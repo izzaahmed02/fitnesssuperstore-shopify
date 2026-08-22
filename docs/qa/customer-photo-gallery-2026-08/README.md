@@ -97,7 +97,7 @@ exercised, which was correct — so a dedicated `fsr90` case was added that buil
 `npm test` exits non-zero if any check fails, so it can be wired into CI. The fixture
 dimensions are committed in `fixtures.json` (each entry names the live product it stands in
 for); the generated images, built pages and `node_modules` are gitignored. `results.json` is the
-raw output of the run recorded in this report — 38/38 against the section file as it stands on
+raw output of the run recorded in this report — 46/46 against the section file as it stands on
 this branch.
 
 To reproduce the before/after evidence for a fix, build the pages from another revision of the
@@ -108,7 +108,7 @@ node build.js <(git show origin/main:sections/customer-photo-gallery.liquid) && 
 ```
 
 That run writes `results.other-source.json` instead of `results.json`, so a comparison run can
-never overwrite the committed evidence. Against the released section it reports 37/38 and exits
+never overwrite the committed evidence. Against the released section it reports 45/46 and exits
 non-zero, the M9 failure being the dead single-photo arrows fixed here.
 
 A human spot-check on two or three live PDPs is still worth doing before the closeout is signed
@@ -130,7 +130,7 @@ off — this run proves the code's behaviour, not the CDN delivery path.
 | D8 | Keyboard ←/→ navigate | Pass |
 | D9 | On-screen arrows navigate; boundary arrows hidden (no wrap) | Pass |
 | D10 | Zoom-in scales a high-res image | Pass |
-| D11 | Zoom never exceeds source pixels | Pass — max ×7.21 = 4284px vs 4284px native, then disabled |
+| D11 | Zoom never exceeds the delivered pixels | Pass — 4284px source, delivered 2048px, zoom stops at ×3.45 = 2048px, then disabled |
 | D12 | "Fit" resets zoom and pan | Pass |
 | D13 | Low-res source shown at native size, not enlarged | Pass — 740×493 → rendered 740×493 |
 | D14 | Zoom-in disabled for a low-res source | Pass |
@@ -171,27 +171,32 @@ off — this run proves the code's behaviour, not the CDN delivery path.
 | F1 | Gallery renders all 10 photos | Pass — 10 slides |
 | F2 | Strip arrows shown for a >4 photo gallery | Pass |
 | F3 | Counter and start boundary across 10 | Pass — "1 of 10", previous hidden |
-| F4 | All 10 contained in the viewport | Pass — e.g. 3482×3000 → 919.2×792, 4284×5712 → 594×792 |
+| F4 | All 10 contained in the viewport | Pass — e.g. delivered 2048×1765 → 919×792, delivered 2048×2731 → 593.9×792 |
 | F5 | All 10 keep their aspect ratio | Pass |
 | F6 | No photo enlarged past its own source at fit size | Pass |
-| F7 | Zoom ceiling stays within each photo's own pixels | Pass — ×2.00=1277/1277, ×3.79=3482/3482, ×5.05=3000/3000, ×7.21=4284/4284, ×1.93=1137/1137, ×2.02=1200/1200, ×1.90=1141/1141, ×4.52=2682/2682, ×2.49=1512/1512 |
+| F7 | Zoom ceiling stays within each photo's delivered pixels | Pass — ×2.00=1277/1277, ×2.23=2048/2048, ×3.45=2048/2048 ×3, ×1.93=1137/1137, ×2.02=1200/1200, ×1.90=1141/1141, ×2.49=1512/1512 |
 | F8 | End boundary after walking all 10 | Pass — "10 of 10", next hidden |
 
-F7 is the per-photo form of the no-upscale guarantee: each of the ten stops at exactly its own
-native width, from the 1141px photo to the 4284px one.
+F7 is the per-photo form of the no-upscale guarantee. The six photos whose sources are under
+2048px stop at their own native width (1137, 1141, 1200, 1277, 1512); the four above it stop at
+the 2048px rendition Shopify delivers. Either way the ceiling is the pixels the customer actually
+received, never more.
 
 ## 4. No upscaling, and code defects vs source defects
 
 Three independent guards, each measured rather than asserted:
 
-1. **Delivery** — the viewer requests `image_url: width: 2048`. Shopify serves the source size
-   when the source is smaller; it does not upscale.
+1. **Delivery** — the viewer requests `image_url: width: 2048`, so Shopify delivers
+   min(source, 2048) px wide: the source itself when smaller, a downscaled rendition when larger,
+   never an upscale. The harness mirrors this — `data-full` points at a 2048-capped rendition of
+   each fixture, so every measurement below is of an image a customer can actually receive.
 2. **Layout** — `max-width/max-height: 100%`, `width/height: auto`, `object-fit: contain` on the
    viewer image. It is fit-only: a 740×493 photo renders at 740×493 on desktop (measured), and
    is downscaled — never stretched — when the viewport is narrower.
 3. **Zoom ceiling** — `computeMaxScale()` caps zoom at `naturalWidth / clientWidth`. Measured:
-   a 4284px-wide source zooms to exactly 4284px and the "+" button then disables; a 740px source
-   on desktop cannot be zoomed at all.
+   FSR90's 4284px source is delivered at 2048px and zooms to exactly 2048px before the "+"
+   button disables; the 740px Precor source is delivered untouched and cannot be zoomed at all on
+   desktop.
 
 So on a PDP whose photos look soft at fit size, the softness is in the source file. The gallery
 is not enlarging or distorting it. Those rows belong to the source-image tracker, not here.

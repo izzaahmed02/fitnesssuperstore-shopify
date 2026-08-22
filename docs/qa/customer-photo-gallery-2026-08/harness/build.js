@@ -48,9 +48,10 @@ const CASES = {
   ]},
 };
 
-// Mirror exactly what the Liquid `for` loop emits (blocks branch), with
-// image_url widths replaced by the same local file (a local file has one
-// intrinsic size; Shopify never upscales past the source either).
+// Mirror exactly what the Liquid `for` loop emits (blocks branch). src/srcset point at the
+// full-size fixture (production asks for 400/600/800, all far below any source here), and
+// data-full points at the 2048-capped delivery rendition, matching the section's
+// `image_url: width: 2048` — so the viewer measures the image a customer actually receives.
 function slides(imgs) {
   return imgs.map(([name, w, h, caption], i) => `
           <div class="customer-photo-gallery__slide">
@@ -60,7 +61,7 @@ function slides(imgs) {
               sizes="(min-width: 990px) 25vw, 80vw"
               width="${w}"
               height="${h}"
-              data-full="img/${name}.png"
+              data-full="img/${name}__d.png"
               data-caption="${caption}"
               alt="Customer photo ${i + 1}"
               loading="lazy"

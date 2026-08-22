@@ -54,8 +54,18 @@ const out = process.argv[2] ? path.resolve(process.argv[2]) : path.join(__dirnam
 const manifest = process.argv[3] ? path.resolve(process.argv[3]) : path.join(__dirname, 'fixtures.json');
 const specs = JSON.parse(fs.readFileSync(manifest, 'utf8')).images;
 
+// The production section sets data-full from `image_url: width: 2048`, so Shopify delivers
+// min(source, 2048) px wide and never upscales. Emit a matching delivery rendition per fixture
+// (<name>__d.png) alongside the full-size source, so the harness measures what a customer can
+// actually receive rather than the untouched original.
+const DELIVERY_CAP = 2048;
+
 fs.mkdirSync(out, { recursive: true });
 for (const s of specs) {
   fs.writeFileSync(path.join(out, `${s.name}.png`), png(s.w, s.h, s.hue || [40, 90, 200]));
-  console.log(`${s.name}  ${s.w}x${s.h}  ${s.source || ''}`);
+  const dw = Math.min(s.w, DELIVERY_CAP);
+  const dh = dw === s.w ? s.h : Math.round((s.h * DELIVERY_CAP) / s.w);
+  fs.writeFileSync(path.join(out, `${s.name}__d.png`), png(dw, dh, s.hue || [40, 90, 200]));
+  const note = dw === s.w ? 'delivered at source size' : `delivered ${dw}x${dh} (capped at ${DELIVERY_CAP})`;
+  console.log(`${s.name}  ${s.w}x${s.h}  -> ${note}  ${s.source || ''}`);
 }
