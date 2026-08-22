@@ -94,7 +94,15 @@ The FSR90 row was originally represented by that product's largest image only, i
 exercised, which was correct — so a dedicated `fsr90` case was added that builds the real
 10-photo strip at all ten dimensions, and the F-series checks below run against it.
 
-`npm test` exits non-zero if any check fails, so it can be wired into CI. The fixture
+`npm test` runs the fixtures, the two browser suites and then `verify-report.js`, and exits
+non-zero if any of them fails, so it can be wired into CI.
+
+`npm run verify` is the report's own guard. Three errors in this closeout came from
+hand-transcribing numbers out of `results.json` into this file — an overstated FSR90 profile, a
+stale check total, and a miscounted set of zoom ceilings — so every figure the report states
+about a run is now checked against the run: the totals, one report row per recorded check, all
+ten F7 ceilings quoted verbatim, the five/five delivery-cap split, and the baseline figure. It
+fails if the report and the data drift apart again. The fixture
 dimensions are committed in `fixtures.json` (each entry names the live product it stands in
 for); the generated images, built pages and `node_modules` are gitignored. `results.json` is the
 raw output of the run recorded in this report — 46/46 against the section file as it stands on
