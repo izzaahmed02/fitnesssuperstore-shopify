@@ -4,8 +4,8 @@ Scope: the gallery UX and rendering lane only, per Tim's 16 Aug direction. Sourc
 replacement stays in the separate *Product Image Source Replacement — Tracker / Supplier /
 Dealer Portal Workflow* thread and its tracker; no tracker rows are duplicated here.
 
-Run date: 18 Aug 2026. Result: **38 of 38 functional checks pass**, 3 defects found and fixed
-in this pass, 2 low-priority items left open for a decision.
+Run dates: 18 Aug 2026, extended 21 Aug 2026. Result: **46 of 46 functional checks pass**,
+3 defects found and fixed in this pass, 2 low-priority items left open for a decision.
 
 ---
 
@@ -68,7 +68,7 @@ live Shopify assets**, read from the Admin API:
 | Case | Real product | Media profile |
 | --- | --- | --- |
 | Multi-image, mixed orientation | French Fitness FSR100 | 960×1280 and 1200×1600 portrait, 4032×3024 landscape ×2 |
-| Multi-image, high resolution | French Fitness FSR90 | 10 photos, 1137×1531 → 4284×5712 |
+| Multi-image, high resolution | French Fitness FSR90 | the full 10-photo gallery, every real dimension: 1277×1586, 3482×3000, 3000×4000 ×2, 4284×5712, 1137×1531, 1200×1600, 1141×1507, 2682×3576, 1512×1974 |
 | Single-image gallery | French Fitness Marin Iso-Lateral Chest/Back Combo | 1 photo, 2252×4000 portrait |
 | Known low-resolution source set | Precor EFX 576i (Remanufactured) | 6 photos, all 740×493 |
 
@@ -88,6 +88,11 @@ npm test        # generate fixtures -> build the pages -> run both suites
 `chromium.launch()` would fail without the browser download that `npm run setup` performs. If
 the machine already has Playwright browsers, point `PLAYWRIGHT_BROWSERS_PATH` at them and
 `npm install && npm test` is sufficient.
+
+The FSR90 row was originally represented by that product's largest image only, inside the mixed
+`multi` case. A 21 Aug review flagged that the report claimed more coverage than the harness
+exercised, which was correct — so a dedicated `fsr90` case was added that builds the real
+10-photo strip at all ten dimensions, and the F-series checks below run against it.
 
 `npm test` exits non-zero if any check fails, so it can be wired into CI. The fixture
 dimensions are committed in `fixtures.json` (each entry names the live product it stands in
@@ -158,6 +163,22 @@ off — this run proves the code's behaviour, not the CDN delivery path.
 | M8 | Reopen resets state | Pass |
 | M9 | Single-image PDP: no dead strip arrows | Pass **after** the fix below (failed before) |
 | M10 | All-low-res gallery: zoom stops exactly at source resolution | Pass |
+
+### Full FSR90 gallery — all 10 photos (desktop 1440×900)
+
+| # | Check | Result |
+| --- | --- | --- |
+| F1 | Gallery renders all 10 photos | Pass — 10 slides |
+| F2 | Strip arrows shown for a >4 photo gallery | Pass |
+| F3 | Counter and start boundary across 10 | Pass — "1 of 10", previous hidden |
+| F4 | All 10 contained in the viewport | Pass — e.g. 3482×3000 → 919.2×792, 4284×5712 → 594×792 |
+| F5 | All 10 keep their aspect ratio | Pass |
+| F6 | No photo enlarged past its own source at fit size | Pass |
+| F7 | Zoom ceiling stays within each photo's own pixels | Pass — ×2.00=1277/1277, ×3.79=3482/3482, ×5.05=3000/3000, ×7.21=4284/4284, ×1.93=1137/1137, ×2.02=1200/1200, ×1.90=1141/1141, ×4.52=2682/2682, ×2.49=1512/1512 |
+| F8 | End boundary after walking all 10 | Pass — "10 of 10", next hidden |
+
+F7 is the per-photo form of the no-upscale guarantee: each of the ten stops at exactly its own
+native width, from the 1141px photo to the 4284px one.
 
 ## 4. No upscaling, and code defects vs source defects
 

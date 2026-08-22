@@ -26,6 +26,18 @@ const CASES = {
   single: { heading: 'Single-image PDP (Marin combo dimensions)', imgs: [
       ['marin_single', 2252, 4000, 'Portrait 2252x4000'],
   ]},
+  fsr90: { heading: 'Multi-image high-resolution PDP — full FSR90 gallery (all 10 photos)', imgs: [
+      ['fsr90_01', 1277, 1586, 'FSR90 photo 1 — 1277x1586'],
+      ['fsr90_02', 3482, 3000, 'FSR90 photo 2 — 3482x3000'],
+      ['fsr90_03', 3000, 4000, 'FSR90 photo 3 — 3000x4000'],
+      ['fsr90_04', 3000, 4000, 'FSR90 photo 4 — 3000x4000'],
+      ['fsr90_05', 4284, 5712, 'FSR90 photo 5 — 4284x5712'],
+      ['fsr90_06', 1137, 1531, 'FSR90 photo 6 — 1137x1531'],
+      ['fsr90_07', 1200, 1600, 'FSR90 photo 7 — 1200x1600'],
+      ['fsr90_08', 1141, 1507, 'FSR90 photo 8 — 1141x1507'],
+      ['fsr90_09', 2682, 3576, 'FSR90 photo 9 — 2682x3576'],
+      ['fsr90_10', 1512, 1974, 'FSR90 photo 10 — 1512x1974'],
+  ]},
   lowres: { heading: 'Known low-resolution source set (Precor EFX 576i dimensions)', imgs: [
       ['lowres_740', 740, 493, 'Low-res 1'],
       ['lowres_740', 740, 493, 'Low-res 2'],

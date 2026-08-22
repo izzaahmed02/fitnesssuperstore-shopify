@@ -261,6 +261,69 @@ async function desktop(browser) {
   await p2.screenshot({ path: path.join(SHOTS, 'desktop-05-single-portrait.png') });
   await p2.close();
 
+  // ===== full FSR90 gallery: 10 photos, every real dimension =====
+  const p4 = await ctx.newPage();
+  await p4.goto(url('fsr90'));
+  await p4.waitForSelector('.customer-photo-gallery__slide img');
+  // Thumbnails are loading="lazy" and a 10-photo strip leaves the later ones off-screen, so
+  // opt them into eager loading before waiting — otherwise the wait can never be satisfied.
+  await p4.$$eval('.customer-photo-gallery__slide img', (is) => is.forEach(i => { i.loading = 'eager'; }));
+  await p4.waitForFunction(() => [...document.querySelectorAll('.customer-photo-gallery__slide img')]
+    .every(i => i.complete && i.naturalWidth > 0), null, { timeout: 60000 });
+
+  const fCount = await p4.$$eval('.customer-photo-gallery__slide img', (is) => is.length);
+  check('F1 full FSR90 gallery renders all 10 photos', fCount === 10, `${fCount} slides`);
+
+  const fArrows = await p4.$$eval('.customer-photo-gallery__arrow', (bs) => bs.map(b => getComputedStyle(b).display));
+  check('F2 strip arrows shown for a >4 photo gallery on desktop',
+    fArrows.every(d => d !== 'none'), JSON.stringify(fArrows));
+
+  await p4.locator('.customer-photo-gallery__slide img').nth(0).click();
+  await p4.waitForFunction(() => document.querySelector('.customer-photo-gallery__lightbox-inner img').classList.contains('is-loaded'));
+  const fFirst = await p4.textContent('.customer-photo-gallery__lightbox-counter');
+  const fPrevHidden = await p4.$eval('.customer-photo-gallery__lightbox-arrow--left', (b) => b.hidden);
+  check('F3 counter and start boundary correct across 10 photos',
+    fFirst === '1 of 10' && fPrevHidden, `counter="${fFirst}", prev hidden=${fPrevHidden}`);
+
+  // Walk all ten, measuring each: contained, undistorted, and never larger than its own source.
+  const walk = [];
+  for (let i = 0; i < 10; i++) {
+    if (i > 0) {
+      await p4.click('.customer-photo-gallery__lightbox-arrow--right');
+      await p4.waitForTimeout(260);
+    }
+    walk.push(await p4.evaluate(async () => {
+      const im = document.querySelector('.customer-photo-gallery__lightbox-inner img');
+      const zin = document.querySelector('[data-zoom="in"]');
+      for (let k = 0; k < 25; k++) { zin.click(); await new Promise(r => setTimeout(r, 8)); }
+      const m = /matrix\(([\d.]+)/.exec(getComputedStyle(im).transform);
+      const scale = m ? parseFloat(m[1]) : 1;
+      document.querySelector('[data-zoom="reset"]').click();
+      await new Promise(r => setTimeout(r, 30));
+      const r = im.getBoundingClientRect();
+      return { natW: im.naturalWidth, natH: im.naturalHeight, fitW: im.clientWidth,
+               w: +r.width.toFixed(1), h: +r.height.toFixed(1), maxScale: scale,
+               counter: document.querySelector('.customer-photo-gallery__lightbox-counter').textContent };
+    }));
+  }
+  const allContained = walk.every(v => v.w <= 1440 * 0.9 + 1 && v.h <= 900 * 0.88 + 1);
+  const allUndistorted = walk.every(v => Math.abs((v.w / v.h) - (v.natW / v.natH)) < 0.02);
+  const allFitOnly = walk.every(v => v.fitW <= v.natW + 1);
+  const allZoomCapped = walk.every(v => v.fitW * v.maxScale <= v.natW + 2);
+  check('F4 all 10 photos contained in the viewport', allContained,
+    walk.map(v => `${v.natW}x${v.natH}->${v.w}x${v.h}`).join('  '));
+  check('F5 all 10 photos keep their aspect ratio', allUndistorted);
+  check('F6 no photo is enlarged past its own source at fit size', allFitOnly);
+  check('F7 zoom ceiling stays within each photo\'s own pixels (all 10)', allZoomCapped,
+    walk.map(v => `x${v.maxScale.toFixed(2)}=${Math.round(v.fitW * v.maxScale)}/${v.natW}`).join('  '));
+
+  const fLast = await p4.textContent('.customer-photo-gallery__lightbox-counter');
+  const fNextHidden = await p4.$eval('.customer-photo-gallery__lightbox-arrow--right', (b) => b.hidden);
+  check('F8 end boundary correct after walking all 10', fLast === '10 of 10' && fNextHidden,
+    `counter="${fLast}", next hidden=${fNextHidden}`);
+  await p4.screenshot({ path: path.join(SHOTS, 'desktop-06-fsr90-full-gallery.png') });
+  await p4.close();
+
   // ===== reduced motion =====
   const rm = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
   const p3 = await rm.newPage();
