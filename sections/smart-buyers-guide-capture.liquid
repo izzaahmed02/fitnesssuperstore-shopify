@@ -177,7 +177,6 @@
       {%- else -%}
         {%- form 'customer', class: 'sbg-form' -%}
           <input type="hidden" name="contact[tags]" value="{{ tag_list }}">
-          <input type="hidden" name="contact[note]" value="Smart Buyer's Guide request — source: {{ sbg_source }}">
           <div class="sbg-field">
             <input
               id="SbgEmail--{{ section.id }}"
@@ -190,6 +189,13 @@
               autocorrect="off"
               autocapitalize="off"
               autocomplete="email"
+              {%- if form.errors %}
+                autofocus
+                aria-invalid="true"
+                aria-describedby="SbgError--{{ section.id }}"
+              {%- elsif form.posted_successfully? %}
+                aria-describedby="SbgSuccess--{{ section.id }}"
+              {%- endif %}
               placeholder="Enter your email"
               required
             >
