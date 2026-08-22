@@ -1922,6 +1922,14 @@
                 {% render 'product-options', product: product %}  
             {%- endcase -%}
           {%- endfor -%}
+          {%- comment -%}
+            Controlled replacement content for discontinued products. Rendered
+            outside the block loop so it does not depend on which product blocks
+            a discontinued template happens to keep enabled.
+          {%- endcomment -%}
+          {%- if product.template_suffix == 'discontinued' -%}
+            {% render 'discontinued-replacement', product: product %}
+          {%- endif -%}
           <a href="{{ product.url }}" class="link product__view-details animate-arrow">
             {{ 'products.product.view_full_details' | t }}
             {% render 'icon-arrow' %}
