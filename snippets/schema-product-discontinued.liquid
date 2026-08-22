@@ -1,6 +1,21 @@
 {%- assign product_url = request.origin | append: product.url -%}
 {%- assign selected_variant = product.selected_or_first_available_variant -%}
 
+{%- comment -%}
+  Google requires offers.price even when availability is Discontinued; without it
+  the item is invalid and ineligible for Product rich results. Use the product's
+  last listed price from Shopify, never a placeholder.
+{%- endcomment -%}
+{%- liquid
+  assign discontinued_price = selected_variant.price
+  if discontinued_price == blank or discontinued_price == 0
+    assign discontinued_price = selected_variant.compare_at_price
+  endif
+  if discontinued_price == blank or discontinued_price == 0
+    assign discontinued_price = product.price_min
+  endif
+-%}
+
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -42,6 +57,8 @@
         "@id": {{ product_url | append: '#discontinued-offer' | json }},
         "@type": "Offer",
         "availability": "https://schema.org/Discontinued",
+        "price": {{ discontinued_price | divided_by: 100.0 | json }},
+        "priceCurrency": {{ shop.currency | default: 'USD' | json }},
         "url": {{ product_url | json }},
         "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% if product.metafields.custom.condition_state contains 'as is' or product.metafields.custom.condition_state contains 'As is' %}UsedCondition{% elsif product.metafields.custom.condition_state contains 'Remanufactured' %}RefurbishedCondition{% else %}{{ product.metafields.custom.condition_state }}Condition{% endif %}{% else %}NewCondition{% endif %}",
         "offeredBy": {
