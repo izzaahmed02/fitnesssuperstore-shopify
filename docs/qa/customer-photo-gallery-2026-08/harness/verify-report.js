@@ -74,6 +74,28 @@ check(
   `expected ${total - 1}/${total}`
 );
 
+// --- the pinned baseline revision actually holds the audited pre-fix section ---------------
+// A pinned SHA is only useful while it still means what the report says it means, and the
+// figures above are only reproducible if the comparison builds the right revision.
+try {
+  const { execFileSync } = require('child_process');
+  const crypto = require('crypto');
+  const pin = (readme.match(/`git show ([0-9a-f]{7,40}):sections\/customer-photo-gallery\.liquid/) || [])[1];
+  const documented = (readme.match(/\| `sections\/customer-photo-gallery\.liquid` \| `([0-9a-f]{32})`/) || [])[1];
+  if (!pin || !documented) {
+    check('report pins a baseline revision and documents its hash', false,
+      `pin=${pin || 'none'}, documented hash=${documented || 'none'}`);
+  } else {
+    const blob = execFileSync('git', ['show', `${pin}:sections/customer-photo-gallery.liquid`],
+      { cwd: DIR, maxBuffer: 1 << 24 });
+    const actual = crypto.createHash('md5').update(blob).digest('hex');
+    check(`pinned baseline ${pin} holds the audited pre-fix section`, actual === documented,
+      actual === documented ? `md5 ${actual}` : `pinned revision has ${actual}, report documents ${documented}`);
+  }
+} catch (e) {
+  check('pinned baseline revision is resolvable', false, e.message.split('\n')[0]);
+}
+
 for (const line of ok) console.log(`OK    ${line}`);
 for (const line of problems) console.log(`STALE ${line}`);
 console.log(`\n${ok.length}/${ok.length + problems.length} report claims match the data`);

@@ -36,7 +36,9 @@ branch deliberately differs from it: the fixes in section 5 change
 `sections/customer-photo-gallery.liquid`, so on this branch that file hashes
 `c75779ea40a936aba44e2a4f69271e1e`. The other two files are untouched and still match the table.
 Reproduce the baseline with
-`git show origin/main:sections/customer-photo-gallery.liquid | md5sum`.
+`git show 575a8de:sections/customer-photo-gallery.liquid | md5sum`. `575a8de` is this PR's merge
+base and the immutable audited revision — `origin/main` moves, and once this PR merges it will
+contain the fix rather than the baseline.
 
 ### Merged PR chain
 
@@ -112,12 +114,14 @@ To reproduce the before/after evidence for a fix, build the pages from another r
 section and re-run:
 
 ```sh
-node build.js <(git show origin/main:sections/customer-photo-gallery.liquid) && npm run qa
+node build.js <(git show 575a8de:sections/customer-photo-gallery.liquid) && npm run qa
 ```
 
 That run writes `results.other-source.json` instead of `results.json`, so a comparison run can
-never overwrite the committed evidence. Against the released section it reports 45/46 and exits
-non-zero, the M9 failure being the dead single-photo arrows fixed here.
+never overwrite the committed evidence. Against the audited pre-fix section it reports 45/46 and
+exits non-zero, the M9 failure being the dead single-photo arrows fixed here. The revision is
+pinned to `575a8de` deliberately: a moving ref would stop reproducing this figure the moment the
+fix lands on it.
 
 A human spot-check on two or three live PDPs is still worth doing before the closeout is signed
 off — this run proves the code's behaviour, not the CDN delivery path.
