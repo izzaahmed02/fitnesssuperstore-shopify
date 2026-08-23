@@ -1,0 +1,183 @@
+# Flooring installation — storefront presentation spec
+
+**Status: STAGING / DISCOVERY ONLY. Production remains HOLD.**
+
+This document is a specification. **No theme file has been changed on this
+branch.** No PDP, section, snippet, cart drawer, checkout extension, Flow,
+email, metaobject, product option, tag or setting has been modified, and none is
+requested.
+
+Controlling records: Tim's emails of August 12 2026 17:27 UTC, August 14 23:16
+UTC and August 14 23:44 UTC, and
+[issue #691](https://github.com/izzaahmed02/fitnesssuperstore-shopify/issues/691).
+
+The calculation, the exact rate card, the fail-closed table, the test evidence
+and the blocker list live in the companion package:
+`izzaahmed02/fs-bundle-api` → `docs/flooring-installation-pricing-technical-package.md`
+and `staging/flooring-pricing/` (branch `claude/flooring-pricing-model-6qwh32`).
+
+---
+
+## 1. The problem this replaces
+
+Tim's goal is explicit: "My goal remains to make all three flooring-installation
+scopes selectable online… The customer must be able to continue without relying
+on a generic 'call for installation' dead end."
+
+What exists today on the nine ACTIVE flooring products carrying
+`flooring-installation-required`:
+
+- The tile and mat PDP option metaobjects point to **"No Thanks"** and **"Custom
+  Installation Quote — Call or Email for Quote"**. Neither scales with area or
+  quantity.
+- The combined turf PDP does not carry the same installation option structure at
+  all.
+- The UNLISTED **Flooring Installation (1296)** product carries flat `$0` / `$200`
+  / `$300` variants with a turf-specific, internally inconsistent description. It
+  is a historical reference only and must not become the pricing engine.
+
+## 2. The customer selects exactly one scope
+
+Three mutually exclusive choices, worded exactly as Tim specified. Not a
+Yes/No installation toggle, and not three additive merchandise lines.
+
+| Order | Label |
+|---|---|
+| 1 | Install Flooring (No Cutting, No Gluing) |
+| 2 | Install & Cut Flooring (No Gluing) |
+| 3 | Install, Cut, & Glue Flooring |
+
+Exactly three, always. There is no fourth scope and no "no installation" scope:
+a customer who does not want installation simply does not select one.
+
+This selector is **order-level**, not per-product. One flooring job on one visit
+gets one scope. It lives in the cart, not on the PDP, because only the cart can
+know the total quantity and the destination.
+
+## 3. PDP
+
+Each eligible flooring PDP replaces "Call or Email for Quote" with availability
+plus an honest statement of what the price depends on:
+
+> **Professional flooring installation is available.** Add the flooring quantity
+> you need to your cart, then choose installation with no cutting, cutting only,
+> or cutting and gluing. Your estimate is based on the area you are actually
+> installing. Final eligibility depends on installation area, substrate, access
+> and project conditions.
+
+The PDP **must not state or imply a price**. The amount is order-level and
+depends on facts the PDP does not have.
+
+The PDP does disclose which of these applies to the product, because it differs
+by family and the customer should not discover it in the cart:
+
+| Family | Products | PDP disclosure |
+|---|---|---|
+| Tile | FF-RIT24 (Middle / Edge / Corner), FF-RITGF, FF-RSGF | All three scopes available; estimate calculated in cart |
+| Mat | FF-HDRFM | Install and Install & Cut available; gluing requires a quote |
+| Rolled rubber | FF-RRGF | Installation available; **priced by quote** |
+| Turf | FF-AGSL, FF-AGSL-V2, FF-AGSL-V3, FF-APGT-1450 | Installation available; **priced by quote** |
+
+Five of nine products are quote-only until Jeff / Installs approves a turf and
+rolled-rubber rate method. That is disclosed as "we will price this for you",
+never as "installation not available" and never by hiding the option.
+
+### 3.1 Reuse the tile calculator that already exists
+
+`assets/tile-calculator.js` already converts a room's dimensions into a tile
+quantity on flooring PDPs. It is the natural place to also capture **the area the
+customer is actually installing**, which is the single most valuable input the
+pricing engine needs and the one the current flow throws away.
+
+Proposed, and deliberately not built on this branch: the calculator writes the
+computed area to a cart attribute alongside the quantity it already sets. The
+customer types their room size once, and both the tile count and the installation
+area come from it. This is a small change to an existing component, and it
+removes the main reason a flooring quote would otherwise fall back to purchased
+coverage.
+
+## 4. Cart
+
+The cart shows the three-scope selector and, for the selected scope:
+
+- the flooring products and quantities covered;
+- **purchased coverage** — what the ordered quantity covers;
+- **installation area** — what the customer is actually installing, entered here
+  or carried from the PDP calculator;
+- the calculated estimate, or the reason there is not one;
+- separately identified materials and surcharges, never folded into the estimate;
+- equipment movement, shown as its own line;
+- whether provider confirmation is required.
+
+**Purchased coverage and installation area are shown as two distinct numbers.**
+This is the customer-facing half of the rule that labor is never charged on
+unused waste or spare material. If a customer buys 465 tiles for a 4,804.8 sq ft
+room, the cart must show 5,005.2 sq ft purchased and 4,804.8 sq ft priced, and
+must not charge labor on the 200 sq ft difference.
+
+### 4.1 Required site inputs
+
+As short as possible, but every one of them changes feasibility or price, and an
+**unanswered** question is treated as a blocker rather than as a "no":
+
+- installation ZIP;
+- residential / commercial / public facility;
+- actual area being installed;
+- substrate (concrete / wood subfloor / existing tile / other / unknown);
+- must existing flooring be removed?
+- is cutting required, and is the room a simple rectangle?
+- is gluing requested?
+- must equipment be moved, and roughly what?
+- stairs, elevator, narrow access, restricted hours?
+- photos or a plan, for material projects;
+- desired timing — **stated as a request, not a commitment**.
+
+### 4.2 The three things the cart may say about money
+
+| Engine status | Cart presentation |
+|---|---|
+| `ESTIMATE` | "Estimated installation: $X. Confirmed before work is scheduled." |
+| `NGS_CONFIRMATION_REQUIRED` | "Estimated installation: $X — **National Gym Service confirmation required**." Amount shown, never presented as owed. |
+| `QUOTE_REQUIRED` | "Installation selected — **we will price this and contact you**", with the reason in plain language. No number. |
+
+Never a `$0` installation line. Never a silent omission. Never a scope downgrade.
+
+Two consequences the copy has to carry honestly today:
+
+- **Every Scope C project is confirmation-required**, because adhesive has no
+  approved price and a glue job cannot yet produce a complete obligation.
+- **Every destination is confirmation-required**, because no flooring
+  service-area list is approved yet. Until that lands, the cart never shows a
+  plain estimate — it shows an estimate plus "confirmation required".
+
+## 5. Order record
+
+Per flooring order, store: scope 1/2/3 with its exact label; purchased coverage;
+installation area and whether it was verified or customer-reported; the area
+actually priced for labor; every flooring line's variant GID, SKU, title,
+quantity and coverage per unit; the band, rate, tier floor and whether the floor
+applied; materials and surcharges; equipment-movement lines; substrate and site
+answers with a photos link; pricing status and confirmation reason; the config
+and rule version; and NGS amount, payment status and any edit/refund adjustment.
+
+The rule version matters: an order priced under
+`FLOORING_INSTALL_RULES@2026-08-23.1` must remain explainable after the rules
+change.
+
+## 6. Order edits, cancellations and refunds
+
+Flooring labor is recalculated from the **installation area**, not from the
+remaining quantity. Reducing tile quantity does not reduce labor unless the area
+being installed also changes — and if the reduced quantity no longer covers the
+stated area, the order fails closed to a quote rather than repricing itself.
+
+A partial cancellation that removes all flooring lines removes the flooring
+labor obligation. A partial cancellation that leaves a smaller flooring order
+requires a re-quote, not an automatic proportional reduction.
+
+## 7. What this spec does not authorize
+
+No live PDP, section, snippet, product option, metaobject, price, tag,
+metafield, cart, checkout, policy, email, Flow or accounting change. The
+customer-facing wording above is a draft for legal, Finance/CPA and Tim's
+review, not approved copy.
