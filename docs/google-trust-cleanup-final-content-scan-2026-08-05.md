@@ -525,3 +525,55 @@ the neutral wording.
 **Release is live and verified.** Content, schema, parity, redirects, canonical and sitemap proof all
 pass. Two closeout actions remain and both require UI access this environment does not have:
 updating the tracker rows to Done, and submitting the Search Console recrawl requests.
+
+---
+
+# Header follow-up — closed a different way (2026-08-14)
+
+The sitewide static rating claim flagged during post-publication verification is resolved and
+closed. It did **not** land as a wording change.
+
+## What happened
+
+| Step | Outcome |
+|---|---|
+| PR #712 | Merged by Izza, `"4.9/5 rating"` → `"Highly Rated by Customers"` |
+| Tim's Aug 13 note | Rejected that wording as a stronger, unscoped qualitative claim; directed the exact approved phrase `"Rated by our customers"` |
+| PR #714 | Opened with that exact phrase, CI green — **never merged** |
+| Actual resolution | `item_cMAqCg` was **removed entirely** from `sections/header-group.json` via Shopify sync commit `894268b`, keeping the homepage hero badge unchanged |
+| Tim's Aug 14 note | Independently verified and marked the item DONE / VERIFIED / CLOSED, with "do not redo the completed change" |
+| PR #714 | **Closed** — merging it would have re-added the deliberately removed item |
+
+## Verified final state
+
+| Check | Result |
+|---|---|
+| `item_cMAqCg` on GitHub `main` | absent |
+| `item_cMAqCg` in live Shopify MAIN (`updatedAt 2026-08-13T22:31:19Z`) | absent |
+| `block_order` | 5 entries, identical both sides |
+| Announcement-bar item texts | identical both sides |
+| Live rendered `4.9/5` in visible text | **0** on `/`, `/pages/about-us`, `/pages/reviews` |
+| Homepage hero badge | unchanged |
+
+Parity confirmed by **parsed-JSON comparison**, not checksums: Shopify stores
+`sections/*-group.json` in a normalized compact form, so its `checksumMd5` never matches the raw
+GitHub blob for this file type. `templates/*.json` do match byte-for-byte.
+
+Resulting bar:
+
+> New & Remanufactured Gym Equipment | Best Warranty | Nationwide Delivery & Installation | Up to 60% off MSRP
+
+## Note on source control
+
+This change landed through a Shopify-generated sync commit rather than a branch/PR. Tim recorded
+that as a one-off and asked that future repo-controlled edits use the normal branch/PR path unless
+a live-admin change is explicitly approved.
+
+## Remaining closeout item
+
+**Search Console evidence only** — five URL Inspection confirmations plus the `sitemap.xml`
+resubmission proof, attached to the canonical thread and added to the existing Google Steps row.
+Not actionable from this environment: there is no Search Console API access here, and Sheets access
+is read-only. Both steps must be completed in the respective web UIs.
+
+No further content scan, ratings reconciliation, or tracker is required.
