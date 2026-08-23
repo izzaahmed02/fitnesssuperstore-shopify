@@ -1060,6 +1060,31 @@ if (!customElements.get('product-customization-options')) {
         if (this.#isReplacing) return;
         const changeUrl = `${window.Shopify.routes.root}cart/change.js`;
         const addUrl = `${window.Shopify.routes.root}cart/add.js`;
+
+        // Item C guard — UX only. Warn and route to Sales BEFORE adding a cart
+        // the server-side validation would block at checkout. If the guard cannot
+        // predict (constants missing, cart unreadable) it returns null and we
+        // proceed: the server remains authoritative, so declining to guess here
+        // is safe, while a wrong guess would block a legitimate order.
+        try {
+          const guard = window.FSBundleGuard;
+          if (guard) {
+            const ops = JSON.parse(this.prepareFunctionalProperties() || '[]');
+            const paid = Array.isArray(ops) ? ops.filter((o) => Number(o.priceAdjustment) > 0).length : 0;
+            const visible = Object.keys(this.prepareOptions() || {}).length;
+            const verdict = await guard.predict(paid, visible);
+            if (verdict && verdict.willExceed) {
+              guard.render(this);
+              this.submitButton?.classList.remove('loading');
+              this.applyChangesButton?.classList.remove('loading');
+              this.querySelector('.loading__spinner')?.classList.add('hidden');
+              return;
+            }
+          }
+        } catch (e) {
+          console.error('[fs-bundle] guard prediction failed; deferring to server validation', e);
+        }
+
         if (!this.checkMandatoryFields()) {
           this.applyChangesButton?.classList.remove('loading');
           return alert('Please select your options before adding this item to cart');
@@ -1327,7 +1352,13 @@ if (!customElements.get('product-customization-options')) {
         // The property COUNT is deliberately NOT clamped. Dropping selections to
         // fit would silently lose exactly what this preserves. Over the cap the
         // transform rejects and the checkout blocks.
-        return JSON.stringify({ v: spec.MANIFEST_VERSION, p: entries });
+        // Stamp the manifest with the spec checksum this asset was generated
+        // against. The transform compares it to the checksum compiled into its
+        // own binary and fails closed on any mismatch, which is the only way to
+        // detect that the two sides were generated from DIFFERENT specs. A
+        // plausible-looking-string check cannot: a stale checksum of the right
+        // shape passes it.
+        return JSON.stringify({ v: spec.MANIFEST_VERSION, c: spec.SPEC_CHECKSUM, p: entries });
       }
 
       prepareFunctionalProperties() {
