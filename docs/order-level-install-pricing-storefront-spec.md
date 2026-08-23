@@ -29,11 +29,20 @@ mutually exclusive selector:
 | 4 | Room of Choice Installation — 0–3 Steps — Assembled + Packaging/Debris Removed | National Gym Service |
 | 5 | Room of Choice Installation — 4+ Steps — Assembled + Packaging/Debris Removed | National Gym Service |
 
-Products whose only current mapping is the blanket "Full Assembly &
-Installation — Any Room" resolve to the internal `FULL_ASSEMBLY_INSTALLATION`
-level. Exactly how that level is labelled to the customer, and whether it is
-shown alongside or instead of levels 3–5, is **open and needs Carlos's
-confirmation**.
+Exactly five, always. Tim's August 18 executive review settled the open
+question here: `FULL_ASSEMBLY_INSTALLATION` **may remain an internal mapping
+state** for products whose only valid source is the blanket "Full Assembly &
+Installation — Any Room" option, but it is **not a sixth customer-facing
+selection** and must never appear in this selector.
+
+That leaves a real gap the storefront cannot close on its own. An FAI-only
+product has no approved amount for Garage Installation, ROC 0–3, or ROC 4+, and
+copying its "Any Room" value across those three levels is expressly prohibited.
+So until **Carlos confirms how FAI-only products are labelled and mapped**, an
+FAI-only product in the cart makes the installation levels `QUOTE_REQUIRED`
+rather than priced. The engine enforces this (tests QA-04a and QA-04b); the
+storefront must present it as "installation quote required for this product",
+never by silently omitting the option or by substituting a lower level.
 
 More than one service level may not be selected for the same order. A
 split-service / mixed-destination exception is out of scope for this phase.
@@ -122,9 +131,10 @@ never create an NGS obligation.
 
 Preserved on the order: selected service level; fulfillment method; eligibility;
 pricing confidence; financial owner; TJF payable and NGS due; base amount;
-whether the order/visit minimum applied; destination zone key and zone-map
-version; installation multiplier; one-step destination price; two-step final
-price when applicable; every covered variant GID, SKU, title, quantity, weight
+whether the order/visit minimum applied; destination zone key, zone approval
+status, and zone-manifest version; installation multiplier; one-step
+destination price; two-step final price when applicable; the complete-order
+parcel result and its source, version, checked-at timestamp and reason; every covered variant GID, SKU, title, quantity, weight
 source/value/unit, pricing method, source option GID and amount; excluded lines
 and reasons; every exception code; customer acknowledgment; site/access answers;
 NGS status; invoice reference; edit/refund/cancellation adjustment status;
@@ -140,3 +150,31 @@ amount silently unchanged is a defect, not a default.
 `locales/` — untouched. The only file added is this document. Wiring is M3 in
 the technical package and is gated on the staging store and on Carlos's wording
 confirmation.
+
+---
+
+## 9. August 23, 2026 correction addendum
+
+Applied from Tim's August 18 executive review (issue #691 comment 5332409911).
+Where this section and the body above disagree, this section controls.
+
+1. **Exactly five customer-facing choices.** Section 1 is updated in place;
+   `FULL_ASSEMBLY_INSTALLATION` is internal-only.
+2. **Quote-required is a display state, not an error.** Under the interim money
+   rule a cart resolves `QUOTE_REQUIRED` whenever quantity exceeds 1, more than
+   one explicitly priced machine is present, or the destination does not map
+   through an approved zone list. On today's data that covers most real carts,
+   including every lower-48 destination while the Zone 1A allowlist is
+   outstanding. The storefront must therefore treat "installation quote
+   required" as a first-class, well-designed path, not an edge case: the
+   equipment sale must still complete, the customer must see that installation
+   is available and will be quoted, and no amount may be shown as final.
+3. **Two-step is not offered by default.** It requires an explicit customer
+   request *and* an approved complete-order parcel result. No approved parcel
+   source is registered today, so two-step must not be surfaced in the UI at all
+   until B5 closes.
+4. **Never show a computed amount that the engine marked as an audit subtotal.**
+   The result object separates `amounts.auditSubtotalCents` from
+   `amounts.finalCents`, and `finalCents` is `null` exactly when the amount is
+   not customer-authoritative. Bind the customer-facing figure to `finalCents`
+   only.
