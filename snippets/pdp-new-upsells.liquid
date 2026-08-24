@@ -161,6 +161,33 @@
                       if up_qty < 1
                         assign up_qty = 1
                       endif
+
+                      comment
+                        Normalise against the variant's Shopify quantity rule, or the
+                        card renders as buyable and every click is rejected by
+                        /cart/add.js: raise to the minimum, round UP to the next
+                        increment, and drop the entry if that lands above the maximum.
+                        Nested ifs on purpose — a nil max compared to a number is a
+                        Liquid error, not false.
+                      endcomment
+                      assign up_qty_unpurchasable = false
+                      if up_variant != blank
+                        assign up_rule = up_variant.quantity_rule
+                        if up_rule.min > up_qty
+                          assign up_qty = up_rule.min
+                        endif
+                        if up_rule.increment > 1
+                          assign up_rem = up_qty | modulo: up_rule.increment
+                          if up_rem > 0
+                            assign up_qty = up_qty | plus: up_rule.increment | minus: up_rem
+                          endif
+                        endif
+                        if up_rule.max != blank
+                          if up_qty > up_rule.max
+                            assign up_qty_unpurchasable = true
+                          endif
+                        endif
+                      endif
                     -%}
 
                     {%- if up_group == group -%}
@@ -171,6 +198,8 @@
                       <!-- pdp-upsell skipped: entry has no resolvable variant (deleted or unset) -->
                     {%- elsif up_variant.available == false -%}
                       <!-- pdp-upsell skipped: {{ up_product.title | escape }} is unavailable -->
+                    {%- elsif up_qty_unpurchasable -%}
+                      <!-- pdp-upsell skipped: {{ up_product.title | escape }} quantity {{ up_qty }} exceeds the variant's maximum of {{ up_variant.quantity_rule.max }} -->
                     {%- elsif up_product.tags contains 'avisplus-product-options' -%}
                       {%- comment -%} An Avis option-holder product, not a standalone one. Adding
                           it makes a cart line that cart-drawer.liquid renders as an

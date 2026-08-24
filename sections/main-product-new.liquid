@@ -29,6 +29,19 @@
 {%- assign pdp_has_options = false -%}
 {%- if pdp_opts != blank -%}
   {%- assign pdp_has_options = true -%}
+{%- else -%}
+  {%- comment -%} Across ALL variants, not just the selected one: a sibling variant
+      can carry variant-level options while the landing variant and the product
+      have none. Switching to it swaps its Product-Options markup in, but scripts
+      in fetched section HTML never execute, so the configurator would sit
+      uninitialised — no pricing, defaults or _functionOperation payload (PR #733
+      review, Aug 24). Stops at the first hit. {%- endcomment -%}
+  {%- for pdp_variant in product.variants -%}
+    {%- if pdp_variant.metafields.options.product_options.value != blank -%}
+      {%- assign pdp_has_options = true -%}
+      {%- break -%}
+    {%- endif -%}
+  {%- endfor -%}
 {%- endif -%}
 
 {%- comment -%} Loaded whenever the product has a configurator — with NO
