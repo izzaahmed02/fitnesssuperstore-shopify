@@ -555,6 +555,25 @@
             /* Server-rendered from the variant's own option metafield, so it must
                re-render or it would offer the previous variant's choices. */
             swapById(fetched, 'PdpNewDeliveryBlock', sectionId);
+            /* "Notify me when available": buy-buttons renders it only for a
+               sold-out variant and product-info.js never swaps it, so it would
+               stay frozen at page-load state across available <-> sold-out
+               changes. The wrapper is always present (empty when available), so
+               the swap adds and removes the control correctly both ways.
+
+               HTMLUpdateUtility (global.js), not swapById: a <script> inside
+               plain innerHTML never runs, and the snippet binds its own dialog
+               open/close/backdrop handlers in one. Re-creating the script
+               element executes it on the fresh control. */
+            var notifySource = fetched.getElementById('PdpNewNotify-' + sectionId);
+            var notifyTarget = document.getElementById('PdpNewNotify-' + sectionId);
+            if (notifySource && notifyTarget) {
+              if (typeof HTMLUpdateUtility === 'function') {
+                HTMLUpdateUtility.setInnerHTML(notifyTarget, notifySource.innerHTML);
+              } else {
+                notifyTarget.innerHTML = notifySource.innerHTML;
+              }
+            }
           }
           syncAvailability(root, fetched, sectionId, data.variant);
           syncOptionGroupSelect(root);

@@ -16,6 +16,13 @@
     before the label (optional, default false). Opt-in so every other caller is
     unchanged. (Liquid's `render` takes a literal snippet name, so this is a flag
     rather than a snippet-name parameter.)
+  - notify_swap_target: {Boolean} wrap the back-in-stock control in an always-present
+    #PdpNewNotify-<section_id> element (optional, default false). product-info.js
+    swaps a fixed id list on variant change that does not include this control, so
+    without a swap target it is frozen at its page-load state: never added when a
+    shopper switches to a sold-out variant, never removed when they switch back.
+    pdp-new.js re-renders the wrapper from the fetched section. Opt-in, so the live
+    PDP's markup is unchanged.
 
   Usage:
   {% render 'buy-buttons', block: block, product: product, product_form_id: product_form_id, section_id: section.id, show_pickup_availability: true %}
@@ -119,12 +126,14 @@
       {%- endform -%}
     </{{ tag }}>
 
+    {%- if notify_swap_target -%}<div id="PdpNewNotify-{{ section_id }}">{%- endif -%}
     {%- if product.selected_or_first_available_variant == null
       or product.selected_or_first_available_variant.available == false
       or quantity_rule_soldout
     -%}
       {%- render 'notify-back-in-stock', product: product, section_id: section_id -%}
     {%- endif -%}
+    {%- if notify_swap_target -%}</div>{%- endif -%}
   {%- else -%}
     <div class="product-form">
       <div class="product-form__buttons form">

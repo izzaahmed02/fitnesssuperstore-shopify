@@ -31,25 +31,14 @@
   {%- assign pdp_has_options = true -%}
 {%- endif -%}
 
-{%- comment -%} Cart-transform flag, computed as the live PDP computes it
-    (main-product.liquid:125-133): true once any cart item carries a
-    _functionOperation payload.
-
-    Gates ONLY this section's asset tags below, never the markup. Extending it to
-    the markup makes the configurator, add-on cards and help popups vanish for the
-    rest of the session once a configured item is in the cart. The gate is nearly a
-    no-op anyway: cart-drawer.liquid loads product-options.css and
-    product-custom-options.js on every page. {%- endcomment -%}
-{%- assign hide_product_options = false -%}
-{%- for item in cart.items -%}
-  {%- for property in item.properties -%}
-    {%- if property.first == '_functionOperation' -%}
-      {%- assign hide_product_options = true -%}
-    {%- endif -%}
-  {%- endfor -%}
-{%- endfor -%}
-
-{%- if pdp_has_options and hide_product_options == false -%}
+{%- comment -%} Loaded whenever the product has a configurator — with NO
+    cart-state gate. The live PDP skips these assets once a cart item carries a
+    _functionOperation payload, relying on cart-drawer.liquid to load the script
+    instead; but only the drawer and the cart page do that, so in notification or
+    page-cart mode a second configured purchase in the same session would render
+    the configurator with no script behind it: default selections, base price,
+    stale payload (PR #733 review, finding 2). {%- endcomment -%}
+{%- if pdp_has_options -%}
   {{ 'product-options.css' | asset_url | stylesheet_tag }}
   {%- comment -%} Swatch layout (.color-options flex row, custom-color trigger) lives
       here, same as the live PDP (main-product.liquid). {%- endcomment -%}
@@ -473,7 +462,8 @@
                 section_id: section.id,
                 show_pickup_availability: false,
                 include_quantity_input: true,
-                show_cart_icon: true
+                show_cart_icon: true,
+                notify_swap_target: true
               -%}
               {%- comment -%} Figma: prompt directly under Add to Cart. Deep-links to the
                   contact form with the enquiry type preselected — ?service=quote is read by
