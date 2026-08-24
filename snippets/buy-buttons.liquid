@@ -79,7 +79,17 @@
         >
 
         {%- if include_quantity_input -%}
-          <input type="hidden" name="quantity" value="1">
+          {%- comment -%} Seeded from the variant's quantity rule, not a literal 1: a
+              variant with min > 1 rejects a quantity-1 add and this form offers no
+              visible quantity control to correct it. pdp-new.js re-syncs the value
+              from the fetched section on variant change. {%- endcomment -%}
+          {%- liquid
+            assign pdp_quantity_min = product.selected_or_first_available_variant.quantity_rule.min | default: 1
+            if pdp_quantity_min < 1
+              assign pdp_quantity_min = 1
+            endif
+          -%}
+          <input type="hidden" name="quantity" value="{{ pdp_quantity_min }}" data-pdp-quantity-input>
         {%- endif -%}
 
         {%- if gift_card_recipient_feature_active -%}
