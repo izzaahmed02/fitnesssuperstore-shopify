@@ -54,9 +54,14 @@ if (!customElements.get('product-form-with-options')) {
               properties: productProperties,
             },
           ],
-          sections: this.cart.getSectionsToRender().map((section) => section.id),
-          sections_url: window.location.pathname,
         };
+        // Page-cart mode has neither <cart-drawer> nor <cart-notification>, so
+        // there is nothing to re-render: ask for no sections and redirect to the
+        // cart on success instead (same split as Dawn's product-form.js).
+        if (this.cart) {
+          bodyRequest.sections = this.cart.getSectionsToRender().map((section) => section.id);
+          bodyRequest.sections_url = window.location.pathname;
+        }
 
         const config = {
           method: 'POST',
@@ -68,10 +73,20 @@ if (!customElements.get('product-form-with-options')) {
 
         try {
           const response = await fetch(url, config);
-          if (!response.ok) throw new Error('Failed to add to cart');
-          if (!this.cart) window.location = window.routes.cart_url;
           const result = await response.json();
-          !response.ok ? this.handleCartError(result) : this.handleCartSuccess(result);
+          // Shopify answers a rejected add with 422 + {status, description};
+          // route that to handleCartError so the real reason (quantity rule,
+          // sold out) is shown and cartError is published — same as Dawn's
+          // product-form.js — rather than the generic message in the catch.
+          if (result.status) {
+            this.handleCartError(result);
+            return;
+          }
+          if (!this.cart) {
+            window.location = window.routes.cart_url;
+            return;
+          }
+          this.handleCartSuccess(result);
         } catch (error) {
           console.error(error);
           this.handleErrorMessage('This configuration is currently out of stock. Please choose another configuration or contact us for availability.');
@@ -127,12 +142,11 @@ if (!customElements.get('product-form-with-options')) {
         return;
       }
 
+      // Only reached with a cart element present (page-cart mode returns
+      // before this); button/spinner reset is the finally block's job.
       handleCartSuccess(response) {
         this.cart.renderContents(response);
-        this.submitButton.classList.remove('loading');
-        if (this.cart && this.cart.classList.contains('is-empty')) this.cart.classList.remove('is-empty');
-        this.submitButton.removeAttribute('aria-disabled');
-        this.querySelector('.loading__spinner').classList.add('hidden');
+        this.cart.classList.remove('is-empty');
       }
 
       prepareDefaultProperties() {
