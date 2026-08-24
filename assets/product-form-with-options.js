@@ -40,7 +40,23 @@ if (!customElements.get('product-form-with-options')) {
         this.cart?.setActiveElement(document.activeElement);
         const url = `${window.Shopify.routes.root}cart/add.js`;
 
+        // Named `properties[...]` inputs rendered inside the form (the gift-card
+        // recipient fields from gift-card-recipient-form.liquid: email, name,
+        // message, send-on date, timezone offset) — the JSON body built below is
+        // the only thing posted, so anything not serialised here is silently
+        // dropped from the order. FormData already skips disabled controls, which
+        // is how recipient-form.js switches those fields off. Spread first so the
+        // configurator helpers keep precedence on any shared key.
+        const formProperties = {};
+        if (this.form) {
+          new FormData(this.form).forEach((value, name) => {
+            const match = name.match(/^properties\[(.+)\]$/);
+            if (match) formProperties[match[1]] = value;
+          });
+        }
+
         const productProperties = {
+          ...formProperties,
           ...this.prepareDefaultProperties(),
           ...this.prepareOptions(),
           _functionOperation: this.prepareFunctionalProperties(),
@@ -145,6 +161,15 @@ if (!customElements.get('product-form-with-options')) {
       // Only reached with a cart element present (page-cart mode returns
       // before this); button/spinner reset is the finally block's job.
       handleCartSuccess(response) {
+        // Posted as `items: [...]`, so Shopify answers `{ items: [line], sections }`
+        // rather than the line itself (which is what Dawn's FormData post gets).
+        // <cart-notification>.renderContents() reads response.key to find
+        // [id="cart-notification-product-<key>"] and throws without it — after
+        // the item is already in the cart. Lift key/id from the single line.
+        if (response && !response.key && response.items && response.items.length) {
+          response.key = response.items[0].key;
+          if (response.id === undefined) response.id = response.items[0].id;
+        }
         this.cart.renderContents(response);
         this.cart.classList.remove('is-empty');
       }

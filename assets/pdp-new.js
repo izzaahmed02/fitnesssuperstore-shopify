@@ -100,10 +100,19 @@
     }, 2000);
   }
 
-  /* Re-render the drawer from freshly fetched section HTML and open it — the same
-     contract cart-drawer.js exposes elsewhere. renderContents() calls open(). */
-  function refreshCartDrawer() {
-    var drawer = document.querySelector('cart-drawer') || document.querySelector('cart-notification');
+  /* The cart element this page renders into, if any. Page-cart mode has neither. */
+  function cartElement() {
+    return document.querySelector('cart-drawer') || document.querySelector('cart-notification');
+  }
+
+  /* Re-render the drawer/notification from the /cart/add.js response and open it —
+     the same contract Dawn's product-form.js uses. The response is passed through
+     whole: <cart-notification>.renderContents() reads response.key to find
+     [id="cart-notification-product-<key>"], so a reconstructed {id, sections}
+     object throws AFTER the add succeeded and the catch below would then show
+     "Unavailable" for an item already in the cart. renderContents() calls open(). */
+  function refreshCartDrawer(added) {
+    var drawer = cartElement();
     if (!drawer || typeof drawer.renderContents !== 'function') {
       /* No drawer on the page (or an unexpected build): fall back to the cart
          page rather than silently leaving the buyer with no feedback. */
@@ -111,27 +120,30 @@
       return Promise.resolve();
     }
 
-    /* Ask the element which sections it re-renders rather than hardcoding them; the
-       drawer and the notification want different sets. */
-    var sectionIds = 'cart-drawer,cart-icon-bubble';
-    if (typeof drawer.getSectionsToRender === 'function') {
-      sectionIds = drawer.getSectionsToRender().map(function (s) { return s.id; }).join(',');
+    /* The add is posted as `items: [...]`, and for that body shape Shopify
+       answers `{ items: [line], sections }` rather than the line itself — so the
+       key and id <cart-notification> / <cart-drawer> read from the top level are
+       absent. Lift them from the single line we added. */
+    if (added && !added.key && added.items && added.items.length) {
+      added.key = added.items[0].key;
+      if (added.id === undefined) added.id = added.items[0].id;
     }
 
+    drawer.classList.remove('is-empty');
+    drawer.renderContents(added);
+
+    /* Other listeners (header count, configurator) key off cartUpdate with the
+       full cart; fetch it after the drawer is already open so it never delays
+       the buyer's feedback. */
     var root = (window.routes && window.routes.root) || '/';
-    return fetch(root + '?sections=' + encodeURIComponent(sectionIds))
+    return fetch(root + 'cart.js')
       .then(function (response) { return response.json(); })
-      .then(function (sections) {
-        return fetch(root + 'cart.js')
-          .then(function (response) { return response.json(); })
-          .then(function (cart) {
-            if (typeof publish === 'function' && typeof PUB_SUB_EVENTS === 'object') {
-              publish(PUB_SUB_EVENTS.cartUpdate, { source: 'pdp-new-upsell', cartData: cart });
-            }
-            drawer.classList.remove('is-empty');
-            drawer.renderContents({ id: cart.id, sections: sections });
-          });
-      });
+      .then(function (cart) {
+        if (typeof publish === 'function' && typeof PUB_SUB_EVENTS === 'object') {
+          publish(PUB_SUB_EVENTS.cartUpdate, { source: 'pdp-new-upsell', cartData: cart });
+        }
+      })
+      .catch(function () { /* the add itself succeeded; nothing to undo */ });
   }
 
   document.addEventListener('click', function (event) {
@@ -148,6 +160,16 @@
     button.disabled = true;
     button.classList.add('loading');
 
+    /* Ask for the cart element's own section list in the same request, so the
+       response carries everything renderContents() needs (id, key, sections).
+       No cart element: no sections, and the success path redirects. */
+    var body = { items: [{ id: Number(variantId), quantity: quantity }] };
+    var drawer = cartElement();
+    if (drawer && typeof drawer.getSectionsToRender === 'function') {
+      body.sections = drawer.getSectionsToRender().map(function (s) { return s.id; });
+      body.sections_url = window.location.pathname;
+    }
+
     var root = (window.routes && window.routes.root) || '/';
     fetch(root + 'cart/add.js', {
       method: 'POST',
@@ -157,7 +179,7 @@
         'X-Requested-With': 'XMLHttpRequest'
       },
       credentials: 'same-origin',
-      body: JSON.stringify({ items: [{ id: Number(variantId), quantity: quantity }] })
+      body: JSON.stringify(body)
     })
       .then(function (response) {
         return response.json().then(function (body) {
@@ -167,9 +189,9 @@
           return body;
         });
       })
-      .then(function () {
+      .then(function (added) {
         flashAdded(button);
-        return refreshCartDrawer();
+        return refreshCartDrawer(added);
       })
       .catch(function (error) {
         console.error('[pdp-new] upsell add failed', error);
@@ -309,12 +331,18 @@
       stripPayLaterQualifier(root);
     }).observe(financing, { childList: true, subtree: true, characterData: true });
 
+    /* Observe the STABLE wrapper (#PdpNewConfigTotal-<id>), not the value span:
+       the variant-change swap replaces the wrapper's innerHTML, and an observer
+       bound to the original span would stay attached to the detached node —
+       priceHelper() would keep writing the visible total while the monthly
+       figure silently stopped following it. subtree covers the new span. */
     var total = configTotalEl(root);
-    if (total) {
+    var totalWrap = total && (total.closest('.pdp-new__total') || total);
+    if (totalWrap) {
       new MutationObserver(function () {
         refreshPayLater(root);
         syncFinancing(root);
-      }).observe(total, { childList: true, subtree: true, characterData: true });
+      }).observe(totalWrap, { childList: true, subtree: true, characterData: true });
     }
 
     stripPayLaterQualifier(root);
@@ -516,6 +544,11 @@
 
     var sectionId = root.dataset.section;
 
+    /* Assigned by the mobile-gallery block below; a no-op until then and on pages
+       with no phone slider. Declared here because the variantChange handler above
+       it in source needs to call it. */
+    var goToMobileMedia = function () {};
+
     syncOptionGroupSelect(root);
     syncStickyToBuyBox(root);
     syncFinancing(root);
@@ -552,9 +585,24 @@
             /* Holds data-price-value, the base priceHelper() adds option prices
                to — a stale one would mis-total every later selection. */
             swapById(fetched, 'PdpNewConfigTotal', sectionId);
+            /* The configurator swapped itself in a frame ago and already computed
+               base + default options into the span this swap just replaced with
+               the server's bare variant price. Recompute against the new base so
+               a variant whose defaults carry a price never shows a total below
+               what the cart payload will charge. */
+            var configurator = root.querySelector('product-customization-options');
+            if (configurator && typeof configurator.updatePrice === 'function') {
+              configurator.updatePrice();
+            }
             /* Server-rendered from the variant's own option metafield, so it must
                re-render or it would offer the previous variant's choices. */
             swapById(fetched, 'PdpNewDeliveryBlock', sectionId);
+            /* Hidden quantity is seeded from the variant's quantity rule (min), and
+               the form itself is never swapped — carry the fetched value over so a
+               min > 1 variant does not post the previous variant's quantity. */
+            var quantitySource = fetched.querySelector('[data-pdp-quantity-input]');
+            var quantityTarget = root.querySelector('[data-pdp-quantity-input]');
+            if (quantitySource && quantityTarget) quantityTarget.value = quantitySource.value;
             /* "Notify me when available": buy-buttons renders it only for a
                sold-out variant and product-info.js never swaps it, so it would
                stay frozen at page-load state across available <-> sold-out
@@ -579,6 +627,11 @@
           syncOptionGroupSelect(root);
           syncStickyToBuyBox(root);
           syncFinancing(root);
+          /* product-info.js sends variant media changes only to the desktop
+             <product-gallery>; the phone slider has to be told separately. */
+          if (data.variant && data.variant.featured_media && data.variant.featured_media.id) {
+            goToMobileMedia(String(data.variant.featured_media.id));
+          }
         });
       });
     }
@@ -798,9 +851,15 @@
     var mgThumbs = root.querySelector('[data-mobile-thumbs]');
     var mgEl = root.querySelector('mobile-gallery');
     var jq = window.jQuery;
-    if (mgThumbs && mgEl && jq) {
+    /* The variant's media the phone slider should be showing. Seeded from the
+       server-selected variant (so a ?variant= landing opens on its own image, not
+       product.media[0]) and updated on variantChange. Read by goToMobileMedia and
+       again by wire() — slick can initialise later than the variant change (a
+       desktop landing resized down), and then it must open on the CURRENT variant. */
+    var mobileMediaId = mgEl && mgEl.dataset.initialMediaId ? String(mgEl.dataset.initialMediaId) : '';
+    if (mgEl && jq) {
       var mgSlider = mgEl.querySelector('.mobile-gallery-slider');
-      var thumbEls = Array.prototype.slice.call(mgThumbs.querySelectorAll('[data-mobile-thumb]'));
+      var thumbEls = mgThumbs ? Array.prototype.slice.call(mgThumbs.querySelectorAll('[data-mobile-thumb]')) : [];
 
       var realSlides = function () {
         return mgSlider.querySelectorAll('.mobile-gallery-slide[data-media-id]');
@@ -813,6 +872,7 @@
         return -1;
       };
       var activateById = function (id) {
+        if (!mgThumbs) return;
         thumbEls.forEach(function (t) {
           var on = t.getAttribute('data-media-id') === id;
           t.classList.toggle('is-active', on);
@@ -824,26 +884,51 @@
           }
         });
       };
+      /* Jump the slider to a media id. Instant (no animation) so a variant change
+         reads as "the picture changed", not a swipe the buyer did not make. A
+         no-op while slick is not initialised (desktop); wire() catches up then. */
+      goToMobileMedia = function (id) {
+        mobileMediaId = id;
+        if (!jq(mgSlider).hasClass('slick-initialized')) return;
+        var idx = slideIndexForId(id);
+        if (idx >= 0 && idx !== jq(mgSlider).slick('slickCurrentSlide')) {
+          jq(mgSlider).slick('slickGoTo', idx, true);
+        }
+      };
 
-      mgThumbs.addEventListener('click', function (e) {
-        var thumb = e.target.closest('[data-mobile-thumb]');
-        if (!thumb || !jq(mgSlider).hasClass('slick-initialized')) return;
-        var idx = slideIndexForId(thumb.getAttribute('data-media-id'));
-        if (idx >= 0) jq(mgSlider).slick('slickGoTo', idx);
-      });
+      if (mgThumbs) {
+        mgThumbs.addEventListener('click', function (e) {
+          var thumb = e.target.closest('[data-mobile-thumb]');
+          if (!thumb || !jq(mgSlider).hasClass('slick-initialized')) return;
+          var idx = slideIndexForId(thumb.getAttribute('data-media-id'));
+          if (idx >= 0) jq(mgSlider).slick('slickGoTo', idx);
+        });
+      }
 
       var bound = false;
       var wire = function () {
         if (bound || !jq(mgSlider).hasClass('slick-initialized')) return false;
         bound = true;
-        jq(mgSlider).on('afterChange.pdpNewThumbs', function (ev, slick, current) {
+        /* off() first: product-mobile-gallery.js unslicks on a desktop resize and
+           re-slicks on the way back, and slick's own teardown only clears its own
+           namespace — ours would otherwise stack a handler per re-init. */
+        jq(mgSlider).off('afterChange.pdpNewThumbs').on('afterChange.pdpNewThumbs', function (ev, slick, current) {
           var slide = realSlides()[current];
           if (slide) activateById(slide.getAttribute('data-media-id'));
         });
+        if (mobileMediaId) goToMobileMedia(mobileMediaId);
         var cur = realSlides()[jq(mgSlider).slick('slickCurrentSlide') || 0];
         if (cur) activateById(cur.getAttribute('data-media-id'));
         return true;
       };
+      /* slick fires `init` on the slider element each time it (re)initialises —
+         including long after load, when a desktop landing is resized down past
+         the poll below. Re-wire on it so the slider still opens on the current
+         variant's media rather than product.media[0]. */
+      jq(mgSlider).on('init.pdpNewThumbs', function () {
+        bound = false;
+        wire();
+      });
       if (!wire()) {
         var tries = 0;
         var poll = setInterval(function () {
