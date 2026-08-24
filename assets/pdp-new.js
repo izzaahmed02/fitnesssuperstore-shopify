@@ -884,11 +884,36 @@
           }
         });
       };
+      /* Aspect ratio of a media id, from the same [data-product-media] JSON the
+         shared gallery script builds its slides from. Parsed once, lazily. */
+      var mediaList = null;
+      var mediaRatioFor = function (id) {
+        if (mediaList === null) {
+          mediaList = [];
+          var el = document.querySelector('[data-product-media]');
+          try { mediaList = JSON.parse(el ? el.textContent : '[]') || []; } catch (e) { /* keep [] */ }
+        }
+        for (var i = 0; i < mediaList.length; i++) {
+          if (String(mediaList[i].id) !== id) continue;
+          var img = mediaList[i].preview_image || {};
+          var ratio = Number(img.aspect_ratio) || (Number(img.width) / Number(img.height));
+          return ratio > 0 && isFinite(ratio) ? ratio : 0;
+        }
+        return 0;
+      };
       /* Jump the slider to a media id. Instant (no animation) so a variant change
          reads as "the picture changed", not a swipe the buyer did not make. A
          no-op while slick is not initialised (desktop); wire() catches up then. */
       goToMobileMedia = function (id) {
         mobileMediaId = id;
+        /* Size the frame for THIS media. product-mobile-gallery.js sets
+           --mobile-gallery-aspect-ratio once, from product.media[0], and never
+           revisits it, so a variant image with a different ratio would show
+           correctly inside a box cut for the first image — letterboxed or
+           clipped. Done before the slick check so it also applies when the
+           slider initialises later. */
+        var ratio = mediaRatioFor(id);
+        if (ratio) mgEl.style.setProperty('--mobile-gallery-aspect-ratio', String(ratio));
         if (!jq(mgSlider).hasClass('slick-initialized')) return;
         var idx = slideIndexForId(id);
         if (idx >= 0 && idx !== jq(mgSlider).slick('slickCurrentSlide')) {
