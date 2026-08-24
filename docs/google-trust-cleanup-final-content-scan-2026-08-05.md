@@ -539,10 +539,10 @@ closed. It did **not** land as a wording change.
 |---|---|
 | PR #712 | Merged by Izza, `"4.9/5 rating"` → `"Highly Rated by Customers"` |
 | Tim's Aug 13 note | Rejected that wording as a stronger, unscoped qualitative claim; directed the exact approved phrase `"Rated by our customers"` |
-| PR #714 | Opened with that exact phrase, CI green — **never merged** |
+| PR #714 | Opened with that exact phrase, CI green, and **merged by Izza on Aug 13 at 21:09:35Z** — three minutes after opening |
 | Actual resolution | `item_cMAqCg` was **removed entirely** from `sections/header-group.json` via Shopify sync commit `894268b`, keeping the homepage hero badge unchanged |
 | Tim's Aug 14 note | Independently verified and marked the item DONE / VERIFIED / CLOSED, with "do not redo the completed change" |
-| PR #714 | **Closed** — merging it would have re-added the deliberately removed item |
+| PR #714 | Already merged before the removal; my later "close" call was a no-op. It was superseded by the removal, not blocked before merge — see correction note below |
 
 ## Verified final state
 
@@ -577,3 +577,29 @@ Not actionable from this environment: there is no Search Console API access here
 is read-only. Both steps must be completed in the respective web UIs.
 
 No further content scan, ratings reconciliation, or tracker is required.
+
+## Correction to this section (recorded 2026-08-24)
+
+An earlier version of the table above stated that PR #714 was never merged and that it was closed
+because merging would have re-added the removed item. **Both statements were wrong.**
+
+PR #714 was opened at 2026-08-13 21:06:25Z and **merged by Izza at 21:09:35Z**, three minutes
+later. `main` then briefly read `"Rated by our customers"`. The announcement-bar item was removed
+entirely about 80 minutes after that (live Shopify MAIN `updatedAt 2026-08-13T22:31:19Z`, reaching
+GitHub via sync commit `894268b`), which superseded the wording change. A subsequent `state:
+closed` API call against the already-merged PR was a no-op.
+
+Corrected sequence:
+
+| Time (UTC) | Event |
+|---|---|
+| Aug 13 21:06:25 | PR #714 opened |
+| Aug 13 21:09:35 | PR #714 **merged** |
+| Aug 13 22:31:19 | `item_cMAqCg` removed from live Shopify MAIN |
+| — | Removal synced to GitHub via `894268b` |
+
+The end state is unchanged and correct. Only the sequence was misreported.
+
+State re-verified 2026-08-24 against `main` `02688a5` and live Shopify MAIN: `item_cMAqCg` absent
+both sides, rendered `foundingDate` `"2010"` on `/`, zero rendered `4.9/5` in visible text, homepage
+hero badge present and unchanged.
