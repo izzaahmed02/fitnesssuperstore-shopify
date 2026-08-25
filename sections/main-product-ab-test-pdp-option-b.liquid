@@ -1,0 +1,543 @@
+{% comment %}
+  GymBuild PDP — "Main info" buy-box (Figma frame 3679:78143 -> 3679:78324).
+  Branch: asjad-pdp. Scope note (see CLAUDE.md Part B): this section renders
+  the "Main info" column only — title, size-swap cards, price, the internal
+  Delivery & Warranty / Key Specs / What's Included tab switcher, CTAs, and
+  the Add-Ons carousel. The product media gallery (Figma node 3679:78304,
+  the sibling "block" left of Main info) is intentionally NOT rebuilt here —
+  it's an existing, reusable PDP component and is out of scope for this pass.
+
+  IMPORTANT — P0 rules deferred, not dropped: per explicit direction, this
+  section is built to match the Figma design as-is, including elements that
+  currently conflict with CLAUDE.md Part B's Hard P0 Rules (financing copy,
+  a compare-at price, CTA labels other than "View selected build", and
+  per-item Add to Cart on the Add-Ons carousel). Those are flagged inline
+  below with "P0 CONFLICT" comments. Nothing here fabricates pricing/stock/
+  warranty/shipping facts — every price, badge, and spec pulls from the live
+  product/variant/metafield data; anywhere the real data source wasn't
+  confirmed in this session, that's called out as a TODO instead of guessed.
+{% endcomment %}
+
+{%- liquid
+  assign gym_product = section.settings.product
+  if gym_product == blank
+    assign gym_product = all_products['french-fitness-gym-package-build-your-own-gym']
+  endif
+  assign product_form_id = 'product-form-' | append: section.id
+  assign current_variant = gym_product.selected_or_first_available_variant
+  assign size_option = gym_product.options_with_values.first
+-%}
+
+{% style %}
+  #shopify-section-{{ section.id }} .gymbuild-main {
+    max-width: 653px;
+  }
+
+  #shopify-section-{{ section.id }} .prod-title {
+    font-family: var(--font-heading-family);
+    font-size: 30px;
+    line-height: 40px;
+    color: #23232b;
+    margin: 0 0 12px;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-size-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+    border: 0;
+    padding: 0;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-size-card__input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-size-card {
+    display: block;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    background: #fff;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-size-card__input:checked + .gymbuild-size-card {
+    border-color: #ca4b23;
+    border-width: 2px;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-size-card__size {
+    display: block;
+    font-weight: 700;
+    font-size: 15px;
+    color: #23232b;
+    margin-bottom: 4px;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-size-card__desc {
+    display: block;
+    font-size: 12px;
+    line-height: 16px;
+    color: #616166;
+    margin-bottom: 10px;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-size-card__price {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: #d83d0e;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-price-row {
+    margin: 16px 0;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-compare {
+    color: #808080;
+    margin-left: 8px;
+    font-size: 14px;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-you-save {
+    display: block;
+    color: #23232b;
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-payment-terms {
+    margin: 8px 0 20px;
+    font-size: 14px;
+    color: #23232b;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    text-decoration: none;
+    box-sizing: border-box;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-btn--outline {
+    background: #fff;
+    color: #23232b;
+    border: 1px solid #d3d9e5;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-btn--solid {
+    background: #d83d0e;
+    color: #fff;
+    border: 1px solid #d83d0e;
+    margin-top: 20px;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-availability-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 16px 0;
+    font-weight: 700;
+    font-size: 15px;
+    color: #000;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-transit {
+    margin: 16px 0;
+    padding: 16px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-transit label {
+    font-weight: 700;
+    font-size: 14px;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-transit__row {
+    display: flex;
+    gap: 8px;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-transit__row input {
+    flex: 1;
+    border: 1px solid #d3d9e5;
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-transit__estimate {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #616166;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-tabs-nav {
+    display: flex;
+    gap: 14px;
+    border-bottom: 1px solid #edeff3;
+    margin-top: 24px;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-tab-button {
+    font-size: 14px;
+    font-weight: 600;
+    color: #23232b;
+    background: transparent;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    padding: 0 0 12px;
+    cursor: pointer;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-tab-button.is-active {
+    border-bottom-color: #d83d0e;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-tab-panel {
+    display: none;
+    padding-top: 16px;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-tab-panel.is-active {
+    display: block;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-spec-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f2f2f2;
+    font-size: 14px;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-cta-helper {
+    margin: 24px 0 12px;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-cta-helper__title {
+    font-weight: 700;
+    font-size: 16px;
+    color: #000;
+    margin: 0 0 4px;
+  }
+
+  #shopify-section-{{ section.id }} .gymbuild-cta-helper__subtitle {
+    font-size: 14px;
+    color: #808080;
+    margin: 0 0 12px;
+  }
+{% endstyle %}
+
+<product-info
+  id="MainProduct-{{ section.id }}"
+  class="gymbuild-main-info section-{{ section.id }}-padding"
+  data-section="{{ section.id }}"
+  data-product-id="{{ gym_product.id }}"
+  data-update-url="false"
+  data-url="{{ gym_product.url }}"
+>
+  {{ 'component-price.css' | asset_url | stylesheet_tag }}
+  {{ 'component-rating.css' | asset_url | stylesheet_tag }}
+  {{ 'component-accordion.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'product-info.js' | asset_url }}" defer="defer"></script>
+
+  <div class="gymbuild-main">
+    {%- if gym_product == blank -%}
+      <p>{{ 'TODO: confirm the GymBuild product exists and is assigned to this template.' }}</p>
+    {%- else -%}
+      <h1 class="prod-title">{{ gym_product.title }}</h1>
+
+      {% render 'product-availability-badge', product: gym_product %}
+
+      {%- unless gym_product.has_only_default_variant or size_option == blank -%}
+        <variant-selects
+          id="variant-selects-{{ section.id }}"
+          data-section="{{ section.id }}"
+        >
+          <fieldset class="gymbuild-size-cards" data-variant-options>
+            <legend class="visually-hidden">{{ size_option.name }}</legend>
+            {%- for variant in gym_product.variants -%}
+              {%- liquid
+                assign is_checked = false
+                if variant == current_variant
+                  assign is_checked = true
+                endif
+                assign variant_desc = variant.metafields.custom.short_description
+              -%}
+              <input
+                type="radio"
+                class="gymbuild-size-card__input"
+                id="GymBuildSize-{{ section.id }}-{{ forloop.index0 }}"
+                name="{{ size_option.name }}-{{ size_option.position }}"
+                value="{{ variant.option1 | escape }}"
+                form="{{ product_form_id }}"
+                data-option-value-id="{{ variant.id }}"
+                data-option-value-available="{{ variant.available }}"
+                data-product-url="{{ gym_product.url }}?variant={{ variant.id }}"
+                {% if is_checked %}checked{% endif %}
+                {% unless variant.available %}class="disabled"{% endunless %}
+              >
+              <label class="gymbuild-size-card" for="GymBuildSize-{{ section.id }}-{{ forloop.index0 }}">
+                <span class="gymbuild-size-card__size">{{ variant.title }}</span>
+                {%- if variant_desc != blank -%}
+                  <span class="gymbuild-size-card__desc">{{ variant_desc }}</span>
+                {%- endif -%}
+                <span class="gymbuild-size-card__price">Starting at {{ variant.price | money }}</span>
+              </label>
+            {%- endfor -%}
+          </fieldset>
+          <script type="application/json" data-selected-variant>{{ current_variant | json }}</script>
+        </variant-selects>
+      {%- endunless -%}
+
+      <div class="gymbuild-price-row">
+        {%- render 'price', product: gym_product, use_variant: true, show_badges: true, price_class: 'price--large' -%}
+
+        {%- comment -%} P0 CONFLICT: Part B says "no compare-at price" — Figma shows one, so it's wired to real data (never fabricated) pending the P0 amendment. {%- endcomment -%}
+        {%- if gym_product.metafields.custom.retail_price.value > current_variant.price -%}
+          <span class="gymbuild-compare">
+            <s>{{ gym_product.metafields.custom.retail_price.value | money }}</s>
+          </span>
+          <span class="gymbuild-you-save">
+            You save {{ gym_product.metafields.custom.retail_price.value | minus: current_variant.price | money }}
+          </span>
+        {%- elsif current_variant.compare_at_price > current_variant.price -%}
+          <span class="gymbuild-compare">
+            <s>{{ current_variant.compare_at_price | money }}</s>
+          </span>
+          <span class="gymbuild-you-save">
+            You save {{ current_variant.compare_at_price | minus: current_variant.price | money }}
+          </span>
+        {%- endif -%}
+      </div>
+
+      {%- comment -%} P0 CONFLICT: Part B says "no financing/payment copy" — Figma shows ShopPay installments, so this uses Shopify's native payment_terms filter (real, store-configured data) rather than any hardcoded "$X/mo" copy. Renders nothing if ShopPay Installments isn't enabled on the store. {%- endcomment -%}
+      <div class="gymbuild-payment-terms">
+        {%- assign installment_form_id = 'gymbuild-installments-' | append: section.id -%}
+        {%- form 'product', gym_product, id: installment_form_id -%}
+          <input type="hidden" name="id" value="{{ current_variant.id }}">
+          {{ form | payment_terms }}
+        {%- endform -%}
+      </div>
+
+      {%- comment -%} P0 CONFLICT: Part B mandates CTA label "View selected build" everywhere — Figma labels this "Customize this build". Kept as-designed pending the P0 amendment. {%- endcomment -%}
+      <button type="button" class="gymbuild-btn gymbuild-btn--outline" data-gymbuild-customize>
+        Customize this build
+      </button>
+
+      <div class="gymbuild-availability-row">
+        {% render 'icon-checkmark' %}
+        {{ section.settings.showroom_line }}
+      </div>
+
+      <div class="gymbuild-transit">
+        <label for="GymBuildZip-{{ section.id }}">Transit Time Calculator:</label>
+        <div class="gymbuild-transit__row">
+          <input type="text" id="GymBuildZip-{{ section.id }}" inputmode="numeric" placeholder="Enter delivery ZIP code" data-gymbuild-zip>
+          <button type="button" class="gymbuild-btn gymbuild-btn--outline" data-gymbuild-zip-submit>Estimate</button>
+        </div>
+        {%- comment -%} Non-Negotiable #4: never fabricate a shipping estimate. No real transit-time data source was confirmed in this session, so no date range is hardcoded here. {%- endcomment -%}
+        <p class="gymbuild-transit__estimate" data-gymbuild-transit-estimate>
+          {{ 'TODO: wire a real transit-time estimate source for this ZIP before launch.' }}
+        </p>
+      </div>
+
+      <div class="gymbuild-tabs" id="GymBuildTabs-{{ section.id }}">
+        <div class="gymbuild-tabs-nav" role="tablist">
+          <button type="button" class="gymbuild-tab-button is-active" data-gymbuild-tab="delivery" role="tab" aria-selected="true">Delivery &amp; Warranty</button>
+          <button type="button" class="gymbuild-tab-button" data-gymbuild-tab="specs" role="tab" aria-selected="false">Key Specs</button>
+          <button type="button" class="gymbuild-tab-button" data-gymbuild-tab="included" role="tab" aria-selected="false">What's Included</button>
+        </div>
+
+        <div class="gymbuild-tab-panel is-active" data-gymbuild-panel="delivery" role="tabpanel">
+          {%- if gym_product.metafields.custom.features_specs.value.warranty_info != blank -%}
+            <div class="metafield-rich_text_field">
+              {{ gym_product.metafields.custom.features_specs.value.warranty_info | metafield_tag }}
+            </div>
+          {%- endif -%}
+          {%- if gym_product.metafields.custom.features_specs.value.shipping_dims_weight != blank -%}
+            <div class="metafield-rich_text_field">
+              {{ gym_product.metafields.custom.features_specs.value.shipping_dims_weight | metafield_tag }}
+            </div>
+          {%- endif -%}
+        </div>
+
+        <div class="gymbuild-tab-panel" data-gymbuild-panel="specs" role="tabpanel" hidden>
+          {%- if gym_product.metafields.custom.features_specs.value.tech_specs != blank -%}
+            <div class="metafield-rich_text_field">
+              {{ gym_product.metafields.custom.features_specs.value.tech_specs | metafield_tag }}
+            </div>
+          {%- else -%}
+            <p>{{ 'TODO: confirm the metafield that should populate Key Specs for this product.' }}</p>
+          {%- endif -%}
+        </div>
+
+        <div class="gymbuild-tab-panel" data-gymbuild-panel="included" role="tabpanel" hidden>
+          {%- if gym_product.metafields.custom.features_specs.value.other_features != blank -%}
+            <div class="metafield-rich_text_field">
+              {{ gym_product.metafields.custom.features_specs.value.other_features.value }}
+            </div>
+          {%- else -%}
+            <p>{{ 'TODO: confirm the metafield/metaobject that should populate the Whats Included category accordion for this product.' }}</p>
+          {%- endif -%}
+        </div>
+      </div>
+
+      {%- comment -%} P0 CONFLICT: Part B mandates CTA label "View selected build" everywhere — Figma labels these "Request Quote Review" / "Open in Gym Designer". Kept as-designed pending the P0 amendment. The Request Quote popup itself isn't built yet (Part B: popup is a separate build step, wired last), so this button has no handler yet. {%- endcomment -%}
+      <button type="button" class="gymbuild-btn gymbuild-btn--solid" data-gymbuild-open-quote-review disabled>
+        Request Quote Review
+      </button>
+
+      <div class="gymbuild-cta-helper">
+        <p class="gymbuild-cta-helper__title">See this layout in your actual room</p>
+        <p class="gymbuild-cta-helper__subtitle">Send us your room plan for quote review</p>
+        {%- comment -%} TODO: confirm the real Gym Designer URL before launch — not fabricated here. {%- endcomment -%}
+        <a class="gymbuild-btn gymbuild-btn--outline" href="{{ section.settings.gym_designer_url | default: '#' }}">
+          Open in Gym Designer
+        </a>
+      </div>
+
+      {%- comment -%}
+        P0 CONFLICT: Part B is QUOTE-ONLY — no Add to Cart anywhere. Figma's
+        Add-Ons carousel has a per-item Add to Cart button. Rather than
+        rebuild it, this reuses the existing, already-live 'product-add-ons'
+        component (snippets/product-add-ons.liquid) driven by this section's
+        own add_on_product blocks — real product data, no fabricated
+        SKUs/prices. Kept as-designed pending the P0 amendment.
+      {%- endcomment -%}
+      {% render 'product-add-ons', section: section %}
+    {%- endif -%}
+  </div>
+</product-info>
+
+<script>
+  (function () {
+    var root = document.getElementById('GymBuildTabs-{{ section.id }}');
+    if (!root) return;
+
+    var buttons = Array.prototype.slice.call(root.querySelectorAll('[data-gymbuild-tab]'));
+    var panels = Array.prototype.slice.call(root.querySelectorAll('[data-gymbuild-panel]'));
+
+    buttons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        var key = button.getAttribute('data-gymbuild-tab');
+
+        buttons.forEach(function (btn) {
+          var isActive = btn === button;
+          btn.classList.toggle('is-active', isActive);
+          btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+
+        panels.forEach(function (panel) {
+          var isActive = panel.getAttribute('data-gymbuild-panel') === key;
+          panel.classList.toggle('is-active', isActive);
+          panel.hidden = !isActive;
+        });
+      });
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "GymBuild - Main info",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "product",
+      "id": "product",
+      "label": "Product",
+      "info": "The GymBuild product this buy-box renders. Leave blank to fall back to the Build Your Own Gym package (handled in Liquid)."
+    },
+    {
+      "type": "text",
+      "id": "showroom_line",
+      "label": "Showroom availability line",
+      "default": "On Display at our Northern California Warehouse Showroom",
+      "info": "Copy from Figma — confirm this is accurate for the selected product before launch."
+    },
+    {
+      "type": "url",
+      "id": "gym_designer_url",
+      "label": "Gym Designer URL",
+      "info": "TODO: no real destination confirmed yet — button links to # until this is set."
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 12
+    }
+  ],
+  "blocks": [
+    {
+      "type": "add_on_product",
+      "name": "Add-on product",
+      "settings": [
+        {
+          "type": "text",
+          "id": "tab_heading",
+          "label": "Tab heading",
+          "default": "Recommended Add-Ons",
+          "info": "Products with the same tab heading will appear in the same tab."
+        },
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Add-on product"
+        },
+        {
+          "type": "text",
+          "id": "custom_title",
+          "label": "Custom product title",
+          "info": "Optional. Leave blank to use the product title."
+        },
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "Button label",
+          "default": "Add To Cart"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "GymBuild - Main info"
+    }
+  ]
+}
+{% endschema %}
