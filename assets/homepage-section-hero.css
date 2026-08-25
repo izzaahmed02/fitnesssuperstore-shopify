@@ -496,24 +496,27 @@ margin: 0;
     padding: 16px 20px;
   }
 
-  /* .questions' side padding widens from 16px to 24px here so the arrow
-     buttons below have a full 32px of gutter (24 padding + 8 card margin)
-     with zero card overlap and zero viewport-edge bleed at 360/390/428px -
-     see PR notes for the math. Top/bottom stay 24px (unchanged from above). */
+  /* .questions' side padding widens to 36px here so the arrow buttons below
+     have a full 44px gutter (36 padding + 8 card margin) - a real 44px-wide
+     hit area with zero card overlap and zero viewport-edge bleed at
+     360/390/428px. Tim reversed the earlier 32px-wide-target decision on
+     24 August: 32px is the minimum clear visual separation, not a waiver of
+     the 44x44 target size. See PR notes for the math. Top/bottom stay 24px
+     (unchanged from above). */
   .homepageHeroSection .questions {
-    padding: 24px;
+    padding: 24px 36px;
   }
 
   /* Nav cue: Slick's default prev/next buttons already carry aria-label
      "Previous"/"Next" and are real <button> elements (keyboard-focusable).
-     The button box itself is taller than the visual circle (32x44) purely
-     to grow the tappable area without widening it - width is capped at 32px
-     because that's all the gutter above allows without overlapping the
-     card. The circle, border and shadow live on ::after so the button's
-     own box can be transparent and 44px tall without becoming an ellipse. */
+     The button box is a real 44x44 hit area, sized to exactly the gutter
+     above so its outer edge sits at the viewport edge and its inner edge
+     stops at the card edge with zero overlap. The circle, border and
+     shadow live on ::after at their original 32px size so growing the hit
+     area doesn't grow the visible glyph. */
   .homepageHeroSection .questions .slick-prev,
   .homepageHeroSection .questions .slick-next {
-    width: 32px;
+    width: 44px;
     height: 44px;
     z-index: 2;
     background: transparent;
