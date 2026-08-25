@@ -221,14 +221,9 @@
 .customer-photo-gallery__arrow--left { left: 10px; }
 .customer-photo-gallery__arrow--right { right: 10px; }
 
-/* A single photo never scrolls, at any width, so its arrows would be dead controls. */
-.customer-photo-gallery[data-count="1"] .customer-photo-gallery__arrow {
-  display: none;
-}
-
-/* Hide thumb arrows on desktop when there are 4 or fewer images (CSS-driven, no JS layout read).
-   Below 990px slides are 80% wide, so 2-4 photos still scroll and keep their arrows. */
+/* Hide thumb arrows on desktop when there are 4 or fewer images (CSS-driven, no JS layout read) */
 @media screen and (min-width: 990px) {
+  .customer-photo-gallery[data-count="1"] .customer-photo-gallery__arrow,
   .customer-photo-gallery[data-count="2"] .customer-photo-gallery__arrow,
   .customer-photo-gallery[data-count="3"] .customer-photo-gallery__arrow,
   .customer-photo-gallery[data-count="4"] .customer-photo-gallery__arrow {
@@ -567,15 +562,12 @@ body.cpg-lightbox-open {
     });
   }, { passive: true });
 
-  var reduceMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
-
   function scrollSlider(dir) {
     var w = getSlideWidth();
     if (!w) return;
     slider.scrollBy({
       left: dir === 'next' ? w : -w,
-      // The CSS reduced-motion block cannot reach a scroll animation, so honour it here.
-      behavior: reduceMotion && reduceMotion.matches ? 'auto' : 'smooth'
+      behavior: 'smooth'
     });
   }
   prevArrow.addEventListener('click', function () { scrollSlider('prev'); });
@@ -873,17 +865,8 @@ body.cpg-lightbox-open {
     counter.textContent = (index + 1) + ' of ' + total;
 
     // Hide arrows at boundaries (no wrap)
-    var active = document.activeElement;
     lbPrev.hidden = index === 0;
     lbNext.hidden = index === total - 1;
-    // Hiding the control the user is standing on would drop focus to <body> and let
-    // them tab out of the modal, so move focus to a control that is still visible.
-    if ((active === lbPrev && lbPrev.hidden) || (active === lbNext && lbNext.hidden)) {
-      var fallback = active === lbNext && !lbPrev.hidden ? lbPrev
-                   : active === lbPrev && !lbNext.hidden ? lbNext
-                   : closeBtn;
-      if (fallback) fallback.focus({ preventScroll: true });
-    }
 
     // Preload neighbors during idle time so they don't fight active decode
     idle(function () {
