@@ -1139,11 +1139,18 @@
           <div class="abtest-title">
             <div class="abtest-title__row">
               <h1 class="abtest-title__name">{{ product.title | escape }}</h1>
-              {% if current_variant.available %}
-                <span class="abtest-tag abtest-tag--available">Available to Order</span>
-              {% else %}
-                <span class="abtest-tag abtest-tag--unavailable">Sold Out</span>
-              {% endif %}
+              <div class="abtest-title__status">
+                {% for block in section.blocks %}
+                  {% if block.type == '@app' %}
+                    {% render block %}
+                  {% endif %}
+                {% endfor %}
+                {% if current_variant.available %}
+                  <span class="abtest-tag abtest-tag--available">Available to Order</span>
+                {% else %}
+                  <span class="abtest-tag abtest-tag--unavailable">Sold Out</span>
+                {% endif %}
+              </div>
             </div>
           </div>
 
