@@ -8,7 +8,8 @@ email, metaobject, product option, tag or setting has been modified, and none is
 requested.
 
 Controlling records: Tim's emails of August 12 2026 17:27 UTC, August 14 23:16
-UTC and August 14 23:44 UTC, and
+UTC, August 14 23:44 UTC and **August 24 13:41 UTC** (official #49158 cost facts,
+the consistent revised staging model, and the FB1–FB8 rulings), and
 [issue #691](https://github.com/izzaahmed02/fitnesssuperstore-shopify/issues/691).
 
 The calculation, the exact rate card, the fail-closed table, the test evidence
@@ -78,9 +79,12 @@ by family and the customer should not discover it in the cart:
 | Rolled rubber | FF-RRGF | Installation available; **priced by quote** |
 | Turf | FF-AGSL, FF-AGSL-V2, FF-AGSL-V3, FF-APGT-1450 | Installation available; **priced by quote** |
 
-Five of nine products are quote-only until Jeff / Installs approves a turf and
-rolled-rubber rate method. That is disclosed as "we will price this for you",
-never as "installation not available" and never by hiding the option.
+Five of nine products are quote-only. Tim's FB2 ruling on August 24 makes that a
+decision rather than a gap: *"Keep installation available in the customer path,
+but collect facts and price manually."* So the storefront's job here is to make
+manual pricing feel like a service, not a dead end — the option is offered, the
+site facts are collected, and the customer is told a price is coming. Never
+"installation not available", and never by hiding the option.
 
 ### 3.1 Reuse the tile calculator that already exists
 
@@ -109,6 +113,22 @@ The cart shows the three-scope selector and, for the selected scope:
 - equipment movement, shown as its own line;
 - whether provider confirmation is required.
 
+### 4.0 Adhesive, on Scope C
+
+Tim's August 24 rule gives the quantity — `ceil(installed sq ft / 850)` pails —
+but explicitly leaves the **customer material price, handling margin and tax
+treatment unapproved** (FB3). So the cart may state the scope and the quantity,
+and must not state a customer amount:
+
+> **Adhesive:** 6 pails required for 4,805 sq ft. Priced separately and confirmed
+> by National Gym Service with your installation quote.
+
+No dollar figure until Finance approves a markup and a tax treatment. The
+engine's internal cost reference is not a customer price and must never be
+rendered as one. Where an installer has adjusted the pail count for a documented
+substrate, trowel, porosity, waste or manufacturer reason, the cart shows the
+adjusted quantity, not the calculated one.
+
 **Purchased coverage and installation area are shown as two distinct numbers.**
 This is the customer-facing half of the rule that labor is never charged on
 unused waste or spare material. If a customer buys 465 tiles for a 4,804.8 sq ft
@@ -136,19 +156,26 @@ As short as possible, but every one of them changes feasibility or price, and an
 
 | Engine status | Cart presentation |
 |---|---|
-| `ESTIMATE` | "Estimated installation: $X. Confirmed before work is scheduled." |
 | `NGS_CONFIRMATION_REQUIRED` | "Estimated installation: $X — **National Gym Service confirmation required**." Amount shown, never presented as owed. |
 | `QUOTE_REQUIRED` | "Installation selected — **we will price this and contact you**", with the reason in plain language. No number. |
+| `ESTIMATE` | Not reachable today. See below. |
 
 Never a `$0` installation line. Never a silent omission. Never a scope downgrade.
 
-Two consequences the copy has to carry honestly today:
+**Only two of those three are live copy.** Tim's FB4 ruling keeps every
+calculated flooring amount provider-confirmation-required until a validated
+service-area or market rule exists, so on today's rules the cart always shows an
+amount *plus* "confirmation required" — there is no plain-estimate state to
+write copy for yet. The first row is what the cart will say the day FB4 lifts;
+it is specified now so the copy review can cover both, but it must not ship as
+reachable text while the ruling stands.
 
-- **Every Scope C project is confirmation-required**, because adhesive has no
-  approved price and a glue job cannot yet produce a complete obligation.
-- **Every destination is confirmation-required**, because no flooring
-  service-area list is approved yet. Until that lands, the cart never shows a
-  plain estimate — it shows an estimate plus "confirmation required".
+Two further reasons the confirmation line stays on:
+
+- **Every Scope C project is confirmation-required**, independently of FB4,
+  because the adhesive customer price is unapproved.
+- **Any project above 1,500 sq ft** displays its estimate but stays
+  provider-confirmed.
 
 ## 5. Order record
 
@@ -156,13 +183,17 @@ Per flooring order, store: scope 1/2/3 with its exact label; purchased coverage;
 installation area and whether it was verified or customer-reported; the area
 actually priced for labor; every flooring line's variant GID, SKU, title,
 quantity and coverage per unit; the band, rate, tier floor and whether the floor
-applied; materials and surcharges; equipment-movement lines; substrate and site
-answers with a photos link; pricing status and confirmation reason; the config
-and rule version; and NGS amount, payment status and any edit/refund adjustment.
+applied; materials and surcharges — including the adhesive product, pack size, coverage
+reference, calculated pail count, any override with its documented reason and
+author, and the adhesive reference version; equipment-movement lines; substrate
+and site answers with a photos link; pricing status and confirmation reason; the
+config and rule version; and NGS amount, payment status and any edit/refund
+adjustment.
 
-The rule version matters: an order priced under
-`FLOORING_INSTALL_RULES@2026-08-23.1` must remain explainable after the rules
-change.
+The rule version matters, and this thread has already proved it: an order priced
+under `FLOORING_INSTALL_RULES@2026-08-23.1` carried Scope B at $1.60/sq ft in
+band 1, and one under `@2026-08-25.2` carries $1.10. Both must remain
+explainable after the rules change again.
 
 ## 6. Order edits, cancellations and refunds
 
@@ -174,6 +205,12 @@ stated area, the order fails closed to a quote rather than repricing itself.
 A partial cancellation that removes all flooring lines removes the flooring
 labor obligation. A partial cancellation that leaves a smaller flooring order
 requires a re-quote, not an automatic proportional reduction.
+
+Adhesive follows the installed area for the same reason labor does, and its
+ceiling makes it lumpy: 4,805 sq ft and 5,000 sq ft are both six pails, while
+5,101 sq ft is seven. A small change in area can therefore move the material
+line by a whole pail or not at all, and the cart must show the recalculated
+quantity rather than scaling the previous one.
 
 ## 7. What this spec does not authorize
 
