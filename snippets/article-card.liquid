@@ -12,6 +12,13 @@
   - show_badge: {String} The setting either show the blog badge or not.
   - lazy_load: {Boolean} Image should be lazy loaded. Default: true (optional)
 
+  Excerpt rule (Tim, 28 Apr 2026 and 25 Aug 2026):
+  Cards render the cleaned excerpt field only. The previous
+  `article.content | truncatewords: 20` fallback has been removed because it
+  masked missing excerpts. Where an excerpt is absent the card renders no
+  excerpt paragraph and is marked data-has-excerpt="false" so the gap is
+  countable during QA rather than hidden behind body text.
+
   Usage:
   {% render 'article-card' blog: blog, article: article, show_image: section.settings.show_image %}
 {% endcomment %}
@@ -22,8 +29,22 @@
     if media_aspect_ratio != null
       assign ratio = media_aspect_ratio
     endif
+
+    assign card_excerpt = ''
+    if article.excerpt.size > 0
+      assign card_excerpt = article.excerpt | strip_html | strip
+    endif
+
+    assign has_excerpt = false
+    if card_excerpt != ''
+      assign has_excerpt = true
+    endif
   -%}
-  <div class="article-card-wrapper card-wrapper underline-links-hover">
+  <div
+    class="article-card-wrapper card-wrapper underline-links-hover"
+    data-has-excerpt="{{ has_excerpt }}"
+    data-article-handle="{{ article.handle }}"
+  >
     {% comment %} <article aria-labelledby="Article-{{ article.id }}"> {% endcomment %}
     <div
       class="
@@ -114,13 +135,14 @@
             </h3>
 
             {%- if show_excerpt -%}
-              {%- if article.excerpt.size > 0 or article.content.size > 0 -%}
+              {%- if has_excerpt -%}
                 <p class="line-truncate article-card__excerpt rte-width">
-                  {%- if article.excerpt.size > 0 -%}
-                    {{ article.excerpt | strip_html }}
-                  {%- else -%}
-                    {{ article.content | strip_html | truncatewords: 20 }}
-                  {%- endif -%}
+                  {{ card_excerpt }}
+                </p>
+              {%- elsif request.design_mode -%}
+                {%- comment -%} Theme-editor-only QA marker. Never renders on the storefront. {%- endcomment -%}
+                <p class="article-card__excerpt rte-width" style="color:#b00020;font-style:italic;">
+                  QA: excerpt missing for {{ article.handle }}
                 </p>
               {%- endif -%}
               <div class="article-card__footer">
