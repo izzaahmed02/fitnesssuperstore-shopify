@@ -1218,14 +1218,33 @@
               <p class="abtest-price__was">Starting at: <s>{{ abtest_mp_compare | money_with_currency }}</s></p>
             {% endif %}
 
-            <div class="abtest-price__row">
-              <span class="abtest-price__now">{{ abtest_mp_price | money }}</span>
+            {% comment %}
+              .pr_custom_price / .pr_custom_compare_price and the .affirm-as-low-as
+              trigger element are required by assets/main-product-custom.js +
+              affirmShopify.js — that script only reveals .paylater-container (the
+              "As low as .../mo" row + Shop Pay/Affirm logos) once it finds an
+              .affirm-as-low-as element, and it reads the displayed price by
+              querying .pr_custom_price directly. Renaming these classes silently
+              breaks that integration.
+            {% endcomment %}
+            <div id="price-{{ section.id }}" role="status" class="abtest-price__row">
+              <p class="abtest-price__label">Starting at</p>
+              <p
+                class="pr_custom_price{% unless product.available %} out-of-stock{% endunless %}"
+                data-price-value="{{ abtest_mp_price | money_without_currency }}"
+                data-currency="{{ cart.currency.symbol }}"
+              >
+                {{ abtest_mp_price | money }}
+              </p>
               {% if abtest_mp_compare > abtest_mp_price %}
+                <span class="pr_custom_compare_price"><s>{{ abtest_mp_compare | money }}</s></span>
                 <span class="abtest-price__save">
                   You save {{ abtest_mp_compare | minus: abtest_mp_price | money }}
                 </span>
               {% endif %}
             </div>
+
+            <p class="affirm-as-low-as" data-page-type="product" data-amount="{{ current_variant.price }}"></p>
 
             {% render 'paylater-providers' %}
           </div>
