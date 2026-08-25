@@ -313,8 +313,64 @@
 </article>
 {% endif %}
 
+{%- comment -%}
+  Article structured data (JSON-LD) — author typing fix.
+
+  Replaces the built-in `{{ article | structured_data }}` output, which always
+  emits the article author as schema.org Person regardless of value. This block
+  reads the controlled public Author Name metafield and types it explicitly:
+  named people as Person, the brand as Organization referencing the site's
+  canonical publisher entity.
+
+  - Author source: custom.author_name (controlled byline), falling back to the
+    native article.author only when the metafield is empty.
+  - Organization names ("Fitness Superstore", "French Fitness") are typed as the
+    canonical Organization (#organization). Any other name is a Person.
+  - Publisher always references the canonical #organization entity emitted by
+    snippets/schema-organization.liquid, rather than a standalone object.
+  - Context normalized to https://schema.org.
+  - One Article entity. FAQPage schema is emitted elsewhere and untouched.
+{%- endcomment -%}
+
+{%- liquid
+  assign author_name = article.metafields.custom.author_name.value | default: article.author
+  assign author_url = article.metafields.custom.author_url.value
+  assign name_check = author_name | strip
+  assign is_org = false
+  if name_check == 'Fitness Superstore' or name_check == 'French Fitness'
+    assign is_org = true
+  endif
+-%}
+
 <script type="application/ld+json">
-  {{ article | structured_data }}
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "@id": {{ article.url | prepend: request.origin | append: '#article' | json }},
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": {{ article.url | prepend: request.origin | json }}
+  },
+  "headline": {{ article.title | json }},
+  "articleBody": {{ article.content | strip_html | json }},
+  {% if article.excerpt != blank %}"description": {{ article.excerpt | strip_html | json }},{% endif %}
+  {% if article.image %}"image": {{ article.image | image_url: width: 1920 | prepend: "https:" | json }},{% endif %}
+  "datePublished": {{ article.published_at | date: '%Y-%m-%dT%H:%M:%S%z' | json }},
+  "dateModified": {{ article.updated_at | date: '%Y-%m-%dT%H:%M:%S%z' | json }},
+  "author":
+  {%- if is_org %} {
+    "@id": {{ shop.url | append: '/#organization' | json }}
+  }
+  {%- else %} {
+    "@type": "Person",
+    "name": {{ author_name | json }}{% if author_url != blank %},
+    "url": {{ author_url | json }}{% endif %}
+  }
+  {%- endif %},
+  "publisher": {
+    "@id": {{ shop.url | append: '/#organization' | json }}
+  }
+}
 </script>
 
 {% schema %}
