@@ -51,6 +51,7 @@
     class="blog-articles {% if section.settings.layout == 'collage' %}blog-articles--collage{% endif %}"
     role="region"
     aria-live="polite"
+    aria-label="Blog search results"
   >
   </div>
 
@@ -128,7 +129,10 @@ document.addEventListener('DOMContentLoaded', () => {
         noResults = document.createElement('div');
         noResults.id = 'no-results';
         noResults.innerHTML = '<p>No articles found.</p>';
-        wrapper.appendChild(noResults);
+      }
+      // Append inside the live region so screen readers announce it.
+      if (noResults.parentNode !== container) {
+        container.appendChild(noResults);
       }
       noResults.style.display = 'block';
     } else if (noResults) {
