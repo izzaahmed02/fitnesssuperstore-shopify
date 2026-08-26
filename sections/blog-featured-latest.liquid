@@ -1,45 +1,49 @@
 {% comment %}
   Featured & Latest Articles — controlled top feed for /pages/blog
 
-  Implements Tim's decision of 25 Aug 2026, option (a): exact-tag-driven.
+  Implements Tim's decisions of 25–26 Aug 2026.
 
-  Rules encoded here:
-  - Replaces the manually selected three-card "Essential Reads" block in the
-    same top slot. One feed only. Does not enable "Popular Right Now".
-  - Maximum nine cards (configurable, default 9).
-  - Membership is EXACT tag equality on "featured".
-  - Remaining slots fill with the newest published non-featured articles.
+  CONTRACT
+  - Eligibility: the exact tag "featured".
+  - Order: ARTICLE integer metafield custom.featured_rank, ascending.
+  - Positions 1..featured_slots are rank-ordered eligible articles.
+  - Remaining positions fill with the newest published non-featured articles.
+  - Maximum nine cards.
   - Drafts excluded: Liquid's blog.articles exposes published articles only.
-  - No duplicate cards.
+  - No duplicate articles: the ledger keys on article.id, which is globally unique.
 
-  NO HARDCODED ARTICLE HANDLES.
-  Per Tim's instruction, this section contains no article handles, titles or
-  IDs of any kind. Membership is determined entirely by live tag data. The
-  candidate pool is built by iterating every blog on the store, so no blog
-  handle list is hardcoded either. Adding or removing an article from the
-  grid is done by adding or removing the exact tag "featured" in Shopify —
-  never by editing this file.
+  NO HARD-CODED ARTICLES OR BLOGS
+  This file contains no article handle, ID or title, and no blog handle list.
+  The candidate pool is built by iterating every blog on the store. Membership
+  comes from live tag data and order comes from a live metafield. Changing the
+  grid is done in Shopify, never by editing this file. The only numbers here are
+  the slot counts, which are merchant settings.
 
-  WHY `article.tags contains 'featured'` IS THE EXACT TEST.
+  WHY `article.tags contains 'featured'` IS THE EXACT TEST
   In Liquid, `contains` applied to an ARRAY tests for an exact element match.
-  article.tags is an array, so this matches only the literal tag "featured"
-  and will NOT match the legacy "featured:top", "featured:cardio", etc.
-  Do NOT pipe article.tags through a join filter before testing it. Joining
-  converts the array to a string, which turns `contains` into a substring
-  test and would pull in all fifteen legacy featured:* rows.
+  article.tags is an array, so this matches only the literal tag "featured" and
+  will NOT match legacy values such as "featured:top" or "featured:cardio".
+  Do not pipe article.tags through a join filter before testing it. Joining
+  converts the array to a string, which turns `contains` into a substring test
+  and would pull in all fifteen legacy featured:* rows.
 
-  ORDERING NOTE (open question raised with Tim, 26 Aug 2026).
-  A pure tag rule yields a SET, not a sequence. With handles prohibited there
-  is no data-driven way to reproduce a specific hand-numbered 1–6 order, so
-  featured articles are ordered newest-first, the same rule used for the fill
-  articles. If a specific fixed sequence is required, it needs a data source
-  (for example a numeric sort metafield on each article) rather than theme code.
+  HOLD BEHAVIOUR — REQUIRED, NOT OPTIONAL
+  Per Tim's instruction, a missing, duplicate, non-integer or out-of-range rank
+  is a HOLD and must NOT silently fall back to newest-first for an approved
+  featured article. When any rank fails validation this section:
+    1. does not pin any featured article into the grid, so no approved article
+       is ever shown in an unapproved position;
+    2. marks the grid data-feed-state="hold" with machine-readable reason codes;
+    3. emits an HTML comment readback of every eligible article and its rank,
+       so the HOLD is provable from view-source;
+    4. renders a visible HOLD panel in the theme editor, or on any URL carrying
+       ?feed_qa=1, so the state is visible during preview QA.
+  The fallback is therefore explicit and evidenced, never silent.
 
-  PER-BLOG 50-ARTICLE LIMIT (recorded, not worked around).
-  Outside a paginate tag, blog.articles returns at most 50 articles per blog,
-  so a blog exceeding 50 published articles would not expose its older ones to
-  this feed. The largest blog today is buying-guides at 25, so there is no
-  current exposure. Left as-is deliberately; revisit only if a blog nears 50.
+  KNOWN LIMIT, documented and deliberately not worked around:
+  blog.articles returns at most 50 articles per blog outside a paginate tag. The
+  largest blog today is Buying Guides at 25, so there is no current exposure.
+  This needs revisiting if any single blog passes 50 published articles.
 {% endcomment %}
 
 {{ 'component-article-card.css' | asset_url | stylesheet_tag }}
@@ -57,13 +61,30 @@
       padding-bottom: {{ section.settings.padding_bottom }}px;
     }
   }
+
+  .featured-feed-hold {
+    grid-column: 1 / -1;
+    border: 2px solid #b00020;
+    background: #fff5f5;
+    color: #b00020;
+    padding: 16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .featured-feed-hold h3 { margin: 0 0 8px; font-size: 15px; }
+  .featured-feed-hold ul { margin: 8px 0 0 18px; }
 {%- endstyle -%}
 
 {%- liquid
   assign max_cards = section.settings.max_cards | default: 9
+  assign featured_slots = section.settings.featured_slots | default: 6
 
   comment
-    Build the candidate pool from every blog on the store. No handle list.
+    Candidate pool across every blog on the store. No handle list.
+    Explicit limits: Liquid's for loop defaults to 50 iterations, which would
+    silently drop articles from an 84-article pool.
   endcomment
   assign pool = '' | split: ''
   for store_blog in blogs limit: 500
@@ -73,12 +94,92 @@
   assign pool_newest = pool | sort: 'published_at' | reverse
 
   comment
-    Pipe-delimited ledger of rendered handles, wrapped in pipes on both sides
-    so one handle cannot substring-match another. Guarantees no duplicates.
+    Pass A — validate ranks on every eligible article.
+    Ledgers are pipe-delimited so one value cannot substring-match another.
   endcomment
+  assign eligible_count = 0
+  assign seen_ranks = '|'
+  assign hold_reasons = '|'
+  assign rank_readback = ''
+
+  for article in pool_newest limit: 500
+    if article.tags contains 'featured'
+      assign eligible_count = eligible_count | plus: 1
+      assign rank_field = article.metafields.custom.featured_rank
+      assign row_state = 'ok'
+
+      if rank_field == blank
+        assign row_state = 'missing_rank'
+      else
+        assign rank_raw = rank_field.value
+        assign rank_num = rank_raw | plus: 0
+        assign rank_int = rank_num | round
+
+        if rank_num != rank_int
+          assign row_state = 'non_integer_rank'
+        elsif rank_num < 1 or rank_num > featured_slots
+          assign row_state = 'out_of_range_rank'
+        else
+          assign rank_key = '|' | append: rank_int | append: '|'
+          if seen_ranks contains rank_key
+            assign row_state = 'duplicate_rank'
+          else
+            assign seen_ranks = seen_ranks | append: rank_int | append: '|'
+          endif
+        endif
+      endif
+
+      unless row_state == 'ok'
+        assign reason_key = '|' | append: row_state | append: '|'
+        unless hold_reasons contains reason_key
+          assign hold_reasons = hold_reasons | append: row_state | append: '|'
+        endunless
+      endunless
+
+      assign rank_display = rank_field.value | default: 'none'
+      assign rank_readback = rank_readback | append: '    ' | append: article.handle | append: ' | rank=' | append: rank_display | append: ' | ' | append: row_state | append: '
+'
+    endif
+  endfor
+
+  comment
+    An eligible set smaller than the configured slots is also a HOLD: an
+    approved article is missing its tag, or the tag has not been applied yet.
+  endcomment
+  if eligible_count < featured_slots
+    unless hold_reasons contains '|incomplete_eligible_set|'
+      assign hold_reasons = hold_reasons | append: 'incomplete_eligible_set|'
+    endunless
+  endif
+
+  assign feed_state = 'ok'
+  if hold_reasons != '|'
+    assign feed_state = 'hold'
+  endif
+
+  assign reason_list = hold_reasons | remove_first: '|' | split: '|'
+
+  assign show_qa = false
+  if request.design_mode
+    assign show_qa = true
+  endif
+  if request.url contains 'feed_qa=1'
+    assign show_qa = true
+  endif
+
   assign rendered = '|'
   assign card_count = 0
 -%}
+
+{%- comment -%} View-source readback. Present on every render, so HOLD is provable. {%- endcomment -%}
+<!-- FEATURED_FEED_READBACK
+  state: {{ feed_state }}
+  eligible (exact tag "featured"): {{ eligible_count }}
+  featured slots: {{ featured_slots }} | max cards: {{ max_cards }}
+  hold reasons: {% if reason_list.size > 0 %}{{ reason_list | join: ', ' }}{% else %}none{% endif %}
+  eligible readback:
+{% if rank_readback != blank %}{{ rank_readback }}{% else %}    (no eligible articles)
+{% endif %}-->
 
 <div class="main-blog page-width section-{{ section.id }}-padding">
   {%- if section.settings.heading != blank -%}
@@ -89,31 +190,71 @@
     <div class="main-blog-description">{{ section.settings.description }}</div>
   {%- endif -%}
 
-  <div class="blog-articles blog-articles--featured-latest">
-    {%- comment -%} Pass 1: articles carrying the exact tag "featured", newest first. {%- endcomment -%}
-    {%- for article in pool_newest limit: 500 -%}
-      {%- if card_count >= max_cards -%}{%- break -%}{%- endif -%}
-      {%- if article.tags contains 'featured' -%}
-        {%- assign key = '|' | append: article.id | append: '|' -%}
-        {%- unless rendered contains key -%}
-          {% render 'article-card',
-            article: article,
-            media_height: section.settings.image_height,
-            media_aspect_ratio: article.image.aspect_ratio,
-            show_image: section.settings.show_image,
-            show_date: section.settings.show_date,
-            show_author: section.settings.show_author,
-            show_excerpt: true
-          %}
-          {%- liquid
-            assign rendered = rendered | append: article.id | append: '|'
-            assign card_count = card_count | plus: 1
-          -%}
-        {%- endunless -%}
-      {%- endif -%}
-    {%- endfor -%}
+  <div
+    class="blog-articles blog-articles--featured-latest"
+    data-feed-state="{{ feed_state }}"
+    data-eligible-count="{{ eligible_count }}"
+    data-featured-slots="{{ featured_slots }}"
+    data-max-cards="{{ max_cards }}"
+    data-hold-reasons="{% if reason_list.size > 0 %}{{ reason_list | join: ',' }}{% endif %}"
+  >
+    {%- if feed_state == 'hold' and show_qa -%}
+      <div class="featured-feed-hold">
+        <h3>Featured feed is on HOLD — rank data is not valid</h3>
+        <p>
+          No approved article has been pinned. Positions are filled with newest
+          published articles only, so no approved article appears in an
+          unapproved position. This panel is visible in the theme editor and on
+          URLs carrying <code>?feed_qa=1</code>. It never renders for shoppers.
+        </p>
+        <ul>
+          {%- for reason in reason_list -%}
+            <li>{{ reason | replace: '_', ' ' }}</li>
+          {%- endfor -%}
+        </ul>
+        <p>
+          Eligible articles carrying the exact tag: {{ eligible_count }} of {{ featured_slots }} expected.
+          Full per-article readback is in the FEATURED_FEED_READBACK comment in page source.
+        </p>
+      </div>
+    {%- endif -%}
 
-    {%- comment -%} Pass 2: fill remaining slots with the newest non-featured articles. {%- endcomment -%}
+    {%- comment -%}
+      Pass 1 — rank-ordered featured articles. Only runs when every rank is
+      valid. Iterating the slot numbers rather than a list of articles keeps
+      the order data-driven with no hard-coded articles.
+    {%- endcomment -%}
+    {%- if feed_state == 'ok' -%}
+      {%- for position in (1..featured_slots) -%}
+        {%- if card_count >= max_cards -%}{%- break -%}{%- endif -%}
+        {%- for article in pool_newest limit: 500 -%}
+          {%- if article.tags contains 'featured' -%}
+            {%- assign this_rank = article.metafields.custom.featured_rank.value | plus: 0 -%}
+            {%- if this_rank == position -%}
+              {%- assign key = '|' | append: article.id | append: '|' -%}
+              {%- unless rendered contains key -%}
+                {% render 'article-card',
+                  article: article,
+                  media_height: section.settings.image_height,
+                  media_aspect_ratio: article.image.aspect_ratio,
+                  show_image: section.settings.show_image,
+                  show_date: section.settings.show_date,
+                  show_author: section.settings.show_author,
+                  show_excerpt: true
+                %}
+                {%- liquid
+                  assign rendered = rendered | append: article.id | append: '|'
+                  assign card_count = card_count | plus: 1
+                -%}
+              {%- endunless -%}
+              {%- break -%}
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endfor -%}
+    {%- endif -%}
+
+    {%- comment -%} Pass 2 — fill remaining positions with newest non-featured articles. {%- endcomment -%}
     {%- for article in pool_newest limit: 500 -%}
       {%- if card_count >= max_cards -%}{%- break -%}{%- endif -%}
       {%- unless article.tags contains 'featured' -%}
@@ -157,7 +298,17 @@
     },
     {
       "type": "paragraph",
-      "content": "Articles appear in this grid by carrying the exact tag 'featured' in Shopify. Legacy tags such as 'featured:top' are deliberately ignored. Remaining slots fill with the newest published articles."
+      "content": "Eligibility is the exact tag 'featured'. Order is the article metafield custom.featured_rank, ascending. Legacy tags such as 'featured:top' are ignored. Remaining positions fill with the newest published articles."
+    },
+    {
+      "type": "range",
+      "id": "featured_slots",
+      "min": 1,
+      "max": 9,
+      "step": 1,
+      "label": "Ranked featured positions",
+      "default": 6,
+      "info": "Valid featured_rank values are 1 to this number. Anything outside it is a HOLD."
     },
     {
       "type": "range",
