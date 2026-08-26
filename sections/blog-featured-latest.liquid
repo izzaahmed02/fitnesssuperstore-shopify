@@ -34,6 +34,12 @@
   featured articles are ordered newest-first, the same rule used for the fill
   articles. If a specific fixed sequence is required, it needs a data source
   (for example a numeric sort metafield on each article) rather than theme code.
+
+  PER-BLOG 50-ARTICLE LIMIT (recorded, not worked around).
+  Outside a paginate tag, blog.articles returns at most 50 articles per blog,
+  so a blog exceeding 50 published articles would not expose its older ones to
+  this feed. The largest blog today is buying-guides at 25, so there is no
+  current exposure. Left as-is deliberately; revisit only if a blog nears 50.
 {% endcomment %}
 
 {{ 'component-article-card.css' | asset_url | stylesheet_tag }}
@@ -60,7 +66,7 @@
     Build the candidate pool from every blog on the store. No handle list.
   endcomment
   assign pool = '' | split: ''
-  for store_blog in blogs
+  for store_blog in blogs limit: 500
     assign pool = pool | concat: store_blog.articles
   endfor
 
@@ -85,10 +91,10 @@
 
   <div class="blog-articles blog-articles--featured-latest">
     {%- comment -%} Pass 1: articles carrying the exact tag "featured", newest first. {%- endcomment -%}
-    {%- for article in pool_newest -%}
+    {%- for article in pool_newest limit: 500 -%}
       {%- if card_count >= max_cards -%}{%- break -%}{%- endif -%}
       {%- if article.tags contains 'featured' -%}
-        {%- assign key = '|' | append: article.handle | append: '|' -%}
+        {%- assign key = '|' | append: article.id | append: '|' -%}
         {%- unless rendered contains key -%}
           {% render 'article-card',
             article: article,
@@ -100,7 +106,7 @@
             show_excerpt: true
           %}
           {%- liquid
-            assign rendered = rendered | append: article.handle | append: '|'
+            assign rendered = rendered | append: article.id | append: '|'
             assign card_count = card_count | plus: 1
           -%}
         {%- endunless -%}
@@ -108,10 +114,10 @@
     {%- endfor -%}
 
     {%- comment -%} Pass 2: fill remaining slots with the newest non-featured articles. {%- endcomment -%}
-    {%- for article in pool_newest -%}
+    {%- for article in pool_newest limit: 500 -%}
       {%- if card_count >= max_cards -%}{%- break -%}{%- endif -%}
       {%- unless article.tags contains 'featured' -%}
-        {%- assign key = '|' | append: article.handle | append: '|' -%}
+        {%- assign key = '|' | append: article.id | append: '|' -%}
         {%- unless rendered contains key -%}
           {% render 'article-card',
             article: article,
@@ -123,7 +129,7 @@
             show_excerpt: true
           %}
           {%- liquid
-            assign rendered = rendered | append: article.handle | append: '|'
+            assign rendered = rendered | append: article.id | append: '|'
             assign card_count = card_count | plus: 1
           -%}
         {%- endunless -%}
