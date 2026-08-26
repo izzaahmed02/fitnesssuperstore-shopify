@@ -1,0 +1,203 @@
+{% comment %}
+  Featured & Latest Articles — controlled top feed for /pages/blog
+
+  Implements Tim's decision of 25 Aug 2026, option (a): exact-tag-driven.
+
+  Rules encoded here:
+  - Replaces the manually selected three-card "Essential Reads" block in the
+    same top slot. One feed only. Does not enable "Popular Right Now".
+  - Maximum nine cards (configurable, default 9).
+  - Membership is EXACT tag equality on "featured".
+  - Remaining slots fill with the newest published non-featured articles.
+  - Drafts excluded: Liquid's blog.articles exposes published articles only.
+  - No duplicate cards.
+
+  NO HARDCODED ARTICLE HANDLES.
+  Per Tim's instruction, this section contains no article handles, titles or
+  IDs of any kind. Membership is determined entirely by live tag data. The
+  candidate pool is built by iterating every blog on the store, so no blog
+  handle list is hardcoded either. Adding or removing an article from the
+  grid is done by adding or removing the exact tag "featured" in Shopify —
+  never by editing this file.
+
+  WHY `article.tags contains 'featured'` IS THE EXACT TEST.
+  In Liquid, `contains` applied to an ARRAY tests for an exact element match.
+  article.tags is an array, so this matches only the literal tag "featured"
+  and will NOT match the legacy "featured:top", "featured:cardio", etc.
+  Do NOT pipe article.tags through a join filter before testing it. Joining
+  converts the array to a string, which turns `contains` into a substring
+  test and would pull in all fifteen legacy featured:* rows.
+
+  ORDERING NOTE (open question raised with Tim, 26 Aug 2026).
+  A pure tag rule yields a SET, not a sequence. With handles prohibited there
+  is no data-driven way to reproduce a specific hand-numbered 1–6 order, so
+  featured articles are ordered newest-first, the same rule used for the fill
+  articles. If a specific fixed sequence is required, it needs a data source
+  (for example a numeric sort metafield on each article) rather than theme code.
+{% endcomment %}
+
+{{ 'component-article-card.css' | asset_url | stylesheet_tag }}
+{{ 'section-main-blog.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+{%- liquid
+  assign max_cards = section.settings.max_cards | default: 9
+
+  comment
+    Build the candidate pool from every blog on the store. No handle list.
+  endcomment
+  assign pool = '' | split: ''
+  for store_blog in blogs
+    assign pool = pool | concat: store_blog.articles
+  endfor
+
+  assign pool_newest = pool | sort: 'published_at' | reverse
+
+  comment
+    Pipe-delimited ledger of rendered handles, wrapped in pipes on both sides
+    so one handle cannot substring-match another. Guarantees no duplicates.
+  endcomment
+  assign rendered = '|'
+  assign card_count = 0
+-%}
+
+<div class="main-blog page-width section-{{ section.id }}-padding">
+  {%- if section.settings.heading != blank -%}
+    <h2 class="title--primary">{{ section.settings.heading }}</h2>
+  {%- endif -%}
+
+  {%- if section.settings.description != blank -%}
+    <div class="main-blog-description">{{ section.settings.description }}</div>
+  {%- endif -%}
+
+  <div class="blog-articles blog-articles--featured-latest">
+    {%- comment -%} Pass 1: articles carrying the exact tag "featured", newest first. {%- endcomment -%}
+    {%- for article in pool_newest -%}
+      {%- if card_count >= max_cards -%}{%- break -%}{%- endif -%}
+      {%- if article.tags contains 'featured' -%}
+        {%- assign key = '|' | append: article.handle | append: '|' -%}
+        {%- unless rendered contains key -%}
+          {% render 'article-card',
+            article: article,
+            media_height: section.settings.image_height,
+            media_aspect_ratio: article.image.aspect_ratio,
+            show_image: section.settings.show_image,
+            show_date: section.settings.show_date,
+            show_author: section.settings.show_author,
+            show_excerpt: true
+          %}
+          {%- liquid
+            assign rendered = rendered | append: article.handle | append: '|'
+            assign card_count = card_count | plus: 1
+          -%}
+        {%- endunless -%}
+      {%- endif -%}
+    {%- endfor -%}
+
+    {%- comment -%} Pass 2: fill remaining slots with the newest non-featured articles. {%- endcomment -%}
+    {%- for article in pool_newest -%}
+      {%- if card_count >= max_cards -%}{%- break -%}{%- endif -%}
+      {%- unless article.tags contains 'featured' -%}
+        {%- assign key = '|' | append: article.handle | append: '|' -%}
+        {%- unless rendered contains key -%}
+          {% render 'article-card',
+            article: article,
+            media_height: section.settings.image_height,
+            media_aspect_ratio: article.image.aspect_ratio,
+            show_image: section.settings.show_image,
+            show_date: section.settings.show_date,
+            show_author: section.settings.show_author,
+            show_excerpt: true
+          %}
+          {%- liquid
+            assign rendered = rendered | append: article.handle | append: '|'
+            assign card_count = card_count | plus: 1
+          -%}
+        {%- endunless -%}
+      {%- endunless -%}
+    {%- endfor -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Featured & Latest",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Featured & Latest Articles"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Section description"
+    },
+    {
+      "type": "paragraph",
+      "content": "Articles appear in this grid by carrying the exact tag 'featured' in Shopify. Legacy tags such as 'featured:top' are deliberately ignored. Remaining slots fill with the newest published articles."
+    },
+    {
+      "type": "range",
+      "id": "max_cards",
+      "min": 3,
+      "max": 12,
+      "step": 1,
+      "label": "Maximum cards",
+      "default": 9
+    },
+    { "type": "checkbox", "id": "show_image", "default": true, "label": "Show image" },
+    { "type": "checkbox", "id": "show_date", "default": true, "label": "Show date" },
+    { "type": "checkbox", "id": "show_author", "default": false, "label": "Show author" },
+    {
+      "type": "select",
+      "id": "image_height",
+      "options": [
+        { "value": "adapt", "label": "Adapt" },
+        { "value": "small", "label": "Small" },
+        { "value": "medium", "label": "Medium" },
+        { "value": "large", "label": "Large" }
+      ],
+      "default": "medium",
+      "label": "Image height"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 36
+    }
+  ],
+  "presets": [{ "name": "Featured & Latest" }]
+}
+{% endschema %}
