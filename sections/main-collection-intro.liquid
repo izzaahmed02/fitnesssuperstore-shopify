@@ -4,12 +4,23 @@
 {% assign title_tag = section.settings.heading_tag | default: 'h2' %}
 
 {% comment %}
-  Iqra's Aug 6 finding 11: the banner alt duplicated the heading. Alt text is now
-  editable. Left blank it keeps the previous fallback, so no existing page changes
-  until someone sets a real description (or an intentionally empty one for a
-  decorative banner).
+  Iqra's Aug 6 finding 11: the banner alt duplicated the heading.
+
+  Three states, because a settings field alone cannot express "intentionally
+  empty" — a blank text field is indistinguishable from an unset one:
+  - image_decorative checked  -> alt="" , the correct markup for a banner that
+    carries no information the heading does not already give
+  - image_alt filled          -> that text
+  - neither                   -> falls back to the heading, the previous
+    behaviour, so no other page using this section changes
 {% endcomment %}
-{% assign image_alt = section.settings.image_alt | default: section_title | escape %}
+{%- liquid
+  if section.settings.image_decorative
+    assign image_alt = ''
+  else
+    assign image_alt = section.settings.image_alt | default: section_title | escape
+  endif
+-%}
 {% assign section_description = section.settings.description | strip | default: collection.description %}
 {% assign section_image = section.settings.image | default: collection.image %}
 
@@ -194,7 +205,13 @@
         "type": "text",
         "id": "image_alt",
         "label": "Image alt text",
-        "info": "Leave blank to fall back to the heading. Describe the image, or set a single space for a purely decorative banner."
+        "info": "Describe the image. Leave blank to fall back to the heading, which duplicates it for screen readers."
+      }, {
+        "type": "checkbox",
+        "id": "image_decorative",
+        "label": "Image is decorative",
+        "info": "Outputs an empty alt attribute, which is correct when the banner adds nothing the heading does not already say. Overrides the alt text above.",
+        "default": false
       }
     ],
     "presets": [
