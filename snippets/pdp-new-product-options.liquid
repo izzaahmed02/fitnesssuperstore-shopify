@@ -49,6 +49,15 @@
   assign index = color_index
   assign last_index = index
   assign has_color_option = false
+  comment
+    Whether a real colour PICKER renders, tested exactly as the render loop
+    tests it (product-option title, not category title). has_color_option above
+    matches on the category title instead, so the two can disagree — a category
+    called "Frame Finish" holding a "Paint Color" option, or one called "Colors"
+    holding none. The colours container below is emitted off this flag, so it is
+    never rendered empty (an empty flex child would add a phantom column gap).
+  endcomment
+  assign pdp_has_color_group = false
 
   for category in options
     assign category_title_downcase = category.title | downcase
@@ -61,6 +70,7 @@
       assign title = product_option.product_option_title | downcase
       if title == 'paint color' or title == 'paint colors' or title == 'color' or title == 'vinyl colors' or title == 'vinyl color'
         assign color_title = product_option.product_option_title
+        assign pdp_has_color_group = true
       else
         assign color_title = ''
       endif
@@ -94,8 +104,46 @@
         assign assambly_index = assambly_index | minus: 1
       endunless
       assign quantity_option = false
+
+      comment
+        The colour group is presented at the TOP of the buy box (Sagi, Aug 25),
+        above the info tabs, while the remaining groups keep their place below
+        the price. It cannot simply be moved out: product-custom-options.js
+        scopes its price maths to `this`, so a colour picker outside
+        <product-customization-options> would stop contributing its price
+        adjustment to the configured total while still reaching the cart.
+
+        So the element stays whole and the groups are emitted into two sibling
+        containers instead. The wrappers are display:contents (pdp-new.css), so
+        those containers become flex items of .pdp-new__info and the colours one
+        can be ordered on its own. Everything stays inside the custom element,
+        inside #Product-Options-<id>, and inside #MainProduct-<id>: the variant
+        swap, the price maths and the cart payload are all untouched.
+
+        Two passes over the same loop rather than one pass into two buffers:
+        the per-category index maths is stateful, so it has to run for EVERY
+        category in each pass and only the OUTPUT is filtered. Snapshot the
+        starting values so the second pass computes exactly what the first did.
+      endcomment
+      assign index_init = index
+      assign color_index_init = color_index
+      assign quantity_index_init = quantity_index
+      assign assambly_index_init = assambly_index
+      assign pdp_passes = 'colors,rest' | split: ','
+      unless pdp_has_color_group
+        assign pdp_passes = 'rest' | split: ','
+      endunless
     %}
 
+    {%- for pdp_pass in pdp_passes -%}
+      {%- liquid
+        assign index = index_init
+        assign color_index = color_index_init
+        assign quantity_index = quantity_index_init
+        assign assambly_index = assambly_index_init
+        assign quantity_option = false
+      -%}
+      <div class="pdp-new__opt-{{ pdp_pass }}">
     {% for category in options %}
       {% liquid
         assign color_counter = 0
@@ -162,8 +210,37 @@
             endif
           endfor
         endif
+
+        comment
+          Which of the two containers this category belongs to. color_counter is
+          the render loop's own count of colour pickers in this category, so the
+          split matches exactly what gets rendered.
+        endcomment
+        assign pdp_in_pass = false
+        if pdp_pass == 'colors' and color_counter > 0
+          assign pdp_in_pass = true
+        elsif pdp_pass == 'rest' and color_counter == 0
+          assign pdp_in_pass = true
+        endif
+
+        comment
+          "Accessories / Add Ons" reads as a redundant bucket label above the
+          option rows and is dropped (Sagi, Aug 25). Matched on a punctuation-
+          and space-stripped title so "Accessories/Add-Ons" and
+          "Accessories & Add Ons" are caught too. The label row is hidden in CSS
+          rather than skipped here: it carries [data-group-color-name], which
+          product-form-with-options.js reads for the cart properties, so it has
+          to stay in the DOM. Only this bucket - sibling groups such as "Cable
+          Attachments" keep their label.
+        endcomment
+        assign pdp_title_key = category.title | downcase | replace: '&', '' | replace: '/', '' | replace: '-', '' | replace: ' ', '' | strip
+        assign pdp_hide_title = false
+        if pdp_title_key == 'accessoriesaddons'
+          assign pdp_hide_title = true
+        endif
       %}
 
+      {%- if pdp_in_pass -%}
       <div
         class="product-option__item{% if pdp_covered %} pdp-new--card-covered{% endif %}"
         {% unless category.hide_option %}
@@ -175,7 +252,7 @@
              doesn't add UI heading tags to the PDP outline (SEO heading QA). The live
              snippet renders a circled step number here; the Figma design has none. {% endcomment %}
           <div
-            class="product-options__category-title"
+            class="product-options__category-title{% if pdp_hide_title %} pdp-new--title-hidden{% endif %}"
             {% if color_counter == 1 %}
               data-group-color-name="{{ color_group }}"
               data-color-name-title="{{ color_title }}"
@@ -272,20 +349,25 @@
           {% endif %}
         {% endfor %}
       </div>
+      {%- endif -%}
     {% endfor %}
-
-    <div
-      id="product-options-total-add"
-      class="product-options__total-add product-options__total-add--hide"
-    >
-      Selection will add
-      <span
-        id="product-options-totalpriceadd"
-        class="product-options__total-price-add"
-        >$0.00</span
-      >
-      to the price
-    </div>
-    <input type="hidden" value="0" class="product-options__total-addcharge">
+      {%- comment -%} Once only, in the groups container - these carry ids. {%- endcomment -%}
+      {%- if pdp_pass == 'rest' -%}
+        <div
+          id="product-options-total-add"
+          class="product-options__total-add product-options__total-add--hide"
+        >
+          Selection will add
+          <span
+            id="product-options-totalpriceadd"
+            class="product-options__total-price-add"
+            >$0.00</span
+          >
+          to the price
+        </div>
+        <input type="hidden" value="0" class="product-options__total-addcharge">
+      {%- endif -%}
+      </div>
+    {%- endfor -%}
   </product-customization-options>
 </div>

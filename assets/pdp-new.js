@@ -544,6 +544,11 @@
 
     var sectionId = root.dataset.section;
 
+    /* Fallback hook for the `html:has(.pdp-new)` overflow rule in pdp-new.css on
+       browsers without :has() — keeps the page free of a horizontal scrollbar
+       so the fixed sticky bar sits at the true bottom of the viewport. */
+    document.documentElement.classList.add('pdp-new-page');
+
     /* Assigned by the mobile-gallery block below; a no-op until then and on pages
        with no phone slider. Declared here because the variantChange handler above
        it in source needs to call it. */

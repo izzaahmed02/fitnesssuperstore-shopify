@@ -337,6 +337,95 @@
   width: 100%;
 }
 
+/* ---- Colours hoisted above the info tabs (Sagi, Aug 25) ----
+   The colour picker has to stay inside <product-customization-options>, whose
+   price maths is scoped to `this` — moved out, it would keep reaching the cart
+   while dropping out of the configured total. So the wrappers stop generating
+   boxes and the snippet's two containers become the flex items of
+   .pdp-new__info instead, which lets the colours one be ordered on its own.
+   display:contents changes rendering only: the DOM is untouched, so the variant
+   swap of #Product-Options-<id> and every JS query still resolve. */
+.pdp-new .pdp-new__configurator,
+.pdp-new .pdp-new__configurator > [id^='Product-Options-'],
+.pdp-new product-customization-options.product-options {
+  display: contents;
+}
+
+/* The column layout product-options.css put on the custom element, now on the
+   containers that replaced it as flex items. Groups stay flush (no gap): each
+   one carries its own padding, and the inline `order` the snippet sets per
+   group still resolves here, among its own siblings. */
+.pdp-new__opt-colors,
+.pdp-new__opt-rest {
+  display: flex;
+  flex-direction: column;
+}
+
+/* .pdp-new__configurator's own bottom margin is dropped with display:contents. */
+.pdp-new__opt-rest {
+  margin-bottom: 20px;
+}
+
+/* Only these carry an explicit order; every other block stays at 0 and keeps
+   its source order, so the theme editor can still reorder blocks freely. */
+.pdp-new__info > .pdp-new__title,
+.pdp-new__info > .pdp-new__meta-row,
+.pdp-new__info > .pdp-new__variant-picker {
+  order: -2;
+}
+
+/* product-variant-picker renders nothing for a single-variant product, but the
+   section always emits this wrapper so the theme editor keeps a selectable
+   block. As a zero-height flex item it still takes a gap on each side, doubling
+   the space above the hoisted colours. Hidden only when it has no element
+   children, so the wrapper and its shopify_attributes stay in the DOM. Browsers
+   without :has() just keep the wider gap. */
+.pdp-new__info > .pdp-new__variant-picker:not(:has(*)) {
+  display: none;
+}
+
+/* No child combinator: display:contents removes the wrappers' boxes but NOT
+   their DOM nodes, so this container is a flex item of .pdp-new__info while
+   still being a DOM descendant of <product-customization-options>. Selectors
+   match the DOM, `order` applies in the box tree. */
+.pdp-new .pdp-new__opt-colors {
+  order: -1;
+}
+
+/* Redundant bucket label above the option rows, dropped per Sagi. Hidden, not
+   removed: the row carries the colour group's cart-property hooks. */
+.pdp-new .product-options__category-title.pdp-new--title-hidden {
+  display: none;
+}
+
+/* ---- PARKED: configurator (minus colours) + configuration total ----
+   Sagi, Aug 27: the buy box shows the colour picker and nothing else, per the
+   Figma. Both regions are HIDDEN, never removed — every input stays in the DOM
+   and stays live, so nothing leaves the purchase path:
+
+     - .pdp-new__opt-rest holds the Assembly & Room of Choice group, which is
+       MANDATORY and is the only thing the "Delivery & Installation Options"
+       dropdown writes to (pdp-new.js clicks its real radio; the select carries
+       no cart hooks of its own). It also holds the hidden-value Warranty and
+       Processing Time selects that product-form-with-options.js reads into the
+       line-item properties. Dropping the markup would silently strip the
+       delivery choice and those properties from the order.
+     - .pdp-new__total is the FIRST .pr_custom_price in the document, which is
+       the base-price contract priceHelper() works to, and the [data-config-total]
+       that pdp-new.js mirrors into the sticky bar and the Affirm quote. Hidden
+       it keeps anchoring both; commented out, the anchor would fall through to
+       the sticky price — and vanish entirely wherever the merchant has the
+       sticky bar switched off.
+
+   Accessories / Add Ons and Cable Attachments (the groups Sagi marked) carry no
+   defaults and no mandatory flag, so hiding them changes no price and no payload.
+
+   TO RESTORE: delete this rule. Nothing else was changed. */
+.pdp-new .pdp-new__opt-rest,
+.pdp-new .pdp-new__total {
+  display: none;
+}
+
 /* The shared snippet's dark "Configure your order here." header bar isn't in the
    Figma design. Hidden here rather than removed from snippets/product-options.liquid,
    which the live PDP renders too. */
@@ -2059,6 +2148,26 @@
     z-index: 2;
   }
 
+}
+
+/* No horizontal page scroll on this template. A fixed bar is positioned against
+   the layout viewport, which EXCLUDES a horizontal scrollbar — so any element
+   wider than the viewport (the global footer menu does this between 1110 and
+   1170px, and by 2px at 990px) pushes `bottom: 0` up by the scrollbar's height
+   and page content shows through the strip beneath the bar (Sagi's review).
+   Set on <html> only: the value propagates to the viewport, which stays the
+   scroll container, so position: sticky on the media card keeps working (it
+   would not if body also became a scroll container). `clip` over `hidden`
+   because iOS Safari ignores hidden-on-root for horizontal panning; hidden is
+   kept first as the fallback for browsers without clip. Two rules, not one
+   list: an unsupported :has() would otherwise invalidate the class rule too. */
+html.pdp-new-page {
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+html:has(.pdp-new) {
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .pdp-new__sticky {
