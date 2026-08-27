@@ -1,0 +1,55 @@
+{% comment %}
+  snippets/labor-day-sale-note.liquid
+
+  Price-adjacent sale note on eligible PDPs, keyed to ACTUAL discount eligibility
+  (collection membership), not the product title. Replaces the previous
+  title-string block in the four product templates (main-product, -comb,
+  -variants, -home-gym-packages).
+
+  Accepts:
+    product         (Product)  required
+    hide_on_mobile  (boolean)  optional. Pass true on the desktop-layout copy so it
+                               does not also render on mobile (the mobile-layout copy
+                               is rendered without it and is the one shown on phones).
+
+  DEPENDENCY: collection 519462814012 ("JULY4 FF Eligible", 1,359 products) must be
+  published to the Online Store sales channel, or Liquid's product.collections will
+  not include it and the 10% French Fitness note will not render. The Remanufactured
+  collection (512180715836) is already published.
+{% endcomment %}
+{%- liquid
+  assign ff_collection_id = 519462814012
+  assign reman_collection_id = 512180715836
+
+  assign in_ff = false
+  assign in_reman = false
+  for c in product.collections
+    if c.id == ff_collection_id
+      assign in_ff = true
+    elsif c.id == reman_collection_id
+      assign in_reman = true
+    endif
+  endfor
+
+  assign campaign_text = ''
+  if in_ff
+    assign campaign_text = settings.sale_promo_ff
+  elsif in_reman
+    assign campaign_text = settings.sale_promo_reman
+  endif
+-%}
+{%- comment -%} Date window (store timezone). Theme editor and force_preview both bypass it. {%- endcomment -%}
+{%- assign now_s = 'now' | date: '%s' | plus: 0 -%}
+{%- assign start_s = settings.laborday_start | date: '%s' | plus: 0 -%}
+{%- assign end_s = settings.laborday_end | date: '%s' | plus: 0 -%}
+{%- assign in_window = false -%}
+{%- if settings.laborday_force_preview or request.design_mode -%}
+  {%- assign in_window = true -%}
+{%- elsif start_s > 0 and end_s > 0 and now_s >= start_s and now_s < end_s -%}
+  {%- assign in_window = true -%}
+{%- endif -%}
+{%- if campaign_text != blank and in_window -%}
+  <div class="campaign-sale-container{% if hide_on_mobile %} hide-on-mobile{% endif %}">
+    <p>{{ campaign_text | escape }}</p>
+  </div>
+{%- endif -%}
