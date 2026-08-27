@@ -293,6 +293,15 @@ endpoint for catalog items, catalog variants, catalog categories, flows, campaig
 segments, tags or product feeds. I therefore cannot read the item, count published items,
 enumerate feeds, or see a DO NOT USE tag.
 
+**Re-tested twice on 2026-08-27**, after two separate permission reviews on the Fitness Superstore
+side. The read gap persisted both times. Meanwhile two unrelated Klaviyo tools
+(`get_billing_usage`, `list_billing_usage`) *did* appear in-session, which proves the connector's
+tool surface refreshes without a session restart. That rules out both a stale session and a missed
+toggle: the read endpoints are simply not being offered to this account's connector. The practical
+route to reads is therefore a read-only private API key **plus** allowlisting `a.klaviyo.com` in the
+environment's network policy — not a reconnect. Recording this so the next attempt is not spent on
+the wrong fix.
+
 Worth flagging on its own terms: on a read-only audit I hold write paths I must not use and lack
 the read paths I need. That asymmetry should be corrected before the pilot, independent of this
 SKU.
