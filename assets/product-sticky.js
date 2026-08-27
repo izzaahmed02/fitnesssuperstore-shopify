@@ -26,16 +26,6 @@ document.addEventListener("DOMContentLoaded", () => {
 }
 
 
-console.log({
-  headerWrapper: !!document.querySelector(".header-wrapper"),
-  product: !!document.querySelector(".product"),
-  productInfo: !!document.querySelector(".product .product__info-wrapper.grid__item"),
-  productInfoLoose: !!document.querySelector(".product .product__info-wrapper"),
-  extraInfo: !!document.querySelector(".product .product__extra_info"),
-  leftContainer: !!document.querySelector(".product .product-main-left-container"),
-  context: getProductContext()
-});
-
   function checkScroll() {
     const headerWrapper = document.querySelector(".header-wrapper");
     const context = getProductContext();

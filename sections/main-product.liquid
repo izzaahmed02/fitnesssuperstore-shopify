@@ -118,8 +118,7 @@
 
   {{ 'custom-main-product-page.css' | asset_url | stylesheet_tag }}
   {{ 'custom-product-gallery.css' | asset_url | stylesheet_tag }}
-  <link rel="stylesheet" href="{{ 'custom-option-picker-snippet.css' | asset_url }}" media="print" onload="this.media='all'">
-  <noscript>{{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}</noscript>
+  {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
   <link rel="stylesheet" href="{{ 'paylater-modal.css' | asset_url }}" media="print" onload="this.media='all'">
   <noscript>{{ 'paylater-modal.css' | asset_url | stylesheet_tag }}</noscript>
 
@@ -134,8 +133,7 @@
 
 
   {% unless hide_product_options %}
-    <link rel="stylesheet" href="{{ 'product-options.css' | asset_url }}" media="print" onload="this.media='all'">
-    <noscript>{{ 'product-options.css' | asset_url | stylesheet_tag }}</noscript>
+    {{ 'product-options.css' | asset_url | stylesheet_tag }}
   {% endunless %}
 
   {%- style -%}
@@ -214,7 +212,10 @@
                 <div class="product__title" {{ block.shopify_attributes }}>
                   <p class="h2">{{ product.title | escape }}</p>
                 </div>
-            
+                {%- if product.metafields.custom.product_color != blank -%}
+                  {% render 'finish-selector', product: product %}
+                {%- endif -%}
+
               {% when 'price' %}
                 <p class="affirm-as-low-as" data-page-type="product" data-amount="{{ product.price }}"></p>
 
@@ -814,31 +815,19 @@
                       <div class="item__text">
                         <span class="title">Ships:</span>
                         {{ product.metafields.custom.ships }}
-                        {% for collection in product.collections %}
-                          {% if collection.handle contains 'shop-by-strength-product-line' %}
-                            <span class="more-info" data-customfield="Shipping">(More Info)</span>
-                            <script>
-  var attachClickHandler = setInterval(function () {
-    var $target = $('.custom_shipping_container');
-    if ($target.length > 0) {
-      var $clickTarget = $target.parent().parent();
-
-      $clickTarget.off('click.clearContent').on('click.clearContent', function () {
-        $('#dynamic-product-content').empty();
-      });
-
-      clearInterval(attachClickHandler); 
-    }
-  }, 200);
-</script>
-
-
-                          {% endif %}
-                        {% endfor %}
+                        {% render 'shipping-packaging-video-link', product: product %}
                       </div>
                     </div>
                   {% endif %}
-                  {% if product.metafields.custom.processing_time != blank %}
+                  {%- comment -%}
+                    Only surface processing/lead time when the product is actually
+                    purchasable. product.available is false only when no variant can be
+                    bought (out of stock AND inventory policy DENY), so an out-of-stock
+                    hold like the ROM hides it, while in-stock and legitimate
+                    continue-selling (preorder/backorder) products still show it. The
+                    stored metafield value is untouched.
+                  {%- endcomment -%}
+                  {% if product.available and product.metafields.custom.processing_time != blank %}
                     <div class="item">
                       <div class="item__icon-wrap">{% render 'icon-timer' %}</div>
                       <div class="item__text">
@@ -881,6 +870,9 @@
                 <div class="product__title hidden lg:block" {{ block.shopify_attributes }}>
                   <h1>{{ product.title | escape }}</h1>
                 </div>
+                {%- if product.metafields.custom.product_color != blank -%}
+                  {% render 'finish-selector', product: product %}
+                {%- endif -%}
               {% when 'price' %}
 
 {% assign campaign_text = '' %}
@@ -899,6 +891,7 @@
   </div>
 {% endunless %}
 
+                <div class="product__price-row">
                 <div class="product__prices hidden lg:block">
                   {%- assign _variant = product.selected_or_first_available_variant -%}
                   {% if _variant.compare_at_price > _variant.price %}
@@ -931,6 +924,7 @@
                   {% endif %}
                 </div>
               {% render 'paylater-providers' %}
+                </div>
               {%- when 'tile_calculator' -%}
                 {% if block.settings.show_tile_calculator %}
                   <div class="product__tile-calculator">
@@ -972,6 +966,11 @@
                       <p>{{ buy_box_variant.metafields.custom.buy_box_note }}</p>
                     {% endif %}
                   </div>
+                  {% render 'product-options-added-line',
+                    product: product,
+                    variant: buy_box_variant,
+                    section_id: section.id
+                  %}
                   <h2 class="product_price_with_options-heading">Total with options</h2>
 
                   <div class="product_price_with_options-contaniner">
@@ -1220,6 +1219,30 @@
                                 class="product-variant-id"
                               >
 
+                              {%- comment -%}
+                                Carry product-level metafields (Warranty, Processing Time) into the
+                                cart as line-item properties so they persist through checkout to the
+                                order page. The cart page already reads `item.product.metafields`
+                                directly, but the checkout/order page only renders real line-item
+                                properties; the with-options form does this in JS
+                                (product-form-with-options.js), so this is the default form's
+                                equivalent.
+                              {%- endcomment -%}
+                              {%- if product.metafields.custom.warranty != blank -%}
+                                <input
+                                  type="hidden"
+                                  name="properties[Warranty]"
+                                  value="{{ product.metafields.custom.warranty | strip_html | replace: ' (See Description for Details)', '' | escape }}"
+                                >
+                              {%- endif -%}
+                              {%- if product.metafields.custom.processing_time_long != blank -%}
+                                <input
+                                  type="hidden"
+                                  name="properties[Processing Time]"
+                                  value="{{ product.metafields.custom.processing_time_long | strip_html | escape }}"
+                                >
+                              {%- endif -%}
+
                               {%- if gift_card_recipient_feature_active -%}
                                 {%- render 'gift-card-recipient-form',
                                   product: product,
@@ -1300,6 +1323,7 @@
                       </div>
                     </div>
                   </div>
+                  {% render 'intl-transformer-note', product: product %}
                   {% if product.metafields.custom.backorder == true and product.metafields.custom.back_order_availability_date %}
                     <div class="backorder_container">
                       <span>
@@ -1324,7 +1348,9 @@
                           {{ 'products.product.duties_included' | t }}
                         {%- endif -%}
                         {%- if shop.shipping_policy.body != blank -%}
-                          {{ 'products.product.shipping_policy_html' | t: link: shop.shipping_policy.url }}
+                        {% comment %}  {{ 'products.product.shipping_policy_html' | t: link: shop.shipping_policy.url }}{% endcomment %}
+                         Shipping calculated at checkout. Financing options available at checkout.<br>
+                         <span style="color: #D83D0E!important;font-weight: 600;">Need help? Call +1-925-215-2927</span>
                         {%- endif -%}
                       </div>
                     {%- endif -%}
@@ -1341,7 +1367,6 @@
                     </div>
                   </div>
 
-                {% render 'paylater-providers' %}
                  </{{ tag }}>
                {% endunless %}
               {%- when 'inventory' -%}
@@ -1407,27 +1432,15 @@
                 {%- endif -%}
 
               {%- when 'review_widget' -%}
-             {% unless product.tags contains 'avisplus-product-options' %}
-                <div class="available-wrap">
-                  {% if product.template_suffix == 'discontinued' %}
-                    <div class="badge stock-badge out">
-                      <span>Discontinued</span>
-                    </div>
-                  {% elsif product.metafields.custom.backorder == true %}
-                    <div class="badge backorder-badge stock-badge">
-                      <span>Available to Pre-Order</span>
-                    </div>
-                  {% else %}
-                    <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
-                      {% if product.available == true %}
-                        <span>Available to Order</span>
-                      {% else %}
-                        <span>Out of stock</span>
-                      {% endif %}
-                    </div>
-                  {% endif %}
-                </div>
-              {% endunless %}
+                {%- assign avisplus_options = false -%}
+                {%- if product.tags contains 'avisplus-product-options' -%}
+                  {%- assign avisplus_options = true -%}
+                {%- endif -%}
+                {% render 'product-availability-badge',
+                  product: product,
+                  check_discontinued: true,
+                  hide_badge: avisplus_options
+                %}
               {%- when 'sku' -%}
                 <p
                   class="product__sku{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}{% if product.selected_or_first_available_variant.sku.size == 0 %} visibility-hidden{% endif %}"
@@ -1899,6 +1912,14 @@
                 {% render 'product-options', product: product %}  
             {%- endcase -%}
           {%- endfor -%}
+          {%- comment -%}
+            Controlled replacement content for discontinued products. Rendered
+            outside the block loop so it does not depend on which product blocks
+            a discontinued template happens to keep enabled.
+          {%- endcomment -%}
+          {%- if product.template_suffix == 'discontinued' -%}
+            {% render 'discontinued-replacement', product: product %}
+          {%- endif -%}
           <a href="{{ product.url }}" class="link product__view-details animate-arrow">
             {{ 'products.product.view_full_details' | t }}
             {% render 'icon-arrow' %}
@@ -2121,8 +2142,7 @@
 
 {% render 'option-help-content' %}
 <script src="{{ 'old-custom.js' | asset_url }}" defer="defer"></script>
-
-
+<script src="{{ 'mobile-pdp-polish.js' | asset_url }}" defer="defer"></script>
 
 {% schema %}
 {

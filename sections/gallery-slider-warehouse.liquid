@@ -1,0 +1,510 @@
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  function gallerySlickInit() {
+    const sectionId = '{{ section.id }}';
+    const $wrapper = $('#shopify-section-' + sectionId + ' .gallery-wrapper');
+    const isMobile = window.innerWidth < 750;
+
+    if (isMobile) {
+      const totalSlides = $wrapper.find('.item').length;
+
+      $wrapper.slick({
+        dots: false,
+        arrows: true,
+        infinite: false,
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        centerMode: false,
+        variableWidth: true,
+
+        appendArrows: $('#shopify-section-' + sectionId + ' .gallery-slider-nav-mobile'),
+
+        prevArrow: `<button class="gallery-prev-${sectionId}">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="48" height="48" rx="24" fill="#616166"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M26.5303 17.4697C26.8232 17.7626 26.8232 18.2374 26.5303 18.5303L21.0607 24L26.5303 29.4697C26.8232 29.7626 26.8232 30.2374 26.5303 30.5303C26.2374 30.8232 25.7626 30.8232 25.4697 30.5303L19.4697 24.5303C19.1768 24.2374 19.1768 23.7626 19.4697 23.4697L25.4697 17.4697C25.7626 17.1768 26.2374 17.1768 26.5303 17.4697Z" fill="white"/>
+          </svg>
+        </button>`,
+
+        nextArrow: `<button class="gallery-next-${sectionId}">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="48" height="48" rx="24" fill="#616166"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M21.4697 17.4697C21.7626 17.1768 22.2374 17.1768 22.5303 17.4697L28.5303 23.4697C28.8232 23.7626 28.8232 24.2374 28.5303 24.5303L22.5303 30.5303C22.2374 30.8232 21.7626 30.8232 21.4697 30.5303C21.1768 30.2374 21.1768 29.7626 21.4697 29.4697L26.9393 24L21.4697 18.5303C21.1768 18.2374 21.1768 17.7626 21.4697 17.4697Z" fill="white"/>
+          </svg>
+        </button>`,
+      });
+
+      // Hide prev on first slide, hide next on last slide
+      const $prev = $('#shopify-section-' + sectionId + ' .gallery-prev-' + sectionId);
+      const $next = $('#shopify-section-' + sectionId + ' .gallery-next-' + sectionId);
+
+      // Initially hide prev (we start on slide 0)
+      $prev.hide();
+
+      $wrapper.on('afterChange', function(event, slick, currentSlide) {
+        if (currentSlide === 0) {
+          $prev.hide();
+        } else {
+          $prev.show();
+        }
+
+        if (currentSlide === totalSlides - 1) {
+          $next.hide();
+        } else {
+          $next.show();
+        }
+      });
+
+    } else {
+      $wrapper.slick({
+        dots: true,
+        arrows: true,
+        infinite: true,
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        centerMode: true,
+        centerPadding: '202px',
+
+        appendArrows: $('#shopify-section-' + sectionId + ' .gallery-slider-nav'),
+
+        prevArrow: `<button class="gallery-prev-${sectionId}">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="48" height="48" rx="24" fill="#616166"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M26.5303 17.4697C26.8232 17.7626 26.8232 18.2374 26.5303 18.5303L21.0607 24L26.5303 29.4697C26.8232 29.7626 26.8232 30.2374 26.5303 30.5303C26.2374 30.8232 25.7626 30.8232 25.4697 30.5303L19.4697 24.5303C19.1768 24.2374 19.1768 23.7626 19.4697 23.4697L25.4697 17.4697C25.7626 17.1768 26.2374 17.1768 26.5303 17.4697Z" fill="white"/>
+          </svg>
+        </button>`,
+
+        nextArrow: `<button class="gallery-next-${sectionId}">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="48" height="48" rx="24" fill="#616166"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M21.4697 17.4697C21.7626 17.1768 22.2374 17.1768 22.5303 17.4697L28.5303 23.4697C28.8232 23.7626 28.8232 24.2374 28.5303 24.5303L22.5303 30.5303C22.2374 30.8232 21.7626 30.8232 21.4697 30.5303C21.1768 30.2374 21.1768 29.7626 21.4697 29.4697L26.9393 24L21.4697 18.5303C21.1768 18.2374 21.1768 17.7626 21.4697 17.4697Z" fill="white"/>
+          </svg>
+        </button>`,
+      });
+    }
+  }
+
+  gallerySlickInit();
+
+});
+</script>
+
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+  }
+
+  #shopify-section-{{ section.id }} .contact__heading {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 16px;
+  }
+
+  #shopify-section-{{ section.id }} p {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 52px;
+  }
+
+  #shopify-section-{{ section.id }} .btn__link {
+    font-family: "Lato";
+    line-height: 24px;
+    color: #ffffff;
+    padding: 12px 24px;
+    background: #D83D0E;
+    border-radius: 8px;
+    margin: 24px auto;
+    display: flex;
+    width: fit-content;
+    text-align: center;
+    margin-bottom: 52px;
+  }
+
+  #shopify-section-{{ section.id }} .contact-content .item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .contact-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+    align-items: center;
+    margin-top: 24px;
+  }
+
+  /* ── Desktop slider ── */
+  .gallery-wrapper {
+    margin-top: 24px;
+  }
+
+  .gallery-wrapper .item {
+    border-radius: 24px;
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+
+  .gallery-wrapper .item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 24px;
+    image-rendering: pixelated;
+  }
+
+  #shopify-section-{{ section.id }} .gallery-wrapper-main {
+    position: relative;
+  }
+
+  #shopify-section-{{ section.id }} .gallery-slider-nav {
+    position: absolute;
+    top: 42%;
+    left: 0;
+    width: 100%;
+  }
+
+  #shopify-section-{{ section.id }} .gallery-prev-{{ section.id }} {
+    position: absolute;
+    left: -20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  #shopify-section-{{ section.id }} .gallery-next-{{ section.id }} {
+    position: absolute;
+    right: -20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  #shopify-section-{{ section.id }} .slick-prev:before,
+  #shopify-section-{{ section.id }} .slick-next:before {
+    display: none !important;
+  }
+
+  .gallery-bg {
+    padding: 0px 16px;
+    border-radius: 24px;
+  }
+
+  .gallery-bg .container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  /* ── Slick Dots ── */
+  #shopify-section-{{ section.id }} .slick-dots {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+    margin: 52px 0 0 0;
+  }
+
+  #shopify-section-{{ section.id }} .slick-dots li {
+    width: 12px;
+    height: 12px;
+    margin: 0;
+  }
+
+  #shopify-section-{{ section.id }} .slick-dots li button {
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    background: #9ca3af;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0;
+    line-height: 0;
+  }
+
+  #shopify-section-{{ section.id }} .slick-dots li button:before {
+    display: none !important;
+  }
+
+  #shopify-section-{{ section.id }} .slick-dots li.slick-active button {
+    background: #23232B;
+  }
+
+  /* ── Uniform slide height in centerMode (desktop) ── */
+  #shopify-section-{{ section.id }} .gallery-wrapper .slick-track {
+    display: flex;
+    align-items: stretch;
+  }
+
+  #shopify-section-{{ section.id }} .gallery-wrapper .slick-slide {
+    height: auto;
+    display: flex !important;
+    align-items: stretch;
+  }
+
+  #shopify-section-{{ section.id }} .gallery-wrapper .slick-slide > div {
+    display: flex;
+    width: 100%;
+  }
+
+  #shopify-section-{{ section.id }} .gallery-wrapper .slick-slide .item {
+    display: flex !important;
+    width: 100%;
+  }
+
+  #shopify-section-{{ section.id }} .gallery-wrapper .slick-slide .item img {
+    width: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* ── Mobile nav container — hidden on desktop ── */
+  .gallery-slider-nav-mobile {
+    display: none;
+  }
+
+  /* ── Mobile ── */
+  @media screen and (max-width: 749px) {
+
+    #shopify-section-{{ section.id }} h2 {
+      font-size: 28px;
+      line-height: 34px;
+    }
+
+    #shopify-section-{{ section.id }} {
+      padding-top: 24px;
+      padding-bottom: 24px;
+    }
+
+    /* Hide desktop nav */
+    #shopify-section-{{ section.id }} .gallery-slider-nav {
+      display: none;
+    }
+
+    /* Outer container: 16px padding each side, clips overflow */
+    .gallery-slider-warehouse .gallery-bg {
+      padding: 0 16px;
+      overflow: hidden;
+    }
+
+    /* Wrapper main is the clipping boundary */
+    #shopify-section-{{ section.id }} .gallery-wrapper-main {
+      overflow: hidden;
+      position: relative;
+    }
+
+    #shopify-section-{{ section.id }} .gallery-wrapper {
+      margin-top: 0;
+      /* Extend right beyond container so next slide peeks */
+      margin-right: -60px;
+    }
+
+    /* Each slide: fixed width leaving room for peek */
+    #shopify-section-{{ section.id }} .gallery-wrapper .slick-slide {
+      width: calc(100vw - 92px) !important;
+      height: auto !important;
+      display: block !important;
+    }
+
+    #shopify-section-{{ section.id }} .gallery-wrapper .slick-slide > div {
+      display: block;
+      width: 100%;
+    }
+
+    #shopify-section-{{ section.id }} .gallery-wrapper .slick-slide .item {
+      height: 320px;
+      border-radius: 16px;
+      margin: 0 12px 0 0;
+      background: #edeff3;
+      display: block !important;
+      width: 100%;
+    }
+
+    #shopify-section-{{ section.id }} .gallery-wrapper .slick-slide .item img {
+      width: 100%;
+      height: 320px;
+      border-radius: 16px;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
+
+    /* Slick track starts at left edge (no centering) */
+    #shopify-section-{{ section.id }} .gallery-wrapper .slick-track {
+      display: flex !important;
+      align-items: stretch;
+      margin-left: 0;
+      margin-right: 0;
+    }
+
+    /* Hide dots on mobile */
+    #shopify-section-{{ section.id }} .slick-dots {
+      display: none !important;
+    }
+
+    /* Mobile nav container */
+    .gallery-slider-nav-mobile {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* Prev arrow — left side */
+    #shopify-section-{{ section.id }} button.gallery-prev-{{ section.id }} {
+      pointer-events: all;
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      z-index: 20;
+    }
+
+    /* Next arrow — right side over peek */
+    #shopify-section-{{ section.id }} button.gallery-next-{{ section.id }} {
+      pointer-events: all;
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      z-index: 20;
+    }
+
+    /* White gradient over right peek */
+    #shopify-section-{{ section.id }} .gallery-wrapper-main::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 80px;
+      height: 100%;
+      background: linear-gradient(to right, transparent, white);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .gallery-slider-warehouse .contact__heading,
+    .gallery-slider-warehouse p {
+      text-align: left !important;
+      margin-bottom: 16px !important;
+    }
+
+    .gallery-slider-warehouse .button.btn__link {
+      margin-top: 16px !important;
+      width: 100% !important;
+      justify-content: center;
+      box-sizing: border-box;
+      margin-bottom: 16px !important;
+    }
+
+    .gallery-wrapper .item img {
+      border-radius: 8px;
+    }
+
+    .gallery-wrapper .item {
+      margin-left: 6px;
+      margin-right: 6px;
+    }
+  }
+{%- endstyle -%}
+
+
+<div class="gallery-bg">
+  <div class="container">
+    <h2 class="contact__heading h1">{{ section.settings.heading }}</h2>
+    {% if section.settings.text != blank %}
+      <p>{{ section.settings.text }}</p>
+    {% endif %}
+    {% if section.settings.link != blank %}
+      <a href="{{ section.settings.href }}" class="button button--primary btn__link">
+        {{ section.settings.link }}
+        {% comment %}
+        <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M0.21967 0.21967C0.512563 -0.0732233 0.987324 -0.0732233 1.28022 0.21967L7.28022 6.21967C7.57311 6.51256 7.57311 6.98732 7.28022 7.28022L1.28022 13.2802C0.987324 13.5731 0.512563 13.5731 0.21967 13.2802C-0.0732233 12.9873 -0.0732233 12.5126 0.21967 12.2197L5.6894 6.74994L0.21967 1.28022C-0.0732233 0.987324 -0.0732233 0.512563 0.21967 0.21967Z" fill="white"/>
+        </svg>
+        {% endcomment %}
+      </a>
+    {% endif %}
+  </div>
+
+  <div class="gallery-wrapper-main">
+    <div class="gallery-wrapper">
+      {% for block in section.blocks %}
+        {% case block.type %}
+          {% when 'item' %}
+            <div class="item">
+              {{ block.settings.image | image_url: width: auto | image_tag }}
+            </div>
+        {% endcase %}
+      {% endfor %}
+    </div>
+
+    <!-- Desktop arrow nav -->
+    <div class="gallery-slider-nav"></div>
+
+    <!-- Mobile arrow nav -->
+    <div class="gallery-slider-nav-mobile"></div>
+  </div>
+</div>
+
+
+{% schema %}
+{
+  "name": "Gallery Slider Warehouse",
+  "tag": "section",
+  "class": "gallery-section gallery-slider-warehouse",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading" },
+    { "type": "text", "id": "text", "label": "Text" },
+    { "type": "text", "id": "link", "label": "CTA Title" },
+    { "type": "url", "id": "href", "label": "CTA Link" },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding top",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding bottom",
+      "default": 80
+    }
+  ],
+  "blocks": [
+    {
+      "type": "item",
+      "name": "Slider item",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Image" }
+      ]
+    }
+  ],
+  "presets": [
+    { "name": "Gallery Slider Warehouse" }
+  ]
+}
+{% endschema %}

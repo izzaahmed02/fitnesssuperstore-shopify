@@ -321,6 +321,15 @@
                             {% if p_name == blank or p_value == blank or first_char == '_' or p_name contains 'Processing Time' %}
                               {% continue %}
                             {% endif %}
+                            {%- comment -%}Skip properties that are already shown as variant options above{%- endcomment -%}
+                            {%- assign prop_is_variant_option = false -%}
+                            {%- for opt in item.options_with_values -%}
+                              {%- if opt.name == p_name -%}
+                                {%- assign prop_is_variant_option = true -%}
+                                {%- break -%}
+                              {%- endif -%}
+                            {%- endfor -%}
+                            {%- if prop_is_variant_option -%}{%- continue -%}{%- endif -%}
                             {% comment %}
                               {% if p_name contains "Warranty"
                               or p_name contains "Processing Time"
@@ -343,7 +352,13 @@
                           {% endfor %}
                           {% if extra_props != '' %}
                             <dl>
-                              {% if item.product.metafields.options.product_options == blank and item.variant.metafields.options.product_options == blank %}
+                              {%- comment -%}
+                                Only repeat options_with_values here for single-variant products
+                                (has_only_default_variant == true). Multi-variant products already
+                                show their options in the dl block above, so repeating them here
+                                would create duplicates.
+                              {%- endcomment -%}
+                              {% if item.product.metafields.options.product_options == blank and item.variant.metafields.options.product_options == blank and item.product.has_only_default_variant %}
                                 {%- for option in item.options_with_values -%}
                                   {% unless option.name == 'Title' %}
                                     <div class="product-option">
@@ -457,7 +472,7 @@
 <div class="overlay cart-items__overlay"></div>
 <div class="cart-items__popup" style="display: none;">
   <div class="cart-items__popup-wrapper">
-    <a href="#" class="cart-items__popup-close">{% render 'cart-item-remove' %}</a>
+    <a href="#" class="cart-items__popup-close" role="button" aria-label="{{ 'accessibility.close' | t }}">{% render 'cart-item-remove' %}</a>
     <h5 class="cart-items__popup-title">{{ 'general.cart.cart_remove_popup_title' | t }}</h5>
     <p class="cart-items__popup-copy">{{ 'general.cart.cart_remove_popup_copy' | t }}</p>
     <div class="cart-items__popup-buttons">

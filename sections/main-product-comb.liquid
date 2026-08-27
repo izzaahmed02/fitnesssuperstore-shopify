@@ -91,12 +91,9 @@
     {{ 'component-volume-pricing.css' | asset_url | stylesheet_tag }}
   {%- endif -%}
 
-  <link rel="stylesheet" href="{{ 'avis-custom.css' | asset_url }}" media="print" onload="this.media='all'">
-  <noscript>{{ 'avis-custom.css' | asset_url | stylesheet_tag }}</noscript>
   {{ 'custom-main-product-page.css' | asset_url | stylesheet_tag }}
   {{ 'custom-product-gallery.css' | asset_url | stylesheet_tag }}
-  <link rel="stylesheet" href="{{ 'custom-option-picker-snippet.css' | asset_url }}" media="print" onload="this.media='all'">
-  <noscript>{{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}</noscript>
+  {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
   <link rel="stylesheet" href="{{ 'paylater-modal.css' | asset_url }}" media="print" onload="this.media='all'">
   <noscript>{{ 'paylater-modal.css' | asset_url | stylesheet_tag }}</noscript>
 
@@ -183,6 +180,11 @@
 
   {% comment %} pdp-page-width main-container {% endcomment %}
     <div class="product product--{{ section.settings.media_size }} product--{{ section.settings.media_position }} product--{{ section.settings.gallery_layout }} product--mobile-{{ section.settings.mobile_thumbnails }} grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %}">
+      {% comment %} Single semantic product-title heading: visually hidden but present and
+         accessible at every breakpoint. The visible titles below (mobile + desktop) are
+         non-heading .product__title-text divs styled identically, so the DOM has exactly one
+         H1 for the product title. (Heading Optimization - SEO Audit.) {% endcomment %}
+      <h1 class="visually-hidden">{{ product.title | escape }}</h1>
       <div class="product__info-wrapper--mobile">
         <div class="product__info-container--mobile">
           {%- for block in section.blocks -%}
@@ -190,37 +192,29 @@
               {%- when 'title' -%}
                 <div class="product__title" {{ block.shopify_attributes }}>
                    {% if is_gift_cards_template %}
-                    <h2>{{ product.title | escape }}</h2>
+                    <div class="product__title-text">{{ product.title | escape }}</div>
                   {% else %}
-                    <h2>{{ product.title | escape }}</h2>
+                    <div class="product__title-text">{{ product.title | escape }}</div>
                     <a href="{{ product.url }}" class="product__title">
-                      <h2 class="h1">
+                      {% comment %} Non-heading duplicate of the title (single-H1 SEO). div.h1
+                         renders identically to the former h2.h1: the grouped heading rule and
+                         .h1 class pin font/size/weight/color, and the universal margin reset
+                         zeroes margins for this only-child. {% endcomment %}
+                      <div class="h1">
                         {{ product.title | escape }}
-                      </h2>
+                      </div>
                     </a>
                   {% endif %}
                 </div>
               {%- when 'review_widget' -%}
-              {% unless product.tags contains 'avisplus-product-options' %}
-                  {% unless is_gift_cards_template %}
-              <div class="available-wrap">
-
-                {% if product.metafields.custom.backorder == true %}
-                  <div class="badge backorder-badge stock-badge">
-                      <span>Available to Pre-Order</span>
-                  </div>
-                {% else %}
-                  <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
-                    {% if product.available == true %}
-                      <span>Available to Order</span>
-                    {% else %}
-                      <span>Out of stock</span>
-                    {% endif %}
-                  </div>
-                {% endif %}
-              </div>
-                {% endunless %}
-              {% endunless %}
+                {%- assign hide_avail_mobile = false -%}
+                {%- if product.tags contains 'avisplus-product-options' or is_gift_cards_template -%}
+                  {%- assign hide_avail_mobile = true -%}
+                {%- endif -%}
+                {% render 'product-availability-badge',
+                  product: product,
+                  hide_badge: hide_avail_mobile
+                %}
               {% when 'price' %}
                 {% unless is_gift_cards_template %}
                   <p class="affirm-as-low-as" data-page-type="product" data-amount="{{ product.price }}"></p>
@@ -650,32 +644,19 @@
                       <div class="item__text">
                         <span class="title">Ships:</span>
                         {{ product.metafields.custom.ships }}
-                        {% for collection in product.collections %}
-                          {% if collection.handle contains 'shop-by-strength-product-line' %}
-                            <span class="more-info" data-customfield="Shipping">(More Info)</span>
-
-                            <script>
-  var attachClickHandler = setInterval(function () {
-    var $target = $('.custom_shipping_container');
-    if ($target.length > 0) {
-      var $clickTarget = $target.parent().parent();
-
-      $clickTarget.off('click.clearContent').on('click.clearContent', function () {
-        $('#dynamic-product-content').empty();
-      });
-
-      clearInterval(attachClickHandler); 
-    }
-  }, 200);
-</script>
-
-
-                          {% endif %}
-                        {% endfor %}
+                        {% render 'shipping-packaging-video-link', product: product %}
                       </div>
                     </div>
                   {% endif %}
                 {% assign current_variant = product.selected_or_first_available_variant %}
+{%- comment -%}
+  Only surface processing/lead time when the product is actually purchasable.
+  product.available is false only when no variant can be bought (out of stock AND
+  inventory policy DENY), so an out-of-stock hold hides it while in-stock and
+  legitimate continue-selling (preorder/backorder) products still show it. The
+  stored metafield value is untouched.
+{%- endcomment -%}
+{% if product.available %}
 {% if current_variant.metafields.custom.processing_time_long_variant != blank or product.metafields.custom.processing_time_long != blank %}
   <div class="item">
     <div class="item__icon-wrap">{% render 'icon-timer' %}</div>
@@ -687,6 +668,7 @@
       <span class="more-info" data-customfield="Processing Time" data-processingtime="{{ current_variant.metafields.custom.processing_time_long_variant }}">(More Info)</span>
     </div>
   </div>
+{% endif %}
 {% endif %}
 
                   {% if product.metafields.custom.product_code != blank %}
@@ -730,13 +712,17 @@
               {%- when 'title' -%}
                 <div class="product__title hidden lg:block" {{ block.shopify_attributes }}>
                   {% if is_gift_cards_template %}
-                    <h1>{{ product.title | escape }}</h1>
+                    <div class="product__title-text">{{ product.title | escape }}</div>
                   {% else %}
-                    <h1>{{ product.title | escape }}</h1>
+                    <div class="product__title-text">{{ product.title | escape }}</div>
                     <a href="{{ product.url }}" class="product__title">
-                      <h2 class="h1">
+                      {% comment %} Non-heading duplicate of the title (single-H1 SEO). div.h1
+                         renders identically to the former h2.h1: the grouped heading rule and
+                         .h1 class pin font/size/weight/color, and the universal margin reset
+                         zeroes margins for this only-child. {% endcomment %}
+                      <div class="h1">
                         {{ product.title | escape }}
-                      </h2>
+                      </div>
                     </a>
                   {% endif %}
                 </div>
@@ -830,6 +816,11 @@
                     </svg>
                     <span class="product-form__error-message"></span>
                   </div>
+                  {% render 'product-options-added-line',
+                    product: product,
+                    variant: product.selected_or_first_available_variant,
+                    section_id: section.id
+                  %}
                   <h2 class="product_price_with_options-heading">Total with options</h2>
 
                    <div class="product_price_with_options-contaniner">
@@ -1156,6 +1147,7 @@
                       </div>
                     </div>
                   </div>
+                  {% render 'intl-transformer-note', product: product %}
                   {% if product.metafields.custom.backorder == true and product.metafields.custom.back_order_availability_date %}
                     <div class="backorder_container">
                       <span>
@@ -1180,7 +1172,8 @@
                           {{ 'products.product.duties_included' | t }}
                         {%- endif -%}
                         {%- if shop.shipping_policy.body != blank -%}
-                          {{ 'products.product.shipping_policy_html' | t: link: shop.shipping_policy.url }}
+                         Shipping calculated at checkout. Financing options available at checkout.<br>
+                         <span style="color: #D83D0E!important;font-weight: 600;">Need help? Call +1-925-215-2927</span>
                         {%- endif -%}
                       </div>
                     {%- endif -%}
@@ -1214,9 +1207,6 @@
                       </button>
                     </div>
                   {% endif %}
-                {% unless is_gift_cards_template %}
-                {% render 'paylater-providers' %}
-              {% endunless %}
                 </{{tag}}>
                {% endunless %}
               {%- when 'inventory' -%}
@@ -1282,27 +1272,15 @@
                 {%- endif -%}
 
               {%- when 'review_widget' -%}
-              {% unless product.tags contains 'avisplus-product-options' %}
-                {% unless is_gift_cards_template %}
-                <div class="available-wrap hidden lg:flex">
-
-
-                  {% if product.metafields.custom.backorder == true %}
-                    <div class="badge backorder-badge stock-badge">
-                       <span>Available to Pre-Order</span>
-                    </div>
-                  {% else %}
-                    <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
-                      {% if product.available == true %}
-                        <span>Available to Order</span>
-                      {% else %}
-                        <span>Out of stock</span>
-                      {% endif %}
-                    </div>
-                  {% endif %}
-                </div>
-                 {% endunless %}
-              {% endunless %}
+                {%- assign hide_avail_desktop = false -%}
+                {%- if product.tags contains 'avisplus-product-options' or is_gift_cards_template -%}
+                  {%- assign hide_avail_desktop = true -%}
+                {%- endif -%}
+                {% render 'product-availability-badge',
+                  product: product,
+                  wrapper_class: 'hidden lg:flex',
+                  hide_badge: hide_avail_desktop
+                %}
               {%- when 'sku' -%}
                 <p
                   class="product__sku{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}{% if product.selected_or_first_available_variant.sku.size == 0 %} visibility-hidden{% endif %}"
@@ -2213,6 +2191,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + sa_product + '.js');
 </script>
+<script src="{{ 'mobile-pdp-polish.js' | asset_url }}" defer="defer"></script>
 
 {% schema %}
 {

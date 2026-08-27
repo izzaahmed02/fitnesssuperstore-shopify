@@ -76,6 +76,11 @@ class ProductGallery extends HTMLElement {
       }
     }
 
+    // Honour a pre-selected variant on first load (e.g. arriving via a
+    // ?variant= URL or a 301 redirect from a now-consolidated product) by
+    // showing that variant's featured image rather than the product default.
+    this.syncToSelectedVariant();
+
     window.addEventListener('resize', this.handleResize.bind(this));
 
 
@@ -87,15 +92,34 @@ class ProductGallery extends HTMLElement {
         const popup = document.getElementById('product-gallery-popup');
         if (media && media.media_type !== 'model' && (!popup || popup.hidden)) {
           this.openPopup(this.activeMediaId);
-        } else if (media && media.media_type === 'model') {
-          console.log('Main image click: Media type is model, not opening popup.');
-        } else if (popup && !popup.hidden) {
-          console.log('Main image click: Popup is already open, not re-opening.');
-        } else {
-          console.log('Main image click: Conditions not met to open popup.');
         }
       }
     });
+  }
+
+  syncToSelectedVariant() {
+    // product-info.js only calls setActiveMedia() in response to a variant
+    // *change* event. When a variant is already selected server-side (a
+    // ?variant= URL, or a 301 redirect from an old product landing on the
+    // consolidated PDP), no change event fires, so the gallery would otherwise
+    // stay on product.media.first. Read the variant emitted by the variant
+    // picker and switch the main image to its featured media.
+    const source = document.querySelector('[data-selected-variant]');
+    if (!source) return;
+
+    let variant;
+    try {
+      variant = JSON.parse(source.textContent);
+    } catch (err) {
+      return;
+    }
+
+    const featuredId = variant && variant.featured_media && variant.featured_media.id;
+    if (!featuredId) return;
+    if (!this.mediaData.some((m) => m.id == featuredId)) return;
+
+    // setActiveMedia() no-ops when the id already matches the active media.
+    this.setActiveMedia(featuredId);
   }
 
   handleResize() {
@@ -134,8 +158,6 @@ class ProductGallery extends HTMLElement {
             this.initZoom(container, media);
           };
         }
-      } else {
-        console.log('handleResize: Not desktop, not initializing zoom.');
       }
     });
   }
@@ -342,7 +364,6 @@ class ProductGallery extends HTMLElement {
       const minZoomRatio = 1.2;
       const zoomRatio = zoomImg.naturalWidth / img.clientWidth;
       if (zoomImg.naturalWidth < 100) {
-       console.log("Natural width is low");
         zoomResult.remove();
         lens.remove();
         return;

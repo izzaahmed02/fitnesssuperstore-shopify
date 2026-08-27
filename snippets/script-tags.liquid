@@ -16,45 +16,6 @@
 
 <script src="{{ 'slick.min.js' | asset_url }}" defer></script>
 
-{% if request.page_type == 'product' %}
-  <script>
-    (function() {
-      var squareLoaded = false;
-
-      function loadSquareMarketplace() {
-        if (squareLoaded) return;
-        squareLoaded = true;
-        var squareScript = document.createElement('script');
-        squareScript.src = 'https://js.squarecdn.com/square-marketplace.js';
-        squareScript.async = true;
-        document.head.appendChild(squareScript);
-
-        ['keydown', 'click', 'touchstart'].forEach(function(evt) {
-          window.removeEventListener(evt, onInteraction, { passive: true });
-        });
-      }
-
-      function onInteraction() {
-        loadSquareMarketplace();
-      }
-
-      ['keydown', 'click', 'touchstart'].forEach(function(evt) {
-        window.addEventListener(evt, onInteraction, { once: true, passive: true });
-      });
-
-      window.addEventListener('load', function() {
-        window.setTimeout(function() {
-          if ('requestIdleCallback' in window) {
-            window.requestIdleCallback(loadSquareMarketplace, { timeout: 5000 });
-          } else {
-            loadSquareMarketplace();
-          }
-        }, 3000);
-      }, { once: true });
-    })();
-  </script>
-{% endif %}
-
 {% if template contains 'page.about-us' or template contains 'page.warehouse-page' %}
   <script>
     (function() {

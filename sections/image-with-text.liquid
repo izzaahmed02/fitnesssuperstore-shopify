@@ -19,6 +19,9 @@
     padding-top: {{ section.settings.padding_top }}px;
     padding-bottom: {{ section.settings.padding_bottom }}px;
     }
+    .image-with-text__grid {
+      align-items: center;
+    }
     }
     .section-{{ section.id }}-padding{
     background:{{ section.settings.bg_color }};
@@ -54,6 +57,7 @@
     .note{
     align-items: start;
     }
+  
     }
 
   .imageText{
@@ -64,6 +68,13 @@
       .imageText{
     margin-right: -4px;
   }
+    }
+    @media screen and (max-width: 767px) {
+      .imageTextInner {
+        border-bottom: .1rem solid rgba(var(--color-foreground), .08);
+    padding-top: 12px;
+    padding-bottom: 12px;
+      }
     }
 {%- endstyle -%}
 
@@ -81,8 +92,8 @@
 -%}
 
 
-<div class="imageText section-{{ section.id }}-padding">
-<div class=" padding-{{ section.id }} scroll-trigger animate--slide-in">
+<div {% if section.settings.anchor_id != blank %}id="{{ section.settings.anchor_id }}"{% endif %} class="imageText section-{{ section.id }}-padding">
+<div class=" padding-{{ section.id }} scroll-trigger animate--slide-in imageTextInner">
     
         {% if section.settings.dropdown %}
             <div class="image-with-text__dropdown-button">
@@ -327,6 +338,12 @@
     ]
   },
   "settings": [
+    {
+      "type": "text",
+      "id": "anchor_id",
+      "label": "Anchor ID (for in-page links)",
+      "info": "Used as the section's HTML id so other elements can link to it, e.g. brand-body-solid. Use lowercase letters, numbers and hyphens only."
+    },
     {
       "type": "color",
       "id": "bg_color",

@@ -1,29 +1,8 @@
 {% comment %}theme-check-disable UndefinedObject{% endcomment %}
-{% comment %} {{ 'section-footer.css' | asset_url | stylesheet_tag }}
-{{ 'component-list-menu.css' | asset_url | stylesheet_tag }}
-{{ 'component-list-social.css' | asset_url | stylesheet_tag }} {% endcomment %}
 
-<link
-  rel="stylesheet"
-  href="{{ 'section-footer.css' | asset_url }}"
-  media="print"
-  onload="this.media='all'"
->
-
-<link
-  rel="stylesheet"
-  href="{{ 'component-list-menu.css' | asset_url }}"
-  media="print"
-  onload="this.media='all'"
->
-
-<link
-  rel="stylesheet"
-  href="{{ 'component-list-social.css' | asset_url }}"
-  media="print"
-  onload="this.media='all'"
->
-
+<link rel="stylesheet" href="{{ 'section-footer.css' | asset_url }}" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="{{ 'component-list-menu.css' | asset_url }}" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="{{ 'component-list-social.css' | asset_url }}" media="print" onload="this.media='all'">
 
 {%- style -%}
   .footer {
@@ -35,7 +14,6 @@
     padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
   }
 
-
   @media screen and (min-width: 750px) {
     .footer {
       margin-top: {{ section.settings.margin_top }}px;
@@ -44,6 +22,92 @@
     .section-{{ section.id }}-padding .footer__top {
       padding-top: {{ section.settings.padding_top }}px;
       padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+
+  .footer__chevron {
+  display: none;
+}
+
+  /* Accordion control is a native <button>; neutralize default button chrome
+     on all viewports so it matches the plain menu label, and give it a
+     visible keyboard-focus indicator. */
+  .footer__accordion-toggle {
+    display: block;
+    width: 100%;
+    padding: 0;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .footer__accordion-toggle:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+  }
+
+  /* ── Footer accordion — mobile only ── */
+  @media screen and (max-width: 749px) {
+
+      .footer__chevron {
+    display: block;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+  }
+
+  .footer__accordion-toggle[aria-expanded="true"] .footer__chevron {
+    transform: rotate(180deg);
+  }
+
+    .footer__accordion-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: none;
+      border: none;
+      border-bottom: 1px solid currentColor;
+      padding: 12px 0;
+      cursor: pointer;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      color: #ffffff;
+    }
+
+    .footer__menu {
+      gap: 0px !important;
+    }
+
+    .footer__chevron {
+      flex-shrink: 0;
+      transition: transform 0.3s ease;
+    }
+
+    .footer__accordion-toggle[aria-expanded="true"] .footer__chevron {
+      transform: rotate(180deg);
+    }
+
+    /* Collapsed — visually hidden AND removed from keyboard tab order.
+       visibility:hidden makes the links non-focusable while keeping them
+       in the DOM; JS also applies the `inert` attribute for immediate,
+       semantically-correct focus/AT removal. */
+    .footer__menu-col .footer__menu-links {
+      max-height: 0;
+      overflow: hidden;
+      visibility: hidden;
+      transition: max-height 0.35s ease, visibility 0s linear 0.35s;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    /* Expanded — visible and focusable */
+    .footer__menu-col .footer__menu-links.is-open {
+      max-height: 600px; /* large enough for any realistic list */
+      visibility: visible;
+      transition: max-height 0.35s ease, visibility 0s linear 0s;
     }
   }
 {%- endstyle -%}
@@ -58,40 +122,24 @@
 <footer class="footer section-{{ section.id }}-padding">
   <div class="page-width">
     <div class="footer__top">
-      <div class="footer__info">
-        {%- if settings.brand_image != blank -%}
-          <a aria-label="Site Logo" href="/" class="footer__logo">
-            {%- assign brand_image_height = settings.brand_image_width
-                | divided_by: settings.brand_image.aspect_ratio
-            -%}
-            <div style="max-width: min(245px, {{ settings.brand_image_width }}px);">
-              {{
+
+      {%- if settings.brand_image != blank -%}
+        <a aria-label="Site Logo" href="/" class="footer__logo">
+          {%- assign brand_image_height = settings.brand_image_width | divided_by: settings.brand_image.aspect_ratio -%}
+          <div style="max-width: min(245px, {{ settings.brand_image_width }}px);">
+            {{
               settings.brand_image
               | image_url: width: 1100
               | image_tag:
-              loading: 'lazy',
-              widths: '50, 100, 150, 200, 300, 400, 550, 800, 1100',
-              height: brand_image_height,
-              width: settings.brand_image_width
-              }}
-            </div>
-          </a>
-        {%- endif -%}
-        <div class="footer__contacts">
-          <div class="footer__address">
-            {{ shop.address.street }}<br>
-            {{ shop.address.city }}, {{ shop.address.province_code }} {{ shop.address.zip }}
+                loading: 'lazy',
+                widths: '50, 100, 150, 200, 300, 400, 550, 800, 1100',
+                height: brand_image_height,
+                width: settings.brand_image_width
+            }}
           </div>
-          {% if shop.phone != empty %}
-            {% assign phone = shop.phone | remove: '-' | remove: ' ' %}
-            <a href="tel:+1-925-215-2927" class="footer__phone">+1-925-215-2927</a>
-          {% endif %}
-          <a href="mailto:sales@fitnesssuperstore.com" class="footer__email">sales@fitnesssuperstore.com</a>
-        </div>
-        {%- if has_social_icons -%}
-          {%- render 'social-icons', class: 'footer__socials' -%}
-        {%- endif -%}
-      </div>
+        </a>
+      {%- endif -%}
+
       {% if section.settings.menu != blank %}
         <div class="footer__menu">
           {% for link in section.settings.menu.links %}
@@ -99,10 +147,24 @@
             {% if link.links.size > 0 %}
               {% assign has_submenu = true %}
             {% endif %}
+
             <div class="footer__menu-col">
               {% if has_submenu %}
-                <div class="footer__menu-label">{{ link.title | escape }}</div>
-                <ul class="footer__menu-links">
+                <button
+                  type="button"
+                  class="footer__menu-label footer__accordion-toggle"
+                  aria-expanded="false"
+                  aria-controls="footer-submenu-{{ section.id }}-{{ forloop.index }}"
+                >
+                  {{ link.title | escape }}
+                  <svg class="footer__chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                <ul
+                  class="footer__menu-links"
+                  id="footer-submenu-{{ section.id }}-{{ forloop.index }}"
+                >
                   {% for sub_link in link.links %}
                     <li>
                       <a href="{{ sub_link.url }}" class="footer__menu-link">{{ sub_link.title | escape }}</a>
@@ -116,75 +178,82 @@
           {% endfor %}
         </div>
       {% endif %}
-    </div>
-     <div class="footer-payment right" style="
-    display: flex;
-    gap: 10px;
-    justify-content: end;
-    margin-bottom: 10px;
-"> 
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Layer_1" x="0px" y="0px" viewBox="0 0 481.1 140.3" style="enable-background:new 0 0 481.1 140.3;" xml:space="preserve" width="110" height="32.08">
-<style type="text/css">
-	.st0{fill:#FFFFFF;}
-	.st1{fill:#EB7100;}
-</style>
-<g transform="translate(-43.322 -70.537)">
-	<g transform="translate(43.322 70.537)">
-		<path class="st0" d="M137.8,140.3L137.8,140.3l-50.2-32.7c3-3,6-6,8.9-8.5l16.2,10.6L105.5,91c3.4-3,6.8-6,10.2-8.5L137.8,140.3z"/>
-		<path class="st0" d="M129.7,44.2c-1.3,0.4-2.1,0.9-3.4,1.3c-6.8,3-13.6,6.4-20,10.2h-14l-8.1-20.8l-8.1,20.8H17.9L0,44.2h67.2    L84.2,0l17,44.2H129.7z"/>
-		<g transform="translate(6.23 10.19)">
-			<path class="st1" d="M161.4,33.1c-7.2,3-51,15.7-109.3,85c-0.9,0.9-10.2,11.5-21.7,11.5h-7.7l0,0h-2.6     c8.9-23,18.7-48.1,20.8-53.6c2.1-4.7,0.4-10.6-4.3-13.6l-0.4-0.4h12.3c4.7,0,8.5,3.4,8.9,8.1v0.4c0,1.7-0.4,3.4-0.9,4.7     c-3,7.2-6.4,17-8.9,23.4c0.9-0.4,2.1-1.7,3-2.6c20-22.5,44.6-40.4,71.9-53.2c11.5-5.1,23.8-8.5,36.1-9.4     C159.7,33.1,160.6,33.1,161.4,33.1z"/>
-		</g>
-	</g>
-	<g transform="translate(162.001 80.948)">
-		<path class="st0" d="M71.6,65.3h-6.8c-2.4,0-4.7,1.7-5.8,4.1l-17.3,46.5h10.5L55,108c1-2.4,3.1-4.1,5.8-4.1h15.3l4.1,12.2h10.5    L71.6,65.3z M59.4,94.8l6.8-18.7L73,94.8H59.4z"/>
-		<path class="st0" d="M232.1,81.2h10.5l8.5,22h0.3l8.8-22h10.5l-14.9,34.6h-9.2L232.1,81.2z"/>
-		<path class="st0" d="M194.1,81.2c-1.7-0.7-3.7-0.7-5.8-0.7c-2.4,0-5.1,0.3-7.1,1.4c-1,0.3-1.7,1-2.7,1.4v-2h-9.2v34.6h9.2V98.5    c0-0.3,0-0.7,0-1c0-1,0.3-2,0.7-2.7s0.3-1,0.7-1.7c0-0.3,0.3-0.3,0.3-0.7c0.3-0.3,0.7-1,1-1.4c0.3-0.3,0.7-0.7,1-1    c0.7-0.3,1-0.7,1.7-1l0,0c0.7-0.3,1.7-0.3,2.7-0.3c0.7,0,1.7,0,2.4,0.3c0.7,0,1.4,0.3,2,0.7v-0.3l0,0l0.3-1l3.1-7.1H194.1z"/>
-		<path class="st0" d="M125.6,90.7c-0.7-2-2-4.1-3.4-5.8s-3.4-3.1-5.4-3.7c-2-0.7-4.1-1.4-6.1-1.4H94v49.9h9.2v-13.6h7.8    c2,0,4.4-0.3,6.1-1.4c2-1,3.7-2,5.4-3.7c1.7-1.7,2.7-3.7,3.4-5.8C127.3,100.6,127.3,95.5,125.6,90.7z M117.1,101.6    c-0.3,1-1,2-2,2.7c-0.7,0.7-1.7,1.4-2.7,1.7c-1,0.3-2.4,0.7-3.4,0.7h-6.1V89.4h6.1c1,0,2.4,0.3,3.4,0.7c1,0.3,2,1,2.7,1.7    C117.8,94.1,118.5,98.2,117.1,101.6z"/>
-		<path class="st0" d="M163.2,90.7c-0.7-2-2-4.1-3.4-5.8s-3.4-3.1-5.4-3.7s-4.1-1.4-6.1-1.4h-16.6v49.9h8.5v-13.6h7.8    c2,0,4.4-0.3,6.1-1.4c2-1,3.7-2,5.4-3.7s2.7-3.7,3.4-5.8C164.9,100.6,164.9,95.5,163.2,90.7z M154.8,101.6c-0.3,1-1,2-2,2.7    c-0.7,0.7-1.7,1.4-2.7,1.7c-1,0.3-2.4,0.7-3.4,0.7h-6.4V89.4h6.1c1,0,2.4,0.3,3.4,0.7c1,0.3,2,1,2.7,1.7    C155.4,94.1,156.1,98.2,154.8,101.6z"/>
-		<path class="st0" d="M313.8,105c0.7,2,2,4.1,3.4,5.8s3.4,3.1,5.4,3.7s4.1,1.4,6.1,1.4h16.6V65.3h-8.5v14.2h-7.8    c-2,0-4.4,0.3-6.1,1.4c-2,1-3.7,2-5.4,3.7c-1.7,1.7-2.7,3.7-3.4,5.8C312.1,95.2,312.1,100.2,313.8,105L313.8,105z M322.3,94.1    c0.3-1,1-2,2-2.7c0.7-0.7,1.7-1.4,2.7-1.7c1.4-0.7,2.4-0.7,3.7-0.7h6.1v17.6h-6.1c-1,0-2.4-0.3-3.4-0.7c-1-0.3-2-1-2.7-1.7    C321.6,101.6,321,97.5,322.3,94.1z"/>
-		<path class="st0" d="M230.4,91.1c-2-4.4-5.4-7.8-9.8-9.5c-4.7-1.7-9.8-1.7-14.6,0c-4.4,1.7-7.8,5.1-9.5,9.5    c-1.7,4.7-1.7,10.2,0,14.9c1.7,4.4,5.1,7.8,9.5,9.5c4.7,1.7,9.8,1.7,14.6,0c4.4-1.7,7.8-5.1,9.5-9.5    C232.1,101.3,232.1,95.8,230.4,91.1z M221.9,102.3c-0.7,2-2.4,3.7-4.4,4.7c-2.4,1-5.1,1-7.8,0c-2-0.7-3.7-2.4-4.7-4.7    c-1-2.7-1-5.4,0-7.8c0.7-2,2.4-3.7,4.4-4.7c2.7-0.7,5.4-0.7,7.8,0.3c2,0.7,3.7,2.4,4.4,4.7C222.6,97.2,222.6,99.9,221.9,102.3    L221.9,102.3z"/>
-		<g transform="translate(91.425 0.176)">
-			<path class="st0" d="M271,70.8c0,2.7-2.4,5.4-5.1,5.4c-3.1,0-5.4-2.4-5.4-5.1c0-3.1,2-5.4,5.1-5.4l0,0     C268.6,65.7,271,67.8,271,70.8L271,70.8z M261.8,70.8c0,2,1.7,4.1,3.7,4.1l0,0c2,0,3.7-1.7,3.7-3.7l0,0c0-2-1.7-4.1-3.7-4.1     C263.5,67.1,261.8,68.4,261.8,70.8C261.8,70.5,261.8,70.8,261.8,70.8L261.8,70.8z M264.9,73.5h-1v-5.1c0.7,0,1.4,0,2,0     c0.7,0,1.4,0,1.7,0.3c0,0,0.3,0.3,0.3,1s-0.3,1-1,1l0,0c0.3,0.3,0.7,0.7,1,1.4c0,0.3,0.3,1,0.3,1.4h-1.4c-0.3-0.3-0.3-1-0.3-1.4     c0-0.7-0.3-0.7-1-0.7h-0.7V73.5z M264.9,70.5h0.7c0.7,0,1-0.3,1-0.7c0-0.3-0.3-0.7-1-0.7c-0.3,0-0.3,0-0.7,0V70.5z"/>
-		</g>
-		<path class="st0" d="M307.4,107.7c-1.7,2.7-3.7,5.1-6.4,6.8c-3.1,1.7-6.4,2.7-9.8,2.7c-2.4,0-5.1-0.3-7.5-1.4    c-4.4-2-7.8-5.4-9.5-9.8c-1-2.4-1.4-4.7-1.4-7.5c0-2.4,0.3-4.7,1.4-7.1c1.7-4.4,5.1-7.8,9.5-9.8c2.4-1,4.7-1.4,7.1-1.4    s5.1,0.3,7.5,1.4c2,1,4.1,2,5.4,3.7c1.4,1.7,2.7,3.7,3.4,5.8c0.7,2.4,1,4.7,1,7.1v1c0,0.3,0,0.7,0,0.7c0,0.3,0,0.7,0,0.7H282    c0,1.4,0.7,2.4,1,3.7c0.7,1,1.4,1.7,2,2.7c1,0.7,1.7,1,2.7,1.4c1,0.3,2,0.3,3.1,0.3c1.7,0,3.7-0.3,5.4-1.4c1.4-1,2.4-2,3.4-3.7    L307.4,107.7z M298.9,94.1c0-0.7-0.3-1.4-0.7-2s-1-1.4-1.7-2c-0.7-0.7-1.7-1.4-2.7-1.7c-1-0.3-2.4-0.7-3.7-0.7    c-2,0-3.7,0.7-5.1,1.7c-1.7,1.4-2.7,2.7-3.1,4.7H298.9z"/>
-	</g>
-	<g>
-		<path class="st1" d="M274,84.5h9.1v14.9h10.5c3.7-0.3,7.5,1,9.8,4.1c2.4,3,3.4,6.8,3,10.8v21h-9.1v-20c0-1.7-0.3-3.4-1.7-4.7    c-1-1.4-2.7-2-4.4-2h-8.1l-0.3,26.4h-9.1V84.5H274z"/>
-		<path class="st1" d="M267.3,121.4c0,3.4-1.4,6.8-3.7,9.1l0,0c-2.7,2.7-6.1,4.1-9.8,4.1h-20.7v-9.1h20.7c2.4,0,4.4-1.7,4.4-4.1l0,0    l0,0c0-1-0.3-2-0.7-2.7c-0.3-0.3-0.3-0.7-0.7-1c-0.3-0.3-0.7-1-1.4-1.4c-0.3-0.3-1-0.7-1.4-1c-0.3-0.3-1-0.7-1.7-1    c-1.7-0.7-3-1.4-4.7-2l-3.4-1c-1.4-0.7-2.7-1-4.1-2c-1.4-0.7-2.7-1.7-3.7-3c-1-1-1.7-2-2.4-3c0-0.3-0.3-0.7-0.3-1    c-0.7-1.4-1-3-1-4.7c0-1.4,0-2.4,0.3-3.4c0.7-2,1.7-4.1,3.4-5.4c2.4-2.7,6.1-4.1,9.5-4.1h18.6v9.1h-18.6c-1,0-2.4,0.3-3,1.4l0,0    c-0.7,0.7-1,1.7-1,2.4c0,0.3,0,0.7,0.3,1c0.3,0.7,0.7,1,1,1.4c0.7,0.7,1,1,1.7,1.4c0.7,0.3,1.7,1,2.4,1.4l3.4,1    c2,0.7,3.7,1.4,5.8,2.4c1.7,0.7,3.4,2,4.7,3l0,0c0.7,0.7,1.4,1.4,2,2l0.3,0.3c1.7,2,2.7,4.4,3,6.8    C267.3,119.7,267.3,120.7,267.3,121.4z"/>
-		<path class="st1" d="M495.2,100.4c-1.7-0.7-3.7-0.7-5.8-0.7c-2.4,0-5.1,0.3-7.1,1.4c-1,0.3-1.7,1-2.7,1.4v-2h-9.1V135h9.1v-17.3    c0-0.3,0-0.7,0-1c0-1,0.3-2,0.7-2.7c0.3-0.7,0.3-1,0.7-1.7c0-0.3,0.3-0.3,0.3-0.7c0.3-0.3,0.7-1,1-1.4c0.3-0.3,0.7-0.7,1-1    c0.7-0.3,1-0.7,1.7-1c0,0,0,0,0.3,0c0.7-0.3,1.7-0.3,2.7-0.3c0.7,0,1.7,0,2.4,0.3c0.7,0,1.4,0.3,2,0.7v-0.3l0,0l0.3-1l2.7-7.1    C495.5,100.4,495.2,100.4,495.2,100.4z"/>
-		<path class="st1" d="M385.1,110.2c-0.7-2-2-4.1-3.7-5.8c-1.4-1.7-3.4-3-5.4-3.7c-2-0.7-4.1-1.4-6.1-1.4h-16.6v49.8h9.1v-13.9h7.8    c2,0,4.4-0.3,6.1-1.4c2-1,3.7-2,5.4-3.7c1.7-1.7,2.7-3.7,3.4-5.8C387.1,120.1,387.1,114.6,385.1,110.2L385.1,110.2z M376.6,121.1    c-0.3,1-1,2-2,2.7c-0.7,0.7-1.7,1.4-2.7,1.7c-1,0.3-2.4,0.7-3.4,0.7h-6.1v-17.6h6.1c1,0,2.4,0.3,3.4,0.7s2,1,2.7,1.7    C377.7,113.6,378.3,117.7,376.6,121.1L376.6,121.1z"/>
-		<path class="st1" d="M423,110.2c-0.7-2-2-4.1-3.4-5.8c-1.4-1.7-3.4-3-5.4-3.7c-2-0.7-4.1-1.4-6.1-1.4h-16.6v49.8h9.1v-13.9h7.8    c2,0,4.4-0.3,6.1-1.4c2-1,3.7-2,5.4-3.7c1.7-1.7,2.7-3.7,3.4-5.8C424.7,120.1,424.7,114.6,423,110.2L423,110.2z M414.6,121.1    c-0.3,1-1,2-2,2.7c-0.7,0.7-1.7,1.4-2.7,1.7c-1,0.3-2.4,0.7-3.4,0.7h-6.1v-17.6h6.1c1,0,2.4,0.3,3.4,0.7s2,1,2.7,1.7    C415.3,113.6,415.9,117.7,414.6,121.1L414.6,121.1z"/>
-		<path class="st1" d="M346.8,110.2c-1.7-4.4-5.1-7.8-9.5-9.5c-4.7-1.7-9.8-1.7-14.6,0c-2,1-4.1,2-5.8,3.7c-1.7,1.7-3,3.7-3.7,5.8    c-1.7,4.7-1.7,10.2,0,14.9c1.7,4.4,5.1,7.8,9.5,9.5c4.7,1.7,9.8,1.7,14.6,0c4.4-1.7,7.8-5.1,9.5-9.5    C348.5,120.4,348.5,115.3,346.8,110.2L346.8,110.2z M338.4,121.8c-0.3,1-1,2-1.7,2.7c-0.7,0.7-1.7,1.4-2.7,1.7c-2.4,1-5.1,1-7.8,0    c-1-0.3-2-1-2.7-1.7c-0.7-0.7-1.4-1.7-1.7-2.7c-1-2.7-1-5.4,0-7.8c0.7-2,2.4-3.7,4.4-4.7c2.4-1,5.4-1,7.8,0c1,0.3,2,1,2.7,1.7    c0.7,0.7,1.4,1.7,1.7,2.7C339.1,116.3,339.1,119.1,338.4,121.8L338.4,121.8z"/>
-		<path class="st1" d="M463.3,126.8c-1.7,2.7-3.7,5.1-6.4,6.8c-3,1.7-6.4,2.7-9.8,2.7c-2.4,0-5.1-0.3-7.5-1.4    c-4.4-1.7-7.8-5.4-9.8-9.8c-1-2.4-1.4-4.7-1.4-7.5c0-2.4,0.3-4.7,1.4-7.1c1.7-4.4,5.1-7.8,9.5-9.8c2.4-1,4.7-1.4,7.1-1.4    c2.4,0,5.1,0.3,7.5,1.4c2,1,4.1,2,5.4,3.7c1.4,1.7,2.7,3.7,3.4,5.8c0.7,2.4,1,4.7,1,7.1v0.7c0,0.3,0,0.7,0,0.7c0,0.3,0,0.7,0,0.7    h-26.1c0,1.4,0.7,2.4,1,3.7c0.7,1,1.4,1.7,2,2.7c1,0.7,1.7,1,2.7,1.4c1,0.3,2,0.3,3,0.3c1.7,0,3.7-0.3,5.4-1.4    c1.4-1,2.4-2,3.4-3.7L463.3,126.8z M454.9,113.3c0-0.7-0.3-1.4-0.7-2c-0.3-0.7-1-1.4-1.7-2c-0.7-0.7-1.7-1.4-2.7-1.7    c-1-0.3-2.4-0.7-3.7-0.7c-2,0-3.7,0.7-5.1,1.7c-1.7,1.4-2.7,2.7-3,4.7L454.9,113.3z"/>
-	</g>
-</g>
-</svg>
 
+      <div class="footer__contacts-wrap">
+        <div class="footer__contacts">
+          <div class="footer__address">
+            {{ shop.address.street }}<br>
+            {{ shop.address.city }}, {{ shop.address.province_code }} {{ shop.address.zip }}
+          </div>
+          {% if shop.phone != empty %}
+            <a href="tel:+1-925-215-2927" class="footer__phone">+1-925-215-2927</a>
+          {% endif %}
+          <a href="mailto:sales@fitnesssuperstore.com" class="footer__email">sales@fitnesssuperstore.com</a>
+        </div>
 
-<div>
-
-
-<a href="https://www.bbb.org/us/ca/benicia/profile/exercise-machines/fitness-superstore-inc-1116-378564/#sealclick" rel="nofollow">
-  <img 
-    src="https://seal-goldengate.bbb.org/seals/darkgray-seal-200-42-whitetxt-bbb-378564.png" 
-    width="200" 
-    height="42" 
-    style="border: 0;" 
-    alt="Fitness Superstore. BBB Business Review" 
-  />
-</a>
-
-</div>
+        {%- if has_social_icons -%}
+          {%- render 'social-icons', class: 'footer__socials' -%}
+        {%- endif -%}
+      </div>
 
     </div>
+
+    <div class="footer-payment right" style="display: flex; gap: 10px; justify-content: end; margin-bottom: 10px;">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Layer_1" x="0px" y="0px" viewBox="0 0 481.1 140.3" style="enable-background:new 0 0 481.1 140.3;" xml:space="preserve" width="110" height="32.08">
+        <style type="text/css">.st0{fill:#FFFFFF;}.st1{fill:#EB7100;}</style>
+        <g transform="translate(-43.322 -70.537)">
+          <g transform="translate(43.322 70.537)">
+            <path class="st0" d="M137.8,140.3L137.8,140.3l-50.2-32.7c3-3,6-6,8.9-8.5l16.2,10.6L105.5,91c3.4-3,6.8-6,10.2-8.5L137.8,140.3z"/>
+            <path class="st0" d="M129.7,44.2c-1.3,0.4-2.1,0.9-3.4,1.3c-6.8,3-13.6,6.4-20,10.2h-14l-8.1-20.8l-8.1,20.8H17.9L0,44.2h67.2    L84.2,0l17,44.2H129.7z"/>
+            <g transform="translate(6.23 10.19)">
+              <path class="st1" d="M161.4,33.1c-7.2,3-51,15.7-109.3,85c-0.9,0.9-10.2,11.5-21.7,11.5h-7.7l0,0h-2.6     c8.9-23,18.7-48.1,20.8-53.6c2.1-4.7,0.4-10.6-4.3-13.6l-0.4-0.4h12.3c4.7,0,8.5,3.4,8.9,8.1v0.4c0,1.7-0.4,3.4-0.9,4.7     c-3,7.2-6.4,17-8.9,23.4c0.9-0.4,2.1-1.7,3-2.6c20-22.5,44.6-40.4,71.9-53.2c11.5-5.1,23.8-8.5,36.1-9.4     C159.7,33.1,160.6,33.1,161.4,33.1z"/>
+            </g>
+          </g>
+          <g transform="translate(162.001 80.948)">
+            <path class="st0" d="M71.6,65.3h-6.8c-2.4,0-4.7,1.7-5.8,4.1l-17.3,46.5h10.5L55,108c1-2.4,3.1-4.1,5.8-4.1h15.3l4.1,12.2h10.5    L71.6,65.3z M59.4,94.8l6.8-18.7L73,94.8H59.4z"/>
+            <path class="st0" d="M232.1,81.2h10.5l8.5,22h0.3l8.8-22h10.5l-14.9,34.6h-9.2L232.1,81.2z"/>
+            <path class="st0" d="M194.1,81.2c-1.7-0.7-3.7-0.7-5.8-0.7c-2.4,0-5.1,0.3-7.1,1.4c-1,0.3-1.7,1-2.7,1.4v-2h-9.2v34.6h9.2V98.5    c0-0.3,0-0.7,0-1c0-1,0.3-2,0.7-2.7s0.3-1,0.7-1.7c0-0.3,0.3-0.3,0.3-0.7c0.3-0.3,0.7-1,1-1.4c0.3-0.3,0.7-0.7,1-1    c0.7-0.3,1-0.7,1.7-1l0,0c0.7-0.3,1.7-0.3,2.7-0.3c0.7,0,1.7,0,2.4,0.3c0.7,0,1.4,0.3,2,0.7v-0.3l0,0l0.3-1l3.1-7.1H194.1z"/>
+            <path class="st0" d="M125.6,90.7c-0.7-2-2-4.1-3.4-5.8s-3.4-3.1-5.4-3.7c-2-0.7-4.1-1.4-6.1-1.4H94v49.9h9.2v-13.6h7.8    c2,0,4.4-0.3,6.1-1.4c2-1,3.7-2,5.4-3.7c1.7-1.7,2.7-3.7,3.4-5.8C127.3,100.6,127.3,95.5,125.6,90.7z M117.1,101.6    c-0.3,1-1,2-2,2.7c-0.7,0.7-1.7,1.4-2.7,1.7c-1,0.3-2.4,0.7-3.4,0.7h-6.1V89.4h6.1c1,0,2.4,0.3,3.4,0.7c1,0.3,2,1,2.7,1.7    C117.8,94.1,118.5,98.2,117.1,101.6z"/>
+            <path class="st0" d="M163.2,90.7c-0.7-2-2-4.1-3.4-5.8s-3.4-3.1-5.4-3.7s-4.1-1.4-6.1-1.4h-16.6v49.9h8.5v-13.6h7.8    c2,0,4.4-0.3,6.1-1.4c2-1,3.7-2,5.4-3.7s2.7-3.7,3.4-5.8C164.9,100.6,164.9,95.5,163.2,90.7z M154.8,101.6c-0.3,1-1,2-2,2.7    c-0.7,0.7-1.7,1.4-2.7,1.7c-1,0.3-2.4,0.7-3.4,0.7h-6.4V89.4h6.1c1,0,2.4,0.3,3.4,0.7c1,0.3,2,1,2.7,1.7    C155.4,94.1,156.1,98.2,154.8,101.6z"/>
+            <path class="st0" d="M313.8,105c0.7,2,2,4.1,3.4,5.8s3.4,3.1,5.4,3.7s4.1,1.4,6.1,1.4h16.6V65.3h-8.5v14.2h-7.8    c-2,0-4.4,0.3-6.1,1.4c-2,1-3.7,2-5.4,3.7c-1.7,1.7-2.7,3.7-3.4,5.8C312.1,95.2,312.1,100.2,313.8,105L313.8,105z M322.3,94.1    c0.3-1,1-2,2-2.7c0.7-0.7,1.7-1.4,2.7-1.7c1.4-0.7,2.4-0.7,3.7-0.7h6.1v17.6h-6.1c-1,0-2.4-0.3-3.4-0.7c-1-0.3-2-1-2.7-1.7    C321.6,101.6,321,97.5,322.3,94.1z"/>
+            <path class="st0" d="M230.4,91.1c-2-4.4-5.4-7.8-9.8-9.5c-4.7-1.7-9.8-1.7-14.6,0c-4.4,1.7-7.8,5.1-9.5,9.5    c-1.7,4.7-1.7,10.2,0,14.9c1.7,4.4,5.1,7.8,9.5,9.5c4.7,1.7,9.8,1.7,14.6,0c4.4-1.7,7.8-5.1,9.5-9.5    C232.1,101.3,232.1,95.8,230.4,91.1z M221.9,102.3c-0.7,2-2.4,3.7-4.4,4.7c-2.4,1-5.1,1-7.8,0c-2-0.7-3.7-2.4-4.7-4.7    c-1-2.7-1-5.4,0-7.8c0.7-2,2.4-3.7,4.4-4.7c2.7-0.7,5.4-0.7,7.8,0.3c2,0.7,3.7,2.4,4.4,4.7C222.6,97.2,222.6,99.9,221.9,102.3    L221.9,102.3z"/>
+            <g transform="translate(91.425 0.176)">
+              <path class="st0" d="M271,70.8c0,2.7-2.4,5.4-5.1,5.4c-3.1,0-5.4-2.4-5.4-5.1c0-3.1,2-5.4,5.1-5.4l0,0     C268.6,65.7,271,67.8,271,70.8L271,70.8z M261.8,70.8c0,2,1.7,4.1,3.7,4.1l0,0c2,0,3.7-1.7,3.7-3.7l0,0c0-2-1.7-4.1-3.7-4.1     C263.5,67.1,261.8,68.4,261.8,70.8C261.8,70.5,261.8,70.8,261.8,70.8L261.8,70.8z M264.9,73.5h-1v-5.1c0.7,0,1.4,0,2,0     c0.7,0,1.4,0,1.7,0.3c0,0,0.3,0.3,0.3,1s-0.3,1-1,1l0,0c0.3,0.3,0.7,0.7,1,1.4c0,0.3,0.3,1,0.3,1.4h-1.4c-0.3-0.3-0.3-1-0.3-1.4     c0-0.7-0.3-0.7-1-0.7h-0.7V73.5z M264.9,70.5h0.7c0.7,0,1-0.3,1-0.7c0-0.3-0.3-0.7-1-0.7c-0.3,0-0.3,0-0.7,0V70.5z"/>
+            </g>
+            <path class="st0" d="M307.4,107.7c-1.7,2.7-3.7,5.1-6.4,6.8c-3.1,1.7-6.4,2.7-9.8,2.7c-2.4,0-5.1-0.3-7.5-1.4    c-4.4-2-7.8-5.4-9.5-9.8c-1-2.4-1.4-4.7-1.4-7.5c0-2.4,0.3-4.7,1.4-7.1c1.7-4.4,5.1-7.8,9.5-9.8c2.4-1,4.7-1.4,7.1-1.4    s5.1,0.3,7.5,1.4c2,1,4.1,2,5.4,3.7c1.4,1.7,2.7,3.7,3.4,5.8c0.7,2.4,1,4.7,1,7.1v1c0,0.3,0,0.7,0,0.7c0,0.3,0,0.7,0,0.7H282    c0,1.4,0.7,2.4,1,3.7c0.7,1,1.4,1.7,2,2.7c1,0.7,1.7,1,2.7,1.4c1,0.3,2,0.3,3.1,0.3c1.7,0,3.7-0.3,5.4-1.4c1.4-1,2.4-2,3.4-3.7    L307.4,107.7z M298.9,94.1c0-0.7-0.3-1.4-0.7-2s-1-1.4-1.7-2c-0.7-0.7-1.7-1.4-2.7-1.7c-1-0.3-2.4-0.7-3.7-0.7    c-2,0-3.7,0.7-5.1,1.7c-1.7,1.4-2.7,2.7-3.1,4.7H298.9z"/>
+          </g>
+          <g>
+            <path class="st1" d="M274,84.5h9.1v14.9h10.5c3.7-0.3,7.5,1,9.8,4.1c2.4,3,3.4,6.8,3,10.8v21h-9.1v-20c0-1.7-0.3-3.4-1.7-4.7    c-1-1.4-2.7-2-4.4-2h-8.1l-0.3,26.4h-9.1V84.5H274z"/>
+            <path class="st1" d="M267.3,121.4c0,3.4-1.4,6.8-3.7,9.1l0,0c-2.7,2.7-6.1,4.1-9.8,4.1h-20.7v-9.1h20.7c2.4,0,4.4-1.7,4.4-4.1l0,0    l0,0c0-1-0.3-2-0.7-2.7c-0.3-0.3-0.3-0.7-0.7-1c-0.3-0.3-0.7-1-1.4-1.4c-0.3-0.3-1-0.7-1.4-1c-0.3-0.3-1-0.7-1.7-1    c-1.7-0.7-3-1.4-4.7-2l-3.4-1c-1.4-0.7-2.7-1-4.1-2c-1.4-0.7-2.7-1.7-3.7-3c-1-1-1.7-2-2.4-3c0-0.3-0.3-0.7-0.3-1    c-0.7-1.4-1-3-1-4.7c0-1.4,0-2.4,0.3-3.4c0.7-2,1.7-4.1,3.4-5.4c2.4-2.7,6.1-4.1,9.5-4.1h18.6v9.1h-18.6c-1,0-2.4,0.3-3,1.4l0,0    c-0.7,0.7-1,1.7-1,2.4c0,0.3,0,0.7,0.3,1c0.3,0.7,0.7,1,1,1.4c0.7,0.7,1,1,1.7,1.4c0.7,0.3,1.7,1,2.4,1.4l3.4,1    c2,0.7,3.7,1.4,5.8,2.4c1.7,0.7,3.4,2,4.7,3l0,0c0.7,0.7,1.4,1.4,2,2l0.3,0.3c1.7,2,2.7,4.4,3,6.8    C267.3,119.7,267.3,120.7,267.3,121.4z"/>
+            <path class="st1" d="M495.2,100.4c-1.7-0.7-3.7-0.7-5.8-0.7c-2.4,0-5.1,0.3-7.1,1.4c-1,0.3-1.7,1-2.7,1.4v-2h-9.1V135h9.1v-17.3    c0-0.3,0-0.7,0-1c0-1,0.3-2,0.7-2.7c0.3-0.7,0.3-1,0.7-1.7c0-0.3,0.3-0.3,0.3-0.7c0.3-0.3,0.7-1,1-1.4c0.3-0.3,0.7-0.7,1-1    c0.7-0.3,1-0.7,1.7-1c0,0,0,0,0.3,0c0.7-0.3,1.7-0.3,2.7-0.3c0.7,0,1.7,0,2.4,0.3c0.7,0,1.4,0.3,2,0.7v-0.3l0,0l0.3-1l2.7-7.1    C495.5,100.4,495.2,100.4,495.2,100.4z"/>
+            <path class="st1" d="M385.1,110.2c-0.7-2-2-4.1-3.7-5.8c-1.4-1.7-3.4-3-5.4-3.7c-2-0.7-4.1-1.4-6.1-1.4h-16.6v49.8h9.1v-13.9h7.8    c2,0,4.4-0.3,6.1-1.4c2-1,3.7-2,5.4-3.7c1.7-1.7,2.7-3.7,3.4-5.8C387.1,120.1,387.1,114.6,385.1,110.2L385.1,110.2z M376.6,121.1    c-0.3,1-1,2-2,2.7c-0.7,0.7-1.7,1.4-2.7,1.7c-1,0.3-2.4,0.7-3.4,0.7h-6.1v-17.6h6.1c1,0,2.4,0.3,3.4,0.7s2,1,2.7,1.7    C377.7,113.6,378.3,117.7,376.6,121.1L376.6,121.1z"/>
+            <path class="st1" d="M423,110.2c-0.7-2-2-4.1-3.4-5.8c-1.4-1.7-3.4-3-5.4-3.7c-2-0.7-4.1-1.4-6.1-1.4h-16.6v49.8h9.1v-13.9h7.8    c2,0,4.4-0.3,6.1-1.4c2-1,3.7-2,5.4-3.7c1.7-1.7,2.7-3.7,3.4-5.8C424.7,120.1,424.7,114.6,423,110.2L423,110.2z M414.6,121.1    c-0.3,1-1,2-2,2.7c-0.7,0.7-1.7,1.4-2.7,1.7c-1,0.3-2.4,0.7-3.4,0.7h-6.1v-17.6h6.1c1,0,2.4,0.3,3.4,0.7s2,1,2.7,1.7    C415.3,113.6,415.9,117.7,414.6,121.1L414.6,121.1z"/>
+            <path class="st1" d="M346.8,110.2c-1.7-4.4-5.1-7.8-9.5-9.5c-4.7-1.7-9.8-1.7-14.6,0c-2,1-4.1,2-5.8,3.7c-1.7,1.7-3,3.7-3.7,5.8    c-1.7,4.7-1.7,10.2,0,14.9c1.7,4.4,5.1,7.8,9.5,9.5c4.7,1.7,9.8,1.7,14.6,0c4.4-1.7,7.8-5.1,9.5-9.5    C348.5,120.4,348.5,115.3,346.8,110.2L346.8,110.2z M338.4,121.8c-0.3,1-1,2-1.7,2.7c-0.7,0.7-1.7,1.4-2.7,1.7c-2.4,1-5.1,1-7.8,0    c-1-0.3-2-1-2.7-1.7c-0.7-0.7-1.4-1.7-1.7-2.7c-1-2.7-1-5.4,0-7.8c0.7-2,2.4-3.7,4.4-4.7c2.4-1,5.4-1,7.8,0c1,0.3,2,1,2.7,1.7    c0.7,0.7,1.4,1.7,1.7,2.7C339.1,116.3,339.1,119.1,338.4,121.8L338.4,121.8z"/>
+            <path class="st1" d="M463.3,126.8c-1.7,2.7-3.7,5.1-6.4,6.8c-3,1.7-6.4,2.7-9.8,2.7c-2.4,0-5.1-0.3-7.5-1.4    c-4.4-1.7-7.8-5.4-9.8-9.8c-1-2.4-1.4-4.7-1.4-7.5c0-2.4,0.3-4.7,1.4-7.1c1.7-4.4,5.1-7.8,9.5-9.8c2.4-1,4.7-1.4,7.1-1.4    c2.4,0,5.1,0.3,7.5,1.4c2,1,4.1,2,5.4,3.7c1.4,1.7,2.7,3.7,3.4,5.8c0.7,2.4,1,4.7,1,7.1v0.7c0,0.3,0,0.7,0,0.7c0,0.3,0,0.7,0,0.7    h-26.1c0,1.4,0.7,2.4,1,3.7c0.7,1,1.4,1.7,2,2.7c1,0.7,1.7,1,2.7,1.4c1,0.3,2,0.3,3,0.3c1.7,0,3.7-0.3,5.4-1.4    c1.4-1,2.4-2,3.4-3.7L463.3,126.8z M454.9,113.3c0-0.7-0.3-1.4-0.7-2c-0.3-0.7-1-1.4-1.7-2c-0.7-0.7-1.7-1.4-2.7-1.7    c-1-0.3-2.4-0.7-3.7-0.7c-2,0-3.7,0.7-5.1,1.7c-1.7,1.4-2.7,2.7-3,4.7L454.9,113.3z"/>
+          </g>
+        </g>
+      </svg>
+
+      <div>
+        <a href="https://www.bbb.org/us/ca/benicia/profile/exercise-machines/fitness-superstore-inc-1116-378564/#sealclick" rel="nofollow" aria-label="Fitness Superstore BBB Business Review">
+          <img
+            src="https://seal-goldengate.bbb.org/seals/darkgray-seal-200-42-whitetxt-bbb-378564.png"
+            width="200"
+            height="42"
+            style="border: 0;"
+            alt="Fitness Superstore. BBB Business Review"
+          />
+        </a>
+      </div>
+    </div>
+
     <div class="footer__bottom">
       <div class="footer__copyright">
         Copyright © {{ 'now' | date: '%Y' }} {{ shop.name | link_to: routes.root_url -}}&nbsp; | &nbsp;All Rights Reserved
       </div>
     </div>
+
   </div>
- 
 </footer>
 
 {% schema %}
@@ -249,3 +318,76 @@
   ]
 }
 {% endschema %}
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Only run accordion behaviour on mobile
+  const mq = window.matchMedia('(max-width: 749px)');
+
+  // Keep a collapsed submenu out of the keyboard tab order / accessibility tree
+  // while its links stay in the DOM. Mirrors the .is-open visual state.
+  function setSubmenuOpen(submenu, open) {
+    if (!submenu) return;
+    submenu.classList.toggle('is-open', open);
+    if (open) {
+      submenu.removeAttribute('inert');
+    } else {
+      submenu.setAttribute('inert', '');
+    }
+  }
+
+  function initAccordions() {
+    const toggles = document.querySelectorAll('.footer__accordion-toggle');
+    if (!toggles.length) return;
+
+    toggles.forEach(toggle => {
+      // Remove any old listener by cloning (safe in case of theme editor re-init)
+      const fresh = toggle.cloneNode(true);
+      toggle.parentNode.replaceChild(fresh, toggle);
+    });
+
+    // Re-query after clone
+    document.querySelectorAll('.footer__accordion-toggle').forEach(toggle => {
+      // Reflect the initial collapsed state: closed submenus are non-focusable.
+      const submenu = document.getElementById(toggle.getAttribute('aria-controls'));
+      setSubmenuOpen(submenu, toggle.getAttribute('aria-expanded') === 'true');
+
+      toggle.addEventListener('click', () => {
+        // Listeners persist after the viewport widens past the breakpoint.
+        // Do nothing on desktop, where every submenu is meant to stay visible
+        // and focusable — a desktop heading click must never toggle open/closed
+        // state or apply `inert`.
+        if (!mq.matches) return;
+
+        const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+        const submenu = document.getElementById(toggle.getAttribute('aria-controls'));
+
+        // Close all others
+        document.querySelectorAll('.footer__accordion-toggle').forEach(other => {
+          if (other !== toggle) {
+            other.setAttribute('aria-expanded', 'false');
+            setSubmenuOpen(document.getElementById(other.getAttribute('aria-controls')), false);
+          }
+        });
+
+        toggle.setAttribute('aria-expanded', String(!isOpen));
+        setSubmenuOpen(submenu, !isOpen);
+      });
+    });
+  }
+
+  // On desktop the submenus are always visible, so they must never be inert
+  // or hidden from the keyboard.
+  function clearInert() {
+    document.querySelectorAll('.footer__menu-links').forEach(submenu => {
+      submenu.removeAttribute('inert');
+    });
+  }
+
+  // Only activate on mobile; also re-run if viewport crosses the breakpoint
+  if (mq.matches) initAccordions(); else clearInert();
+  mq.addEventListener('change', e => {
+    if (e.matches) initAccordions(); else clearInert();
+  });
+});
+</script>

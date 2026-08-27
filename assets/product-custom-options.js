@@ -25,6 +25,7 @@ if (!customElements.get('product-customization-options')) {
       #itemUpdateListenerAdded = false;
       #isReplacing = false;
       #initialized = false;
+      #applyingConditionalDefaults = false;
       #cartUpdateUnsubscribe = null;
       #variantChangeUnsubscribe = null;
       #onPageShow = null;
@@ -111,6 +112,8 @@ if (!customElements.get('product-customization-options')) {
         this.setDefaultOptionsListener();
         this.handleQuantity();
         this.handlePopupHelper();
+        this.handleHelpPopupAccordions();
+        this.handleMandatoryReset();
         this.relatedProductsSwitcher();
         this.colorSwatchHandler();
         this.addCustomColorHandler();
@@ -269,13 +272,89 @@ if (!customElements.get('product-customization-options')) {
         });
       }
 
+      // A conditional (tiered) option is hidden until its parent choice is picked,
+      // and hiding it clears whatever was selected inside. Nothing ever re-applied
+      // the option's own default when it became visible again, so the dependent step
+      // ended up with no selection at all - e.g. on the 5 Stack PDPs, switching
+      // "Stations Included" left "Station Layout" showing its default in the
+      // accordion label while no radio was actually checked. Because prepareOptions()
+      // reads `[data-customization-option]:checked`, that state also dropped the
+      // option from the cart line item even though the PDP looked configured.
+      // The same happens on first paint: both "Station Layout" accordions share a
+      // radio group name, so the server-rendered `checked` of the visible one is
+      // knocked out by the hidden one before it is cleared.
+      restoreConditionalDefault(accordion) {
+        const defaultId = accordion.dataset.defaultOption;
+        if (!defaultId) return false;
+        // Authoritative visibility check: in a deeper tier chain, restoring an earlier
+        // default dispatches an `input` that can re-run syncConditionalVisibility() and
+        // hide this accordion, so the caller's list may already be stale. Checking a
+        // hidden accordion's default would leave a hidden-but-checked option that
+        // prepareOptions() and updatePrice() would still count.
+        if (window.getComputedStyle(accordion).display === 'none') return false;
+        // Never override a selection the shopper already made.
+        if (accordion.querySelector('[data-customization-option]:checked')) return false;
+        const defaultInput = accordion.querySelector(`[data-customization-option="${defaultId}"]`);
+        if (!defaultInput || defaultInput.disabled) return false;
+        // The label is server-rendered with the default badge already in it, so clear
+        // it first - otherwise createOptionHTML appends a second copy of the badge.
+        const optionHandler = accordion.querySelector('[data-selected-options]');
+        if (optionHandler) {
+          optionHandler.querySelectorAll('[data-option-id]').forEach((badge) => badge.remove());
+          optionHandler.dataset.selectedOptions = '';
+        }
+        defaultInput.checked = true;
+        // Reuse the radio `input` handler (setCustomizationOption) so the label, the
+        // conditional state and the price all refresh the same way a click would.
+        defaultInput.dispatchEvent(new Event('input', { bubbles: true }));
+        return true;
+      }
+
+      // Applies the default of every conditional option that is currently visible
+      // with nothing selected. Only called when a parent choice changed or on init -
+      // not from addRemoveListener, so clearing an optional selection by hand still
+      // sticks. Defaults belong to the PDP configuration flow, so the cart contexts
+      // (which render the shopper's saved selections) are left untouched.
+      applyConditionalDefaults() {
+        if (window.location.href.includes('/cart') || this.closest('cart-notification') || this.closest('cart-drawer')) return;
+        if (this.#applyingConditionalDefaults) return;
+        this.#applyingConditionalDefaults = true;
+        try {
+          // Restoring a default can reveal the next tier down, so keep going until a
+          // pass changes nothing. Each accordion is attempted at most once per call:
+          // two accordions that share a radio group name (which is what happens when
+          // they share an option title) would otherwise keep clearing each other's
+          // default and spin this loop forever.
+          const attempted = new Set();
+          for (;;) {
+            const pending = Array.from(this.querySelectorAll('[data-conditions-to-render][data-default-option]')).filter(
+              (accordion) =>
+                !attempted.has(accordion) &&
+                window.getComputedStyle(accordion).display !== 'none' &&
+                !accordion.querySelector('[data-customization-option]:checked'),
+            );
+            if (pending.length === 0) return;
+            let restored = 0;
+            pending.forEach((accordion) => {
+              attempted.add(accordion);
+              if (this.restoreConditionalDefault(accordion)) restored += 1;
+            });
+            if (restored === 0) return;
+          }
+        } finally {
+          this.#applyingConditionalDefaults = false;
+        }
+      }
+
       conditionalChoice(option) {
         this.syncConditionalVisibility();
+        this.applyConditionalDefaults();
         this.updateConditionalBanners();
       }
 
       checkDefaultConditionsToRender() {
         this.syncConditionalVisibility();
+        this.applyConditionalDefaults();
         this.updateConditionalBanners();
       }
 
@@ -558,6 +637,35 @@ if (!customElements.get('product-customization-options')) {
         </p>`;
       }
 
+      // Mandatory options (e.g. "Assembly & Room of Choice", Warranty) can't be
+      // cleared - addRemoveListener intentionally skips them, so their badge "x"
+      // did nothing. For a mandatory option the "x" should instead revert the
+      // selection to the default variant (typically the free option), matching how
+      // the other options behave. Delegate the click so it also covers badges that
+      // are recreated when the selection changes, and reuse the existing radio
+      // `input` handler (setCustomizationOption) to refresh the label and price.
+
+      handleMandatoryReset() {
+        const containers = this.querySelectorAll('[data-option-accordion]');
+        if (containers.length === 0) return;
+        containers.forEach((container) => {
+          const optionHandler = container.querySelector('[data-selected-options][data-mandatory]');
+          if (!optionHandler) return;
+          const defaultId = container.dataset.defaultOption;
+          if (!defaultId) return;
+          optionHandler.addEventListener('click', (event) => {
+            const closeButton = event.target.closest('.close-option');
+            if (!closeButton) return;
+            event.preventDefault();
+            event.stopPropagation();
+            const defaultInput = container.querySelector(`[data-customization-option="${defaultId}"]`);
+            if (!defaultInput || defaultInput.checked) return;
+            defaultInput.checked = true;
+            defaultInput.dispatchEvent(new Event('input', { bubbles: true }));
+          });
+        });
+      }
+
       // Default option event lister (Add possibility to remove default)
 
       setDefaultOptionsListener() {
@@ -692,6 +800,32 @@ if (!customElements.get('product-customization-options')) {
         });
       }
 
+      // Accordion rows inside the option help popups (e.g. the "Assembly & Room of
+      // Choice" delivery details). The popup body is metaobject rich-text whose markup
+      // uses .accordion / .accordion-header / .accordion-body and expects an `active`
+      // class toggle, but nothing wired it up on the PDP, so the rows never expanded.
+      // Popups are rendered at the section level (outside this element), so query the
+      // document and guard each header against double-binding across instances.
+
+      handleHelpPopupAccordions() {
+        const headers = document.querySelectorAll('.option-popup .accordion-header');
+        if (headers.length === 0) return;
+        headers.forEach((header) => {
+          if (header.dataset.accordionBound === 'true') return;
+          header.dataset.accordionBound = 'true';
+          const body = header.nextElementSibling;
+          if (!body || !body.classList.contains('accordion-body')) return;
+          header.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const accordion = header.closest('.accordion');
+            if (!accordion) return;
+            const isActive = accordion.classList.toggle('active');
+            body.style.display = isActive ? 'block' : 'none';
+          });
+        });
+      }
+
       // Related products popup helper to select necessary product
 
       relatedProductsSwitcher() {
@@ -749,8 +883,6 @@ if (!customElements.get('product-customization-options')) {
       // Helper to create corect price HTML
 
       priceHelper(priceAdjustment) {
-        console.log('priceAdjustment',priceAdjustment);
-        
         const priceElement = document.querySelectorAll('.pr_custom_price');
         if (priceElement.length === 0) return;
 
@@ -761,10 +893,26 @@ if (!customElements.get('product-customization-options')) {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         });
-        console.log('formattedPrice',formattedPrice);
-        
+
         priceElement.forEach((el) => {
           el.innerText = `${priceElement[0].dataset?.currency || ''}${formattedPrice}`;
+        });
+
+        this.renderOptionsAddedTotal(priceAdjustment);
+      }
+
+      renderOptionsAddedTotal(priceAdjustment) {
+        const targets = document.querySelectorAll('[data-options-added-value]');
+        if (targets.length === 0) return;
+        const delta = Number(priceAdjustment) || 0;
+        const formatted = Math.abs(delta).toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        targets.forEach((el) => {
+          const currency = el.dataset.currency || '$';
+          const sign = delta < 0 ? '-' : '+';
+          el.innerText = `${sign}${currency}${formatted}`;
         });
       }
 
@@ -1029,6 +1177,18 @@ if (!customElements.get('product-customization-options')) {
         if (mandatoryFields.length === 0) return true;
         let errorCounter = 0;
         mandatoryFields.forEach((field) => {
+          // A conditional (tiered) option that does not apply to the current parent
+          // choice is hidden by syncConditionalVisibility(), which also clears its
+          // selection. Requiring it would block add to cart on a configuration the
+          // shopper has fully filled in - e.g. the 5 Stack PDPs render one Station
+          // Layout accordion per Stations Included tier, so whichever tier is not
+          // selected is always hidden and always empty. Only the options a shopper
+          // can actually see are mandatory.
+          const accordion = field.closest('[data-option-accordion]');
+          if (accordion && window.getComputedStyle(accordion).display === 'none') {
+            field.classList.remove('error');
+            return;
+          }
           if (field.dataset.selectedOptions === '') {
             field.classList.add('error');
             errorCounter += 1;

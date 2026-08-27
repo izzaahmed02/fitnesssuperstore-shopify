@@ -17,6 +17,15 @@
   if product_option.option_type != blank
     assign option_type = product_option.option_type
   endif
+  comment
+    "Assembly & Room of Choice" is configured as a Select in the metafields, but it
+    should use the same accordion/swatch selector as the other product options instead
+    of a native dropdown. Force the accordion rendering for this category.
+  endcomment
+  assign category_title_downcase = category.title | downcase
+  if category_title_downcase == 'assembly & room of choice installation needed?'
+    assign option_type = 'Accordion'
+  endif
   assign option_visible = true
   if product_option.hide_values
     assign option_visible = false
@@ -27,6 +36,9 @@
   <div
     data-type="{{ product_option.product_option_title | handleize }}"
     data-option-accordion
+    {% if product_option.product_option_sets_default.value.id %}
+      data-default-option="{{ product_option.product_option_sets_default.value.id }}"
+    {% endif %}
     class="product-options__accordion"
     {% if conditions_to_render != blank %}
       data-conditions-to-render="{{ conditions_to_render | replace_last: ',', '' | strip }}"
@@ -57,14 +69,14 @@
       | append: extra_unique
     %}
     <button class="product-options__accordion-header" aria-expanded="false" aria-controls="{{ accordion_id }}" data-open-accordion>
-      <h3 class="product-options__subcategory-title" data-option-title>
+      <span class="product-options__subcategory-title" data-option-title>
         {{ product_option.product_option_title }}
         {% if product_option.help_text.value != blank %}
           {% liquid
             render 'related-products-button', product_id: product_option.product_option_sets_default.value.id, option_title: product_option.product_option_title
           %}
         {% endif %}
-      </h3>
+      </span>
       {% assign price = product_option.product_option_sets_default.value.price %}
       {% assign price_substract = product_option.product_option_sets_default.value.metafields.custom.price_reduction_value_new %}
 
