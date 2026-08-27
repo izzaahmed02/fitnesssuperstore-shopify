@@ -430,6 +430,13 @@ margin: 0;
   .homepageHeroSection .benefit-card {
     margin: 0 8px;
     margin-bottom: 0px;
+    /* Shrinkable default: this must hold whenever Slick hasn't
+       initialized (e.g. the JS gate below missing a genuine mobile
+       width), so three cards in the .questions flex row shrink to fit
+       instead of overflowing the viewport. The non-shrinking,
+       content-sized behavior for the actual carousel is scoped to
+       .slick-initialized below and wins once Slick has run. */
+    flex: 1 1 0%;
   }
 
   .homepageHeroSection .text h2 {
@@ -452,6 +459,139 @@ margin: 0;
 
   .homepageHeroSection .image-wrapper {
     border-radius: 0 0 20px 20px;
+  }
+}
+
+/* ── Why Choose Us — mobile carousel (per #670) ──
+   Content-sized cards: one full-width slide, no side peeks, and no
+   equal-height stretch that leaves a large blank panel under short copy.
+   adaptiveHeight (set in the Slick init) sizes the viewport to the current
+   card; these rules stop the earlier flex/stretch behavior from forcing
+   every card to the tallest slide's height. */
+@media (max-width: 768px) {
+  /* Once Slick initializes, .questions is the carousel container - let it be a
+     normal block instead of an equal-height flex row. */
+  .homepageHeroSection .questions.slick-initialized {
+    display: block;
+    align-items: initial;
+  }
+
+  /* Restore Slick's default (float) track so adaptiveHeight can size to the
+     current card instead of the tallest one. */
+  .homepageHeroSection .questions .slick-track {
+    display: block;
+  }
+
+  .homepageHeroSection .questions .slick-slide {
+    height: auto;
+  }
+
+  .homepageHeroSection .questions.slick-initialized .benefit-card {
+    height: auto;
+    min-height: 0;
+    flex: 0 0 auto;
+    flex-grow: 0;
+    align-self: flex-start;
+    margin: 0 8px;
+    padding: 16px 20px;
+  }
+
+  /* .questions' side padding widens to 36px here so the arrow buttons below
+     have a full 44px gutter (36 padding + 8 card margin) - a real 44px-wide
+     hit area with zero card overlap and zero viewport-edge bleed at
+     360/390/428px. Tim reversed the earlier 32px-wide-target decision on
+     24 August: 32px is the minimum clear visual separation, not a waiver of
+     the 44x44 target size. See PR notes for the math. Top/bottom stay 24px
+     (unchanged from above). */
+  .homepageHeroSection .questions {
+    padding: 24px 36px;
+  }
+
+  /* Nav cue: Slick's default prev/next buttons already carry aria-label
+     "Previous"/"Next" and are real <button> elements (keyboard-focusable).
+     The button box is a real 44x44 hit area, sized to exactly the gutter
+     above so its outer edge sits at the viewport edge and its inner edge
+     stops at the card edge with zero overlap. The circle, border and
+     shadow live on ::after at their original 32px size so growing the hit
+     area doesn't grow the visible glyph. */
+  .homepageHeroSection .questions .slick-prev,
+  .homepageHeroSection .questions .slick-next {
+    width: 44px;
+    height: 44px;
+    z-index: 2;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .homepageHeroSection .questions .slick-prev {
+    left: 0;
+  }
+
+  .homepageHeroSection .questions .slick-next {
+    right: 0;
+  }
+
+  .homepageHeroSection .questions .slick-prev::after,
+  .homepageHeroSection .questions .slick-next::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    border: 1px solid #E5E5E5;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    z-index: 0;
+  }
+
+  /* Slick's stock glyph relies on an icon font (@font-face in
+     slick-theme.min.css) whose src URLs are empty/unresolvable in this
+     bundle - assets/ has no slick.woff/eot/ttf/svg file at all - so the
+     arrow would fall back to an unstyled Unicode character. An inline SVG
+     data-URI was tried next, but its background-image never painted across
+     three variations while ::after (same technique, no image) rendered
+     fine - so this is a pure-CSS chevron instead: two borders rotated into
+     an arrow shape, no image, no font dependency. */
+  .homepageHeroSection .questions .slick-prev:before,
+  .homepageHeroSection .questions .slick-next:before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 9px;
+    height: 9px;
+    border-top: 3px solid #000000;
+    border-right: 3px solid #000000;
+    background: none;
+    opacity: 1;
+    z-index: 1;
+  }
+
+  .homepageHeroSection .questions .slick-prev:before {
+    transform: translate(-35%, -50%) rotate(-135deg);
+  }
+
+  .homepageHeroSection .questions .slick-next:before {
+    transform: translate(-65%, -50%) rotate(45deg);
+  }
+
+  .homepageHeroSection .questions .slick-prev:focus-visible,
+  .homepageHeroSection .questions .slick-next:focus-visible {
+    outline: 2px solid #D83D0E;
+    outline-offset: 2px;
+  }
+
+  /* Disabled (first/last slide) state: dim the whole button (icon + circle)
+     to 40% opacity. That's a dark gray (#393940) icon on white at 40% -
+     still clearly a visible, legible arrow shape, just muted as a cue that
+     this direction isn't available - not invisible. */
+  .homepageHeroSection .questions .slick-prev.slick-disabled,
+  .homepageHeroSection .questions .slick-next.slick-disabled {
+    opacity: 0.4;
   }
 }
 
@@ -481,12 +621,12 @@ margin: 0;
     height: 36px;
   }
 
-  .homepageHeroSection .benefit-card {
-    padding: 16px;
-     flex: 1; 
+  .homepageHeroSection .questions.slick-initialized .benefit-card {
+    padding: 16px 20px;
+     flex: 0 0 auto;
   }
 
   .homepageHeroSection .slick-track{
-    display: flex;
+    display: block;
   }
 }
