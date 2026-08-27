@@ -58,11 +58,18 @@ So QA item 2 — six feed identities, numeric IDs, statuses and tag screenshots 
 and Haroon regardless of what access is granted here. Do not let an access grant become the reason
 that deadline slides.
 
-Likewise the two legacy-URL captures need either the domain allowlisted or ten seconds in a browser:
+## Legacy-URL captures
 
-- `https://www.fitnesssuperstore.com/French-Fitness-Tahoe-Assisted-Chin-Dip-New-p/FFT-ACD.htm`
-  (mixed case exactly as stored in Klaviyo — case sensitivity is itself the open question)
-- `https://www.fitnesssuperstore.com/v/vspfiles/photos/FFT-ACD-2.jpg`
+- **Image — DONE, confirmed 404.** `/v/vspfiles/photos/FFT-ACD-2.jpg` returns the storefront
+  404 page. Captured in-browser by Yusra 2026-08-27. Recorded in QA §6. This upgraded the risk
+  from "plausibly broken" to a confirmed customer-facing defect.
+- **PDP URL — STILL OPEN.** Needs
+  `https://www.fitnesssuperstore.com/French-Fitness-Tahoe-Assisted-Chin-Dip-New-p/FFT-ACD.htm`
+  requested with **mixed case preserved and no query string**. The first attempt hit
+  `…/FFT-ACD.ht?pb=0` (`.ht`, plus a stray Volusion-era `pb` parameter, likely browser
+  autocomplete), which is not in the redirect table, so its 404 proved nothing. Stored redirect
+  paths are lowercase; whether a mixed-case request matches is the open question. If it 404s,
+  both stale fields are hard 404s and the finding escalates from data-freshness to live breakage.
 
 ## Standing constraints
 
