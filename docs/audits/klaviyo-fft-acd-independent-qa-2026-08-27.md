@@ -207,71 +207,77 @@ field-level restore is mechanically possible once a before-state JSON exists.
 
 ---
 
-## 6. Remaining risk — HOLD. One risk is now a confirmed defect.
-
-### Confirmed: the legacy image is a hard 404. The legacy URL is still untested.
+## 6. Remaining risk — HOLD. Both captures are now complete, and they split.
 
 The thread has been treating the stale URL and the stale image as one defect of equal severity.
-They are not, and one of them is now verified broken.
+Both were captured in-browser on 2026-08-27, and they are **not** equal: one is a hard failure and
+one is graceful degradation.
 
-**The image — CONFIRMED 404.** Captured in-browser by Yusra on 2026-08-27:
+### The image — CONFIRMED 404. This is the severe half.
+
 `https://www.fitnesssuperstore.com/v/vspfiles/photos/FFT-ACD-2.jpg` returns the storefront
 **404 "Page not found"** page, not an image.
 
-This was predicted from the redirect table and is now observed. The entire live Shopify redirect
-table (3,970 rows, EXACT count) contains only two `/v/vspfiles/` entries —
-`/v/vspfiles/assets/images/ff-wr40.mp4` and `/v/vspfiles/photos/fmsquatgzfm6010-2t.jpg` — and
-**neither is `FFT-ACD-2.jpg`**. With no redirect and no origin asset, the path is simply dead.
+Predicted from the redirect table and now observed. The full live table (3,970 rows, EXACT count)
+carries only two `/v/vspfiles/` entries — `/v/vspfiles/assets/images/ff-wr40.mp4` and
+`/v/vspfiles/photos/fmsquatgzfm6010-2t.jpg` — and **neither is `FFT-ACD-2.jpg`**. No redirect, no
+origin asset, dead path.
 
-**Consequence, stated plainly:** the image on the Klaviyo catalog item is not stale, it is
-**broken**. Any dynamic product block, feed or template that renders
-`$custom:::$default:::FFT-ACD` shows a customer a broken image. Read together with §3 — three
-In Use = Yes feeds bound to Browse Abandonment and Added to Cart drafts — the exposure if either
-flow is set live is a broken hero *and* a $100-low price, both customer-facing. That is a
-verified defect chain, not a hypothesis, and it is the strongest argument for gating those drafts.
+**Consequence:** the image on the Klaviyo catalog item is not stale, it is **broken**. Any dynamic
+product block, feed or template that renders `$custom:::$default:::FFT-ACD` shows a customer a
+broken image. Read with §3 — three In Use = Yes feeds bound to Browse Abandonment and Added to
+Cart drafts — the exposure if either flow is set live is a broken hero **and** a $100-low price
+together. Verified defect chain, not a hypothesis, and the strongest reason to gate those drafts.
 
-**Corroboration for §1.** The audit sheet records a 404 on
-`/v/vspfiles/feeds/bingshopping-klaviyo.txt`; `/v/vspfiles/photos/` is now confirmed 404 as well.
-The legacy Volusion asset root is gone. That is consistent with the "New Klaviyo Feed" source
-having failed at the Volusion decommission and the catalog freezing in March 2025. It remains
-corroboration, not proof that this source is the catalog writer.
+### The URL — CONFIRMED redirecting correctly. Degradation only.
 
-**The URL — still NOT VERIFIED.** Two live Shopify redirects cover this SKU's legacy path:
+`https://www.fitnesssuperstore.com/French-Fitness-Tahoe-Assisted-Chin-Dip-New-p/FFT-ACD.htm`,
+requested with **mixed case exactly as stored in Klaviyo**, lands on
+`/products/french-fitness-tahoe-assisted-chin-dip-new` — the correct, current PDP.
+
+This resolves the case-sensitivity question I had flagged as open: the stored redirect paths are
+lowercase, and the mixed-case request **still matches**. Shopify's redirect matching is
+case-insensitive here.
 
 | Redirect GID | Path | Target |
 |---|---|---|
 | `gid://shopify/UrlRedirect/536931893564` | `/french-fitness-tahoe-assisted-chin-dip-new-p/fft-acd.htm` | `/products/french-fitness-tahoe-assisted-chin-dip-new` |
 | `gid://shopify/UrlRedirect/540735406396` | `/french-fitness-tahoe-assisted-chin-dip-p/fft-acd.htm` | `/products/french-fitness-tahoe-assisted-chin-dip-new` |
 
-So a matching request should land on the correct product page via one extra hop. But the stored
-redirect paths are **lowercase** while the URL held in Klaviyo is **mixed case** —
-`/French-Fitness-Tahoe-Assisted-Chin-Dip-New-p/FFT-ACD.htm`. Whether the mixed-case request
-matches the rule is the open question.
+So the URL defect is **degradation, not breakage** — one extra hop, with the attendant UTM/attribution
+fidelity cost on a redirect. It does not strand a customer.
 
-A first browser attempt on 2026-08-27 returned 404, but the address bar shows it requested
-`…/FFT-ACD.ht?pb=0` — `.ht` rather than `.htm`, plus a stray Volusion-era `?pb=0` parameter,
-most likely a browser autocomplete from history. A path ending `.ht` is not in the redirect table,
-so that 404 is expected and carries no information about the Klaviyo URL. **The capture must be
-repeated against the exact mixed-case `.htm` URL with no query string.**
+*Method note:* a first attempt returned 404, but its address bar showed
+`…/FFT-ACD.ht?pb=0` — `.ht` rather than `.htm`, plus a stray Volusion-era `pb` parameter, most
+likely browser autocomplete from history. A path ending `.ht` is not in the redirect table, so that
+404 carried no information and was discarded. The capture above is the valid one.
 
-Both outcomes are actionable:
+### Bonus corroboration from the PDP capture
 
-- Lands on the product page → the URL defect is degradation (extra hop, UTM fidelity), and the
-  image is the severe half.
-- Returns 404 → **both** stale fields are hard 404s, and this ceases to be a data-freshness
-  finding and becomes live customer-facing breakage. Escalate accordingly.
+The rendered product page independently confirms the Shopify source from the customer-facing side:
+**$2,799.00**, compare-at **$3,899.00** ("You save $1,100.00" — consistent with
+`custom.retail_price = 389900`), Condition New, Grade Commercial, Product Code **FFT-ACD**,
+"Available to Order". This is a third independent confirmation that Klaviyo's $2,699 is $100 low.
+
+### Net risk grading
+
+| Field | Status | Severity |
+|---|---|---|
+| Klaviyo image (`/v/vspfiles/photos/FFT-ACD-2.jpg`) | **Hard 404** | **High** — broken render to customer |
+| Klaviyo URL (legacy `.htm`) | Redirects to correct PDP | Low — extra hop, attribution fidelity |
+| Klaviyo price ($2,699 vs $2,799) | Stale | Medium — customer-facing, understates by $100 |
+| Klaviyo inventory (`-1` vs metadata "In Stock") | Internally contradictory | Medium — governs feed/block visibility |
 
 ### Recommendation on the pilot gate
 
-Keep the live HTTP capture in the one-SKU acceptance criteria as a gate rather than an
-afterthought — the image capture has already changed the risk grade once. Capture the legacy PDP
-URL **exactly as stored in Klaviyo, case preserved and query-string free**, and re-capture the
-image after any remap to prove the fix.
+Keep the live HTTP capture in the one-SKU acceptance criteria as a gate. It has now changed the
+risk grade in both directions — it upgraded the image and downgraded the URL — which is exactly why
+it belongs before the work rather than after it. Re-capture the image post-remap to prove the fix.
 
 ### Standing risk, unchanged
 
-The audit still cannot prove disuse. Per Tim's boundary, the stale URL and image are not evidence
-of disuse, and a DO NOT USE tag is a containment label, not disablement.
+The audit still cannot prove disuse. Per Tim's boundary, the stale fields are not evidence of
+disuse, and a DO NOT USE tag is a containment label, not disablement.
 
 ---
 
@@ -291,16 +297,15 @@ Worth flagging on its own terms: on a read-only audit I hold write paths I must 
 the read paths I need. That asymmetry should be corrected before the pilot, independent of this
 SKU.
 
-**Blocker 2 — storefront HTTP. PARTIALLY CLEARED. Owner: anyone on a normal network.**
-`www.fitnesssuperstore.com` is blocked by this session's network egress policy. Verified as a
-policy block rather than an origin response: the proxy answered `403` to `CONNECT` for all four
-URLs tested, including the known-good live Shopify PDP. This is the same check Masum flagged as
-outstanding.
+**Blocker 2 — storefront HTTP. CLEARED.**
+`www.fitnesssuperstore.com` is blocked by this session's network egress policy — verified as a
+policy block rather than an origin response, since the proxy answered `403` to `CONNECT` for all
+four URLs tested including the known-good live Shopify PDP. This was the same check Masum flagged
+as outstanding.
 
-Yusra supplied the legacy **image** capture in-browser on 2026-08-27, which cleared half of it and
-produced the confirmed 404 in §6. The legacy **URL** capture is still outstanding — the first
-attempt requested `.ht?pb=0` rather than `.htm` and so did not test the stored value. Either allow
-the domain for this environment or repeat the capture in a browser.
+**Resolved out-of-band.** Yusra supplied both captures in-browser on 2026-08-27, and they are
+recorded in §6: the legacy image returns 404, and the legacy mixed-case `.htm` URL redirects to the
+correct PDP. Nothing further is needed here. Masum's identical blocker can be closed the same way.
 
 **Blocker 3 — Shopify installed-app inventory. Owner: Izza / store admin.**
 `appInstallations` returned `access denied` for the Admin API credentials in use. The app list in

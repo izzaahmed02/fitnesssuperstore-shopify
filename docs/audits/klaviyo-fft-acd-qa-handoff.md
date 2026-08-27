@@ -58,18 +58,21 @@ So QA item 2 — six feed identities, numeric IDs, statuses and tag screenshots 
 and Haroon regardless of what access is granted here. Do not let an access grant become the reason
 that deadline slides.
 
-## Legacy-URL captures
+## Legacy-URL captures — BOTH DONE
 
-- **Image — DONE, confirmed 404.** `/v/vspfiles/photos/FFT-ACD-2.jpg` returns the storefront
-  404 page. Captured in-browser by Yusra 2026-08-27. Recorded in QA §6. This upgraded the risk
-  from "plausibly broken" to a confirmed customer-facing defect.
-- **PDP URL — STILL OPEN.** Needs
-  `https://www.fitnesssuperstore.com/French-Fitness-Tahoe-Assisted-Chin-Dip-New-p/FFT-ACD.htm`
-  requested with **mixed case preserved and no query string**. The first attempt hit
-  `…/FFT-ACD.ht?pb=0` (`.ht`, plus a stray Volusion-era `pb` parameter, likely browser
-  autocomplete), which is not in the redirect table, so its 404 proved nothing. Stored redirect
-  paths are lowercase; whether a mixed-case request matches is the open question. If it 404s,
-  both stale fields are hard 404s and the finding escalates from data-freshness to live breakage.
+Captured in-browser by Yusra 2026-08-27. Recorded in QA §6. Blocker 2 is closed; Masum's identical
+blocker can be closed the same way.
+
+- **Image — confirmed 404.** `/v/vspfiles/photos/FFT-ACD-2.jpg` returns the storefront 404 page.
+  Upgraded from "plausibly broken" to a confirmed customer-facing defect. Severe half.
+- **PDP URL — confirmed redirecting.** The mixed-case
+  `/French-Fitness-Tahoe-Assisted-Chin-Dip-New-p/FFT-ACD.htm` lands on
+  `/products/french-fitness-tahoe-assisted-chin-dip-new`. Resolves the case-sensitivity question:
+  Shopify's redirect match is case-insensitive here. Degradation only, not breakage.
+
+The rendered PDP also gave a third independent confirmation of the Shopify source from the
+customer-facing side: $2,799.00, compare-at $3,899.00, Condition New, Grade Commercial, Product
+Code FFT-ACD, Available to Order.
 
 ## Standing constraints
 
