@@ -975,10 +975,24 @@
 
                   <div class="product_price_with_options-contaniner">
                     <div class="product_prices">
+                      {%- comment -%}
+                        "Total with options" must build on the price the customer actually pays.
+                        When the promo banner is active (custom.saleprice_name set and
+                        custom.sale_price below the variant price) that banner price is the
+                        selling price; otherwise it is the native variant price.
+                      {%- endcomment -%}
+                      {%- assign twp_variant = product.selected_or_first_available_variant -%}
+                      {%- assign twp_price = twp_variant.price -%}
+                      {%- if product.metafields.custom.saleprice_name != blank -%}
+                        {%- assign twp_sale = product.metafields.custom.sale_price | replace: ',', '' | times: 100.0 -%}
+                        {%- if twp_sale > 0 and twp_price > twp_sale -%}
+                          {%- assign twp_price = twp_sale -%}
+                        {%- endif -%}
+                      {%- endif -%}
                       <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
                         <div class="pr_custom_price-container">
-                           <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{  product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
-                            {{ product.selected_or_first_available_variant.price | money }}
+                           <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{ twp_price | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
+                            {{ twp_price | money }}
                           </p>
                         </div>
                       </div>

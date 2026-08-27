@@ -1241,12 +1241,26 @@
   {%- if mp_variant.compare_at_price > mp_price -%}
     {%- assign mp_compare = mp_variant.compare_at_price -%}
   {%- endif -%}
+
+  {%- comment -%}
+    "Total with options" must build on the price the customer actually pays.
+    When the PACKAGE PRICE banner is active (custom.saleprice_name set and
+    custom.sale_price below the variant price) that banner price is the
+    selling price; otherwise it is the native variant price.
+  {%- endcomment -%}
+  {%- assign mp_selling = mp_price -%}
+  {%- if product.metafields.custom.saleprice_name != blank -%}
+    {%- assign mp_sale = product.metafields.custom.sale_price | replace: ',', '' | times: 100.0 -%}
+    {%- if mp_sale > 0 and mp_price > mp_sale -%}
+      {%- assign mp_selling = mp_sale -%}
+    {%- endif -%}
+  {%- endif -%}
   
 
   <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
     <div class="pr_custom_price-container">
-       <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{  product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
-        {{ product.selected_or_first_available_variant.price | money }}
+       <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{ mp_selling | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
+        {{ mp_selling | money }}
       </p>
        {% if mp_compare > mp_price %}
     <span class="pr_custom_compare_price">
