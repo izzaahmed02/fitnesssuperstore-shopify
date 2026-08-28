@@ -27,6 +27,17 @@
       form.addEventListener('submit', function () { push('check_model_submit', { location: 'check_model_form' }); });
     }
 
+    // Video walkthrough: click-to-play overlay (no autoplay)
+    document.querySelectorAll('[data-sr-video]').forEach(function (wrap) {
+      var video = wrap.querySelector('video');
+      var btn = wrap.querySelector('[data-sr-video-play]');
+      if (!video || !btn) return;
+      btn.addEventListener('click', function () { video.play(); });
+      video.addEventListener('play', function () { wrap.classList.add('is-playing'); });
+      video.addEventListener('pause', function () { wrap.classList.remove('is-playing'); });
+      video.addEventListener('ended', function () { wrap.classList.remove('is-playing'); });
+    });
+
     // Gallery carousel: arrows + dots
     document.querySelectorAll('[data-sr-carousel]').forEach(function (root) {
       var track = root.querySelector('[data-sr-track]');

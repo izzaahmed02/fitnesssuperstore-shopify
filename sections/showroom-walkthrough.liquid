@@ -10,18 +10,27 @@
 <section class="sr-page sr-section sr-walkthrough">
   <div class="sr-container">
     <h2 class="sr-section__title sr-center">{{ s.walkthrough_heading }}</h2>
-    <p class="sr-walkthrough__lede">{{ s.walkthrough_text }}</p>
+    {%- if s.walkthrough_text != blank -%}
+      <p class="sr-walkthrough__lede">{{ s.walkthrough_text }}</p>
+    {%- endif -%}
 
     {%- if s.walkthrough_video_mp4 != blank -%}
-      <div class="sr-video">
-        <video class="sr-video__el" controls preload="none" playsinline{% if poster != blank %} poster="{{ poster }}"{% endif %} aria-label="Factory Showroom Tour">
+      <div class="sr-video" data-sr-video>
+        <video class="sr-video__el" controls preload="none" playsinline{% if poster != blank %} poster="{{ poster }}"{% endif %}>
           <source src="{{ s.walkthrough_video_mp4 }}" type="video/mp4">
         </video>
+        <button type="button" class="sr-video__play" data-sr-video-play aria-label="Play the Factory Showroom Tour">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+        </button>
       </div>
     {%- elsif poster != blank -%}
       <div class="sr-video">
         <img src="{{ poster }}" alt="Factory Showroom Tour" loading="lazy" width="1280" height="720">
       </div>
+    {%- endif -%}
+
+    {%- if s.walkthrough_subtext != blank -%}
+      <p class="sr-walkthrough__subtext">{{ s.walkthrough_subtext }}</p>
     {%- endif -%}
 
     <div class="sr-walkthrough__cta">
@@ -40,11 +49,12 @@
   "class": "section section-showroom-walkthrough",
   "settings": [
     { "type": "text", "id": "walkthrough_heading", "label": "Heading", "default": "Not Local to Benicia?" },
-    { "type": "textarea", "id": "walkthrough_text", "label": "Text", "default": "Request a live or recorded video walkthrough to see equipment remotely, compare options, and ask questions before ordering. Request a personalized walkthrough of specific equipment." },
+    { "type": "textarea", "id": "walkthrough_text", "label": "Text (above video)", "default": "Request a live or recorded video walkthrough to see equipment remotely, compare options, and ask questions before ordering." },
     { "type": "header", "content": "Showroom tour video" },
     { "type": "text", "id": "walkthrough_video_mp4", "label": "Video file URL (.mp4)" },
     { "type": "text", "id": "walkthrough_poster_url", "label": "Poster / thumbnail URL" },
     { "type": "image_picker", "id": "walkthrough_video_image", "label": "Poster image (fallback)" },
+    { "type": "textarea", "id": "walkthrough_subtext", "label": "Text (below video)", "default": "Request a personalized walkthrough of specific equipment." },
     { "type": "header", "content": "Request CTA" },
     { "type": "text", "id": "walkthrough_button_label", "label": "Button label", "default": "Request a Video Walkthrough" },
     { "type": "text", "id": "walkthrough_url", "label": "Button URL", "default": "/pages/contact#showroom-visit" }
