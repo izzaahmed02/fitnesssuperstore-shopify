@@ -58,6 +58,18 @@
     display: none;
     }
 
+    {%- if section.settings.sticky_header_type == 'none' -%}
+        /* Mobile: when the merchant hasn't opted into any sticky header type,
+           don't let .section-header stay pinned - the wrapper below already
+           renders as a plain div (not the sticky-header custom element) in
+           that case, so CSS shouldn't force sticky behavior on top of it. */
+        .section-header {
+        position: static;
+        top: auto;
+        }
+
+    {%- endif -%}
+
     /* The upper bar is hidden here, so give the logo room below the viewport edge. */
     .header {
     padding-top: 8px !important;
@@ -70,6 +82,40 @@
     .header-wrapper.shopify-section-header-hidden {
     position: static;
     top: auto;
+    }
+
+    /* Keep the initial site-header compact on mobile without changing its
+       functions (phone, cart, menu, search). Give the search field a
+       comfortable tap target and tighten the vertical spacing around it.
+       No logo rule here: Dawn's own @media (max-width: 990px) already caps
+       .header__heading-logo at height:42px/width:auto - overriding height
+       to auto (as an earlier revision did) un-caps it back toward its full
+       250px desktop logo_width, and a max-width:240px alongside that never
+       actually binds (natural width at 42px tall is ~217px, verified
+       against the live logo file's aspect ratio via the Admin API - well
+       under 240). That combination shipped in #670 unremarked by review
+       and carried into this branch the same way; removing it entirely
+       restores Dawn's intended compact mobile sizing. */
+
+    /* 44px, not 48: header-group.json's own custom_css hard-locks
+       .custom-header-search (the wrapper) to height:44px!important at
+       <=749px. A taller min-height here would overflow that fixed parent.
+       44px still clears the WCAG 2.5.5 AAA target size. */
+    .custom-header-search--input {
+    min-height: 44px;
+    }
+
+    .custom-header-search-container {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    }
+
+    /* padding-top is intentionally not set here: the earlier
+       `.header { padding-top: 8px !important; }` rule in this same
+       max-width:989px block deliberately owns the mobile top padding.
+       Only the bottom padding is set here. */
+    .header {
+    padding-bottom: 6px;
     }
     }
 
