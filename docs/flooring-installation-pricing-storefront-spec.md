@@ -8,8 +8,10 @@ email, metaobject, product option, tag or setting has been modified, and none is
 requested.
 
 Controlling records: Tim's emails of August 12 2026 17:27 UTC, August 14 23:16
-UTC, August 14 23:44 UTC and **August 24 13:41 UTC** (official #49158 cost facts,
-the consistent revised staging model, and the FB1–FB8 rulings), and
+UTC, August 14 23:44 UTC, **August 24 13:41 UTC** (official #49158 cost facts,
+the consistent revised staging model, the FB1–FB8 rulings) and **August 26 08:02
+UTC** (package accepted for formal PR review; FF-HDRFM off the tile curve;
+adhesive never $0), and
 [issue #691](https://github.com/izzaahmed02/fitnesssuperstore-shopify/issues/691).
 
 The calculation, the exact rate card, the fail-closed table, the test evidence
@@ -75,16 +77,20 @@ by family and the customer should not discover it in the cart:
 | Family | Products | PDP disclosure |
 |---|---|---|
 | Tile | FF-RIT24 (Middle / Edge / Corner), FF-RITGF, FF-RSGF | All three scopes available; estimate calculated in cart |
-| Mat | FF-HDRFM | Install and Install & Cut available; gluing requires a quote |
+| Mat | FF-HDRFM | Installation available; **priced by quote** |
 | Rolled rubber | FF-RRGF | Installation available; **priced by quote** |
 | Turf | FF-AGSL, FF-AGSL-V2, FF-AGSL-V3, FF-APGT-1450 | Installation available; **priced by quote** |
 
-Five of nine products are quote-only. Tim's FB2 ruling on August 24 makes that a
+**Six of nine products are now quote-only**, after Tim's August 26 ruling moved
+FF-HDRFM off the tile curve on every scope. Combined with FB2, that is a
 decision rather than a gap: *"Keep installation available in the customer path,
-but collect facts and price manually."* So the storefront's job here is to make
-manual pricing feel like a service, not a dead end — the option is offered, the
-site facts are collected, and the customer is told a price is coming. Never
-"installation not available", and never by hiding the option.
+but collect facts and price manually."*
+
+It does change the storefront's centre of gravity. Only three of nine products
+reach a calculated number, so the quote path is the **normal** path for this
+category, not the exception — it has to be designed as a service the customer
+chooses, with the same care as the priced path, rather than as a fallback screen.
+Never "installation not available", and never by hiding the option.
 
 ### 3.1 Reuse the tile calculator that already exists
 
@@ -123,9 +129,16 @@ and must not state a customer amount:
 > **Adhesive:** 6 pails required for 4,805 sq ft. Priced separately and confirmed
 > by National Gym Service with your installation quote.
 
-No dollar figure until Finance approves a markup and a tax treatment. The
-engine's internal cost reference is not a customer price and must never be
-rendered as one. Where an installer has adjusted the pail count for a documented
+No dollar figure until Finance approves a markup and a tax treatment — Zaheer
+owns that recommendation. The engine's internal cost reference is not a customer
+price and must never be rendered as one.
+
+**And never `$0`.** Tim's August 26 ruling is explicit: adhesive must not be
+displayed or recorded as zero. A `$0` line reads as "included" to a customer and
+as "no material" to accounting, and both are false. The engine represents "not
+approved" as null; any template that coerces a null amount to `0` or to `$0.00`
+before rendering would break that rule, so the adhesive line must be rendered
+from the quantity and the status, never from a defaulted amount. Where an installer has adjusted the pail count for a documented
 substrate, trowel, porosity, waste or manufacturer reason, the cart shows the
 adjusted quantity, not the calculated one.
 
