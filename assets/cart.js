@@ -6,35 +6,56 @@ class CartRemoveButton extends HTMLElement {
       });
   }
   showPopup() {
-    let e = document.querySelector('.cart-items__popup'),
-      t = document.querySelector('.overlay'),
-      r = e?.querySelector('.cart-items__popup-btn--remove'),
-      a = e?.querySelector('.cart-items__popup-btn--cancel'),
-      i = e?.querySelector('.cart-items__popup-close');
-    if (!e || !t || !r || !a || !i) {
+    const popup = document.querySelector('.cart-items__popup');
+    const overlay = document.querySelector('.overlay');
+    const removeButton = popup?.querySelector('.cart-items__popup-btn--remove');
+    const cancelButton = popup?.querySelector('.cart-items__popup-btn--cancel');
+    const closeButton = popup?.querySelector('.cart-items__popup-close');
+    if (!popup || !overlay || !removeButton || !cancelButton || !closeButton) {
       console.error('Popup elements not found.');
       return;
     }
-    e.classList.add('active'), t.classList.add('active'), document.querySelector('html, body').classList.add('overflow-hidden'), (e.dataset.index = this.dataset.index);
-    let n = () => {
-        this.removeItem(),
-          setTimeout(() => {
-            s();
-          }, 350);
-      },
-      s = () => {
-        e.classList.remove('active'), t.classList.remove('active'), document.querySelector('html, body').classList.remove('overflow-hidden'), r.removeEventListener('click', n);
-      };
-    r.addEventListener('click', (e) => {
-      e.preventDefault(), n();
-    }),
-      a.addEventListener('click', (e) => {
-        e.preventDefault(), s();
-      }),
-      i.addEventListener('click', (e) => {
-        e.preventDefault(), s();
-      }),
-      t.addEventListener('click', s);
+
+    // This popup is rendered outside every container the cart AJAX rerender
+    // replaces, so these nodes live for the whole page session and each open
+    // must detach the handlers it attached. The previous implementation handed
+    // removeEventListener a different function than it had registered, so the
+    // closure from every earlier removal stayed bound to the confirm button:
+    // the second confirmed removal in a session fired all of them, deleting
+    // more lines than the customer selected and sending a stale line index to
+    // /cart/change.js (the observed 422).
+    const detach = () => {
+      removeButton.removeEventListener('click', onRemove);
+      cancelButton.removeEventListener('click', onDismiss);
+      closeButton.removeEventListener('click', onDismiss);
+      overlay.removeEventListener('click', onDismiss);
+    };
+    const hide = () => {
+      popup.classList.remove('active');
+      overlay.classList.remove('active');
+      document.querySelector('html, body').classList.remove('overflow-hidden');
+    };
+    const onRemove = (event) => {
+      event.preventDefault();
+      detach();
+      this.removeItem();
+      setTimeout(hide, 350);
+    };
+    const onDismiss = (event) => {
+      event?.preventDefault();
+      detach();
+      hide();
+    };
+
+    popup.classList.add('active');
+    overlay.classList.add('active');
+    document.querySelector('html, body').classList.add('overflow-hidden');
+    popup.dataset.index = this.dataset.index;
+
+    removeButton.addEventListener('click', onRemove);
+    cancelButton.addEventListener('click', onDismiss);
+    closeButton.addEventListener('click', onDismiss);
+    overlay.addEventListener('click', onDismiss);
   }
   removeItem() {
     let e = document.querySelector('cart-items') || document.querySelector('cart-drawer-items');
@@ -111,6 +132,9 @@ class CartItems extends HTMLElement {
   getSectionsToRender() {
     return [
       { id: 'main-cart-items', section: document.getElementById('main-cart-items').dataset.id, selector: '.js-contents' },
+      // Sits outside .js-contents, so it needs its own render target - see the
+      // matching entry in CartDrawerItems.getSectionsToRender().
+      { id: 'CartItems-ProductOptions', section: document.getElementById('main-cart-items').dataset.id, selector: '#CartItems-ProductOptions' },
       { id: 'cart-live-region-text', section: 'cart-live-region-text', selector: '.shopify-section' },
       { id: 'main-cart-footer', section: document.getElementById('main-cart-footer').dataset.id, selector: '.js-contents' },
     ];
@@ -118,13 +142,22 @@ class CartItems extends HTMLElement {
   async updateQuantity(e, t, r, a) {
     this.enableLoading(e);
     try {
-      let i = JSON.stringify({ line: e, quantity: t, sections: this.getSectionsToRender().map((e) => e.section), sections_url: window.location.pathname }),
+      let i = JSON.stringify({ line: e, quantity: t, sections: [...new Set(this.getSectionsToRender().map((e) => e.section))], sections_url: window.location.pathname }),
         n = await fetch(`${routes.cart_change_url}`, { ...fetchConfig(), body: i }),
         s = JSON.parse(await n.text()),
         o = document.getElementById(`Quantity-${e}`) || document.getElementById(`Drawer-quantity-${e}`),
         l = document.querySelectorAll('.cart-item');
+      // A rejected change (e.g. 422 for a line that no longer exists) comes
+      // back without `sections`, so falling through would throw on s.items and
+      // surface as an unrelated TypeError. Report the real reason and stop.
+      if (!n.ok || s.status) {
+        let f = s.description || s.message || window.cartStrings.error;
+        console.error('Cart change rejected:', n.status, f);
+        o && (o.value = o.getAttribute('value')), this.updateLiveRegions(e, f);
+        return;
+      }
       if (s.errors) {
-        (o.value = o.getAttribute('value')), this.updateLiveRegions(e, s.errors);
+        o && (o.value = o.getAttribute('value')), this.updateLiveRegions(e, s.errors);
         return;
       }
       this.classList.toggle('is-empty', 0 === s.item_count);
@@ -133,8 +166,11 @@ class CartItems extends HTMLElement {
       d && d.classList.toggle('is-empty', 0 === s.item_count),
         c && c.classList.toggle('is-empty', 0 === s.item_count),
         this.getSectionsToRender().forEach((e) => {
-          let t = document.getElementById(e.id).querySelector(e.selector) || document.getElementById(e.id);
-          t.innerHTML = this.getSectionInnerHTML(s.sections[e.section], e.selector);
+          let v = document.getElementById(e.id);
+          if (!v) return;
+          let t = v.querySelector(e.selector) || v,
+            w = this.getSectionInnerHTML(s.sections[e.section], e.selector);
+          null !== w && (t.innerHTML = w);
         });
       let u = s.items[e - 1]?.quantity,
         m = document.querySelector('.title-wrapper-with-link .title > span');
@@ -153,22 +189,26 @@ class CartItems extends HTMLElement {
     } catch (h) {
       console.error('Error in updateQuantity:', h), this.querySelectorAll('.loading__spinner').forEach((e) => e.classList.add('hidden'));
       let g = document.getElementById('cart-errors') || document.getElementById('CartDrawer-CartErrors');
-      g.textContent = window.cartStrings.error;
+      g && (g.textContent = window.cartStrings.error);
     } finally {
       this.disableLoading(e);
     }
   }
   updateLiveRegions(e, t) {
     let r = document.getElementById(`Line-item-error-${e}`) || document.getElementById(`CartDrawer-LineItemError-${e}`);
-    r && (r.querySelector('.cart-item__error-text').innerHTML = t), this.lineItemStatusElement.setAttribute('aria-hidden', !0);
+    let i = r?.querySelector('.cart-item__error-text');
+    i && (i.innerHTML = t), this.lineItemStatusElement?.setAttribute('aria-hidden', !0);
     let a = document.getElementById('cart-live-region-text') || document.getElementById('CartDrawer-LiveRegionText');
-    a.setAttribute('aria-hidden', !1),
+    a &&
+      (a.setAttribute('aria-hidden', !1),
       setTimeout(() => {
         a.setAttribute('aria-hidden', !0);
-      }, 1e3);
+      }, 1e3));
   }
   getSectionInnerHTML(e, t) {
-    return new DOMParser().parseFromString(e, 'text/html').querySelector(t).innerHTML;
+    if (!e) return null;
+    let r = new DOMParser().parseFromString(e, 'text/html').querySelector(t);
+    return r ? r.innerHTML : null;
   }
   enableLoading(e) {
     let t = document.getElementById('main-cart-items') || document.getElementById('CartDrawer-CartItems');
