@@ -89,11 +89,17 @@ onReady(() => {
     });
   };
 
+  const toggleDropdownBtn = (mobileBtn) => {
+    const panel = mobileBtn.nextElementSibling;
+    if (!panel) return;
+    toggleCollapsible(panel, mobileBtn.querySelector('svg'));
+    rafBatch(() => mobileBtn.setAttribute('aria-expanded', panel.classList.contains('visible')));
+  };
+
   document.body.addEventListener('click', (e) => {
     const mobileBtn = e.target.closest('.dropdown-btn');
     if (mobileBtn && window.innerWidth <= 749) {
-      const panel = mobileBtn.nextElementSibling;
-      if (panel) toggleCollapsible(panel, mobileBtn.querySelector('svg'));
+      toggleDropdownBtn(mobileBtn);
       return;
     }
     const iwtBtn = e.target.closest('.image-with-text__dropdown-button');
@@ -102,6 +108,14 @@ onReady(() => {
       if (panel) toggleCollapsible(panel, iwtBtn.querySelector('svg'));
     }
   }, { passive: true });
+
+  document.body.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const mobileBtn = e.target.closest('.dropdown-btn');
+    if (!mobileBtn || window.innerWidth > 749) return;
+    e.preventDefault();
+    toggleDropdownBtn(mobileBtn);
+  });
 
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-scroll-to-section]');
