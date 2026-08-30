@@ -11,9 +11,11 @@
     <!-- LEFT SIDE NAV -->
     <div class="process-steps-nav">
       {% for block in section.blocks %}
-        <div 
-          class="process-nav-item {% if forloop.first %}active{% endif %}" 
+        <div
+          class="process-nav-item {% if forloop.first %}active{% endif %}"
           data-target="step-{{ forloop.index0 }}"
+          role="button"
+          tabindex="0"
           {{ block.shopify_attributes }}
         >
           <div class="process-nav-number">
@@ -1615,7 +1617,6 @@ display: none;
   }
 
   .process-steps-nav {
-    display: none !important;
     position: relative;
     top: 0;
     margin-bottom: 24px;
@@ -1831,14 +1832,23 @@ document.addEventListener("DOMContentLoaded", function () {
   const navItems = document.querySelectorAll(".process-nav-item");
   const sections = document.querySelectorAll(".process-step-block");
 
-  // Click: scroll to section using getBoundingClientRect for accuracy
+  // Click/keyboard: scroll to section using getBoundingClientRect for accuracy
+  function scrollToStep(item) {
+    const target = document.getElementById(item.dataset.target);
+    if (!target) return;
+
+    const top = target.getBoundingClientRect().top + window.scrollY - 120;
+    window.scrollTo({ top, behavior: "smooth" });
+  }
+
   navItems.forEach(item => {
     item.addEventListener("click", function () {
-      const target = document.getElementById(this.dataset.target);
-      if (!target) return;
-
-      const top = target.getBoundingClientRect().top + window.scrollY - 120;
-      window.scrollTo({ top, behavior: "smooth" });
+      scrollToStep(this);
+    });
+    item.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      scrollToStep(this);
     });
   });
 
