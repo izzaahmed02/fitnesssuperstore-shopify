@@ -446,34 +446,6 @@
       <div class="drawer__footer">
         <div class="cart-drawer__footer" {{ block.shopify_attributes }}>
           {% unless cart == empty %}
-            {%- comment -%}
-              Mirrors the totals block in sections/main-cart-footer.liquid so the
-              drawer and the cart page agree. Without it a discounted cart showed
-              a bare "Total $0.00" with nothing to explain the reduction.
-            {%- endcomment -%}
-            {%- if cart.cart_level_discount_applications.size > 0 -%}
-              <ul
-                class="cart-drawer__discounts"
-                role="list"
-                aria-label="{{ 'customer.order.discount' | t }}"
-              >
-                {%- for discount in cart.cart_level_discount_applications -%}
-                  <li class="cart-drawer__discount">
-                    {%- render 'icon-discount' -%}
-                    <span class="cart-drawer__discount-title">{{ discount.title | escape }}</span>
-                    <span class="cart-drawer__discount-amount">-{{ discount.total_allocated_amount | money }}</span>
-                  </li>
-                {%- endfor -%}
-              </ul>
-            {%- endif -%}
-            {%- if cart.total_discount > 0 -%}
-              <div class="total-wrapper total-wrapper--secondary">
-                Subtotal <span>{{ cart.original_total_price | money }}</span>
-              </div>
-              <div class="total-wrapper total-wrapper--secondary total-wrapper--discount">
-                Total sale <span>-{{ cart.total_discount | money }}</span>
-              </div>
-            {%- endif -%}
             <div class="total-wrapper">
               Total <span class="cart-total">{{ cart.total_price | money }}</span>
             </div>
