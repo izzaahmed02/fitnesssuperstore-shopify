@@ -105,9 +105,7 @@
 {%- liquid
   assign featured_slots = section.settings.featured_slots | default: 6
 
-  comment
-    Correction 3: clamp in code as well as in the schema.
-  endcomment
+    # Correction 3: clamp in code as well as in the schema.
   assign max_cards = section.settings.max_cards | default: 9
   if max_cards > 9
     assign max_cards = 9
@@ -116,10 +114,8 @@
     assign max_cards = 1
   endif
 
-  comment
-    Validation pass. Scoped per blog so every loop stays inside the documented
-    per-array fetch bound, with scanned-vs-expected proof of completeness.
-  endcomment
+    # Validation pass. Scoped per blog so every loop stays inside the documented
+    # per-array fetch bound, with scanned-vs-expected proof of completeness.
   assign expected_total = 0
   assign scanned_total = 0
   assign eligible_count = 0
@@ -169,26 +165,21 @@
         endunless
 
         assign rank_display = rank_field.value | default: 'none'
-        assign rank_readback = rank_readback | append: '    ' | append: store_blog.handle | append: '/' | append: article.handle | append: ' | rank=' | append: rank_display | append: ' | ' | append: row_state | append: '
-'
+        assign rank_readback = rank_readback | append: store_blog.handle | append: '/' | append: article.handle | append: ' rank=' | append: rank_display | append: ' state=' | append: row_state | append: '~'
       endif
     endfor
   endfor
 
-  comment
-    Completeness check. A short scan means the platform truncated a fetch, so
-    the PASS/HOLD verdict cannot be trusted and the feed HOLDs.
-  endcomment
+    # Completeness check. A short scan means the platform truncated a fetch, so
+    # the PASS/HOLD verdict cannot be trusted and the feed HOLDs.
   if scanned_total != expected_total
     unless hold_reasons contains '|incomplete_traversal|'
       assign hold_reasons = hold_reasons | append: 'incomplete_traversal|'
     endunless
   endif
 
-  comment
-    Fewer eligible articles than ranked slots means the tag has not been fully
-    applied yet.
-  endcomment
+    # Fewer eligible articles than ranked slots means the tag has not been fully
+    # applied yet.
   if eligible_count < featured_slots
     unless hold_reasons contains '|incomplete_eligible_set|'
       assign hold_reasons = hold_reasons | append: 'incomplete_eligible_set|'
@@ -203,9 +194,7 @@
   assign reason_list = hold_reasons | remove_first: '|' | split: '|'
   assign rank_entries = rank_map | remove_first: '|' | split: '|'
 
-  comment
-    Newest-first pool, used only by the fill pass.
-  endcomment
+    # Newest-first pool, used only by the fill pass.
   assign pool = '' | split: ''
   for store_blog in blogs
     assign pool = pool | concat: store_blog.articles
@@ -224,7 +213,8 @@
   max cards (clamped): {{ max_cards }}
   hold reasons: {% if reason_list.size > 0 %}{{ reason_list | join: ', ' }}{% else %}none{% endif %}
   eligible readback:
-{% if rank_readback != blank %}{{ rank_readback }}{% else %}    (no eligible articles)
+{% if rank_readback != blank %}{% assign readback_lines = rank_readback | split: '~' %}{% for readback_line in readback_lines %}    {{ readback_line }}
+{% endfor %}{% else %}    (no eligible articles)
 {% endif %}-->
 
 <div class="main-blog page-width section-{{ section.id }}-padding">
