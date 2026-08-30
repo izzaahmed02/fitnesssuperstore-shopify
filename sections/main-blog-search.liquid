@@ -19,6 +19,12 @@
 
 {%- liquid
   assign max_results = section.settings.max_results | default: 9
+  if max_results > 9
+    assign max_results = 9
+  endif
+  if max_results < 1
+    assign max_results = 1
+  endif
 -%}
 
 <div class="main-blog page-width section-{{ section.id }}-padding">
@@ -215,10 +221,11 @@ document.addEventListener('DOMContentLoaded', () => {
       "type": "range",
       "id": "max_results",
       "min": 3,
-      "max": 12,
+      "max": 9,
       "step": 1,
       "label": "Maximum search results",
-      "default": 9
+      "default": 9,
+      "info": "Approved maximum is nine. The value is also clamped to nine in code."
     },
     { "type": "checkbox", "id": "show_image", "default": true, "label": "Show Image" },
     { "type": "checkbox", "id": "show_date", "default": true, "label": "Show Date" },

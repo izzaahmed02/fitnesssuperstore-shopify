@@ -186,6 +186,18 @@
     endunless
   endif
 
+    # Fill window. The fill pass skips every eligible article before it can
+    # place a card, so the window must cover them plus the whole grid. Clamped
+    # to the documented per-array bound; if that clamp binds, HOLD rather than
+    # silently render a short grid.
+  assign fill_limit = max_cards | plus: eligible_count
+  if fill_limit > 50
+    assign fill_limit = 50
+    unless hold_reasons contains '|fill_window_exhausted|'
+      assign hold_reasons = hold_reasons | append: 'fill_window_exhausted|'
+    endunless
+  endif
+
   assign feed_state = 'ok'
   if hold_reasons != '|'
     assign feed_state = 'hold'
@@ -210,7 +222,7 @@
   state: {{ feed_state }}
   traversal: scanned {{ scanned_total }} of {{ expected_total }} expected articles across {{ blogs.size }} blogs
   eligible (exact tag "featured"): {{ eligible_count }} of {{ featured_slots }} ranked slots
-  max cards (clamped): {{ max_cards }}
+  max cards (clamped): {{ max_cards }} | fill window: {{ fill_limit }}
   hold reasons: {% if reason_list.size > 0 %}{{ reason_list | join: ', ' }}{% else %}none{% endif %}
   eligible readback:
 {% if rank_readback != blank %}{% assign readback_lines = rank_readback | split: '~' %}{% for readback_line in readback_lines %}    {{ readback_line }}
@@ -300,10 +312,11 @@
 
     {%- comment -%}
       Pass 2 — fill remaining positions with newest non-featured articles.
-      Explicitly capped at 50 iterations. At most featured_slots articles are
-      skipped, so a 9-card grid always fills well inside that bound.
+      The window is sized to eligible_count plus max_cards, so every eligible
+      article can be skipped and the grid still fills. Sizing is computed, not
+      assumed, and raises fill_window_exhausted if it cannot be satisfied.
     {%- endcomment -%}
-    {%- for article in pool_newest limit: 50 -%}
+    {%- for article in pool_newest limit: fill_limit -%}
       {%- if card_count >= max_cards -%}{%- break -%}{%- endif -%}
       {%- unless article.tags contains 'featured' -%}
         {%- assign key = '|' | append: article.id | append: '|' -%}
