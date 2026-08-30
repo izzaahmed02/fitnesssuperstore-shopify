@@ -773,6 +773,12 @@
   </div>
 </div>
 
+{%- comment -%}
+  Wrapper is rendered unconditionally and is listed as its own render target in
+  CartItems.getSectionsToRender(), so the option popups are rebuilt alongside
+  the Modify buttons inside .js-contents on every AJAX cart update.
+{%- endcomment -%}
+<div id="CartItems-ProductOptions">
 {% if show_product_options %}
   {% assign has_info = false %}
   {% for item in cart.items %}
@@ -808,7 +814,10 @@
       {% endfor %}
     {% endfor %}
   {% endfor %}
+{% endif %}
+</div>
 
+{% if show_product_options %}
   <script src="{{ 'product-custom-options.js' | asset_url }}" defer></script>
 {% endif %}
 

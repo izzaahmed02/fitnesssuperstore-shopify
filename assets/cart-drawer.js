@@ -175,6 +175,10 @@ class CartDrawerItems extends CartItems {
   getSectionsToRender() {
     return [
       { id: 'CartDrawer', section: 'cart-drawer', selector: '.drawer__inner' },
+      // The option popups sit outside .drawer__inner (they position: fixed and
+      // cannot live inside the transformed drawer), so they need their own
+      // render target or their Modify listeners go stale on every update.
+      { id: 'CartDrawer-ProductOptions', section: 'cart-drawer', selector: '#CartDrawer-ProductOptions' },
       { id: 'cart-icon-bubble', section: 'cart-icon-bubble', selector: '.shopify-section' },
     ];
   }
