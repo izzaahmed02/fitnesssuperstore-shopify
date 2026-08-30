@@ -13,7 +13,21 @@
   - Drafts excluded: Liquid's blog.articles exposes published articles only.
   - No duplicate articles: the ledger keys on article.id, globally unique.
 
-  NO HARD-CODED ARTICLES OR BLOGS
+  BLOG DISCOVERY — WHY A HANDLE LIST IS UNAVOIDABLE
+  Shopify Liquid cannot enumerate blogs. The blogs object is a lookup accessed
+  by handle, not an iterable collection, so `for x in blogs` yields nothing and
+  the candidate pool comes back empty. The blogs to scan therefore have to be
+  named in a setting, which is the same mechanism already in use and already
+  accepted on the hub search section.
+
+  This is a blog handle list, not an article list. No article handle, ID or
+  title appears anywhere in this file. Which articles are featured, and in what
+  order, remains driven entirely by the live tag and the live rank metafield.
+  A configured handle that resolves to no blog raises the HOLD reason
+  unknown_blog_handle rather than being skipped, so a blog cannot silently drop
+  out of validation.
+
+  NO HARD-CODED ARTICLES
   No article handle, ID or title, and no blog handle list. Blogs are discovered
   by iterating the blogs global. Eligibility comes from live tag data, order
   from a live metafield. The only literals are slot counts, which are settings.
@@ -124,7 +138,23 @@
   assign rank_map = '|'
   assign rank_readback = ''
 
-  for store_blog in blogs
+  assign blog_handles = section.settings.blog_handles | split: ','
+  assign blog_count = 0
+
+  for handle in blog_handles
+    assign clean_handle = handle | strip
+    assign store_blog = blogs[clean_handle]
+
+    if store_blog == blank
+        # A configured handle that resolves to no blog is a HOLD. Silently
+        # skipping it would hide an entire blog from validation.
+      unless hold_reasons contains '|unknown_blog_handle|'
+        assign hold_reasons = hold_reasons | append: 'unknown_blog_handle|'
+      endunless
+      continue
+    endif
+
+    assign blog_count = blog_count | plus: 1
     assign expected_total = expected_total | plus: store_blog.articles_count
 
     for article in store_blog.articles
@@ -172,6 +202,15 @@
 
     # Completeness check. A short scan means the platform truncated a fetch, so
     # the PASS/HOLD verdict cannot be trusted and the feed HOLDs.
+    # An empty pool means blog resolution failed outright. Without this an
+    # expected total of zero would equal a scanned total of zero and the
+    # completeness check would pass while nothing had been examined at all.
+  if expected_total == 0
+    unless hold_reasons contains '|no_articles_found|'
+      assign hold_reasons = hold_reasons | append: 'no_articles_found|'
+    endunless
+  endif
+
   if scanned_total != expected_total
     unless hold_reasons contains '|incomplete_traversal|'
       assign hold_reasons = hold_reasons | append: 'incomplete_traversal|'
@@ -208,8 +247,12 @@
 
     # Newest-first pool, used only by the fill pass.
   assign pool = '' | split: ''
-  for store_blog in blogs
-    assign pool = pool | concat: store_blog.articles
+  for handle in blog_handles
+    assign clean_handle = handle | strip
+    assign store_blog = blogs[clean_handle]
+    if store_blog != blank
+      assign pool = pool | concat: store_blog.articles
+    endif
   endfor
   assign pool_newest = pool | sort: 'published_at' | reverse
 
@@ -220,7 +263,7 @@
 {%- comment -%} View-source readback. Present on every render, so state is provable. {%- endcomment -%}
 <!-- FEATURED_FEED_READBACK
   state: {{ feed_state }}
-  traversal: scanned {{ scanned_total }} of {{ expected_total }} expected articles across {{ blogs.size }} blogs
+  traversal: scanned {{ scanned_total }} of {{ expected_total }} expected articles across {{ blog_count }} resolved blogs
   eligible (exact tag "featured"): {{ eligible_count }} of {{ featured_slots }} ranked slots
   max cards (clamped): {{ max_cards }} | fill window: {{ fill_limit }}
   hold reasons: {% if reason_list.size > 0 %}{{ reason_list | join: ', ' }}{% else %}none{% endif %}
@@ -407,6 +450,13 @@
     {
       "type": "paragraph",
       "content": "Eligibility is the exact tag 'featured'. Order is the article metafield custom.featured_rank, ascending. Legacy tags such as 'featured:top' are ignored. Remaining positions fill with the newest published articles. Append ?feed_qa=1 to the page URL to reveal the HOLD diagnostic panel."
+    },
+    {
+      "type": "text",
+      "id": "blog_handles",
+      "label": "Blog handles (comma separated)",
+      "default": "buying-guides, comparisons, maintenance, warranty-shipping, news, case-studies",
+      "info": "Liquid cannot enumerate blogs, so the blogs to scan must be named here. Article selection remains driven entirely by tag and rank. A handle that resolves to no blog is a HOLD."
     },
     {
       "type": "range",
