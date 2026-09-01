@@ -42,31 +42,63 @@ customElements.get('product-info') ||
         });  
       }
       redirectCombinedListingToVariant() {
-        // On combined-listing parent URLs the page renders the parent product, so
-        // child-level data (compare_at_price, variant metafields) is missing until
-        // the user clicks a variant. Forward to the checked variant's child URL so
-        // the default landing matches the per-variant URL.
+        // On a combined-listing PARENT URL the page renders the parent shell, so
+        // the title stays the generic family name while the SKU/price come from a
+        // default variant — the incoherent "generic parent name + one child's SKU
+        // + a random (cheapest) price" state. To match the coherent Dual
+        // Adjustable Pulley behaviour we forward to the REAL child product URL for
+        // the fully-selected option combination, so title + SKU + price + images
+        // all describe the same product.
+        //
+        // The child URL is resolved from the family variants map
+        // (data-product-variants-map), the same source of truth
+        // variant-fallback-intercept.js uses. A single option value's
+        // data-product-url does NOT uniquely identify a child on a multi-option
+        // listing (Purchase Type + Set Type + Weight), which is why the previous
+        // per-value approach bailed out and left the generic shell showing.
         if (this.dataset.isCombinedListing !== 'true') return;
         const currentPath = window.location.pathname;
-        // If the current path is itself one of the rendered child product URLs,
-        // we're already on a legitimate child page the user navigated to — do
-        // not redirect. Otherwise (e.g. on the bare parent URL) the checked
-        // option's child data-product-url can point at a *different* child:
-        // when the landed child's variants are all sold out, the default
-        // selected variant resolves to a sibling (e.g. Sets), and redirecting
-        // to it would bounce the user away from the child they chose.
-        const optionUrls = Array.from(
-          this.querySelectorAll('variant-selects [data-product-url], variant-selects option[data-product-url]')
-        ).map((el) => el.dataset.productUrl);
-        const onValidChild = optionUrls.some(
-          (u) => u === currentPath || u === currentPath + '/' || u + '/' === currentPath
+
+        const mapScript = this.querySelector('script[data-product-variants-map]');
+        if (!mapScript) return;
+        let variantsMap;
+        try {
+          variantsMap = JSON.parse(mapScript.textContent);
+        } catch (e) {
+          return;
+        }
+        if (!Array.isArray(variantsMap) || variantsMap.length === 0) return;
+
+        const pathOf = (u) => {
+          try {
+            return new URL(u, window.location.origin).pathname;
+          } catch (e) {
+            return null;
+          }
+        };
+
+        // Already standing on one of the family's child URLs? Do not redirect —
+        // this is the loop guard (child pages also run this on load).
+        if (variantsMap.some((v) => v.u && pathOf(v.u) === currentPath)) return;
+
+        // Read the fully-selected option combination (one value per option), in
+        // option order, from the picker fieldsets.
+        const selected = Array.from(this.querySelectorAll('[data-variant-options]')).map((fs) => {
+          const checked = fs.querySelector('[data-option-value-id]:checked, option[data-option-value-id][selected]');
+          return checked ? checked.value : null;
+        });
+
+        const match = variantsMap.find(
+          (v) =>
+            v.o1 === (selected[0] || null) &&
+            v.o2 === (selected[1] || null) &&
+            v.o3 === (selected[2] || null)
         );
-        if (onValidChild) return;
-        const checked = this.querySelector('variant-selects [data-product-url]:checked, variant-selects option[data-product-url][selected]');
-        const target = checked?.dataset?.productUrl;
-        if (!target) return;
-        if (target === currentPath || target === currentPath + '/') return;
-        window.location.replace(target);
+        if (!match || !match.u) return;
+
+        const targetPath = pathOf(match.u);
+        if (!targetPath || targetPath === currentPath) return;
+        window.location.replace(targetPath);
       }
       addPreProcessCallback(t) {
         this.preProcessHtmlCallbacks.push(t);
