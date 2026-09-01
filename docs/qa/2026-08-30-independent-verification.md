@@ -6,7 +6,7 @@
 live Fitness Superstore Shopify Admin and the `izzaahmed02/fitnesssuperstore-shopify` theme
 repository at `origin/main` = `8a00e8e5ce6477358b8baffc676c937ea7344eb2`.
 
-**Disposition: HOLD.** See §7.
+**Disposition: HOLD.** See §8.
 
 All checks below are read-only. No metafield definition was created, no catalogue was
 written, no theme or app was changed, no order was edited, and no staging or production
@@ -232,7 +232,35 @@ Two items to close **before** it is applied to the isolated staging theme:
 
 ---
 
-## 6. Staging QA readiness note
+## 6. Thread attachment review
+
+The thread carries one distinct image attachment. It appears twice — on Izza's 30 August
+message and again on Qash's reply that quotes it — and the two copies are byte-identical
+(SHA-256 `96edbfdf97ad4d72...`, 29,689 bytes). There are no other attachments or screenshots
+in the thread.
+
+It is a Shopify Partner dashboard row showing:
+
+| Store | Store type | Status |
+|---|---|---|
+| API Testing \| Izza-Qash — `api-testing-izza-qash.myshopify.com` | Staging | Active |
+
+**What it evidences:** the staging store exists, is registered as a Shopify *Staging*-type
+store, and is Active. That is consistent with Izza's isolation statement.
+
+**What it does not evidence:** the image is cropped to the single row. It does not show the
+owning Partner organization, the `qash-izza-bundle` app installation, the app's client ID,
+or its scopes. Tim's staging authorization rests on "Izza's ownership, isolation, dependency,
+and reset-method PASS," and this screenshot corroborates the store's existence and type only —
+company ownership, the absence of production scope, and the single-store installation remain
+Izza's written attestation rather than shown evidence. Those are verifiable directly once
+Partner-organization visibility is granted, which is included in the access request in §8.
+
+This also bears on the payment prerequisite in §7: Shopify applies payment restrictions to
+non-production store types, which is precisely why test-mode or Bogus Gateway payment must be
+confirmed enabled before the staging session rather than discovered at checkout.
+
+## 7. Staging QA readiness note
 
 FF-FSR90 currently carries an automatic 10% checkout discount through 2026-09-07, observed
 on Order #49333 as $3,299.00 → $2,969.10. FF-FSR90 is in the staging stress set. Expected
@@ -241,7 +269,7 @@ result will be misread as a failure.
 
 ---
 
-## 7. Disposition — HOLD
+## 8. Disposition — HOLD
 
 **HOLD.** No PASS is possible at this time, and the reason is structural rather than a
 judgement on the work.
