@@ -64,6 +64,40 @@
         padding-top: 6px;
         padding-bottom: 6px;
       }
+
+      /* The 14px above lands on the wrapper, but `mobile-text` is a richtext setting, so the
+         visible copy is a <p> child and base-v2.min.css sets
+         `.announcement-bar .h5 p { font-size: 11.5px }` below 990px. A child's own font-size
+         wins over its parent's, so the bar still rendered at 11.5px against the 14-15px spec.
+         Targeting the paragraph at (0,3,1) beats that rule's (0,2,1) regardless of load order
+         (the same declaration exists in both base-v2.min.css and base.css.liquid). */
+      .announcement-bar__message.h5 .mobile-text p {
+        font-size: 14px;
+        line-height: 1.2;
+      }
+
+      /* Raising the font to 14px makes the 84-character mobile string wrap to a THIRD line at
+         320px, which breaks both the 54px cap and the "no third line" rule. The 0.6px tracking
+         in base-v2.min.css costs ~50px of line budget over 84 characters, which is what pushes
+         it over. Measured maximum that still holds two lines at 320/375/390/430 is 0.3px;
+         0.4px and the original 0.6px both spill to three lines at 320px. Set to 0.2px to keep
+         a little tracking with margin below that edge. Tracking is Dmitri's call as visual
+         owner - this is the implementation constraint, not a design preference. */
+      .announcement-bar__message .mobile-text {
+        letter-spacing: 0.2px;
+      }
+    }
+
+    /* base-v2.min.css pins `.utility-bar { height: 30px }` below 389px while below 350px is
+       already `height: auto`. That is why QA measured 320px at 55px but 375px as a 30px bar
+       holding a ~48px message: at 375px the copy overflows its parent and can collide with the
+       header. Releasing the fixed height makes 320-430px uniformly auto, which is the normal
+       state everywhere above 388px. `.gradient` is unconditional on this element, so (0,2,0)
+       overrides the (0,1,0) rule without depending on stylesheet order. */
+    @media screen and (max-width: 388px) {
+      .utility-bar.gradient {
+        height: auto;
+      }
     }
 {% endstyle %}
 
