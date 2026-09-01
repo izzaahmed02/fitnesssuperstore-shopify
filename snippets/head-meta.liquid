@@ -54,6 +54,16 @@
   <meta name="robots" content="noindex,nofollow">
 {% endif %}
 
+{%- comment -%}
+  Allow a collection to be excluded from search indexing without unpublishing it.
+  Set the collection's `seo.hidden` metafield to 1. Used for eligibility collections
+  that must be reachable by URL (so campaign links and feeds resolve) but should not
+  be indexed or surfaced as a browsable category.
+{%- endcomment -%}
+{% if template contains 'collection' and collection and collection.metafields.seo.hidden == 1 %}
+  <meta name="robots" content="noindex,follow">
+{% endif %}
+
 {% if template contains 'product' and product %}
   {% assign custom_canonical = null %}
   {% if product and product.metafields.custom.product_canonical_url != blank %}
