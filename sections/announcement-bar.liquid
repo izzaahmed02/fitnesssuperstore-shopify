@@ -14,6 +14,16 @@
     if section.blocks.size > 0
         assign announcement_bar = true
     endif
+
+    assign now_s = 'now' | date: '%s' | plus: 0
+    assign ld_start_s = settings.laborday_start | date: '%s' | plus: 0
+    assign ld_end_s = settings.laborday_end | date: '%s' | plus: 0
+    assign ld_in_window = false
+    if settings.laborday_force_preview or request.design_mode
+        assign ld_in_window = true
+    elsif ld_start_s > 0 and ld_end_s > 0 and now_s >= ld_start_s and now_s < ld_end_s
+        assign ld_in_window = true
+    endif
 -%}
 
 {% if social_icons %}
@@ -57,6 +67,16 @@
     }
 {% endstyle %}
 
+{%- comment -%}
+  Labor Day 2026 (PR #758): date-gate the announcement bar to the sale window (Sept 1-7)
+  so it does not persist after the sale ends. Safe to gate the whole utility bar here
+  because this section has show_social=false and both locale selectors off, so the Labor
+  Day announcement is its only content. Theme editor (request.design_mode) and
+  settings.laborday_force_preview both bypass the dates, mirroring
+  snippets/labor-day-sale-note.liquid. If social icons or a locale selector are ever
+  enabled on this section, move this gate to the announcement block instead.
+{%- endcomment -%}
+{%- if ld_in_window -%}
 <div
         class="utility-bar color-{{ section.settings.color_scheme }} gradient{% if section.settings.show_line_separator and section.blocks.size > 0 %} utility-bar--bottom-border{% elsif section.settings.show_line_separator and section.settings.show_social and social_icons %} utility-bar--bottom-border-social-only{% endif %}{% if section.settings.enable_country_selector or section.settings.enable_language_selector %} header-localization{% endif %}"
         {{ block.shopify_attributes }}
@@ -82,7 +102,7 @@
                     {%- endif -%}
                     <div class="announcement-bar__message h5">
                         <span class="desktop-text">{{ section.blocks.first.settings.text | replace: '<a ', '<a aria-label="Link to Warehouse"' }}</span>
-                        <span class="mobile-text">{{ section.blocks.first.settings.mobile-text | replace: '<a ', '<a aria-label="Link to Warehouse"' }}</span>
+                        <span class="mobile-text">{{ section.blocks.first.settings['mobile-text'] | replace: '<a ', '<a aria-label="Link to Warehouse"' }}</span>
                         {%- if section.blocks.first.settings.link != blank -%}
                             {% render 'icon-arrow' %}
                         {%- endif -%}
@@ -143,7 +163,7 @@
                                         {%- endif -%}
                                         <div class="announcement-bar__message h5">
                                             <span class="desktop-text">{{ block.settings.text | replace: '<a ', '<a aria-label="Warehouse Page"' }}</span>
-                                            <span class="mobile-text">{{ block.settings.mobile-text | replace: '<a ', '<a aria-label="Warehouse Page"' }}</span>
+                                            <span class="mobile-text">{{ block.settings['mobile-text'] | replace: '<a ', '<a aria-label="Warehouse Page"' }}</span>
                                             {%- if block.settings.link != blank -%}
                                                 {% render 'icon-arrow' %}
                                             {%- endif -%}
@@ -203,6 +223,7 @@
         </div>
     </div>
 </div>
+{%- endif -%}
 
 {% schema %}
 {
