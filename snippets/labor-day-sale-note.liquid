@@ -12,24 +12,30 @@
                                does not also render on mobile (the mobile-layout copy
                                is rendered without it and is the one shown on phones).
 
-  DEPENDENCY: collection 519462814012 ("JULY4 FF Eligible", 1,359 products) must be
-  published to the Online Store sales channel, or Liquid's product.collections will
-  not include it and the 10% French Fitness note will not render. The Remanufactured
-  collection (512180715836) is already published.
+  ELIGIBILITY: mirrors each discount collection's own smart-collection rules, read from
+  non-truncating product fields (vendor / type / tags / title). It deliberately does NOT
+  use product.collections, which truncates when a product is in more than ~20 collections
+  (so the eligible collection could be missed), and it does NOT depend on the collection
+  being published to the Online Store. The automatic discounts still target the
+  collections by ID, so this note matches exactly which products get discounted.
+    French Fitness 10% (collection 519462814012, all must be true):
+      vendor == 'French Fitness' AND type != 'Product (Hidden)' AND no 'july4-exclude' tag
+    Remanufactured 5% (collection 512180715836, all must be true):
+      title contains 'Remanufactured' AND type == 'Product Index'
 {% endcomment %}
 {%- liquid
-  assign ff_collection_id = 519462814012
-  assign reman_collection_id = 512180715836
-
   assign in_ff = false
   assign in_reman = false
-  for c in product.collections
-    if c.id == ff_collection_id
+
+  if product.vendor == 'French Fitness' and product.type != 'Product (Hidden)'
+    unless product.tags contains 'july4-exclude'
       assign in_ff = true
-    elsif c.id == reman_collection_id
-      assign in_reman = true
-    endif
-  endfor
+    endunless
+  endif
+
+  if product.type == 'Product Index' and product.title contains 'Remanufactured'
+    assign in_reman = true
+  endif
 
   assign campaign_text = ''
   if in_ff
