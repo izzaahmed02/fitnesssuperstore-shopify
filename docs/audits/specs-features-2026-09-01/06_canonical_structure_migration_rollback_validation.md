@@ -43,7 +43,7 @@ additive or rename-only; none deletes content.
 | B1 | Add a definition `description` and per-field descriptions | Definition is undocumented; field names like `list` and `other_features` are unguessable | 0 |
 | B2 | Rename `shipping_dims_weight_2` → `shipping_dimensions_weight`, and retire `shipping_dims_weight` after migrating its 341 values into it | Two fields, one concept, different types (rich text vs multi-line) | 341 |
 | B3 | Rename `list` → `additional_list` | `list` collides with the Liquid keyword and is meaningless in admin | 10 |
-| B4 | Deprecate `downloads_other_info` and `exercises` | Not bound in the live theme; 1 populated record each | 2 |
+| B4 | Deprecate `downloads_other_info` **only** | Bound in no theme at all (verified across all 80 themes, file 10). 1 populated record. **`exercises` was originally in this row and has been removed: it is bound in an in-progress PDP rebuild — see file 10.** | 1 |
 | B5 | Set `product_title` to required | It is the `displayNameKey`; a blank one makes the record unfindable in admin | 0 |
 | B6 | Normalize `comparison_chart_table`, `buying_guide`, `frequently_asked_questions` from raw multi-line blobs to the `pdp_table` / `pdp_sections` / `pdp_faq` children already in the store | Same target as `specs_features_new`; makes the two models converge instead of diverge | up to 973 |
 

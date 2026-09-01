@@ -96,7 +96,17 @@ properly:
 let you export a scenario/workflow as JSON, so the same grep works. Both hold `read_metaobjects`, so
 neither can be skipped.
 
-## C. The 79 non-live themes — scriptable, do not do this by hand
+## C. The 79 non-live themes — **DONE, see file 10**
+
+Ran 2026-09-01 across all 80 themes. Result: `downloads_other_info` is bound nowhere and is safe to
+deprecate; **`exercises` is bound in an in-progress PDP rebuild** (`pdp-ayyaz-new` + Ayyaz's
+development theme) and must not be deprecated. `list`, `shipping_dims_weight` and
+`shipping_dims_weight_2` are bound in all 80 themes, so the proposed renames are an 80-theme change.
+Full results and the consequence for migration item B4 are in `10_nonlive_theme_scan.md`.
+
+The method below is kept so the scan can be repeated.
+
+### How it was run / how to repeat it
 
 Theme file bodies **are** readable through the Admin API (`OnlineStoreTheme.files { body }`),
 confirmed 2026-09-01. So this is a script, not 79 rounds of clicking.
@@ -123,9 +133,9 @@ large themes.
 file**. Shopify emails a link per theme. Unzip them into one folder and run the same grep once. Fine
 for a handful of themes, painful for 79.
 
-**Option 3 — let me run it.** I can query the Admin API theme by theme and produce a table of
-theme → at-risk field → file → line, then add it to the packet as file 10. It is ~80 queries so it
-is not instant, but it needs no admin clicks from you. Say the word.
+**Option 3 — the Admin API directly.** This is what was actually done: 16 batched queries of 5
+themes each, pulling `templates/product*.json` and the extra-info / main-product sections, then
+matching locally. Glob patterns work in the `filenames` argument. See file 10 for the method.
 
 **Worth doing regardless of the outcome:** 79 unpublished themes for one store is itself the finding.
 Most are dated one-off branches (`usman-26-march`, `avis-removal-20-jan`, `Blog-Fix-16-APR-Waqas`).
@@ -167,7 +177,8 @@ app-injected markup together), run Screaming Frog from a normal workstation:
 
 1. **A** is done — read it, and chase the six apps named as worth a real answer.
 2. **B** — Flow, Make, n8n. One admin session, use the export-and-grep shortcut.
-3. **C** — say whether you want me to run it, or hand the CLI loop to Izza.
+3. ~~**C**~~ — done, see file 10. One action falls out of it: **do not deprecate `exercises`**,
+   and ask Ayyaz whether the new PDP is going ahead.
 4. **D** — optional. Schedule a recurring full-domain crawl rather than a one-off.
 
 Nothing above changes any store data. All of it is read-only verification, and all of it should be
