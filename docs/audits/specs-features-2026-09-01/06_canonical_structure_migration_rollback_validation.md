@@ -1,6 +1,6 @@
 # 06 — Proposed Canonical Structure, Migration Sequence, Rollback Plan, Validation Plan
 
-Nothing in this document has been executed. `specs_features` is untouched: 4,542 entries, all ACTIVE,
+Nothing in this document has been executed. `specs_features` is untouched: 4,546 entries, all ACTIVE,
 same definition and same product assignments as before the audit.
 
 ---
@@ -30,7 +30,7 @@ specs_features_new
 **Recommendation: do not design a third structure.** The canonical target should be
 `specs_features_new`, and the decision Tim actually needs to make is *"do we finish the
 specs_features → specs_features_new migration, or do we stop it and clean up specs_features in
-place?"* Two competing PDP data models on 4,542 products is a bigger risk than any duplicate in
+place?"* Two competing PDP data models on 4,546 products is a bigger risk than any duplicate in
 this packet. Whoever created `specs_features_new` should be identified before either path starts.
 
 ## B. Proposed canonical naming / field structure for `specs_features` (in-place option)
@@ -63,11 +63,11 @@ automations, and the 19 non-live themes. Tim/Izza sign-off that the reference ma
 up `specs_features` in place. Everything after this branches on that answer. *Blocking.*
 
 **Phase 2 — re-export immediately before any write (no writes).** Re-run the bulk export in this
-packet. `01_specs_features_raw_export.jsonl` is the 2026-08-20 baseline; a same-day export is the
+packet. `01_specs_features_raw_export.jsonl` is the 2026-09-01 baseline; a same-day export is the
 actual rollback source. Store it outside the container (Drive), plus a Matrixify metaobject export as
 a second, admin-importable copy.
 
-**Phase 3 — the 68 clean orphans.** 68 records with zero back-references and no duplicate twin.
+**Phase 3 — the 70 clean orphans.** 70 records with zero back-references and no duplicate twin.
 Sequence: (a) confirm still zero references at execution time, (b) set `publishable` status to DRAFT —
 *not* delete — (c) wait 14 days, (d) delete only if nothing regressed. DRAFT is the reversible step;
 deletion is not. Requires Tim approval (`07_requires_tim_approval.csv`).
@@ -81,7 +81,7 @@ canonical's PDP renders, then DRAFT the twin. One pair at a time, never batched.
 products, plus 2 empty shells. These need a content decision from Larianne/Tim per pair before any
 merge. Do not touch them in a bulk pass.
 
-**Phase 6 — the 472 non-live-only records.** Referenced only by ARCHIVED / UNLISTED / DRAFT products.
+**Phase 6 — the 477 non-live-only records.** Referenced only by ARCHIVED / UNLISTED / DRAFT products.
 Lowest value, highest chance of a surprise (a product gets reactivated and loses its content). Do this
 last, DRAFT-only, and only after Phase 3 has been stable for a full cycle.
 

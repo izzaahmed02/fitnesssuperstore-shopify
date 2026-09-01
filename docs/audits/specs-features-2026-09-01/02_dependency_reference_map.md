@@ -1,7 +1,7 @@
 # 02 — Dependency / Reference Map: `specs_features`
 
-Captured 2026-08-20 against the live store (Fitness Superstore, Shopify Plus) and the live theme
-`fitnesssuperstore-shopify/main` (OnlineStoreTheme/186120208700, updated 2026-08-19).
+Captured 2026-09-01 against the live store (Fitness Superstore, Shopify Plus) and the live theme
+`fitnesssuperstore-shopify/main` (OnlineStoreTheme/186120208700, updated 2026-08-28).
 
 Read this together with:
 - `01_entries_export.csv` — the per-record reference map (every entry → every product that points at it)
@@ -16,8 +16,8 @@ Product
   └── metafield  custom.features_specs        MetafieldDefinition/83345768764
         type: metaobject_reference
         validated against: MetaobjectDefinition/7246479676  (specs_features)
-        metafieldsCount: 4467
-              └── Metaobject  specs_features   (4542 entries)
+        metafieldsCount: 4469
+              └── Metaobject  specs_features   (4546 entries)
                     ├── set_includes         → set_include  (MetaobjectDefinition/8537375036, 755 entries)
                     └── accessories_included → accessory    (MetaobjectDefinition/7246643516, 225 entries)
 ```
@@ -29,7 +29,7 @@ Product
 - All 111 metaobject definitions in the store were enumerated (3 pages). **No** metaobject definition
   has a field that references `specs_features`. `specs_features_new` shares the two *children*
   (`set_include`, `accessory`) but does not reference `specs_features` itself.
-- The bulk export of `metaobject.referencedBy` returned **4,467 back-reference rows, 100% of them
+- The bulk export of `metaobject.referencedBy` returned **4,469 back-reference rows, 100% of them
   `Product / custom.features_specs`**. Zero Collection, Page, Article, Variant or Metaobject
   referencers exist.
 
@@ -37,23 +37,23 @@ Product
 
 | Fact | Count |
 |---|---|
-| Entries in the definition | **4,542** |
-| Entries referenced by at least one product | 4,457 |
-| Distinct products referencing an entry | 4,467 |
+| Entries in the definition | **4,546** |
+| Entries referenced by at least one product | 4,459 |
+| Distinct products referencing an entry | 4,469 |
 | Products pointing at more than one entry | 0 (1:1 by design) |
 | Entries shared by more than one product | **10** |
-| Entries with **zero** back-references (orphans) | **85** |
+| Entries with **zero** back-references (orphans) | **87** |
 
-Status of the 4,467 referencing products:
+Status of the 4,469 referencing products:
 
 | Product status | Products |
 |---|---|
-| ACTIVE | 3,737 |
+| ACTIVE | 3,736 |
 | ARCHIVED | 453 |
-| UNLISTED | 252 |
-| DRAFT | 25 |
+| UNLISTED | 250 |
+| DRAFT | 30 |
 
-730 of the referencing products are ARCHIVED / UNLISTED / DRAFT. The 472 entries whose *only*
+733 of the referencing products are ARCHIVED / UNLISTED / DRAFT. The 477 entries whose *only*
 references come from non-live products have no customer-facing surface today — see
 `05_dispositions.csv`.
 
@@ -95,7 +95,7 @@ product.home-gym-packages.json   (HGS-extra-info)
 | `exercises` | 1 (`french-fitness-fsr-90-functional-trainer-smith-squat-rack-machine-new`) | dead field — content is entered but never rendered |
 
 `product_title` is the definition's `displayNameKey` — it is the admin-facing label, not a rendered field.
-It is populated on all 4,542 records and must be preserved.
+It is populated on all 4,546 records and must be preserved.
 
 Also note the overlap pair `shipping_dims_weight` (rich text, 341 populated, bound only in
 `product.gym-package.json`) vs `shipping_dims_weight_2` (multi-line, 386 populated, bound in 11
