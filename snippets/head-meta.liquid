@@ -77,7 +77,15 @@
 {% endif %}
 
 {%- if settings.favicon != blank -%}
-  <link rel="icon" href="{{ settings.favicon | image_url: width: 32 }}" type="image/png">
+  {%- comment -%}
+    Google Search only considers favicons that are square and a multiple of 48 px.
+    The previous 32 px-only output was below that threshold, so expose 96 px and
+    192 px renders of the same stable source file instead.
+    https://developers.google.com/search/docs/appearance/favicon-in-search
+  {%- endcomment -%}
+  <link rel="icon" href="{{ settings.favicon | image_url: width: 96, height: 96 }}" type="image/png" sizes="96x96">
+  <link rel="icon" href="{{ settings.favicon | image_url: width: 192, height: 192 }}" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="{{ settings.favicon | image_url: width: 180, height: 180 }}" sizes="180x180">
 {%- endif -%}
 
 {%- unless settings.type_header_font.system? and settings.type_body_font.system? -%}
