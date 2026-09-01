@@ -419,18 +419,33 @@ document.addEventListener("DOMContentLoaded", function() {
       {%- if tbl.table_type == 'Table with images' -%}
         {% render 'pdp-table-images', table: tbl %}
       {%- elsif tbl.table_type == 'Table with header' or tbl.table_type == 'Table without header' -%}
-        {%- assign is_label_value = false -%}
+        {%- comment -%}
+          Full-scan table-type detection (PR #640 contract): inspect EVERY cell,
+          not just the first. Route per the reconciliation decision matrix.
+          - all populated rows have BOTH attribute + value -> label/value (comparison)
+          - attribute-only, values-only, or mixed/orphan    -> simple one-column (never a blank column)
+          - no populated rows                               -> render nothing
+        {%- endcomment -%}
+        {%- assign has_orphan_row = false -%}
+        {%- assign populated_row_count = 0 -%}
         {%- for col in tbl.table_headers.value -%}
           {%- for cell in col.content.value -%}
-            {%- if cell.attribute != blank -%}{%- assign is_label_value = true -%}{%- endif -%}
-            {%- break -%}
+            {%- assign a_blank = true -%}
+            {%- assign v_blank = true -%}
+            {%- if cell.attribute != blank -%}{%- assign a_blank = false -%}{%- endif -%}
+            {%- if cell.values != blank -%}{%- assign v_blank = false -%}{%- endif -%}
+            {%- unless a_blank and v_blank -%}
+              {%- assign populated_row_count = populated_row_count | plus: 1 -%}
+              {%- if a_blank or v_blank -%}{%- assign has_orphan_row = true -%}{%- endif -%}
+            {%- endunless -%}
           {%- endfor -%}
-          {%- break -%}
         {%- endfor -%}
-        {%- if is_label_value -%}
-          {% render 'pdp-table-comparison', table: tbl %}
-        {%- else -%}
+        {%- if populated_row_count == 0 -%}
+          {%- comment -%} nothing to render: no shell, no heading {%- endcomment -%}
+        {%- elsif has_orphan_row -%}
           {% render 'pdp-table', table: tbl %}
+        {%- else -%}
+          {% render 'pdp-table-comparison', table: tbl %}
         {%- endif -%}
       {%- else -%}
         {% render 'pdp-table', table: tbl %}
@@ -685,18 +700,33 @@ document.addEventListener("DOMContentLoaded", function() {
                 {%- if tbl.table_type == 'Table with images' -%}
                   {% render 'pdp-table-images', table: tbl %}
                 {%- elsif tbl.table_type == 'Table with header' or tbl.table_type == 'Table without header' -%}
-                  {%- assign is_label_value = false -%}
+                  {%- comment -%}
+                    Full-scan table-type detection (PR #640 contract): inspect EVERY cell,
+                    not just the first. Route per the reconciliation decision matrix.
+                    - all populated rows have BOTH attribute + value -> label/value (comparison)
+                    - attribute-only, values-only, or mixed/orphan    -> simple one-column (never a blank column)
+                    - no populated rows                               -> render nothing
+                  {%- endcomment -%}
+                  {%- assign has_orphan_row = false -%}
+                  {%- assign populated_row_count = 0 -%}
                   {%- for col in tbl.table_headers.value -%}
                     {%- for cell in col.content.value -%}
-                      {%- if cell.attribute != blank -%}{%- assign is_label_value = true -%}{%- endif -%}
-                      {%- break -%}
+                      {%- assign a_blank = true -%}
+                      {%- assign v_blank = true -%}
+                      {%- if cell.attribute != blank -%}{%- assign a_blank = false -%}{%- endif -%}
+                      {%- if cell.values != blank -%}{%- assign v_blank = false -%}{%- endif -%}
+                      {%- unless a_blank and v_blank -%}
+                        {%- assign populated_row_count = populated_row_count | plus: 1 -%}
+                        {%- if a_blank or v_blank -%}{%- assign has_orphan_row = true -%}{%- endif -%}
+                      {%- endunless -%}
                     {%- endfor -%}
-                    {%- break -%}
                   {%- endfor -%}
-                  {%- if is_label_value -%}
-                    {% render 'pdp-table-comparison', table: tbl %}
-                  {%- else -%}
+                  {%- if populated_row_count == 0 -%}
+                    {%- comment -%} nothing to render: no shell, no heading {%- endcomment -%}
+                  {%- elsif has_orphan_row -%}
                     {% render 'pdp-table', table: tbl %}
+                  {%- else -%}
+                    {% render 'pdp-table-comparison', table: tbl %}
                   {%- endif -%}
                 {%- else -%}
                   {% render 'pdp-table', table: tbl %}
