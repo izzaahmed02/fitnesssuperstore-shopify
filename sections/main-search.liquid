@@ -235,31 +235,6 @@ width: 6px!important;
                 <ul class="collection grid product-grid grid--2-col-tablet-down grid--3-col-desktop " id="product-grid" data-id="{{ section.id }}" >
                     {% comment %} <div class="loading-overlay gradient"></div> {% endcomment %}
                     {%- for item in search.results -%}
-                        {%- comment -%}
-                          Combined-listing / hidden exclusion — mirrors sections/predictive-search.liquid:116-129.
-                          Skips combined-listing CHILD products, "Product (Hidden)"-type products, and
-                          products tagged "hidden" so only the ONE family result shows in full search.
-                          Note: the "N products" count above comes from paginate.items and is not
-                          adjusted for skipped items — validate in preview before relying on it.
-                        {%- endcomment -%}
-                        {%- if item.object_type == 'product' -%}
-                            {%- assign search_excluded_types = "Product (Hidden)" | split: '|' -%}
-                            {%- assign skip_search_item = false -%}
-                            {%- if item.combined_listing.parent_product != blank -%}
-                                {%- assign skip_search_item = true -%}
-                            {%- endif -%}
-                            {%- if search_excluded_types contains item.type -%}
-                                {%- assign skip_search_item = true -%}
-                            {%- endif -%}
-                            {%- for search_item_tag in item.tags -%}
-                                {%- if search_item_tag == 'hidden' -%}
-                                    {%- assign skip_search_item = true -%}
-                                {%- endif -%}
-                            {%- endfor -%}
-                            {%- if skip_search_item -%}
-                                {%- continue -%}
-                            {%- endif -%}
-                        {%- endif -%}
                         {% assign lazy_load = false %}
                         {%- if forloop.index > 2 -%}
                             {%- assign lazy_load = true -%}
