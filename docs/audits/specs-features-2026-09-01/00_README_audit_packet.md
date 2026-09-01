@@ -75,6 +75,7 @@ Who created `specs_features_new` should be established first.
 | 06 | `06_canonical_structure_migration_rollback_validation.md` | **6** — canonical structure, 9-phase migration, rollback per phase, validation gates |
 | 07 | `07_requires_tim_approval.csv` (592 rows) | **7** — exact records needing Tim's approval, priority-ordered, with the proposed action |
 | 08 | `08_addendum_external_link_cleanup_verification.md` | not requested — verification of the previously-closed `target="_blank"` item, including one published blog post that still carries it |
+| 09 | `09_phase0_closing_the_coverage_gaps.md` | Phase 0 runbook — closes the app gap, corrects the theme count 19 → 79, and gives step-by-step for Flow/Make/n8n, the theme scan, and a proper full-domain crawl |
 
 ## Method
 
@@ -97,11 +98,14 @@ Who created `specs_features_new` should be established first.
 Three surfaces could not be proven with the API access available and need a manual check in admin
 before anything destructive runs. Details in `02_dependency_reference_map.md` §4.
 
-1. **Installed apps** — `appInstallations` returns `access denied` on this connection, so apps and
-   their scopes could not be listed. An app reading `custom.features_specs` via API would not appear
-   in any theme file.
-2. **Shopify Flow / automations** — not enumerable here.
-3. **The 19 non-live themes** — only the live theme was scanned.
+1. ~~**Installed apps**~~ — **CLOSED, see file 09.** The packet originally recorded `access denied`
+   here; that was a transient error I did not retry. Re-run 2026-09-01 it works. 47 apps installed,
+   **20 hold `read_metaobjects`** and could read this data.
+2. **Shopify Flow / automations** — still open, and genuinely manual: Flow workflows are not exposed
+   in the Admin API. Make and n8n are installed too and need the same review. Steps in file 09.
+3. **The non-live themes** — still open. Correction: there are **79**, not 19 (the original figure
+   came from a query that returned only the first 20 themes). Theme file bodies *are* readable via
+   the Admin API, so this is scriptable rather than manual. Steps in file 09.
 
-Until those three are cleared, the orphan and archive lists should be treated as *candidates*, which
-is how they are labelled throughout.
+Until items 2 and 3 are cleared, the orphan and archive lists should be treated as *candidates*,
+which is how they are labelled throughout. File 09 is the runbook for closing them.

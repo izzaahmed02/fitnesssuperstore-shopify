@@ -106,12 +106,14 @@ templates + `extra-info.liquid`). Two fields for one concept — a naming-cleanu
 These three surfaces could not be proven from the API credentials available to me. They are the only
 places an undiscovered dependency could hide, and each is a 5-minute check inside Shopify admin:
 
-1. **Installed apps.** `appInstallations` returns `access denied` on this connection, so I cannot list
-   apps or their scopes. An app reading `custom.features_specs` through the Storefront or Admin API
-   would not appear in any theme file. **Ask:** does any installed app (feed/SEO/PIM/AI-content) read
-   `custom.features_specs`?
+1. ~~**Installed apps.**~~ **CLOSED — see file 09.** The `access denied` recorded here was a
+   transient error that I did not retry before writing it down as a permanent limit. Re-run
+   2026-09-01 the query works: 47 apps installed, 20 of them hold `read_metaobjects` and could read
+   this data. File 09 lists them and names the six worth chasing for actual usage.
 2. **Shopify Flow / automations.** Not enumerable here. **Ask:** does any Flow read or write
    `custom.features_specs` or `specs_features` entries?
-3. **The 19 non-live themes.** Only the live theme was scanned. A dev theme that still binds a field
-   scheduled for deprecation would break when it is next published. Low risk, but worth a grep before
-   any field is removed.
+3. **The non-live themes.** Correction: there are **79** (1 MAIN, 2 DEVELOPMENT, 77 UNPUBLISHED),
+   not 19 — the original figure came from a query that returned only the first 20 themes. Only the
+   live theme was scanned. A dev theme that still binds a field scheduled for deprecation would break
+   when it is next published. Theme file bodies are readable through the Admin API, so this is
+   scriptable; see file 09.
