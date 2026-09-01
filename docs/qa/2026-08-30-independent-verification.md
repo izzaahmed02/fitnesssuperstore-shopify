@@ -14,7 +14,9 @@ deployment was performed.
 
 ---
 
-## 1. Authoritative catalogue key — CONFIRMS Tim decision 1
+## 1. Authoritative catalogue key — decision 1 is UNSAFE AS WRITTEN
+
+### 1.1 What I confirmed of Tim's premises
 
 | Check | Result |
 |---|---|
@@ -23,8 +25,7 @@ deployment was performed.
 | `custom` namespace, PRODUCT (50 definitions) | no `bundle_option_config` |
 | `custom` namespace, PRODUCTVARIANT (11 definitions) | no `bundle_option_config` |
 
-Metafield **values** for both `fs_bundle.option_config` and `custom.bundle_option_config`,
-read at product level and variant level:
+Values for both keys, read at product and variant level:
 
 | SKU | Product ID | Variant ID | `fs_bundle.option_config` | `custom.bundle_option_config` |
 |---|---|---|---|---|
@@ -33,23 +34,75 @@ read at product level and variant level:
 | FF-FSR90 | 9878150218044 | 51734489661756 | null | null |
 | FF-FSR100 | 9875868123452 | 51140912218428 | null | null |
 
-Theme repository at `origin/main`:
+Theme repository at `origin/main`: `git grep -E "bundle_option_config|fs_bundle|option_config"`
+returns no matches.
 
+And Tim's statement about the deployed production query is correct. Read directly from the
+production branch source, `origin/current_live`,
+`extensions/product-bundle/src/cart_transform_run.graphql`:
+
+```graphql
+optionConfig: metafield(namespace: "fs_bundle", key: "option_config") {
 ```
-git grep -n -E "bundle_option_config|fs_bundle|option_config" origin/main
-# no matches
-```
 
-**Verified.** Neither key exists as a definition or a value on production, and the live theme
-references neither. Because nothing is populated either way, the canonical-key choice carries
-no migration cost today — decision 1 is safe to adopt as written.
+So every premise in decision 1 holds. The conclusion drawn from them does not.
 
-**Not verified:** the stated rationale that the deployed production function reads
-`fs_bundle.option_config`. That is a property of the deployed app build, and I have no access
-to the deployed source or the Partner/Developer record. It remains Izza's `izza-bundle-20`
-→ SHA mapping item.
+### 1.2 The blocking finding
 
----
+`docs/task1-rust-port-validation.md` §S records a controlled experiment run on the test store
+on 2026-08-14 that eliminated **ten** competing hypotheses by direct test rather than
+reasoning — scope granted, metafield present and byte-identical, merchant-owned definition
+created, storefront read granted, value rewritten after definition and app redeployed, query
+source verified, product identity verified, and two positive control probes.
+
+The isolated result:
+
+| Metafield | Namespace | Type | Function sees |
+|---|---|---|---|
+| `custom/warranty` | `custom` | text | **value** |
+| `custom/bundle_option_config` | `custom` | json | **value** |
+| `fs_bundle/option_config` | `fs_bundle` | json | **`null`** |
+
+The two definitions are identical in `ownerType`, `access.admin`, `access.storefront` and
+`adminFilterable`. **The namespace string is the only difference.** `fs_bundle` is not
+declared or reserved by any of our own apps, and the platform root cause is explicitly
+recorded as unexplained and out of scope.
+
+**Decision 1 directs the Rust consumer, generator, fixtures, documentation and staging write
+plan to move to a key that a controlled company experiment has already shown the function
+cannot read.**
+
+The failure mode is silent, which is what makes this urgent rather than merely wrong. Per §S,
+executing that literally against production would write catalogues the function cannot read
+with: no error, no warning, no failed deploy; correct-looking data in the Shopify admin; the
+release gate reporting itself satisfied; and the legacy client-priced path still running
+underneath with the undercharge exposure fully open. §S puts the scale at 3,737 catalogues.
+The input query in the repository carries an inline warning against "tidying" it back to
+`fs_bundle` for exactly this reason.
+
+### 1.3 Decision 1 also reverses a prior Tim approval
+
+`scripts/option-config/fsr90-option-config.json` records the current location as
+"custom/bundle_option_config (merchant-owned), **per Tim's approval of 14 Aug**", and
+§S carries Tim's own numbered corrections to that section. PR #16 is therefore not drifting
+from an approved key — it is implementing one. Decision 1 appears to have been reached
+without §S in view.
+
+Tim's decision 1 already provides the route: a compelling reason to stay off
+`fs_bundle.option_config`, documented, with separate written approval. That reason exists,
+predates the decision, and is his own. **Recommendation: keep `custom.bundle_option_config`
+and confirm decision 1 is withdrawn in writing before any generator, fixture or staging work
+is repointed.**
+
+### 1.4 Why this also explains the production behaviour
+
+Production reads `fs_bundle.option_config`. That key is unreadable from a Function input
+query per §S, *and* carries no value anywhere on production per §1.1. Production strict mode
+therefore cannot ever have engaged, and the JavaScript falls back to client-supplied pricing.
+That is an exact, independent match for the order-scan result in §3: across 249 orders, no
+non-zero client `priceAdjustment` was ever applied, because the trusted path it would have
+been checked against was never live. The lab result and the production data agree, and they
+were arrived at separately.
 
 ## 2. FF-CIKB30 / FF-CIKB40 — CONFIRMS Tim decision 5, and identifies the root cause
 
@@ -271,47 +324,138 @@ result will be misread as a failure.
 
 ## 8. Disposition — HOLD
 
-**HOLD.** No PASS is possible at this time, and the reason is structural rather than a
-judgement on the work.
+**HOLD**, on one blocking technical finding plus two access gaps. This is not a judgement on
+the quality of Qash's work, which reproduced cleanly on every check I could run (§9).
+
+### Blocking — must be resolved before the staging session starts
+
+**Decision 1 must be withdrawn or confirmed against §S.** Repointing the catalogue to
+`fs_bundle.option_config` would move the function to a key a controlled company experiment
+has already shown it cannot read, and the failure is silent: no error, plausible-looking
+admin data, a release gate reporting itself satisfied, and the client-priced path still
+running underneath. See §1. This is the one item where proceeding as written would make
+things materially worse than doing nothing.
 
 ### Blocked — cannot be performed from this environment
 
-1. **The Rust candidate repository `izzaahmed02/fs-bundle-api` is not accessible to me.**
-   I cannot check out any SHA, run function-runner, or independently reproduce: the
-   6,242,014 / 11,000,000 instruction count; the 54 fixtures; the 17/17 disposition and 4/4
-   regular-price cases; the 29 agreements / 25 explained divergences / 0 unexplained parity
-   result; the 4,291-byte and 8,987-byte catalogue measurements against the 9,000-byte gate;
-   the exclusion logic; authoritative-key behaviour; or the fail-closed controls. Every one
-   of these currently rests on developer self-report. **Read access for me is a prerequisite
-   for the independent reproduction assigned to me.**
-2. **No access to `api-testing-izza-qash.myshopify.com` or the `qash-izza-bundle` staging
+1. **No access to `api-testing-izza-qash.myshopify.com` or the `qash-izza-bundle` staging
    app.** The product page → cart → checkout → completed order → rollback QA cannot start.
-   Named access is Usman's 10:00 AM Monday item.
+   Named access is Usman's 10:00 AM Monday item. Partner-organization visibility is also
+   needed so the ownership and scope claims in §6 can be verified rather than accepted.
+2. **Payment test mode unconfirmed.** Condition 7 requires completed checkouts with no real
+   payment. Non-production store types carry payment restrictions, so Bogus Gateway or test
+   mode must be confirmed enabled before Monday or completed-order QA cannot happen at all.
 3. **No frozen SHA exists.** Tim: "No SHA is frozen yet." Qash posts one at 11:00 AM Monday.
-   A PASS tied to an exact SHA cannot precede it.
+   Everything in §9 is therefore tied to `fc4922d`, not to a frozen candidate, and must be
+   re-run once the SHA is fixed. That re-run is now a short, scripted exercise.
 4. **The deployed production runtime identity is unestablished.** Mapping `izza-bundle-20`
    to a deployed SHA and deployment timestamp is Izza's item; I have no Partner/Developer
    record access.
 
 ### Verified and clear
 
-- Decision 1 (canonical key `fs_bundle.option_config`) — confirmed safe; nothing populated
-  either way.
+- **Runtime, parity, fixtures and disposition logic all reproduce** at `fc4922d` — 17/17,
+  4/4, 54/54, 45/45, and parity at 29/25/0 exactly. §9.
 - Decision 5 (FF-CIKB30 $19.80 / FF-CIKB40 $25.08) — confirmed arithmetically, with the
-  drift mechanism identified.
-- Decision 3 exclusions and decision 4 exclusions — no evidence found that contradicts them.
-- #49333 as a failing fixture — confirmed, with a complete 249-order scan behind it.
+  drift mechanism identified. §2.
+- Decision 3 (35 rows) and decision 4 (6 rows) — exclusion counts confirmed exactly. §9.
+- Decision 2 (empty labels) — the right call on the precautionary argument, though the
+  13-byte margin cited for it is not reproducible from the committed artefacts. §9.
+- #49333 as a failing fixture — confirmed, with a complete 249-order scan behind it. §3.
 
 ### Requires a decision before the staging session
 
 - **Decision 6 should be restated.** #49324 is not a verified working comparator, and later
   orders do not demonstrate correct transformation. The evidence supports "the non-zero
-  path is unproven in production," not a cart-complexity threshold. This raises rather than
-  lowers the risk of any activation, and the staging test plan should be written to prove
-  the non-zero path works at all before it is used to probe for a size threshold.
+  path is unproven in production," not a cart-complexity threshold. §1.4 supplies the
+  mechanism for why. The staging plan should first prove the non-zero path works at all,
+  then probe for a size threshold.
 - PR #729's stale Rust cross-reference should be reconciled before it is applied to staging.
+- The toolchain versions and lockfiles requested on 28 August should be posted with the
+  frozen SHA, so the instruction count becomes exactly checkable rather than approximately
+  agreed. §9.
 
 ---
+
+## 9. Independent runtime reproduction at the reviewed head
+
+Performed against a fresh clone of `izzaahmed02/fs-bundle-api` checked out at
+`fc4922d392bfdef01540a875e1e0dd34eccd56f6` — the head Tim independently reviewed. Local
+only. No store, no credential, nothing deployed or activated, and nothing committed to that
+repository.
+
+**Toolchain used:** rustc/cargo 1.94.1, target `wasm32-wasip1`, Node 22.22.2,
+Shopify CLI 4.7.0, function-runner 9.2.2, binaryen (wasm-opt) 123.0.0.
+
+| Claim | Reported by Qash | Independently measured | Verdict |
+|---|---|---|---|
+| Estimator/spec checksum | — | `a5e3004509fedddc`, artefacts match spec | PASS |
+| Source-control disposition cases | 17/17 | **17/17** | PASS |
+| Regular-price cases | 4/4 | **4/4** | PASS |
+| Transform fixtures | 54 | **54 run, 54 passed** | PASS |
+| Cart-validation fixtures | — | **45 run, 45 passed** | PASS |
+| JavaScript/Rust parity | 29 agree / 25 intended / 0 unexplained | **29 AGREE / 25 INTENDED-DIVERGENCE / 0 unexplained** | PASS, exact match |
+| Max instructions | 6,242,014 of 11,000,000 | **6,231,776 of 11,000,000** | see below |
+| Over budget | 0 | **0** | PASS |
+
+Parity was run against the actual live production JavaScript, extracted from
+`origin/current_live`, not a stand-in.
+
+### The instruction-count delta
+
+My maximum is 6,231,776 against Qash's reported 6,242,014 — a difference of 10,238
+instructions, 0.16%. The headroom conclusion is unchanged and comfortable either way, and
+the top fixture is the same (`hybrid-over-budget-folds-to-lineupdate.json`).
+
+This is not presented as a discrepancy in the work. The most likely explanation is that
+Qash's figure was measured on an earlier head — f74db2b, 3090c5b, a09c811 and 1745ea9 all
+appear as candidate heads across the thread and PR bodies — and `fc4922d` post-dates them.
+A toolchain difference is the other candidate, and cannot be excluded because the toolchain
+versions and lockfiles Tim asked for on 28 August have not been posted.
+
+That is precisely the point of freezing a SHA and publishing the toolchain: a number that
+moves by 0.16% for unrecorded reasons cannot be independently confirmed, only approximately
+agreed with. Once the SHA is frozen and the toolchain published, this becomes a
+one-command check.
+
+### Reproduction accommodations, disclosed
+
+Two, neither of which touches the function under test:
+
+1. The Shopify CLI fetches `wasm-opt` from `cdn.jsdelivr.net`, which this environment's
+   egress policy blocks with a 403. The identical pinned artefact, binaryen 123.0.0, was
+   installed from the permitted npm registry instead.
+2. `scripts/runtime-parity-evidence.mjs` resolves function-runner from a hardcoded global
+   CLI path. A local copy was run with only that one line repointed at the
+   project-local install of the same function-runner 9.2.2 binary; the copy was deleted
+   afterwards and nothing was committed. Worth fixing upstream so the script runs on any
+   reviewer's machine.
+
+### Remaining unreproduced
+
+- **Catalogue byte measurements.** The committed artefact
+  `docs/data/cohort-byte-sizes-2026-08-31.json` records a 12-product cohort on the
+  empty-label basis with a maximum of 4,291 bytes against the 9,000-byte gate, 47.7%, none
+  over — internally consistent with Qash's figures. Regenerating those numbers from source
+  requires a production Admin read, so they are corroborated, not reproduced.
+- **The 8,987-byte variant-title figure** behind decision 2 is not reproducible from the
+  committed artefacts, which are empty-label only. Decision 2 is the right call on the
+  precautionary argument regardless, but the 13-byte margin cited for it is currently
+  unverifiable.
+
+### Exclusion counts confirmed
+
+From `docs/data/option-dispositions-2026-08-31.json`, 2,417 rows:
+
+| Disposition | Rows |
+|---|---|
+| PASS | 2,275 |
+| SUBSTITUTION-NO-FORMULA | 88 |
+| PRICE-DRIFT-REVALIDATE | **35** |
+| CONFLICT | 13 |
+| MULTI-PARENT-HOLD | **6** |
+
+The 35 in decision 3 and the six in decision 4 are confirmed exactly.
 
 ## Appendix — reproducing this
 
