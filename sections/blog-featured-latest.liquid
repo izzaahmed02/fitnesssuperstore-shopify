@@ -180,9 +180,17 @@
             if seen_ranks contains rank_key
               assign row_state = 'duplicate_rank'
             else
-              assign seen_ranks = seen_ranks | append: rank_int | append: '|'
               assign lookup = store_blog.handle | append: '/' | append: article.handle
-              assign rank_map = rank_map | append: rank_int | append: '>' | append: lookup | append: '|'
+                # Resolve the lookup now, during validation. If it fails at
+                # render time instead, the article would vanish from the
+                # approved order with no reason code, which is the silent
+                # fallback this section exists to prevent.
+              if articles[lookup] == blank
+                assign row_state = 'rank_lookup_failed'
+              else
+                assign seen_ranks = seen_ranks | append: rank_int | append: '|'
+                assign rank_map = rank_map | append: rank_int | append: '>' | append: lookup | append: '|'
+              endif
             endif
           endif
         endif
