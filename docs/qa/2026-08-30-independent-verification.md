@@ -14,7 +14,7 @@ deployment was performed.
 
 ---
 
-## 1. Authoritative catalogue key — decision 1 is UNSAFE AS WRITTEN
+## 1. Authoritative catalogue key — decision 1 WITHDRAWN by Tim 2026-09-02
 
 ### 1.1 What I confirmed of Tim's premises
 
@@ -88,21 +88,18 @@ The input query in the repository carries an inline warning against "tidying" it
 from an approved key — it is implementing one. Decision 1 appears to have been reached
 without §S in view.
 
-Tim's decision 1 already provides the route: a compelling reason to stay off
-`fs_bundle.option_config`, documented, with separate written approval. That reason exists,
-predates the decision, and is his own. **Recommendation: keep `custom.bundle_option_config`
-and confirm decision 1 is withdrawn in writing before any generator, fixture or staging work
-is repointed.**
+**Resolved.** Tim withdrew the repoint instruction on 2026-09-02 and confirmed
+`custom.bundle_option_config` as the controlled Phase 2 namespace/key, with the `fs_bundle`
+artefact marked non-authoritative and not to be updated. No generator, fixture,
+documentation or staging write-plan work was repointed in the interim.
 
 ### 1.4 Why this also explains the production behaviour
 
 Production reads `fs_bundle.option_config`. That key is unreadable from a Function input
 query per §S, *and* carries no value anywhere on production per §1.1. Production strict mode
 therefore cannot ever have engaged, and the JavaScript falls back to client-supplied pricing.
-That is an exact, independent match for the order-scan result in §3: across 249 orders, no
-non-zero client `priceAdjustment` was ever applied, because the trusted path it would have
-been checked against was never live. The lab result and the production data agree, and they
-were arrived at separately.
+That is consistent with the order-scan result in §3: the adjustments that were applied came
+through the legacy client-priced path, not through a trusted catalogue read.
 
 ## 2. FF-CIKB30 / FF-CIKB40 — CONFIRMS Tim decision 5, and identifies the root cause
 
@@ -144,6 +141,12 @@ recomputed when the parent is repriced. The two siblings still agree only becaus
 parents were not repriced. There is no compare-at value and no audit field on any of the
 four, so the drift is silent.
 
+**The drift reached charged prices, not just stored records.** Order #49324 (§3) shows both
+drifted reductions were actually applied at checkout: FF-CIKB30 charged $40.53 where the
+current 33% rule gives $40.20, and FF-CIKB40 charged $50.59 where the rule gives $50.92 —
+$0.33 over and $0.33 under respectively. Small per unit, but it confirms the defect is live
+in customer-facing pricing rather than latent in the source data.
+
 **Consequence for decision 3 (35 PRICE-DRIFT-REVALIDATE rows).** This is a class defect, not
 two isolated rows: any absolute reduction record drifts on every parent reprice. Two
 recommendations follow, both of which reduce the size of the later merchandising project
@@ -163,75 +166,81 @@ Both remain excluded from Phase 2, as Tim directed. No write is proposed.
 
 ---
 
-## 3. Order #49333 incident boundary — decision 6 is NOT supported as written
+## 3. Order #49324 / #49333 reconciliation — CORRECTED 2026-09-02
 
-### 3.1 Scan method and completeness
+### 3.1 Correction to the earlier version of this section
 
-Every order in the window was examined, not a sample:
+An earlier version of this document read only `lineItem.customAttributes`. That misses
+`lineItemGroup.customAttributes`, where the payload lives **after a successful grouping**.
+Tim's 2026-09-02 correction is right, and three earlier conclusions are withdrawn:
 
-- Range: **#49115 – #49363**, 2026-08-01 through 2026-08-30 — **249 of 249 order numbers**
-  (247 retrieved across five paged queries, #49175 and #49176 retrieved individually).
-- **692 line items** inspected.
-- For each line, the `_functionOperation` cart attribute was parsed and every
-  `priceAdjustment` value extracted, then compared against the price actually charged.
-
-### 3.2 Result
-
-**Exactly 8 line items in the entire month carry a non-zero `priceAdjustment`. All 8 are on
-Order #49333. All 8 were charged at base price.**
-
-| SKU | Charged | Option adjustments due | Ops | Non-zero ops |
-|---|---|---|---|---|
-| FFS-LPDLR-V2 | $2,799.00 | $79.00 | 6 | 2 |
-| FFT-HAA | $2,799.00 | $299.00 | 4 | 1 |
-| FFB-DAP | $3,099.00 | $682.00 | 10 | 7 |
-| FFT-CSMP | $2,799.00 | $299.00 | 4 | 1 |
-| FF-FSR90 | $3,299.00 (charged $2,969.10 after automatic 10% discount) | $1,630.00 | 13 | 9 |
-| FFT-PLCLE | $2,799.00 | $299.00 | 4 | 1 |
-| FFM-PLHSLP | $2,499.00 | $849.00 | 4 | 1 |
-| FFB-45DLLP | $2,799.00 | $719.10 | 4 | 1 |
-
-Total configured-option value not charged: **$4,856.10**, on an order totalling $36,997.50.
-
-Lines whose adjustments were all zero were unaffected, which is expected — a zero adjustment
-is indistinguishable whether or not the transform ran.
-
-### 3.3 Two payload shapes, mutually exclusive
-
-Across the 692 line items:
-
-| Shape | Lines |
+| Withdrawn claim | Status |
 |---|---|
-| carries `_functionOperation` | 202 |
-| carries a `Price` attribute | 50 |
-| carries **both** | **0** |
+| "#49324 carries no `_functionOperation` on any line" | **Wrong.** It carries one per configured parent, on the line item group. |
+| "202 vs 50 lines, zero overlap — the shapes are mutually exclusive" | **Withdrawn.** An artefact of reading one attribute source. |
+| "The non-zero path has exactly one production observation and it failed" | **Wrong.** It has 58 successful observations in this window. |
 
-Order #49333 is the `_functionOperation` shape. **Order #49324 carries no
-`_functionOperation` attribute on any line** — it is the `Price` shape, with option
-selections as separate companion line items and the parent price already net of the
-reduction.
+### 3.2 Re-run method
 
-### 3.4 What this means
+Every order re-read against **both** attribute sources, classifying each configured unit as
+grouped (successful expansion) or ungrouped (failed/unexpanded):
 
-- **#49324 cannot serve as a verified working comparator for the path that failed on
-  #49333.** It never exercised that path. Whatever applied the kettlebell reduction on
-  #49324 is a different mechanism, and the order record alone does not establish which.
-- **"Later orders also transformed correctly" is not demonstrable from production data.**
-  Every later order's `_functionOperation` adjustments are zero, and a zero adjustment
-  yields an identical result whether or not the transform ran. These orders are not
-  evidence of success.
-- **A deterministic cart-complexity threshold is therefore not established** — there is no
-  passing observation either above or below any cart size. Neither is a time-based window.
+- Range **#49115 – #49400**, 2026-08-01 to 2026-09-02 — **all 286 order numbers examined**
+  (280 across seven paged queries; #49175, #49176, #49325, #49326, #49327 and #49328
+  retrieved individually and each confirmed to have `lineItemGroup: null` on every line with
+  zero-only adjustments).
+- Grouped units de-duplicated by `LineItemGroup` id, since the group attributes repeat on
+  every member line.
 
-The accurate statement of the evidence is narrower and carries more risk than either
-hypothesis: **the non-zero `priceAdjustment` path has exactly one production observation in
-August 2026, and it failed.** The path should be treated as unproven in production.
+### 3.3 Result
 
-Tim's instruction not to characterize all orders between the two timestamps as affected is
-supported, and more strongly than stated: the scan shows no other order was affected,
-because no other order used the path. #49333 remains a valid failing fixture.
+| Class | Count |
+|---|---|
+| Grouped units (successful expansion) | **58**, across 51 orders |
+| — of those carrying a non-zero `priceAdjustment` | **58** |
+| — of those carrying a **negative** adjustment | **4** (all on #49324) |
+| Ungrouped lines carrying `_functionOperation` | 228 |
+| — of those with a non-zero adjustment | **8** (all on #49333) |
 
----
+**Order #49324 is a successful comparator.** Five grouped units, each matching live base
+prices exactly:
+
+| SKU | Adjustment | Realized | Check |
+|---|---|---|---|
+| FF-CIKB20 | −$14.52 | $29.48 | $44.00 − $14.52 ✓ |
+| FF-CIKB30 | −$19.47 | $40.53 | $60.00 − $19.47 ✓ |
+| FF-CIKB40 | −$25.41 | $50.59 | $76.00 − $25.41 ✓ |
+| FF-CIKB50 | −$30.36 | $61.64 | $92.00 − $30.36 ✓ |
+| FF-SMWB-S6-620 | +$62.00 | $269.00 + $62.00 companion | parent unchanged, companion priced ✓ |
+
+**Order #49333 is the sole failure.** All 11 lines have `lineItemGroup: null` — no expansion
+occurred — with the payload surviving on the ungrouped line attributes and $4,856.10 of
+configured option value uncharged on a $36,997.50 order. It is the only order in the window
+with a non-zero ungrouped line.
+
+### 3.4 The two findings coexist, as Tim set out
+
+- **Strict catalogue mode never engaged in production.** Production reads
+  `fs_bundle.option_config`, which is unreadable from a Function input query per §S and
+  unpopulated everywhere per §1.1. This is unaffected by the grouping correction and still
+  holds.
+- **The legacy client-priced path did work**, on 58 units across 51 orders, and failed on
+  #49333.
+
+So the risk is not "the path has never worked." It is that the path which *does* work prices
+from client-supplied values (§4) while the trusted catalogue path has never once engaged.
+
+### 3.5 One attribution still unproven
+
+Tim attributes the #49333 failure to the instruction limit being exceeded. That is the
+leading hypothesis and the evidence is consistent with it — #49333 is by far the largest
+configured cart in the window at 11 configured parents and 46+ operations, and §9 measures
+the heaviest committed fixture at 6,231,776 of 11,000,000, so headroom exists at fixture
+scale but not necessarily at that cart's scale.
+
+It is not directly evidenced, because no production runtime log is available. The #49333
+stress case in the staging matrix is what would confirm it. Recording it as a hypothesis
+rather than a cause.
 
 ## 4. Provenance of `priceAdjustment` — control finding
 
@@ -361,15 +370,16 @@ things materially worse than doing nothing.
 - Decision 3 (35 rows) and decision 4 (6 rows) — exclusion counts confirmed exactly. §9.
 - Decision 2 (empty labels) — the right call on the precautionary argument, though the
   13-byte margin cited for it is not reproducible from the committed artefacts. §9.
-- #49333 as a failing fixture — confirmed, with a complete 249-order scan behind it. §3.
+- #49324 as a successful comparator and #49333 as the failed fixture — confirmed against
+  both attribute sources, with a complete 286-order scan behind it. §3.
 
 ### Requires a decision before the staging session
 
-- **Decision 6 should be restated.** #49324 is not a verified working comparator, and later
-  orders do not demonstrate correct transformation. The evidence supports "the non-zero
-  path is unproven in production," not a cart-complexity threshold. §1.4 supplies the
-  mechanism for why. The staging plan should first prove the non-zero path works at all,
-  then probe for a size threshold.
+- **Decision 6 as corrected by Tim on 2026-09-02 is accepted.** #49324 is a successful
+  grouped/legacy comparator; #49333 is the failed/unexpanded fixture; strict catalogue mode
+  never engaged. See §3. The staging matrix should still open with the single
+  one-paid-option case before the #49333 stress case, so that a pass establishes the
+  trusted path engages at all before cart size is varied.
 - PR #729's stale Rust cross-reference should be reconciled before it is applied to staging.
 - The toolchain versions and lockfiles requested on 28 August should be posted with the
   frozen SHA, so the instruction count becomes exactly checkable rather than approximately
