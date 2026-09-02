@@ -1,27 +1,14 @@
 {% comment %}
   snippets/labor-day-sale-note.liquid
 
-  Price-adjacent sale note on eligible PDPs, keyed to ACTUAL discount eligibility
-  (collection membership), not the product title. Replaces the previous
-  title-string block in the four product templates (main-product, -comb,
-  -variants, -home-gym-packages).
+  Price-adjacent Labor Day offer on eligible PDPs. Eligibility mirrors the
+  discount collections, while the displayed equipment price is calculated
+  from the selected variant. Shopify still applies the automatic discount at
+  checkout; this component does not alter catalog or checkout prices.
 
   Accepts:
     product         (Product)  required
-    hide_on_mobile  (boolean)  optional. Pass true on the desktop-layout copy so it
-                               does not also render on mobile (the mobile-layout copy
-                               is rendered without it and is the one shown on phones).
-
-  ELIGIBILITY: mirrors each discount collection's own smart-collection rules, read from
-  non-truncating product fields (vendor / type / tags / title). It deliberately does NOT
-  use product.collections, which truncates when a product is in more than ~20 collections
-  (so the eligible collection could be missed), and it does NOT depend on the collection
-  being published to the Online Store. The automatic discounts still target the
-  collections by ID, so this note matches exactly which products get discounted.
-    French Fitness 10% (collection 519462814012, all must be true):
-      vendor == 'French Fitness' AND type != 'Product (Hidden)' AND no 'july4-exclude' tag
-    Remanufactured 5% (collection 512180715836, all must be true):
-      title contains 'Remanufactured' AND type == 'Product Index'
+    hide_on_mobile  (boolean)  optional
 {% endcomment %}
 {%- liquid
   assign in_ff = false
@@ -38,13 +25,22 @@
   endif
 
   assign campaign_text = ''
+  assign campaign_percent = 0
   if in_ff
     assign campaign_text = settings.sale_promo_ff
+    assign campaign_percent = 10
   elsif in_reman
     assign campaign_text = settings.sale_promo_reman
+    assign campaign_percent = 5
   endif
+
+  assign current_variant = product.selected_or_first_available_variant
+  assign campaign_base_price = current_variant.price
+  assign campaign_multiplier = 100 | minus: campaign_percent
+  assign campaign_checkout_price = campaign_base_price | times: campaign_multiplier | divided_by: 100
+  assign campaign_savings = campaign_base_price | minus: campaign_checkout_price
 -%}
-{%- comment -%} Date window (store timezone). Theme editor and force_preview both bypass it. {%- endcomment -%}
+{%- comment -%} Date window is evaluated in the store timezone. {%- endcomment -%}
 {%- assign now_s = 'now' | date: '%s' | plus: 0 -%}
 {%- assign start_s = settings.laborday_start | date: '%s' | plus: 0 -%}
 {%- assign end_s = settings.laborday_end | date: '%s' | plus: 0 -%}
@@ -54,8 +50,18 @@
 {%- elsif start_s > 0 and end_s > 0 and now_s >= start_s and now_s < end_s -%}
   {%- assign in_window = true -%}
 {%- endif -%}
-{%- if campaign_text != blank and in_window -%}
+{%- if campaign_text != blank and campaign_percent > 0 and campaign_base_price > 0 and in_window -%}
   <div class="campaign-sale-container{% if hide_on_mobile %} hide-on-mobile{% endif %}">
-    <p>{{ campaign_text | escape }}</p>
+    <p class="campaign-sale-container__copy">{{ campaign_text | escape }}</p>
+    <div class="campaign-sale-price" aria-live="polite">
+      <span class="campaign-sale-price__label">Labor Day equipment price</span>
+      <strong class="campaign-sale-price__value">{{ campaign_checkout_price | money }}</strong>
+    </div>
+    <p class="campaign-sale-container__savings">
+      Save an additional {{ campaign_savings | money }} automatically at checkout.
+    </p>
+    <p class="campaign-sale-container__scope">
+      Based on the {{ campaign_base_price | money }} equipment price. Options, warranty, shipping, and installation are excluded.
+    </p>
   </div>
 {%- endif -%}
