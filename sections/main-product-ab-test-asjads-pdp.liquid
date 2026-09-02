@@ -1,3 +1,4 @@
+{% style %}
 
 .product-form__quantity {
   display: none;
@@ -446,7 +447,7 @@
                 {% assign preview = media.preview_image %}
 
                 <button
-                  class="thumbnail-btn{% if model %}{% else %}{% if forloop.first %} is-active{% endif %}{% endif %}{% if media.alt contains '3D' or media.alt contains '3d' %} threeD-image{% endif %}"
+                  class="thumbnail-btn{% if forloop.first %} is-active{% endif %}{% if media.alt contains '3D' or media.alt contains '3d' %} threeD-image{% endif %}"
                   data-media-id="{{ media.id }}"
                   type="button"
                 >
@@ -550,7 +551,7 @@
                 </button>
               {%- endif -%}
 
-              {%- assign remaining_images = image_media | drop: 3 -%}
+              {%- assign remaining_images = image_media | slice: 3, image_media.size -%}
               {%- if remaining_images.size > 0 -%}
                 <button
                   class="thumbnail-btn{% if remaining_images.first.alt contains '3D' or remaining_images.first.alt contains '3d' %} threeD-image{% endif %}"
@@ -1277,14 +1278,6 @@
           {% endfor %}
 
           <div class="metainfo-wrapper metainfo-tabs-wrapper">
-            {% assign has_custom_metainfo_tabs = false %}
-
-            {% for block in section.blocks %}
-              {% if block.type == 'metainfo_custom_tab' and block.settings.title != blank %}
-                {% assign has_custom_metainfo_tabs = true %}
-              {% endif %}
-            {% endfor %}
-
             <div class="metainfo-tabs-nav" role="tablist">
               <button
                 type="button"
@@ -1445,9 +1438,9 @@
             </div>
           </div>
 
-          {% assign metaObject3rdParty = product.metafields.custom['3rd_party'].value %}
-          {% if metaObject3rdParty != blank and metaObject3rdParty.google_material != blank %}
-            {% assign value = metaObject3rdParty.google_material | downcase %}
+          {% assign meta_object_3rd_party = product.metafields.custom['3rd_party'].value %}
+          {% if meta_object_3rd_party != blank and meta_object_3rd_party.google_material != blank %}
+            {% assign value = meta_object_3rd_party.google_material | downcase %}
             {% if value == 'on display in benicia' %}
               <div class="showroom">
                 <div class="img-wrap">{% render 'icon-bigcheck' %}</div>
@@ -1537,14 +1530,7 @@
       <script src="{{ 'product-model.js' | asset_url }}" defer></script>
     {%- endif -%}
 
-    {%- liquid
-      if product.selected_or_first_available_variant.featured_media
-        assign seo_media = product.selected_or_first_available_variant.featured_media
-      else
-        assign seo_media = product.featured_media
-      endif
-    -%}
-  
+
 </product-info>
 
 <div id="product-gallery-popup" class="product-popup-overlay" hidden>
@@ -1589,7 +1575,6 @@
 </div>
 
 {% assign options = product.metafields.options.product_options.value %}
-{% assign has_info = false %}
 {% for category in options %}
   {% if category.help_text.value != blank %}
     {% liquid
@@ -1597,9 +1582,8 @@
       assign title = content.title
       assign text = content.help_text
       assign related_products = content.related_products.value
-      assign has_info = true
     %}
-    {% render 'related-products-popup-for-options', 
+    {% render 'related-products-popup-for-options',
       popup_id: category.title,
       title: title,
       related_products: related_products,
@@ -1614,7 +1598,6 @@
         assign title = content.title
         assign text = content.help_text
         assign related_products = content.related_products.value
-        assign has_info = true
       %}
       {% render 'related-products-popup-for-options', 
         popup_id: product_option.product_option_title,
