@@ -35,9 +35,20 @@
   "Data Wiring Notes" section) — do not treat this category grouping as
   real or ship it as-is long-term.
 
-  The "Swap" button on each card is inert (no click handler) — its real
-  interaction (picking an alternative from the metaobject, price delta)
-  is deliberately not designed yet, per explicit direction.
+  SWAP INTERACTION (Figma node 4544:92078): clicking "Swap" on an included
+  card switches the drawer body + header into a "Swap to:" sub-view (same
+  drawer, no new modal — toggled via the .is-swap-view class on
+  .gymbuild-customize-drawer__content), showing alternatives with a price
+  delta (+/- $X). "Back to build" returns to the main tabs/grid.
+
+  Per explicit direction, this is now functional against the SAME
+  temporary placeholder data described above: an item's "alternates" are
+  the other products already sharing its placeholder tab_heading category
+  (e.g. the other 2 "Mats" products), and clicking an alternative actually
+  swaps it in (updates the card's image/title + the footer subtotal live).
+  The price deltas are real arithmetic on real product prices — only the
+  category grouping itself is placeholder. All of this gets replaced once
+  the variant-metafield -> metaobject data model exists.
 {% endcomment -%}
 
 {%- liquid
@@ -54,6 +65,12 @@
   >
     <div class="gymbuild-customize-drawer__header">
       <h2 class="gymbuild-customize-drawer__title">Customize this build</h2>
+      <button type="button" class="gymbuild-customize-drawer__back" data-gymbuild-back>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Back to build
+      </button>
       <button
         type="button"
         id="ModalClose-GymBuildCustomize-{{ section.id }}"
@@ -65,6 +82,7 @@
     </div>
 
     <div class="gymbuild-customize-drawer__body">
+      <div class="gymbuild-customize-drawer__main-view">
       {% if product.variants.size > 1 %}
         <fieldset class="gymbuild-customize-drawer__size-cards" role="radiogroup" aria-label="{{ product.options_with_values.first.name }}">
           <legend class="visually-hidden">{{ product.options_with_values.first.name }}</legend>
