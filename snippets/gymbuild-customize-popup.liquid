@@ -750,5 +750,124 @@
         });
       });
     });
+
+    // "Swap to:" sub-view — same drawer, no new modal. See snippet's top
+    // comment (Figma node 4544:92078) for the visual-only/TEMPORARY-data
+    // caveats around this.
+    var content = modal.querySelector('.gymbuild-customize-drawer__content');
+    var footer = modal.querySelector('.gymbuild-customize-drawer__footer');
+    var subtotalEl = modal.querySelector('[data-gymbuild-subtotal]');
+    var swapCurrentEl = modal.querySelector('[data-gymbuild-swap-current]');
+    var swapGridEl = modal.querySelector('[data-gymbuild-swap-grid]');
+    var backBtn = modal.querySelector('[data-gymbuild-back]');
+    var runningTotalCents = footer ? parseInt(footer.dataset.basePrice, 10) || 0 : 0;
+    var activeCard = null;
+
+    function formatMoney(cents) {
+      return '$' + (cents / 100).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function formatDelta(deltaCents) {
+      if (deltaCents === 0) return '';
+      var sign = deltaCents > 0 ? '+ ' : '- ';
+      return sign + formatMoney(Math.abs(deltaCents));
+    }
+
+    function showMainView() {
+      content.classList.remove('is-swap-view');
+      activeCard = null;
+    }
+
+    function showSwapView(card) {
+      var pool;
+      try {
+        pool = JSON.parse(card.dataset.itemPool || '[]');
+      } catch (e) {
+        pool = [];
+      }
+
+      var currentId = card.dataset.itemId;
+      var currentPriceCents = parseInt(card.dataset.itemPrice, 10) || 0;
+      var alternates = pool.filter(function (p) {
+        return String(p.id) !== String(currentId);
+      });
+
+      if (!alternates.length) return;
+
+      activeCard = card;
+
+      if (swapCurrentEl) {
+        swapCurrentEl.innerHTML =
+          '<img class="gymbuild-customize-drawer__swap-current-image" src="' + card.dataset.itemImage + '" alt="" loading="lazy">' +
+          '<div class="gymbuild-customize-drawer__swap-current-info">' +
+          '<p class="gymbuild-customize-drawer__swap-current-title">' + card.dataset.itemTitle + '</p>' +
+          '<p class="gymbuild-customize-drawer__swap-current-count">1 item</p>' +
+          '</div>';
+      }
+
+      if (swapGridEl) {
+        swapGridEl.innerHTML = '';
+        alternates.forEach(function (alt) {
+          var deltaCents = alt.price - currentPriceCents;
+          var deltaClass = deltaCents > 0 ? 'is-increase' : (deltaCents < 0 ? 'is-decrease' : '');
+
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'gymbuild-customize-drawer__swap-card';
+          btn.dataset.altId = alt.id;
+          btn.dataset.altTitle = alt.title;
+          btn.dataset.altImage = alt.image;
+          btn.dataset.altPrice = alt.price;
+          btn.innerHTML =
+            '<div class="gymbuild-customize-drawer__swap-card-image-wrap">' +
+            '<img class="gymbuild-customize-drawer__swap-card-image" src="' + alt.image + '" alt="" loading="lazy">' +
+            '</div>' +
+            '<p class="gymbuild-customize-drawer__swap-card-title">' + alt.title + '</p>' +
+            '<p class="gymbuild-customize-drawer__swap-card-delta ' + deltaClass + '">' + formatDelta(deltaCents) + '</p>';
+
+          btn.addEventListener('click', function () {
+            selectAlternate(alt, deltaCents);
+          });
+
+          swapGridEl.appendChild(btn);
+        });
+      }
+
+      content.classList.add('is-swap-view');
+    }
+
+    function selectAlternate(alt, deltaCents) {
+      if (!activeCard) return;
+
+      var image = activeCard.querySelector('.gymbuild-customize-drawer__card-image');
+      var title = activeCard.querySelector('.gymbuild-customize-drawer__card-title');
+
+      if (image) image.setAttribute('src', alt.image);
+      if (title) title.textContent = alt.title;
+
+      activeCard.dataset.itemId = alt.id;
+      activeCard.dataset.itemTitle = alt.title;
+      activeCard.dataset.itemImage = alt.image;
+      activeCard.dataset.itemPrice = alt.price;
+
+      runningTotalCents += deltaCents;
+      if (subtotalEl) subtotalEl.textContent = formatMoney(runningTotalCents);
+
+      showMainView();
+    }
+
+    modal.querySelectorAll('[data-gymbuild-swap-btn]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var card = btn.closest('[data-gymbuild-item]');
+        if (card) showSwapView(card);
+      });
+    });
+
+    if (backBtn) {
+      backBtn.addEventListener('click', showMainView);
+    }
   })();
 </script>
