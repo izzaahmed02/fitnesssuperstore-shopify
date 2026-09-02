@@ -1,3 +1,4 @@
+{% style %}
 
 .product-form__quantity {
   display: none;
@@ -264,8 +265,6 @@
   {{ 'HGS-custom-product-gallery.css' | asset_url | stylesheet_tag }}
   <link rel="stylesheet" href="{{ 'custom-option-picker-snippet.css' | asset_url }}" media="print" onload="this.media='all'">
   <noscript>{{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}</noscript>
-  <link rel="stylesheet" href="{{ 'paylater-modal.css' | asset_url }}" media="print" onload="this.media='all'">
-  <noscript>{{ 'paylater-modal.css' | asset_url | stylesheet_tag }}</noscript>
 
   {% assign hide_product_options = false %}
   {% for item in cart.items %}
@@ -354,81 +353,6 @@
 
   {% comment %} pdp-page-width main-container {% endcomment %}
     <div class="product product--{{ section.settings.media_size }} product--{{ section.settings.media_position }} product--{{ section.settings.gallery_layout }} product--mobile-{{ section.settings.mobile_thumbnails }} grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %}">
-      <div class="product__info-wrapper--mobile">
-        <div class="product__info-container--mobile">
-          {%- for block in section.blocks -%}
-            {%- case block.type -%}
-              {%- when 'title' -%}
-                <div class="product__title" {{ block.shopify_attributes }}>
-                  <p class="h2">{{ product.title | escape }}</p>
-                </div>
-            
-              {% when 'price' %}
-                <p class="affirm-as-low-as" data-page-type="product" data-amount="{{ product.price }}"></p>
-
-
-                {% assign campaign_text = '' %}
-
-                {% if product.title contains 'French Fitness' %}
-                  {% assign campaign_text = settings.sale_promo_ff %}
-                {% elsif product.title contains 'Remanufactured' %}
-                  {% assign campaign_text = settings.sale_promo_reman %}
-                {% else %}
-                  {% assign campaign_text = settings.sale_promo_default %}
-                {% endif %}
-
-                {% unless campaign_text == blank %}
-                  <div class="campaign-sale-container hide-on-mobile">
-                    <p>{{ campaign_text | escape }}</p>
-                  </div>
-                {% endunless %}
-
-                <div>
-                 {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
-  <span class="pr_custom_compare_price"
-    >As high as:
-    <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
-  </span>
-{% elsif product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
-  <span class="pr_custom_compare_price"
-    >As high as:
-    <s>{{ product.selected_or_first_available_variant.compare_at_price | money_with_currency -}}</s>
-  </span>
-{% endif %}
-                  {% if product.metafields.custom.saleprice_name != blank %}
-                    {% render 'super-sale',
-                      sale_name: product.metafields.custom.saleprice_name,
-                      current_price: product.selected_or_first_available_variant.compare_at_price,
-                      sale_price: product.metafields.custom.sale_price
-                    %}
-                  {% else %}
-                    <div class="price-container">
-                      {%- render 'price',
-                        product: product,
-                        use_variant: true,
-                        show_badges: true,
-                        price_class: 'price--large'
-                      -%}
-
-                      {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
-  <span class="you-save"
-    >You save
-    {{ product.metafields.custom.retail_price | minus: product.selected_or_first_available_variant.price | money -}}
-  </span>
-{% elsif product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
-  <span class="you-save"
-    >You save
-    {{ product.selected_or_first_available_variant.compare_at_price | minus: product.selected_or_first_available_variant.price | money -}}
-  </span>
-{% endif %}
-                    </div>
-                  {% endif %}
-                </div>
-            {%- endcase -%}
-          {%- endfor -%}
-        </div>
-      </div>
-
       <div class="product-main-left-container">
 
            <product-gallery
@@ -446,7 +370,7 @@
                 {% assign preview = media.preview_image %}
 
                 <button
-                  class="thumbnail-btn{% if model %}{% else %}{% if forloop.first %} is-active{% endif %}{% endif %}{% if media.alt contains '3D' or media.alt contains '3d' %} threeD-image{% endif %}"
+                  class="thumbnail-btn{% if forloop.first %} is-active{% endif %}{% if media.alt contains '3D' or media.alt contains '3d' %} threeD-image{% endif %}"
                   data-media-id="{{ media.id }}"
                   type="button"
                 >
@@ -550,7 +474,7 @@
                 </button>
               {%- endif -%}
 
-              {%- assign remaining_images = image_media | drop: 3 -%}
+              {%- assign remaining_images = image_media | slice: 3, image_media.size -%}
               {%- if remaining_images.size > 0 -%}
                 <button
                   class="thumbnail-btn{% if remaining_images.first.alt contains '3D' or remaining_images.first.alt contains '3d' %} threeD-image{% endif %}"
@@ -897,44 +821,37 @@
           class="product__info-container{% if section.settings.enable_sticky_info %} product__column-sticky{% endif %}"
         >
           {%- comment -%}
-            AB Test - Option B ("asjads-pdp") — Main info buy-box.
-            Rebuilt from Figma frame 3679:78324 ("Main info", file
-            XBaAGVhSupd0fvIcXd28qw, node-id 3679-78324). Scope: this section
-            renders the "Main info" column only (title, size-swap cards,
-            price/financing, tabs, showroom badge, CTAs, add-ons) — the
-            product media gallery above is the existing, reusable PDP
-            component and is intentionally left untouched.
+            Main info buy-box, rebuilt from Figma frame 3679:78324
+            ("Main info", file XBaAGVhSupd0fvIcXd28qw). This section
+            renders the buy-box column only (title, size cards, price,
+            tabs, showroom badge, CTAs, add-ons) — the product media
+            gallery above is the shared PDP gallery component and is
+            left untouched.
 
-            CTA WIRING — per explicit direction, the quote-flow buttons below
-            ("Request Quote Review", "Get delivered quote / confirm fit",
-            "Open in Gym Designer", "Customize this build") are VISUAL ONLY:
-            plain <button type="button"> elements with no popup, cart, or
-            submission logic attached yet. There is intentionally no Add to
-            Cart button in this design, matching Figma. Wire these up once
-            the target flow (quote popup vs. real purchase) is decided.
+            CTA status: "Customize this build" opens the customize-build
+            drawer (gymbuild-customize-popup.liquid) and "Request Quote
+            Review" opens the quote-review popup
+            (gymbuild-quote-review-popup.liquid). "Open in Gym Designer"
+            is still visual-only — its real destination hasn't been
+            confirmed yet. There's no Add to Cart button here by design;
+            this is a quote-only flow. The "Get delivered quote / confirm
+            fit" button and the secondary "Request Quote Review" text
+            link were removed to match that.
 
-            Size-swap cards are driven by product.variants — one card per
-            variant, matching the future single-package/size product this
-            template will be assigned to. Selecting a card navigates to that
-            variant's URL (read-only page view, not a cart mutation).
+            Size cards are driven by product.variants, one per package
+            size. Selecting a card navigates to that variant's URL — a
+            page view, not a cart mutation.
 
-            Two near-duplicate blocks in the Figma frame (a second, narrower
-            "Info" tab panel + "Total price/CTA" section, and a fully
-            duplicated Add-ons/most-popular block lower in the frame) were
-            treated as leftover design exploration and were not rebuilt here
-            — see the read-out given to the team before this rewrite.
+            Two near-duplicate blocks in the Figma frame (a second,
+            narrower tab panel + price/CTA section, and a duplicated
+            add-ons block lower down) are design-exploration leftovers
+            and were not rebuilt here.
           {%- endcomment -%}
 
           {%- liquid
             assign current_variant = product.selected_or_first_available_variant
             assign custom_product_options_block = section.blocks | where: 'type', 'product_options'
             assign abtest_mp_price = current_variant.price
-            assign abtest_mp_compare = 0
-            if product.metafields.custom.retail_price > abtest_mp_price
-              assign abtest_mp_compare = product.metafields.custom.retail_price
-            elsif current_variant.compare_at_price > abtest_mp_price
-              assign abtest_mp_compare = current_variant.compare_at_price
-            endif
           -%}
 
           {% style %}
@@ -993,6 +910,38 @@
               margin: 0 0 20px;
               border: 0;
               padding: 0;
+            }
+
+            /* auto-fit/minmax(140px) wraps to 2 columns below ~316px of
+               available width, breaking the 3-cards-in-a-row mobile layout
+               (Figma node 3679:99315). Force exactly 3 fixed columns instead. */
+            @media screen and (max-width: 600px) {
+              #shopify-section-{{ section.id }} .abtest-size-cards {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+              }
+
+              #shopify-section-{{ section.id }} .abtest-size-card {
+                padding: 8px;
+                gap: 4px;
+              }
+
+              #shopify-section-{{ section.id }} .abtest-size-card.is-selected {
+                padding: 7px;
+              }
+
+              #shopify-section-{{ section.id }} .abtest-size-card__title {
+                font-size: 12px;
+              }
+
+              #shopify-section-{{ section.id }} .abtest-size-card__desc {
+                font-size: 10px;
+                line-height: 14px;
+              }
+
+              #shopify-section-{{ section.id }} .abtest-size-card__price {
+                font-size: 12px;
+              }
             }
 
             #shopify-section-{{ section.id }} .abtest-size-card__input {
@@ -1165,11 +1114,19 @@
                     {% render block %}
                   {% endif %}
                 {% endfor %}
+                {% comment %}
+                  Stock-status badge (Available to Order / Sold Out) is
+                  hidden for now. Plan is to repurpose this into a
+                  Request-Quote-status badge later, so it's commented out
+                  rather than deleted — leave it here during other cleanup.
+                {% endcomment %}
+                {% comment %}
                 {% if current_variant.available %}
                   <span class="abtest-tag abtest-tag--available">Available to Order</span>
                 {% else %}
                   <span class="abtest-tag abtest-tag--unavailable">Sold Out</span>
                 {% endif %}
+                {% endcomment %}
               </div>
             </div>
           </div>
@@ -1213,18 +1170,13 @@
           {% endif %}
 
           <div class="abtest-price">
-            {% if abtest_mp_compare > abtest_mp_price %}
-              <p class="abtest-price__was">Starting at: <s>{{ abtest_mp_compare | money_with_currency }}</s></p>
-            {% endif %}
-
             {% comment %}
-              .pr_custom_price / .pr_custom_compare_price and the .affirm-as-low-as
-              trigger element are required by assets/main-product-custom.js +
-              affirmShopify.js — that script only reveals .paylater-container (the
-              "As low as .../mo" row + Shop Pay/Affirm logos) once it finds an
-              .affirm-as-low-as element, and it reads the displayed price by
-              querying .pr_custom_price directly. Renaming these classes silently
-              breaks that integration.
+              .pr_custom_price is read directly by assets/main-product-custom.js
+              elsewhere in the theme — keep this class name. The Affirm/Shop Pay
+              financing UI (.affirm-as-low-as trigger + paylater-providers render)
+              and the compare-at "was" price / "You save" pill have both been
+              removed from this PDP per P0 (no financing copy, no compare-at price
+              on the GymBuild quote-only buy-box).
             {% endcomment %}
             <div id="price-{{ section.id }}" role="status" class="abtest-price__row">
               <p class="abtest-price__label">Starting at</p>
@@ -1235,23 +1187,16 @@
               >
                 {{ abtest_mp_price | money }}
               </p>
-              {% if abtest_mp_compare > abtest_mp_price %}
-                <span class="pr_custom_compare_price"><s>{{ abtest_mp_compare | money }}</s></span>
-                <span class="abtest-price__save">
-                  You save {{ abtest_mp_compare | minus: abtest_mp_price | money }}
-                </span>
-              {% endif %}
             </div>
-
-            <p class="affirm-as-low-as" data-page-type="product" data-amount="{{ current_variant.price }}"></p>
-
-            {% render 'paylater-providers' %}
           </div>
 
-          {% comment %} Visual-only for now — see TODO note at top of this file. {% endcomment %}
-          <button type="button" class="abtest-btn abtest-btn--outline abtest-customize">
-            Customize this build
-          </button>
+          <modal-opener class="gymbuild-customize-drawer__opener" data-modal="#GymBuildCustomizeModal-{{ section.id }}">
+            <button type="button" class="abtest-btn abtest-btn--outline abtest-customize" aria-haspopup="dialog">
+              Customize this build
+            </button>
+          </modal-opener>
+          {% render 'gymbuild-customize-popup', current_variant: current_variant %}
+          {% render 'gymbuild-quote-review-popup', current_variant: current_variant %}
 
           {% for item in product.tags %}
             {% unless item != 'Free Shipping' or product.template_suffix == 'discontinued' %}
@@ -1277,14 +1222,6 @@
           {% endfor %}
 
           <div class="metainfo-wrapper metainfo-tabs-wrapper">
-            {% assign has_custom_metainfo_tabs = false %}
-
-            {% for block in section.blocks %}
-              {% if block.type == 'metainfo_custom_tab' and block.settings.title != blank %}
-                {% assign has_custom_metainfo_tabs = true %}
-              {% endif %}
-            {% endfor %}
-
             <div class="metainfo-tabs-nav" role="tablist">
               <button
                 type="button"
@@ -1445,9 +1382,9 @@
             </div>
           </div>
 
-          {% assign metaObject3rdParty = product.metafields.custom['3rd_party'].value %}
-          {% if metaObject3rdParty != blank and metaObject3rdParty.google_material != blank %}
-            {% assign value = metaObject3rdParty.google_material | downcase %}
+          {% assign meta_object_3rd_party = product.metafields.custom['3rd_party'].value %}
+          {% if meta_object_3rd_party != blank and meta_object_3rd_party.google_material != blank %}
+            {% assign value = meta_object_3rd_party.google_material | downcase %}
             {% if value == 'on display in benicia' %}
               <div class="showroom">
                 <div class="img-wrap">{% render 'icon-bigcheck' %}</div>
@@ -1456,21 +1393,24 @@
             {% endif %}
           {% endif %}
 
-          {% comment %} Visual-only for now — see TODO note at top of this file. {% endcomment %}
           <div class="abtest-cta-row">
-            <button type="button" class="abtest-btn abtest-btn--primary">Request Quote Review</button>
-            <button type="button" class="abtest-btn abtest-btn--outline">Get delivered quote / confirm fit</button>
-            <button type="button" class="abtest-btn abtest-btn--link">Request Quote Review</button>
+            <button type="button" class="abtest-btn abtest-btn--primary" data-gymbuild-open-review>Request Quote Review</button>
           </div>
 
-          {% comment %} Visual-only for now — see TODO note at top of this file. {% endcomment %}
+          {% comment %} Still visual-only — the real Gym Designer destination hasn't been confirmed. {% endcomment %}
           <div class="abtest-room-cta">
             <p class="abtest-room-cta__title">See this layout in your actual room</p>
             <p class="abtest-room-cta__subtitle">Send us your room plan for quote review</p>
             <button type="button" class="abtest-btn abtest-btn--outline">Open in Gym Designer</button>
           </div>
 
-          {% render 'product-add-ons', section: section %}
+          {% comment %}
+            Forked to product-add-ons-quote.liquid (Include in Quote / Remove
+            from Quote toggle, no cart logic) per P0 — see comment at top of
+            that snippet. The shared product-add-ons.liquid is untouched and
+            still used as-is by sections/main-product-home-gym-packages.liquid.
+          {% endcomment %}
+          {% render 'product-add-ons-quote', section: section %}
           <a href="{{ product.url }}" class="link product__view-details animate-arrow">
             {{ 'products.product.view_full_details' | t }}
             {% render 'icon-arrow' %}
@@ -1537,14 +1477,7 @@
       <script src="{{ 'product-model.js' | asset_url }}" defer></script>
     {%- endif -%}
 
-    {%- liquid
-      if product.selected_or_first_available_variant.featured_media
-        assign seo_media = product.selected_or_first_available_variant.featured_media
-      else
-        assign seo_media = product.featured_media
-      endif
-    -%}
-  
+
 </product-info>
 
 <div id="product-gallery-popup" class="product-popup-overlay" hidden>
@@ -1589,7 +1522,6 @@
 </div>
 
 {% assign options = product.metafields.options.product_options.value %}
-{% assign has_info = false %}
 {% for category in options %}
   {% if category.help_text.value != blank %}
     {% liquid
@@ -1597,9 +1529,8 @@
       assign title = content.title
       assign text = content.help_text
       assign related_products = content.related_products.value
-      assign has_info = true
     %}
-    {% render 'related-products-popup-for-options', 
+    {% render 'related-products-popup-for-options',
       popup_id: category.title,
       title: title,
       related_products: related_products,
@@ -1614,7 +1545,6 @@
         assign title = content.title
         assign text = content.help_text
         assign related_products = content.related_products.value
-        assign has_info = true
       %}
       {% render 'related-products-popup-for-options', 
         popup_id: product_option.product_option_title,
@@ -3319,7 +3249,7 @@
       "type": "text",
       "id": "button_label",
       "label": "Button label",
-      "default": "Add To Cart"
+      "default": "Include in Quote"
     }
   ]
 },
