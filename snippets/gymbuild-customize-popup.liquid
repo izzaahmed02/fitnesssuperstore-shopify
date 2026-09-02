@@ -183,7 +183,48 @@
                     -%}
 
                     {% if card_tab_key == panel_key and inclusion_product != blank %}
-                      <div class="gymbuild-customize-drawer__card">
+                      {%- liquid
+                        assign inclusion_title = card_block.settings.custom_title | default: inclusion_product.title
+                        assign inclusion_variant = inclusion_product.selected_or_first_available_variant
+                        assign inclusion_image_url = inclusion_product.featured_image | image_url: width: 300
+
+                        capture inclusion_pool_json
+                          echo '['
+                          assign pool_first = true
+                          for pool_block in gymbuild_addon_blocks
+                            assign pool_tab_key = pool_block.settings.tab_heading | default: 'Included' | handleize
+                            if pool_tab_key == card_tab_key and pool_block.settings.product != blank
+                              assign pool_product = pool_block.settings.product
+                              assign pool_variant = pool_product.selected_or_first_available_variant
+                              assign pool_title = pool_block.settings.custom_title | default: pool_product.title
+                              assign pool_image_url = pool_product.featured_image | image_url: width: 300
+                              unless pool_first
+                                echo ','
+                              endunless
+                              echo '{"id":'
+                              echo pool_variant.id | json
+                              echo ',"title":'
+                              echo pool_title | json
+                              echo ',"image":'
+                              echo pool_image_url | json
+                              echo ',"price":'
+                              echo pool_variant.price
+                              echo '}'
+                              assign pool_first = false
+                            endif
+                          endfor
+                          echo ']'
+                        endcapture
+                      -%}
+                      <div
+                        class="gymbuild-customize-drawer__card"
+                        data-gymbuild-item
+                        data-item-id="{{ inclusion_variant.id }}"
+                        data-item-title="{{ inclusion_title | escape }}"
+                        data-item-image="{{ inclusion_image_url }}"
+                        data-item-price="{{ inclusion_variant.price }}"
+                        data-item-pool='{{ inclusion_pool_json }}'
+                      >
                         <div class="gymbuild-customize-drawer__card-image-wrap">
                           {% if inclusion_product.featured_image %}
                             {%- liquid
@@ -204,12 +245,10 @@
                           {% endif %}
                         </div>
 
-                        <p class="gymbuild-customize-drawer__card-title">
-                          {{ card_block.settings.custom_title | default: inclusion_product.title }}
-                        </p>
+                        <p class="gymbuild-customize-drawer__card-title">{{ inclusion_title }}</p>
                         <p class="gymbuild-customize-drawer__card-count">1 item</p>
 
-                        <button type="button" class="gymbuild-customize-drawer__swap-btn" data-gymbuild-swap disabled>
+                        <button type="button" class="gymbuild-customize-drawer__swap-btn" data-gymbuild-swap-btn{% if inclusion_pool_json contains ',' %}{% else %} disabled{% endif %}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <path d="M4 12a8 8 0 0 1 13.66-5.66M20 12a8 8 0 0 1-13.66 5.66" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M17 3v4h-4M7 21v-4h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
