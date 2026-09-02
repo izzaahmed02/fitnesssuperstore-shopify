@@ -3,55 +3,51 @@
   identical across every finish of the same model, so two products can be
   compared to see whether they are the same machine in a different finish.
 
-  Preferred source:
+  When custom.combined_listing_family is populated, that explicit key is used.
+  Otherwise, the snippet falls back to the title-normalisation rules below.
 
-    - custom.combined_listing_family, when the product has an explicit family
-      key. This supports sibling products whose model names differ, such as the
-      Telluride and Vail Hip Thrust / Glute Machines.
-
-  Legacy fallback:
+  Two things are dropped from the title, both read from the product's own
+  metafields - nothing about any specific finish is written into this snippet:
 
     - the finish word, from custom.product_color ("Black", "Silver", ...)
     - the series code that carries the finish, taken as the first segment of
       custom.product_code ("FFB-DAP" -> "FFB", "FFS-DAP" -> "FFS")
 
-  The fallback preserves the existing DAP-style title matching. The series code
-  has to come out too: those products are titled "French Fitness FFB Black
-  <Type>" / "French Fitness FFS Silver <Type>", so removing only the colour
-  word would leave FFB vs FFS behind and the two finishes of one machine would
-  never match. Codes whose prefix is not in the title (FFM-PLISPL, and any other
-  series that does not put its code in the title) are left untouched.
+  The series code has to come out too: those products are titled "French Fitness
+  FFB Black <Type>" / "French Fitness FFS Silver <Type>", so removing only the
+  colour word would leave FFB vs FFS behind and the two finishes of one machine
+  would never match. Codes whose prefix is not in the title (FFM-PLISPL, and any
+  other series that does not put its code in the title) are left untouched.
 
-  Fallback values are only removed as whole space-delimited words, so a colour
-  or code that happens to be part of a longer word is left alone.
+  Both values are only removed as whole space-delimited words, so a colour or
+  code that happens to be part of a longer word is left alone.
 
   Accepts:
     product - {Object} the product to build the key for (required)
 {%- endcomment -%}
 {%- liquid
   assign explicit_family = product.metafields.custom.combined_listing_family.value
+  assign color = product.metafields.custom.product_color.value
+  assign code = product.metafields.custom.product_code.value
 
   if explicit_family != blank
-    echo explicit_family | strip | downcase | split: ' ' | join: ' '
+    assign key = explicit_family
   else
-    assign color = product.metafields.custom.product_color.value
-    assign code = product.metafields.custom.product_code.value
+  assign key = ' ' | append: product.title | append: ' '
 
-    assign key = ' ' | append: product.title | append: ' '
-
-    if color != blank
-      assign color_word = ' ' | append: color | append: ' '
-      assign key = key | replace: color_word, ' '
-    endif
-
-    if code != blank
-      assign series = code | split: '-' | first
-      if series != blank
-        assign series_word = ' ' | append: series | append: ' '
-        assign key = key | replace: series_word, ' '
-      endif
-    endif
-
-    echo key | downcase | split: ' ' | join: ' '
+  if color != blank
+    assign color_word = ' ' | append: color | append: ' '
+    assign key = key | replace: color_word, ' '
   endif
+
+  if code != blank
+    assign series = code | split: '-' | first
+    if series != blank
+      assign series_word = ' ' | append: series | append: ' '
+      assign key = key | replace: series_word, ' '
+    endif
+  endif
+  endif
+
+  echo key | strip | downcase | split: ' ' | join: ' '
 -%}
