@@ -821,34 +821,31 @@
           class="product__info-container{% if section.settings.enable_sticky_info %} product__column-sticky{% endif %}"
         >
           {%- comment -%}
-            AB Test - Option B ("asjads-pdp") — Main info buy-box.
-            Rebuilt from Figma frame 3679:78324 ("Main info", file
-            XBaAGVhSupd0fvIcXd28qw, node-id 3679-78324). Scope: this section
-            renders the "Main info" column only (title, size-swap cards,
-            price/financing, tabs, showroom badge, CTAs, add-ons) — the
-            product media gallery above is the existing, reusable PDP
-            component and is intentionally left untouched.
+            Main info buy-box, rebuilt from Figma frame 3679:78324
+            ("Main info", file XBaAGVhSupd0fvIcXd28qw). This section
+            renders the buy-box column only (title, size cards, price,
+            tabs, showroom badge, CTAs, add-ons) — the product media
+            gallery above is the shared PDP gallery component and is
+            left untouched.
 
-            CTA WIRING — per explicit direction, the quote-flow buttons below
-            ("Request Quote Review", "Open in Gym Designer", "Customize this
-            build") are VISUAL ONLY: plain <button type="button"> elements
-            with no popup, cart, or submission logic attached yet. There is
-            intentionally no Add to Cart button in this design, matching
-            Figma. Wire these up once the target flow (quote popup vs. real
-            purchase) is decided. The "Get delivered quote / confirm fit"
-            button and the secondary "Request Quote Review" text link have
-            been removed per P0.
+            CTA status: "Customize this build" opens the customize-build
+            drawer (gymbuild-customize-popup.liquid) and "Request Quote
+            Review" opens the quote-review popup
+            (gymbuild-quote-review-popup.liquid). "Open in Gym Designer"
+            is still visual-only — its real destination hasn't been
+            confirmed yet. There's no Add to Cart button here by design;
+            this is a quote-only flow. The "Get delivered quote / confirm
+            fit" button and the secondary "Request Quote Review" text
+            link were removed to match that.
 
-            Size-swap cards are driven by product.variants — one card per
-            variant, matching the future single-package/size product this
-            template will be assigned to. Selecting a card navigates to that
-            variant's URL (read-only page view, not a cart mutation).
+            Size cards are driven by product.variants, one per package
+            size. Selecting a card navigates to that variant's URL — a
+            page view, not a cart mutation.
 
-            Two near-duplicate blocks in the Figma frame (a second, narrower
-            "Info" tab panel + "Total price/CTA" section, and a fully
-            duplicated Add-ons/most-popular block lower in the frame) were
-            treated as leftover design exploration and were not rebuilt here
-            — see the read-out given to the team before this rewrite.
+            Two near-duplicate blocks in the Figma frame (a second,
+            narrower tab panel + price/CTA section, and a duplicated
+            add-ons block lower down) are design-exploration leftovers
+            and were not rebuilt here.
           {%- endcomment -%}
 
           {%- liquid
@@ -1118,11 +1115,10 @@
                   {% endif %}
                 {% endfor %}
                 {% comment %}
-                  Stock-status badge (Available to Order / Sold Out) hidden
-                  per explicit direction — kept here, not deleted, since the
-                  logic is expected to be repurposed later into a
-                  Request-Quote-status badge and re-enabled. Do not remove
-                  this block when doing other cleanup.
+                  Stock-status badge (Available to Order / Sold Out) is
+                  hidden for now. Plan is to repurpose this into a
+                  Request-Quote-status badge later, so it's commented out
+                  rather than deleted — leave it here during other cleanup.
                 {% endcomment %}
                 {% comment %}
                 {% if current_variant.available %}
