@@ -420,32 +420,56 @@ document.addEventListener("DOMContentLoaded", function() {
         {% render 'pdp-table-images', table: tbl %}
       {%- elsif tbl.table_type == 'Table with header' or tbl.table_type == 'Table without header' -%}
         {%- comment -%}
-          Full-scan table-type detection (PR #640 contract): inspect EVERY cell,
-          not just the first. Route per the reconciliation decision matrix.
-          - all populated rows have BOTH attribute + value -> label/value (comparison)
-          - attribute-only, values-only, or mixed/orphan    -> simple one-column (never a blank column)
-          - no populated rows                               -> render nothing
+          Full-scan table-type detection (PR #640 reconciliation contract, Tim decision 2026-09-02).
+          Inspect EVERY cell across ALL columns. Route per the required matrix:
+            1. no populated records            -> render nothing (no heading/shell)
+            2. homogeneous attribute-only      -> simple renderer
+            3. homogeneous values-only         -> simple renderer
+            4. every populated record has both -> label/value renderer
+            5. mixed / orphan / ragged         -> NO customer-facing table; emit nonvisual QA diagnostic; HOLD
+          No hard-coding; no CSS hiding; mixed/ragged never falls back to the simple renderer.
         {%- endcomment -%}
-        {%- assign has_orphan_row = false -%}
-        {%- assign populated_row_count = 0 -%}
+        {%- assign populated_records = 0 -%}
+        {%- assign shape_attr_only = false -%}
+        {%- assign shape_val_only = false -%}
+        {%- assign shape_both = false -%}
+        {%- assign col_len_seen = '' -%}
+        {%- assign is_ragged = false -%}
         {%- for col in tbl.table_headers.value -%}
+          {%- assign this_col_len = 0 -%}
           {%- for cell in col.content.value -%}
+            {%- assign this_col_len = this_col_len | plus: 1 -%}
             {%- assign a_blank = true -%}
             {%- assign v_blank = true -%}
             {%- if cell.attribute != blank -%}{%- assign a_blank = false -%}{%- endif -%}
             {%- if cell.values != blank -%}{%- assign v_blank = false -%}{%- endif -%}
             {%- unless a_blank and v_blank -%}
-              {%- assign populated_row_count = populated_row_count | plus: 1 -%}
-              {%- if a_blank or v_blank -%}{%- assign has_orphan_row = true -%}{%- endif -%}
+              {%- assign populated_records = populated_records | plus: 1 -%}
+              {%- if a_blank == false and v_blank == false -%}{%- assign shape_both = true -%}
+              {%- elsif a_blank == false and v_blank -%}{%- assign shape_attr_only = true -%}
+              {%- elsif a_blank and v_blank == false -%}{%- assign shape_val_only = true -%}
+              {%- endif -%}
             {%- endunless -%}
           {%- endfor -%}
+          {%- if this_col_len > 0 -%}
+            {%- assign col_len_seen = col_len_seen | append: this_col_len | append: ',' -%}
+          {%- endif -%}
         {%- endfor -%}
-        {%- if populated_row_count == 0 -%}
-          {%- comment -%} nothing to render: no shell, no heading {%- endcomment -%}
-        {%- elsif has_orphan_row -%}
-          {% render 'pdp-table', table: tbl %}
-        {%- else -%}
+        {%- comment -%} ragged: more than one distinct populated-column length {%- endcomment -%}
+        {%- assign col_len_list = col_len_seen | split: ',' | uniq -%}
+        {%- if col_len_list.size > 1 -%}{%- assign is_ragged = true -%}{%- endif -%}
+        {%- assign shape_count = 0 -%}
+        {%- if shape_attr_only -%}{%- assign shape_count = shape_count | plus: 1 -%}{%- endif -%}
+        {%- if shape_val_only -%}{%- assign shape_count = shape_count | plus: 1 -%}{%- endif -%}
+        {%- if shape_both -%}{%- assign shape_count = shape_count | plus: 1 -%}{%- endif -%}
+        {%- if populated_records == 0 -%}
+          {%- comment -%} nothing to render {%- endcomment -%}
+        {%- elsif is_ragged or shape_count > 1 -%}
+          <!-- PDP-TABLE-QA-HOLD: MALFORMED_DATA_SHAPE -->
+        {%- elsif shape_both -%}
           {% render 'pdp-table-comparison', table: tbl %}
+        {%- else -%}
+          {% render 'pdp-table', table: tbl %}
         {%- endif -%}
       {%- else -%}
         {% render 'pdp-table', table: tbl %}
@@ -701,32 +725,56 @@ document.addEventListener("DOMContentLoaded", function() {
                   {% render 'pdp-table-images', table: tbl %}
                 {%- elsif tbl.table_type == 'Table with header' or tbl.table_type == 'Table without header' -%}
                   {%- comment -%}
-                    Full-scan table-type detection (PR #640 contract): inspect EVERY cell,
-                    not just the first. Route per the reconciliation decision matrix.
-                    - all populated rows have BOTH attribute + value -> label/value (comparison)
-                    - attribute-only, values-only, or mixed/orphan    -> simple one-column (never a blank column)
-                    - no populated rows                               -> render nothing
+                    Full-scan table-type detection (PR #640 reconciliation contract, Tim decision 2026-09-02).
+                    Inspect EVERY cell across ALL columns. Route per the required matrix:
+                      1. no populated records            -> render nothing (no heading/shell)
+                      2. homogeneous attribute-only      -> simple renderer
+                      3. homogeneous values-only         -> simple renderer
+                      4. every populated record has both -> label/value renderer
+                      5. mixed / orphan / ragged         -> NO customer-facing table; emit nonvisual QA diagnostic; HOLD
+                    No hard-coding; no CSS hiding; mixed/ragged never falls back to the simple renderer.
                   {%- endcomment -%}
-                  {%- assign has_orphan_row = false -%}
-                  {%- assign populated_row_count = 0 -%}
+                  {%- assign populated_records = 0 -%}
+                  {%- assign shape_attr_only = false -%}
+                  {%- assign shape_val_only = false -%}
+                  {%- assign shape_both = false -%}
+                  {%- assign col_len_seen = '' -%}
+                  {%- assign is_ragged = false -%}
                   {%- for col in tbl.table_headers.value -%}
+                    {%- assign this_col_len = 0 -%}
                     {%- for cell in col.content.value -%}
+                      {%- assign this_col_len = this_col_len | plus: 1 -%}
                       {%- assign a_blank = true -%}
                       {%- assign v_blank = true -%}
                       {%- if cell.attribute != blank -%}{%- assign a_blank = false -%}{%- endif -%}
                       {%- if cell.values != blank -%}{%- assign v_blank = false -%}{%- endif -%}
                       {%- unless a_blank and v_blank -%}
-                        {%- assign populated_row_count = populated_row_count | plus: 1 -%}
-                        {%- if a_blank or v_blank -%}{%- assign has_orphan_row = true -%}{%- endif -%}
+                        {%- assign populated_records = populated_records | plus: 1 -%}
+                        {%- if a_blank == false and v_blank == false -%}{%- assign shape_both = true -%}
+                        {%- elsif a_blank == false and v_blank -%}{%- assign shape_attr_only = true -%}
+                        {%- elsif a_blank and v_blank == false -%}{%- assign shape_val_only = true -%}
+                        {%- endif -%}
                       {%- endunless -%}
                     {%- endfor -%}
+                    {%- if this_col_len > 0 -%}
+                      {%- assign col_len_seen = col_len_seen | append: this_col_len | append: ',' -%}
+                    {%- endif -%}
                   {%- endfor -%}
-                  {%- if populated_row_count == 0 -%}
-                    {%- comment -%} nothing to render: no shell, no heading {%- endcomment -%}
-                  {%- elsif has_orphan_row -%}
-                    {% render 'pdp-table', table: tbl %}
-                  {%- else -%}
+                  {%- comment -%} ragged: more than one distinct populated-column length {%- endcomment -%}
+                  {%- assign col_len_list = col_len_seen | split: ',' | uniq -%}
+                  {%- if col_len_list.size > 1 -%}{%- assign is_ragged = true -%}{%- endif -%}
+                  {%- assign shape_count = 0 -%}
+                  {%- if shape_attr_only -%}{%- assign shape_count = shape_count | plus: 1 -%}{%- endif -%}
+                  {%- if shape_val_only -%}{%- assign shape_count = shape_count | plus: 1 -%}{%- endif -%}
+                  {%- if shape_both -%}{%- assign shape_count = shape_count | plus: 1 -%}{%- endif -%}
+                  {%- if populated_records == 0 -%}
+                    {%- comment -%} nothing to render {%- endcomment -%}
+                  {%- elsif is_ragged or shape_count > 1 -%}
+                    <!-- PDP-TABLE-QA-HOLD: MALFORMED_DATA_SHAPE -->
+                  {%- elsif shape_both -%}
                     {% render 'pdp-table-comparison', table: tbl %}
+                  {%- else -%}
+                    {% render 'pdp-table', table: tbl %}
                   {%- endif -%}
                 {%- else -%}
                   {% render 'pdp-table', table: tbl %}
