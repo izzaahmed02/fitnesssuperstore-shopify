@@ -68,16 +68,22 @@
       <div class="gymbuild-quote-review-modal__package">
         <div class="gymbuild-quote-review-modal__package-image-wrap">
           {% if current_variant.featured_image %}
+            {%- liquid
+              assign review_package_image_alt = current_variant.featured_image.alt | default: product.title | escape
+            -%}
             {{
               current_variant.featured_image
               | image_url: width: 160
-              | image_tag: loading: 'lazy', alt: current_variant.featured_image.alt | default: product.title | escape, class: 'gymbuild-quote-review-modal__package-image'
+              | image_tag: loading: 'lazy', alt: review_package_image_alt, class: 'gymbuild-quote-review-modal__package-image'
             }}
           {% elsif product.featured_image %}
+            {%- liquid
+              assign review_package_image_alt = product.featured_image.alt | default: product.title | escape
+            -%}
             {{
               product.featured_image
               | image_url: width: 160
-              | image_tag: loading: 'lazy', alt: product.featured_image.alt | default: product.title | escape, class: 'gymbuild-quote-review-modal__package-image'
+              | image_tag: loading: 'lazy', alt: review_package_image_alt, class: 'gymbuild-quote-review-modal__package-image'
             }}
           {% else %}
             {{ 'product-1' | placeholder_svg_tag: 'gymbuild-quote-review-modal__package-image placeholder-svg' }}
