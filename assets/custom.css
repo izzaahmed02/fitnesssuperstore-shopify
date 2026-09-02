@@ -212,3 +212,74 @@ font-size: 28px!important;
     padding: 4px 6px;
   }
 }
+
+/* PDP breadcrumbs: tighten the trailing link and pair each arrow with its label.
+   The breadcrumb base rules live in the minified block on line 1 of this file:
+   `.custom-breadcrumbs__navigation a:last-child,.custom-breadcrumbs__navigation
+   span{color:#D83D0E;font-weight:700;margin-right:1.5rem}`. */
+.custom-breadcrumbs__navigation a:last-child {
+  margin-right: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* The compact-hierarchy markup wraps each link with its arrow icon in a
+   .breadcrumb-segment span, so that minified rule now matches every nested link
+   and every segment span - not just the current page. Left alone it turns the
+   whole desktop hierarchy orange/bold and adds a 1.5rem gutter after each
+   crumb, so restore the normal link treatment and let the flex gaps do the
+   spacing. Only the current page stays orange/bold. */
+.custom-breadcrumbs__navigation .breadcrumb-segment,
+.custom-breadcrumbs__navigation .breadcrumb-segment a {
+  color: #23232b;
+  font-weight: 400;
+  margin-right: 0;
+}
+
+/* Desktop and tablet: the segment is the flex row that keeps the arrow and its
+   label on one baseline, 4px apart. Without this the links sit ~10px below the
+   Home link, because a flex/block link inside a non-flex span starts on the
+   line after the inline arrow. */
+@media (min-width: 750px) {
+  .custom-breadcrumbs__navigation .breadcrumb-segment,
+  .custom-breadcrumbs__navigation .breadcrumb-current {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .custom-breadcrumbs__navigation .breadcrumb-current {
+    margin-right: 0;
+  }
+}
+
+/* Mobile: the base rule sets flex-wrap:wrap and the section's compact-row block
+   does not reset it, so a long parent label wraps out of the single 44px row. */
+@media (max-width: 749px) {
+  .pdp-breadcrumbs .custom-breadcrumbs__navigation {
+    flex-wrap: nowrap;
+  }
+
+  /* The base rule sets white-space:normal on every breadcrumb link, which beats
+     the nowrap inherited from the row, so a long parent label wrapped onto a
+     second line instead of truncating. Declaring nowrap on the link itself is
+     what lets the segment's overflow:hidden/text-overflow:ellipsis engage. */
+  .pdp-breadcrumbs .breadcrumb-segment--parent a {
+    white-space: nowrap;
+  }
+
+  /* Keep Home at full width so only the parent label absorbs the truncation. */
+  .pdp-breadcrumbs .breadcrumb-home {
+    flex-shrink: 0;
+  }
+}
+
+/* Tighten the breadcrumb block's bottom padding below desktop (was 0 16px 24px
+   in the minified max-width:989px block) so the compact row sits closer to the
+   product content. */
+@media (max-width: 989px) {
+  .customBreadcrumbs {
+    padding: 0 16px 8px;
+  }
+}
