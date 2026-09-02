@@ -817,7 +817,18 @@
                 {% endif %}
 
                 {% unless is_gift_cards_template %}
-                  {% render 'prop65' %}
+                  {%- comment -%}
+                    GymBuild PDP (product.ab-test-asjads-pdp) explicitly
+                    keeps this Warranty tab present with empty content
+                    until real metaobject-driven warranty data exists —
+                    but the Prop 65 notice below is unconditional and
+                    would otherwise show on an empty tab. Scoped by
+                    template_suffix so every other product's Warranty tab
+                    is completely unaffected.
+                  {%- endcomment -%}
+                  {% unless product.template_suffix == 'ab-test-asjads-pdp' %}
+                    {% render 'prop65' %}
+                  {% endunless %}
 
                   {% if customer and customer.tags contains 'admin' %}
                     <a id="download-pds" style="cursor:pointer;">Download Product Data Sheet</a>
