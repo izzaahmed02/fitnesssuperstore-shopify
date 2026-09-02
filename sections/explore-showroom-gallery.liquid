@@ -5,18 +5,34 @@
   Images render at their native aspect ratio (no forced crop, no stretch) so the
   framing decision stays with the edited exports rather than with CSS.
 
-  The whole section is suppressed until at least one block has an image
-  selected, so it is safe to ship before the exports are uploaded to Files: the
-  copy is staged and the section appears on its own once the images are
-  attached, with no empty heading left on the page in the meantime.
+  The two approved showroom blocks use their image-picker selection when set.
+  While the selectors remain blank in this unpublished preview, each approved
+  block falls back to its matching Shopify Files image by filename. The fallback
+  is scoped to the existing item_5877 and item_5878 block IDs only.
 {% endcomment %}
 
 {%- liquid
+  assign default_5877 = images['IMG_5877_showroom_web.webp']
+  assign default_5878 = images['IMG_5878_showroom_web.webp']
   assign has_image = false
+
   for block in section.blocks
-    if block.type == 'item' and block.settings.image != blank
-      assign has_image = true
-      break
+    if block.type == 'item'
+      assign item_image = block.settings.image
+
+      if item_image == blank
+        case block.id
+          when 'item_5877'
+            assign item_image = default_5877
+          when 'item_5878'
+            assign item_image = default_5878
+        endcase
+      endif
+
+      if item_image != blank
+        assign has_image = true
+        break
+      endif
     endif
   endfor
 -%}
@@ -106,24 +122,38 @@
 
   <div class="es-grid">
     {%- for block in section.blocks -%}
-      {%- if block.type == 'item' and block.settings.image != blank -%}
+      {%- if block.type == 'item' -%}
         {%- liquid
+          assign item_image = block.settings.image
+
+          if item_image == blank
+            case block.id
+              when 'item_5877'
+                assign item_image = default_5877
+              when 'item_5878'
+                assign item_image = default_5878
+            endcase
+          endif
+
           assign item_alt = block.settings.alt
-          if item_alt == blank
-            assign item_alt = block.settings.image.alt
+          if item_alt == blank and item_image != blank
+            assign item_alt = item_image.alt
           endif
         -%}
-        <div class="es-item" {{ block.shopify_attributes }}>
-          {{
-            block.settings.image
-            | image_url: width: 1600
-            | image_tag:
-              alt: item_alt,
-              widths: '400, 600, 800, 1000, 1200, 1600',
-              sizes: '(min-width: 750px) 50vw, calc(100vw - 32px)',
-              loading: 'lazy'
-          }}
-        </div>
+
+        {%- if item_image != blank -%}
+          <div class="es-item" {{ block.shopify_attributes }}>
+            {{
+              item_image
+              | image_url: width: 1600
+              | image_tag:
+                alt: item_alt,
+                widths: '400, 600, 800, 1000, 1200, 1600',
+                sizes: '(min-width: 750px) 50vw, calc(100vw - 32px)',
+                loading: 'lazy'
+            }}
+          </div>
+        {%- endif -%}
       {%- endif -%}
     {%- endfor -%}
   </div>
