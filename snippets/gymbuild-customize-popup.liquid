@@ -247,12 +247,20 @@
     top: 0;
     right: 0;
     height: 100%;
-    width: min(480px, 100%);
+    /* Figma node 4539:86140: drawer frame is 704px of a 1440px reference
+       viewport (x=736, width=704) — ~48.9%, i.e. half the screen. */
+    width: 50%;
     background: #fff;
     display: flex;
     flex-direction: column;
     transform: translateX(100%);
     transition: transform 280ms ease;
+  }
+
+  @media screen and (max-width: 749px) {
+    .gymbuild-customize-drawer__content {
+      width: 100%;
+    }
   }
 
   .gymbuild-customize-drawer[open] .gymbuild-customize-drawer__content {
@@ -401,6 +409,7 @@
   .gymbuild-customize-drawer__card {
     display: flex;
     flex-direction: column;
+    height: 100%;
     min-width: 0;
     background: #fff;
     border: 1px solid #eee9e7;
@@ -412,10 +421,12 @@
   .gymbuild-customize-drawer__card-image-wrap {
     width: 100%;
     aspect-ratio: 1 / 1;
+    overflow: hidden;
     background: #faf9f9;
   }
 
   .gymbuild-customize-drawer__card-image {
+    box-sizing: border-box;
     width: 100%;
     height: 100%;
     object-fit: contain;
