@@ -1160,11 +1160,20 @@
                     {% render block %}
                   {% endif %}
                 {% endfor %}
+                {% comment %}
+                  Stock-status badge (Available to Order / Sold Out) hidden
+                  per explicit direction — kept here, not deleted, since the
+                  logic is expected to be repurposed later into a
+                  Request-Quote-status badge and re-enabled. Do not remove
+                  this block when doing other cleanup.
+                {% endcomment %}
+                {% comment %}
                 {% if current_variant.available %}
                   <span class="abtest-tag abtest-tag--available">Available to Order</span>
                 {% else %}
                   <span class="abtest-tag abtest-tag--unavailable">Sold Out</span>
                 {% endif %}
+                {% endcomment %}
               </div>
             </div>
           </div>
@@ -1440,7 +1449,13 @@
             <button type="button" class="abtest-btn abtest-btn--outline">Open in Gym Designer</button>
           </div>
 
-          {% render 'product-add-ons', section: section %}
+          {% comment %}
+            Forked to product-add-ons-quote.liquid (Include in Quote / Remove
+            from Quote toggle, no cart logic) per P0 — see comment at top of
+            that snippet. The shared product-add-ons.liquid is untouched and
+            still used as-is by sections/main-product-home-gym-packages.liquid.
+          {% endcomment %}
+          {% render 'product-add-ons-quote', section: section %}
           <a href="{{ product.url }}" class="link product__view-details animate-arrow">
             {{ 'products.product.view_full_details' | t }}
             {% render 'icon-arrow' %}
