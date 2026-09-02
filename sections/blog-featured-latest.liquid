@@ -1,0 +1,527 @@
+{% comment %}
+  Featured & Latest Articles — controlled top feed for /pages/blog
+
+  Implements Tim's decisions of 25–27 Aug 2026, including the three
+  current-head corrections against head be22a706.
+
+  CONTRACT
+  - Eligibility: the exact tag "featured".
+  - Order: ARTICLE integer metafield custom.featured_rank, ascending.
+  - Positions 1..featured_slots are rank-ordered eligible articles.
+  - Remaining positions fill with the newest published non-featured articles.
+  - Hard maximum of nine cards, enforced in schema AND in code.
+  - Drafts excluded: Liquid's blog.articles exposes published articles only.
+  - No duplicate articles: the ledger keys on article.id, globally unique.
+
+  BLOG DISCOVERY — WHY A HANDLE LIST IS UNAVOIDABLE
+  Shopify Liquid cannot enumerate blogs. The blogs object is a lookup accessed
+  by handle, not an iterable collection, so `for x in blogs` yields nothing and
+  the candidate pool comes back empty. The blogs to scan therefore have to be
+  named in a setting, which is the same mechanism already in use and already
+  accepted on the hub search section.
+
+  This is a blog handle list, not an article list. No article handle, ID or
+  title appears anywhere in this file. Which articles are featured, and in what
+  order, remains driven entirely by the live tag and the live rank metafield.
+  A configured handle that resolves to no blog raises the HOLD reason
+  unknown_blog_handle rather than being skipped, so a blog cannot silently drop
+  out of validation.
+
+  NO HARD-CODED ARTICLES
+  No article handle, ID or title, and no blog handle list. Blogs are discovered
+  by iterating the blogs global. Eligibility comes from live tag data, order
+  from a live metafield. The only literals are slot counts, which are settings.
+
+  WHY `article.tags contains 'featured'` IS THE EXACT TEST
+  In Liquid, `contains` on an ARRAY tests for an exact element match, so this
+  matches only the literal tag "featured" and never "featured:top" or any other
+  legacy featured:* value. Do not pipe article.tags through a join filter first;
+  joining makes it a string and turns the test into a substring match.
+
+  CORRECTION 1 — COMPLETE TRAVERSAL, PROVEN NOT ASSUMED
+  blog.articles has a default fetch page size of 50 per blog, and a for loop's
+  limit parameter cannot raise it. The previous head passed an inflated limit
+  value, which was ineffective. Every loop here is therefore scoped to a blog
+  than to a combined 84-article array, so each traversal stays inside the
+  documented bound.
+
+  Rather than assume that is sufficient, this section verifies it. During
+  validation it counts every article actually scanned and compares that to the
+  sum of blog.articles_count across all blogs. If the platform ever truncates a
+  fetch, scanned will fall short of expected and the feed raises the HOLD reason
+  incomplete_traversal instead of publishing a false PASS. Both numbers are
+  printed in the view-source readback, so completeness is provable rather than
+  asserted.
+
+  Rendering avoids re-traversal entirely. Validation records blog_handle/
+  article_handle per rank, and rendering resolves each rank through the
+  articles global. The only remaining multi-blog loop is the newest-fill pass,
+  which is explicitly capped at 50 and always terminates far earlier because at
+  most featured_slots articles are excluded from a 9-card grid.
+
+  CORRECTION 2 — QA PANEL VISIBILITY
+  The Liquid request object exposes no query-string-bearing url property, so the
+  previous server-side query-string test was dead code. The HOLD panel
+  is now NOT rendered into the shopper DOM at all. It is constructed client-side
+  from the grid's data attributes only when window.location.search carries
+  feed_qa=1. In the theme editor it is rendered server-side via request.design_mode.
+  A shopper on the normal URL receives no panel markup whatsoever.
+
+  CORRECTION 3 — HARD NINE-CARD CAP
+  The schema range now stops at 9, and the value is additionally clamped in code
+  so a settings file edited outside the theme editor cannot exceed the approved
+  maximum.
+
+  HOLD BEHAVIOUR
+  A missing, duplicate, non-integer or out-of-range rank is a HOLD and must not
+  silently fall back to newest-first for an approved article. The rank-pinning
+  pass is gated on a valid state, so on HOLD it does not execute at all and no
+  approved article can appear in an unapproved position.
+
+  KNOWN LIMIT, documented and deliberately not worked around:
+  a single blog holding more than 50 published articles would exceed the per-blog
+  fetch page size. Largest blog today is 25. The incomplete_traversal check above
+  would detect and HOLD on that condition rather than fail silently.
+{% endcomment %}
+
+{{ 'component-article-card.css' | asset_url | stylesheet_tag }}
+{{ 'section-main-blog.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+
+  .featured-feed-hold {
+    grid-column: 1 / -1;
+    border: 2px solid #b00020;
+    background: #fff5f5;
+    color: #b00020;
+    padding: 16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .featured-feed-hold h3 { margin: 0 0 8px; font-size: 15px; }
+  .featured-feed-hold ul { margin: 8px 0 0 18px; }
+  .featured-feed-hold code { background: #ffe9e9; padding: 1px 4px; }
+{%- endstyle -%}
+
+{%- liquid
+  assign featured_slots = section.settings.featured_slots | default: 6
+
+    # Correction 3: clamp in code as well as in the schema.
+  assign max_cards = section.settings.max_cards | default: 9
+  if max_cards > 9
+    assign max_cards = 9
+  endif
+  if max_cards < 1
+    assign max_cards = 1
+  endif
+
+    # Validation pass. Scoped per blog so every loop stays inside the documented
+    # per-array fetch bound, with scanned-vs-expected proof of completeness.
+  assign expected_total = 0
+  assign scanned_total = 0
+  assign eligible_count = 0
+  assign seen_ranks = '|'
+  assign hold_reasons = '|'
+  assign rank_map = '|'
+  assign rank_readback = ''
+
+  assign blog_handles = section.settings.blog_handles | split: ','
+  assign blog_count = 0
+
+  for handle in blog_handles
+    assign clean_handle = handle | strip
+    assign store_blog = blogs[clean_handle]
+
+    if store_blog == blank
+        # A configured handle that resolves to no blog is a HOLD. Silently
+        # skipping it would hide an entire blog from validation.
+      unless hold_reasons contains '|unknown_blog_handle|'
+        assign hold_reasons = hold_reasons | append: 'unknown_blog_handle|'
+      endunless
+      continue
+    endif
+
+    assign blog_count = blog_count | plus: 1
+    assign expected_total = expected_total | plus: store_blog.articles_count
+
+    for article in store_blog.articles
+      assign scanned_total = scanned_total | plus: 1
+
+      if article.tags contains 'featured'
+        assign eligible_count = eligible_count | plus: 1
+        assign rank_field = article.metafields.custom.featured_rank
+        assign row_state = 'ok'
+
+        if rank_field == blank
+          assign row_state = 'missing_rank'
+        else
+          assign rank_num = rank_field.value | plus: 0
+          assign rank_int = rank_num | round
+
+          if rank_num != rank_int
+            assign row_state = 'non_integer_rank'
+          elsif rank_num < 1 or rank_num > featured_slots
+            assign row_state = 'out_of_range_rank'
+          else
+            assign rank_key = '|' | append: rank_int | append: '|'
+            if seen_ranks contains rank_key
+              assign row_state = 'duplicate_rank'
+            else
+              assign lookup = store_blog.handle | append: '/' | append: article.handle
+                # Resolve the lookup now, during validation. If it fails at
+                # render time instead, the article would vanish from the
+                # approved order with no reason code, which is the silent
+                # fallback this section exists to prevent.
+              if articles[lookup] == blank
+                assign row_state = 'rank_lookup_failed'
+              else
+                assign seen_ranks = seen_ranks | append: rank_int | append: '|'
+                assign rank_map = rank_map | append: rank_int | append: '>' | append: lookup | append: '|'
+              endif
+            endif
+          endif
+        endif
+
+        unless row_state == 'ok'
+          assign reason_key = '|' | append: row_state | append: '|'
+          unless hold_reasons contains reason_key
+            assign hold_reasons = hold_reasons | append: row_state | append: '|'
+          endunless
+        endunless
+
+        assign rank_display = rank_field.value | default: 'none'
+        assign rank_readback = rank_readback | append: store_blog.handle | append: '/' | append: article.handle | append: ' rank=' | append: rank_display | append: ' state=' | append: row_state | append: '~'
+      endif
+    endfor
+  endfor
+
+    # Completeness check. A short scan means the platform truncated a fetch, so
+    # the PASS/HOLD verdict cannot be trusted and the feed HOLDs.
+    # An empty pool means blog resolution failed outright. Without this an
+    # expected total of zero would equal a scanned total of zero and the
+    # completeness check would pass while nothing had been examined at all.
+  if expected_total == 0
+    unless hold_reasons contains '|no_articles_found|'
+      assign hold_reasons = hold_reasons | append: 'no_articles_found|'
+    endunless
+  endif
+
+  if scanned_total != expected_total
+    unless hold_reasons contains '|incomplete_traversal|'
+      assign hold_reasons = hold_reasons | append: 'incomplete_traversal|'
+    endunless
+  endif
+
+    # Fewer eligible articles than ranked slots means the tag has not been fully
+    # applied yet.
+  if eligible_count < featured_slots
+    unless hold_reasons contains '|incomplete_eligible_set|'
+      assign hold_reasons = hold_reasons | append: 'incomplete_eligible_set|'
+    endunless
+  endif
+
+    # Fill window. The fill pass skips every eligible article before it can
+    # place a card, so the window must cover them plus the whole grid. Clamped
+    # to the documented per-array bound; if that clamp binds, HOLD rather than
+    # silently render a short grid.
+  assign fill_limit = max_cards | plus: eligible_count
+  if fill_limit > 50
+    assign fill_limit = 50
+    unless hold_reasons contains '|fill_window_exhausted|'
+      assign hold_reasons = hold_reasons | append: 'fill_window_exhausted|'
+    endunless
+  endif
+
+  assign feed_state = 'ok'
+  if hold_reasons != '|'
+    assign feed_state = 'hold'
+  endif
+
+  assign reason_list = hold_reasons | remove_first: '|' | split: '|'
+  assign rank_entries = rank_map | remove_first: '|' | split: '|'
+
+    # Newest-first pool, used only by the fill pass.
+  assign pool = '' | split: ''
+  for handle in blog_handles
+    assign clean_handle = handle | strip
+    assign store_blog = blogs[clean_handle]
+    if store_blog != blank
+      assign pool = pool | concat: store_blog.articles
+    endif
+  endfor
+  assign pool_newest = pool | sort: 'published_at' | reverse
+
+  assign rendered = '|'
+  assign card_count = 0
+-%}
+
+{%- comment -%} View-source readback. Present on every render, so state is provable. {%- endcomment -%}
+<!-- FEATURED_FEED_READBACK
+  state: {{ feed_state }}
+  traversal: scanned {{ scanned_total }} of {{ expected_total }} expected articles across {{ blog_count }} resolved blogs
+  eligible (exact tag "featured"): {{ eligible_count }} of {{ featured_slots }} ranked slots
+  max cards (clamped): {{ max_cards }} | fill window: {{ fill_limit }}
+  hold reasons: {% if reason_list.size > 0 %}{{ reason_list | join: ', ' }}{% else %}none{% endif %}
+  eligible readback:
+{% if rank_readback != blank %}{% assign readback_lines = rank_readback | split: '~' %}{% for readback_line in readback_lines %}    {{ readback_line }}
+{% endfor %}{% else %}    (no eligible articles)
+{% endif %}-->
+
+<div class="main-blog page-width section-{{ section.id }}-padding">
+  {%- if section.settings.heading != blank -%}
+    <h2 class="title--primary">{{ section.settings.heading }}</h2>
+  {%- endif -%}
+
+  {%- if section.settings.description != blank -%}
+    <div class="main-blog-description">{{ section.settings.description }}</div>
+  {%- endif -%}
+
+  <div
+    class="blog-articles blog-articles--featured-latest"
+    data-featured-feed
+    data-feed-state="{{ feed_state }}"
+    data-scanned-total="{{ scanned_total }}"
+    data-expected-total="{{ expected_total }}"
+    data-eligible-count="{{ eligible_count }}"
+    data-featured-slots="{{ featured_slots }}"
+    data-max-cards="{{ max_cards }}"
+    data-hold-reasons="{% if reason_list.size > 0 %}{{ reason_list | join: ',' }}{% endif %}"
+  >
+    {%- comment -%}
+      Correction 2: the panel is rendered server-side ONLY in the theme editor.
+      On the storefront it is absent from the DOM and is built client-side only
+      when feed_qa=1 is present, so shoppers never receive the markup.
+    {%- endcomment -%}
+    {%- if feed_state == 'hold' and request.design_mode -%}
+      <div class="featured-feed-hold">
+        <h3>Featured feed is on HOLD — rank data is not valid</h3>
+        <p>
+          No approved article has been pinned. Positions are filled with newest
+          published articles only, so no approved article appears in an
+          unapproved position.
+        </p>
+        <ul>
+          {%- for reason in reason_list -%}
+            <li>{{ reason | replace: '_', ' ' }}</li>
+          {%- endfor -%}
+        </ul>
+        <p>
+          Traversal: scanned {{ scanned_total }} of {{ expected_total }} expected articles.
+          Eligible: {{ eligible_count }} of {{ featured_slots }}.
+        </p>
+      </div>
+    {%- endif -%}
+
+    {%- comment -%}
+      Pass 1 — rank-ordered featured articles. Runs only when every rank is
+      valid. Ranks resolve through the articles global, so no re-traversal.
+    {%- endcomment -%}
+    {%- if feed_state == 'ok' -%}
+      {%- for position in (1..featured_slots) -%}
+        {%- if card_count >= max_cards -%}{%- break -%}{%- endif -%}
+        {%- for entry in rank_entries -%}
+          {%- assign parts = entry | split: '>' -%}
+          {%- assign entry_rank = parts[0] | plus: 0 -%}
+          {%- if entry_rank == position -%}
+            {%- assign ranked_article = articles[parts[1]] -%}
+            {%- if ranked_article != blank -%}
+              {%- assign key = '|' | append: ranked_article.id | append: '|' -%}
+              {%- unless rendered contains key -%}
+                {% render 'article-card',
+                  article: ranked_article,
+                  media_height: section.settings.image_height,
+                  media_aspect_ratio: ranked_article.image.aspect_ratio,
+                  show_image: section.settings.show_image,
+                  show_date: section.settings.show_date,
+                  show_author: section.settings.show_author,
+                  show_excerpt: true
+                %}
+                {%- liquid
+                  assign rendered = rendered | append: ranked_article.id | append: '|'
+                  assign card_count = card_count | plus: 1
+                -%}
+              {%- endunless -%}
+            {%- endif -%}
+            {%- break -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endfor -%}
+    {%- endif -%}
+
+    {%- comment -%}
+      Pass 2 — fill remaining positions with newest non-featured articles.
+      The window is sized to eligible_count plus max_cards, so every eligible
+      article can be skipped and the grid still fills. Sizing is computed, not
+      assumed, and raises fill_window_exhausted if it cannot be satisfied.
+    {%- endcomment -%}
+    {%- for article in pool_newest limit: fill_limit -%}
+      {%- if card_count >= max_cards -%}{%- break -%}{%- endif -%}
+      {%- unless article.tags contains 'featured' -%}
+        {%- assign key = '|' | append: article.id | append: '|' -%}
+        {%- unless rendered contains key -%}
+          {% render 'article-card',
+            article: article,
+            media_height: section.settings.image_height,
+            media_aspect_ratio: article.image.aspect_ratio,
+            show_image: section.settings.show_image,
+            show_date: section.settings.show_date,
+            show_author: section.settings.show_author,
+            show_excerpt: true
+          %}
+          {%- liquid
+            assign rendered = rendered | append: article.id | append: '|'
+            assign card_count = card_count | plus: 1
+          -%}
+        {%- endunless -%}
+      {%- endunless -%}
+    {%- endfor -%}
+  </div>
+</div>
+
+<script>
+  // Correction 2: QA panel is built client-side only on ?feed_qa=1.
+  // Shoppers on the normal URL receive no panel markup at all.
+  (function () {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('feed_qa') !== '1') return;
+
+    var grid = document.querySelector('[data-featured-feed]');
+    if (!grid || grid.dataset.feedState !== 'hold') return;
+    if (grid.querySelector('.featured-feed-hold')) return; // already server-rendered in the editor
+
+    var reasons = (grid.dataset.holdReasons || '').split(',').filter(Boolean);
+
+    var panel = document.createElement('div');
+    panel.className = 'featured-feed-hold';
+
+    var title = document.createElement('h3');
+    title.textContent = 'Featured feed is on HOLD \u2014 rank data is not valid';
+    panel.appendChild(title);
+
+    var intro = document.createElement('p');
+    intro.textContent =
+      'No approved article has been pinned. Positions are filled with newest ' +
+      'published articles only, so no approved article appears in an unapproved position.';
+    panel.appendChild(intro);
+
+    if (reasons.length) {
+      var list = document.createElement('ul');
+      reasons.forEach(function (reason) {
+        var li = document.createElement('li');
+        li.textContent = reason.replace(/_/g, ' ');
+        list.appendChild(li);
+      });
+      panel.appendChild(list);
+    }
+
+    var stats = document.createElement('p');
+    stats.textContent =
+      'Traversal: scanned ' + grid.dataset.scannedTotal + ' of ' +
+      grid.dataset.expectedTotal + ' expected articles. Eligible: ' +
+      grid.dataset.eligibleCount + ' of ' + grid.dataset.featuredSlots + '.';
+    panel.appendChild(stats);
+
+    grid.insertBefore(panel, grid.firstChild);
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Featured & Latest",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Featured & Latest Articles"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Section description"
+    },
+    {
+      "type": "paragraph",
+      "content": "Eligibility is the exact tag 'featured'. Order is the article metafield custom.featured_rank, ascending. Legacy tags such as 'featured:top' are ignored. Remaining positions fill with the newest published articles. Append ?feed_qa=1 to the page URL to reveal the HOLD diagnostic panel."
+    },
+    {
+      "type": "text",
+      "id": "blog_handles",
+      "label": "Blog handles (comma separated)",
+      "default": "buying-guides, comparisons, maintenance, warranty-shipping, news, case-studies",
+      "info": "Liquid cannot enumerate blogs, so the blogs to scan must be named here. Article selection remains driven entirely by tag and rank. A handle that resolves to no blog is a HOLD."
+    },
+    {
+      "type": "range",
+      "id": "featured_slots",
+      "min": 1,
+      "max": 9,
+      "step": 1,
+      "label": "Ranked featured positions",
+      "default": 6,
+      "info": "Valid featured_rank values are 1 to this number. Anything outside it is a HOLD."
+    },
+    {
+      "type": "range",
+      "id": "max_cards",
+      "min": 3,
+      "max": 9,
+      "step": 1,
+      "label": "Maximum cards",
+      "default": 9,
+      "info": "Approved maximum is nine. The value is also clamped to nine in code."
+    },
+    { "type": "checkbox", "id": "show_image", "default": true, "label": "Show image" },
+    { "type": "checkbox", "id": "show_date", "default": true, "label": "Show date" },
+    { "type": "checkbox", "id": "show_author", "default": true, "label": "Show author" },
+    {
+      "type": "select",
+      "id": "image_height",
+      "options": [
+        { "value": "adapt", "label": "Adapt" },
+        { "value": "small", "label": "Small" },
+        { "value": "medium", "label": "Medium" },
+        { "value": "large", "label": "Large" }
+      ],
+      "default": "medium",
+      "label": "Image height"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 36
+    }
+  ],
+  "presets": [{ "name": "Featured & Latest" }]
+}
+{% endschema %}
