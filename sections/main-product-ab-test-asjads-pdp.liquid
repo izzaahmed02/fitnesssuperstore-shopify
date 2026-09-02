@@ -1219,13 +1219,12 @@
             {% endif %}
 
             {% comment %}
-              .pr_custom_price / .pr_custom_compare_price and the .affirm-as-low-as
-              trigger element are required by assets/main-product-custom.js +
-              affirmShopify.js — that script only reveals .paylater-container (the
-              "As low as .../mo" row + Shop Pay/Affirm logos) once it finds an
-              .affirm-as-low-as element, and it reads the displayed price by
-              querying .pr_custom_price directly. Renaming these classes silently
-              breaks that integration.
+              .pr_custom_price / .pr_custom_compare_price are read directly by
+              assets/main-product-custom.js elsewhere in the theme — keep these
+              class names even though the Affirm/Shop Pay financing UI
+              (.affirm-as-low-as trigger + paylater-providers render) has been
+              removed from this PDP per P0 (no financing/payment copy on the
+              GymBuild quote-only buy-box).
             {% endcomment %}
             <div id="price-{{ section.id }}" role="status" class="abtest-price__row">
               <p class="abtest-price__label">Starting at</p>
@@ -1243,10 +1242,6 @@
                 </span>
               {% endif %}
             </div>
-
-            <p class="affirm-as-low-as" data-page-type="product" data-amount="{{ current_variant.price }}"></p>
-
-            {% render 'paylater-providers' %}
           </div>
 
           {% comment %} Visual-only for now — see TODO note at top of this file. {% endcomment %}
