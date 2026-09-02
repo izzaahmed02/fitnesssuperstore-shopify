@@ -1,0 +1,572 @@
+{%- comment %}
+  "Request Quote Review" popup for the GymBuild PDP
+  (sections/main-product-ab-test-asjads-pdp.liquid only).
+  Figma: file XBaAGVhSupd0fvIcXd28qw, node 4145:82852.
+
+  Centered <modal-dialog> (Dawn's custom element, assets/global.js) — same
+  open/close/focus-trap/ESC/backdrop-click mechanics as
+  gymbuild-customize-popup.liquid's drawer, but centered-dialog CSS instead
+  of a right-side drawer. Own class (.gymbuild-quote-review-modal), not
+  Dawn's shared .product-popup-modal, for the same reason the customize
+  drawer avoided it: that class is still live elsewhere in the theme.
+
+  TWO ENTRY POINTS open this same modal (confirmed 2026-09-02): the main
+  PDP's "Request Quote Review" button, and the "Request Quote Review"
+  button inside gymbuild-customize-popup.liquid's footer. Both carry
+  [data-gymbuild-open-review]; a single shared listener below (a) closes
+  the customize drawer if it's open, (b) re-populates the Swaps and
+  Customizations / price breakdown from whatever is currently selected
+  there, then (c) shows this modal. This is why the swap cards in that
+  other snippet also carry data-original-* attributes (added alongside
+  the existing mutable data-item-* ones specifically to support this) —
+  comparing original vs. current is how a "swap" is detected here.
+
+  UI ONLY, per explicit direction (2026-09-08): everything that's already
+  real/live is wired dynamically (package name/price/SKU/weight, the live
+  swap state and its price deltas, the build page URL). The "Submit
+  GymBuild Quote Review" button does nothing on click — no payload is
+  assembled, nothing is submitted anywhere. That wiring (and the target
+  webhook, e.g. n8n) is future work — see CLAUDE.md's "Data Wiring Notes".
+
+  TWO FIELDS ARE DELIBERATE PLACEHOLDERS, not real data (explicit
+  direction, since neither has a real source yet):
+  - "Package code" — Figma's "GYMPKG-1500SQFTB" matches no real field on
+    this product (checked live: closest are the product_code metafield
+    "FF-BYOG" and mpn/vendor_part_no "BYOG-1500", neither matches). Shown
+    as a literal "TODO" string until a real field exists post-metaobjects.
+  - "Delivery & Installation Options" (the select + its "?" tooltip) —
+    no real option list or tooltip copy exists yet. Options are literal
+    "TODO" strings; replace once approved.
+
+  The disclaimer paragraph ("Equipment subtotal only...") is rendered
+  verbatim from Figma and is real customer-facing copy — per CLAUDE.md
+  non-negotiable #7, it needs human review before this ever goes live,
+  same as any other new customer-facing copy in this build.
+{% endcomment -%}
+
+<modal-dialog id="GymBuildQuoteReviewModal-{{ section.id }}" class="gymbuild-quote-review-modal">
+  <div
+    role="dialog"
+    aria-label="Request quote review for this build"
+    aria-modal="true"
+    class="gymbuild-quote-review-modal__content"
+    tabindex="-1"
+  >
+    <div class="gymbuild-quote-review-modal__header">
+      <h2 class="gymbuild-quote-review-modal__title">Request quote review for this build</h2>
+      <button
+        type="button"
+        id="ModalClose-GymBuildQuoteReview-{{ section.id }}"
+        class="gymbuild-quote-review-modal__close"
+        aria-label="{{ 'accessibility.close' | t }}"
+      >
+        {% render 'icon-close' %}
+      </button>
+    </div>
+
+    <div class="gymbuild-quote-review-modal__body">
+      <div class="gymbuild-quote-review-modal__package">
+        <div class="gymbuild-quote-review-modal__package-image-wrap">
+          {% if current_variant.featured_image %}
+            {{
+              current_variant.featured_image
+              | image_url: width: 160
+              | image_tag: loading: 'lazy', alt: current_variant.featured_image.alt | default: product.title | escape, class: 'gymbuild-quote-review-modal__package-image'
+            }}
+          {% elsif product.featured_image %}
+            {{
+              product.featured_image
+              | image_url: width: 160
+              | image_tag: loading: 'lazy', alt: product.featured_image.alt | default: product.title | escape, class: 'gymbuild-quote-review-modal__package-image'
+            }}
+          {% else %}
+            {{ 'product-1' | placeholder_svg_tag: 'gymbuild-quote-review-modal__package-image placeholder-svg' }}
+          {% endif %}
+        </div>
+        <div class="gymbuild-quote-review-modal__package-info">
+          <p class="gymbuild-quote-review-modal__package-title">{{ current_variant.title }} Gym Package</p>
+          <p class="gymbuild-quote-review-modal__package-price">{{ current_variant.price | money }}</p>
+        </div>
+      </div>
+
+      <div class="gymbuild-quote-review-modal__details">
+        <p class="gymbuild-quote-review-modal__section-heading">Details:</p>
+        <ul class="gymbuild-quote-review-modal__details-list">
+          <li>Package code: <span class="gymbuild-quote-review-modal__todo">TODO: confirm after metaobjects are created</span></li>
+          <li>Shopify SKU: {{ current_variant.sku }}</li>
+          <li>Total Package Weight: {{ current_variant.weight_in_unit | weight_with_unit: current_variant.weight_unit }}</li>
+        </ul>
+      </div>
+
+      <div class="gymbuild-quote-review-modal__swaps">
+        <p class="gymbuild-quote-review-modal__section-heading">Swaps and Customizations:</p>
+        <p class="gymbuild-quote-review-modal__no-swaps" data-gymbuild-review-no-swaps>
+          No swaps selected — this build uses the default package inclusions.
+        </p>
+        <div class="gymbuild-quote-review-modal__swaps-list" data-gymbuild-review-swaps></div>
+      </div>
+
+      <p class="gymbuild-quote-review-modal__build-link">
+        Your build page URL:
+        <a href="{{ current_variant.url }}" class="gymbuild-quote-review-modal__build-link-a">View selected build</a>
+      </p>
+
+      <div class="gymbuild-quote-review-modal__delivery">
+        <p class="gymbuild-quote-review-modal__section-heading">Delivery info:</p>
+
+        <div class="gymbuild-quote-review-modal__field-row">
+          <div class="gymbuild-quote-review-modal__field">
+            <label for="GymBuildReviewZip-{{ section.id }}">ZIP code</label>
+            <input type="text" id="GymBuildReviewZip-{{ section.id }}" name="zip" placeholder="Your ZIP code">
+          </div>
+          <div class="gymbuild-quote-review-modal__field">
+            <label for="GymBuildReviewDelivery-{{ section.id }}">
+              Delivery &amp; Installation Options
+              <span class="gymbuild-quote-review-modal__tooltip" tabindex="0" title="TODO: confirm real delivery &amp; installation options copy" aria-label="TODO: confirm real delivery &amp; installation options copy">?</span>
+            </label>
+            <select id="GymBuildReviewDelivery-{{ section.id }}" name="delivery_preference">
+              <option value="">Select your preference</option>
+              <option value="todo_curbside">TODO: Curbside Delivery</option>
+              <option value="todo_white_glove">TODO: White Glove Delivery + Install</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="gymbuild-quote-review-modal__field">
+          <label for="GymBuildReviewName-{{ section.id }}">Your name</label>
+          <input type="text" id="GymBuildReviewName-{{ section.id }}" name="customer_name" placeholder="Name here">
+        </div>
+
+        <div class="gymbuild-quote-review-modal__field-row">
+          <div class="gymbuild-quote-review-modal__field">
+            <label for="GymBuildReviewPhone-{{ section.id }}">Your phone</label>
+            <input type="tel" id="GymBuildReviewPhone-{{ section.id }}" name="customer_phone" placeholder="Phone here">
+          </div>
+          <div class="gymbuild-quote-review-modal__field">
+            <label for="GymBuildReviewEmail-{{ section.id }}">Your email</label>
+            <input type="email" id="GymBuildReviewEmail-{{ section.id }}" name="customer_email" placeholder="Email here">
+          </div>
+        </div>
+
+        <div class="gymbuild-quote-review-modal__field">
+          <label for="GymBuildReviewNotes-{{ section.id }}">Notes</label>
+          <textarea id="GymBuildReviewNotes-{{ section.id }}" name="notes" rows="3" placeholder="Notes here..."></textarea>
+        </div>
+      </div>
+
+      <p class="gymbuild-quote-review-modal__disclaimer">
+        Equipment subtotal only. Final freight, tax, delivery, installation, availability, and approved customization pricing will be confirmed by our team during quote review.
+      </p>
+
+      <div class="gymbuild-quote-review-modal__breakdown">
+        <div class="gymbuild-quote-review-modal__breakdown-row">
+          <span>Base Package</span>
+          <span>{{ current_variant.price | money }}</span>
+        </div>
+        <div class="gymbuild-quote-review-modal__breakdown-row" data-gymbuild-review-customizations-row hidden>
+          <span>Customizations</span>
+          <span data-gymbuild-review-customizations-price></span>
+        </div>
+        <div class="gymbuild-quote-review-modal__breakdown-row gymbuild-quote-review-modal__breakdown-row--total">
+          <span>Estimated equipment subtotal</span>
+          <span data-gymbuild-review-subtotal>{{ current_variant.price | money }}</span>
+        </div>
+      </div>
+
+      <button type="button" class="gymbuild-quote-review-modal__submit">
+        Submit GymBuild Quote Review
+      </button>
+    </div>
+  </div>
+</modal-dialog>
+
+<style>
+  .gymbuild-quote-review-modal {
+    box-sizing: border-box;
+    position: fixed;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    z-index: -1;
+    overflow-y: auto;
+    padding: 40px 16px;
+    background: rgba(35, 35, 43, 0.5);
+  }
+
+  .gymbuild-quote-review-modal[open] {
+    opacity: 1;
+    visibility: visible;
+    /* Above the customize drawer's z-index: 101 — this can open from
+       inside that drawer, and must render on top of it. */
+    z-index: 102;
+  }
+
+  .gymbuild-quote-review-modal__content {
+    box-sizing: border-box;
+    position: relative;
+    background: #fff;
+    width: min(600px, 100%);
+    margin: 0 auto;
+    border-radius: 12px;
+    padding: 28px;
+  }
+
+  .gymbuild-quote-review-modal__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .gymbuild-quote-review-modal__title {
+    font-size: 24px;
+    line-height: 30px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #23232b;
+    margin: 0;
+  }
+
+  .gymbuild-quote-review-modal__close {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 4px;
+    cursor: pointer;
+    color: #23232b;
+    line-height: 0;
+    flex: 0 0 auto;
+  }
+
+  .gymbuild-quote-review-modal__package {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .gymbuild-quote-review-modal__package-image-wrap {
+    width: 64px;
+    height: 64px;
+    flex: 0 0 auto;
+    background: #faf9f9;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .gymbuild-quote-review-modal__package-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  .gymbuild-quote-review-modal__package-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #23232b;
+  }
+
+  .gymbuild-quote-review-modal__package-price {
+    margin: 2px 0 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #f1592a;
+  }
+
+  .gymbuild-quote-review-modal__section-heading {
+    margin: 0 0 8px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #23232b;
+  }
+
+  .gymbuild-quote-review-modal__details {
+    margin-bottom: 18px;
+  }
+
+  .gymbuild-quote-review-modal__details-list {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13px;
+    line-height: 22px;
+    color: #4b4b52;
+  }
+
+  .gymbuild-quote-review-modal__todo {
+    color: #b45309;
+    font-style: italic;
+  }
+
+  .gymbuild-quote-review-modal__swaps {
+    margin-bottom: 18px;
+  }
+
+  .gymbuild-quote-review-modal__no-swaps {
+    margin: 0;
+    font-size: 13px;
+    color: #808080;
+  }
+
+  .gymbuild-quote-review-modal__swaps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .gymbuild-quote-review-modal__swap-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #eee9e7;
+    border-radius: 10px;
+    padding: 10px;
+  }
+
+  .gymbuild-quote-review-modal__swap-item-image {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    background: #faf9f9;
+    border-radius: 6px;
+    flex: 0 0 auto;
+  }
+
+  .gymbuild-quote-review-modal__swap-item-title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: #23232b;
+  }
+
+  .gymbuild-quote-review-modal__swap-item-delta {
+    margin: 2px 0 0;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .gymbuild-quote-review-modal__swap-item-delta.is-increase {
+    color: #d83d0e;
+  }
+
+  .gymbuild-quote-review-modal__swap-item-delta.is-decrease {
+    color: #12693a;
+  }
+
+  .gymbuild-quote-review-modal__build-link {
+    font-size: 13px;
+    color: #23232b;
+    margin: 0 0 18px;
+  }
+
+  .gymbuild-quote-review-modal__build-link-a {
+    color: #d83d0e;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .gymbuild-quote-review-modal__delivery {
+    margin-bottom: 18px;
+  }
+
+  .gymbuild-quote-review-modal__field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .gymbuild-quote-review-modal__field {
+    margin-bottom: 14px;
+  }
+
+  .gymbuild-quote-review-modal__field label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #23232b;
+    margin-bottom: 6px;
+  }
+
+  .gymbuild-quote-review-modal__field input,
+  .gymbuild-quote-review-modal__field select,
+  .gymbuild-quote-review-modal__field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #d3d9e5;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 14px;
+    color: #23232b;
+  }
+
+  .gymbuild-quote-review-modal__field textarea {
+    resize: vertical;
+  }
+
+  .gymbuild-quote-review-modal__tooltip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #e5e5e5;
+    color: #4b4b52;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: help;
+  }
+
+  .gymbuild-quote-review-modal__disclaimer {
+    font-size: 12px;
+    line-height: 18px;
+    color: #808080;
+    margin: 0 0 18px;
+  }
+
+  .gymbuild-quote-review-modal__breakdown {
+    border-top: 1px solid #edeff3;
+    padding-top: 14px;
+    margin-bottom: 18px;
+  }
+
+  .gymbuild-quote-review-modal__breakdown-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #23232b;
+    padding: 4px 0;
+  }
+
+  .gymbuild-quote-review-modal__breakdown-row span:last-child {
+    color: #d83d0e;
+    font-weight: 700;
+  }
+
+  .gymbuild-quote-review-modal__breakdown-row--total {
+    font-size: 16px;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+
+  .gymbuild-quote-review-modal__breakdown-row--total span:last-child {
+    font-size: 18px;
+  }
+
+  .gymbuild-quote-review-modal__submit {
+    width: 100%;
+    min-height: 48px;
+    border: 0;
+    border-radius: 8px;
+    background: #d83d0e;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  @media screen and (max-width: 576px) {
+    .gymbuild-quote-review-modal {
+      padding: 0;
+    }
+
+    .gymbuild-quote-review-modal__content {
+      width: 100%;
+      min-height: 100%;
+      border-radius: 0;
+    }
+
+    .gymbuild-quote-review-modal__field-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var reviewModal = document.getElementById('GymBuildQuoteReviewModal-{{ section.id }}');
+    if (!reviewModal) return;
+
+    var noSwapsEl = reviewModal.querySelector('[data-gymbuild-review-no-swaps]');
+    var swapsListEl = reviewModal.querySelector('[data-gymbuild-review-swaps]');
+    var customizationsRow = reviewModal.querySelector('[data-gymbuild-review-customizations-row]');
+    var customizationsPriceEl = reviewModal.querySelector('[data-gymbuild-review-customizations-price]');
+    var subtotalEl = reviewModal.querySelector('[data-gymbuild-review-subtotal]');
+    var basePriceCents = {{ current_variant.price }};
+
+    function formatMoney(cents) {
+      return '$' + (cents / 100).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function formatDelta(deltaCents) {
+      var sign = deltaCents > 0 ? '+ ' : '- ';
+      return sign + formatMoney(Math.abs(deltaCents));
+    }
+
+    function populateReview() {
+      var items = Array.from(document.querySelectorAll('[data-gymbuild-item]'));
+      var swapped = items.filter(function (item) {
+        return item.dataset.itemId !== item.dataset.originalId;
+      });
+
+      swapsListEl.innerHTML = '';
+
+      if (!swapped.length) {
+        noSwapsEl.hidden = false;
+        customizationsRow.hidden = true;
+        subtotalEl.textContent = formatMoney(basePriceCents);
+        return;
+      }
+
+      noSwapsEl.hidden = true;
+
+      var totalDeltaCents = 0;
+
+      swapped.forEach(function (item) {
+        var currentPrice = parseInt(item.dataset.itemPrice, 10) || 0;
+        var originalPrice = parseInt(item.dataset.originalPrice, 10) || 0;
+        var deltaCents = currentPrice - originalPrice;
+        totalDeltaCents += deltaCents;
+
+        var deltaClass = deltaCents > 0 ? 'is-increase' : (deltaCents < 0 ? 'is-decrease' : '');
+
+        var row = document.createElement('div');
+        row.className = 'gymbuild-quote-review-modal__swap-item';
+        row.innerHTML =
+          '<img class="gymbuild-quote-review-modal__swap-item-image" src="' + item.dataset.itemImage + '" alt="" loading="lazy">' +
+          '<div>' +
+          '<p class="gymbuild-quote-review-modal__swap-item-title">' + item.dataset.itemTitle + '</p>' +
+          '<p class="gymbuild-quote-review-modal__swap-item-delta ' + deltaClass + '">' + formatDelta(deltaCents) + '</p>' +
+          '</div>';
+
+        swapsListEl.appendChild(row);
+      });
+
+      customizationsRow.hidden = false;
+      customizationsPriceEl.textContent = formatDelta(totalDeltaCents);
+      subtotalEl.textContent = formatMoney(basePriceCents + totalDeltaCents);
+    }
+
+    var openTriggers = document.querySelectorAll('[data-gymbuild-open-review]');
+    openTriggers.forEach(function (trigger) {
+      trigger.addEventListener('click', function () {
+        var customizeDrawer = document.getElementById('GymBuildCustomizeModal-{{ section.id }}');
+        if (customizeDrawer && customizeDrawer.hasAttribute('open')) {
+          customizeDrawer.hide();
+        }
+
+        populateReview();
+        reviewModal.show(trigger);
+      });
+    });
+  })();
+</script>
