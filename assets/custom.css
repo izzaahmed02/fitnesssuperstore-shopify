@@ -52,8 +52,20 @@ font-size: 28px!important;
  }
 
 
- .campaign-sale-container {
-  display: none!important;
+/* Labor Day 2026 (PR #758): removed the global `.campaign-sale-container { display:none !important }`
+   kill-switch. The sale note is now emitted only inside the sale window by
+   snippets/labor-day-sale-note.liquid (date-gated + force_preview), so a global hide is obsolete and
+   was suppressing the note at all widths - including the variants-template mobile note (P1).
+   Desktop/mobile split remains handled by `.campaign-sale-container.hide-on-mobile` in
+   section-main-product.css, reinforced below across the full sub-990px range. */
+
+/* The mobile-layout copy renders at <=989.98px (product__info-wrapper--mobile: display:block
+   @max-width:991.98px, display:none @min-width:990px) and the desktop layout takes over at >=990px.
+   The theme's base hide-on-mobile only fires at <=768px, which would double-render the note at
+   769-989px once it is no longer globally killed. Hide the desktop-layout copy across the whole
+   sub-990px range so exactly one note shows (mobile copy <=989.98px, desktop copy >=990px). */
+@media (max-width: 989.98px) {
+  .campaign-sale-container.hide-on-mobile { display: none !important; }
 }
 
 /* Remove left side nav on Collection and Product templates only (from A/B test winner).

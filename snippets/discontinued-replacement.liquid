@@ -1,0 +1,58 @@
+{%- comment -%}
+  Controlled discontinued replacement module.
+
+  Renders the source-controlled discontinued content attached to a product
+  through custom.discontinued_product_content -> above_the_fold_content.
+
+  The replacement product is read from the explicit product references on that
+  metaobject (best_new_replacement, best_value_option) and is rendered even when
+  the referenced product is unavailable, so an approved out-of-stock replacement
+  still appears with its own source-controlled lead-time language.
+
+  The module never substitutes a collection, related-products, all-products or
+  any automatically selected product: when an approved reference is blank the
+  corresponding card is simply not rendered.
+
+  No price, Add to Cart, Buy Now, Notify Me or quick-add control is rendered
+  here, so the discontinued page keeps no purchase path.
+
+  Accepts:
+    - product: {Object} the discontinued product (required)
+{%- endcomment -%}
+
+{%- liquid
+  assign discontinued_content = product.metafields.custom.discontinued_product_content.value
+  assign above_the_fold = discontinued_content.above_the_fold_content.value
+  assign new_replacement = above_the_fold.best_new_replacement.value
+  assign value_replacement = above_the_fold.best_value_option.value
+-%}
+
+{%- if above_the_fold != blank -%}
+  {{ 'component-discontinued-replacement.css' | asset_url | stylesheet_tag }}
+
+  <div class="discontinued-replacement">
+    {%- if above_the_fold.header.value != blank -%}
+      <h2 class="discontinued-replacement__heading">{{ above_the_fold.header.value | escape }}</h2>
+    {%- endif -%}
+
+    {%- if above_the_fold.introduction.value != blank -%}
+      <div class="discontinued-replacement__intro rte">
+        {{ above_the_fold.introduction | metafield_tag }}
+      </div>
+    {%- endif -%}
+
+    {%- if new_replacement != blank -%}
+      {% render 'discontinued-replacement-card',
+        replacement: new_replacement,
+        intro: above_the_fold.best_new_intro
+      %}
+    {%- endif -%}
+
+    {%- if value_replacement != blank -%}
+      {% render 'discontinued-replacement-card',
+        replacement: value_replacement,
+        intro: above_the_fold.best_value_intro
+      %}
+    {%- endif -%}
+  </div>
+{%- endif -%}
