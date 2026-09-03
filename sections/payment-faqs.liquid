@@ -71,8 +71,10 @@
 }
 
 .payment-faqs .accordion {
-  border-bottom: 1px solid #E5E5E5;
-  margin: 16px 0;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  padding: 0 12px;
+  margin: 0 0 12px;
 }
 
 .payment-faqs .accordion-header {
@@ -92,15 +94,14 @@
   margin: 0;
 }
 
-.payment-faqs .accordion-header::after {
-  content: '>';
-  font-size: 20px;
+.payment-faqs .accordion-chevron {
+  display: flex;
+  flex-shrink: 0;
   transition: transform 0.3s ease;
-  transform: rotate(90deg);
 }
 
-.payment-faqs .accordion-header.active::after {
-  content: '<';
+.payment-faqs .accordion-header.active .accordion-chevron {
+  transform: rotate(180deg);
 }
 
 .payment-faqs .accordion-content-text {
@@ -135,7 +136,9 @@
 
 .payment-faqs .accordion-container ul li:before {
   content: "";
-  border: 4px solid #FE8425;
+  width: 8px;
+  height: 8px;
+  background: #3E77AA;
   border-radius: 50%;
   position: absolute;
   left: -15px;
@@ -208,22 +211,24 @@
   }
 
   .payment-faqs .accordion {
-    margin: 0;
-    padding: 0;
+    margin: 0 0 12px;
+    padding: 0 12px;
   }
 
   .payment-faqs .accordion-header {
         font-size: 16px;
         line-height: 24px;
         font-family: var(--font-body-family);
-        padding: 12px;
+        padding: 12px 0;
         font-weight: 700;
 
   }
 
   .payment-faqs .accordion-container ul li:before{
     content: "";
-    border: 4px solid #FE8425;
+    width: 8px;
+    height: 8px;
+    background: #3E77AA;
     border-radius: 50%;
     position: absolute;
     top: 7px;
@@ -242,8 +247,7 @@ vertical-align: middle;
 }
 
   .payment-faqs .accordion-content-text.active {
-    padding: 12px;
-    padding-top: 0px;
+    padding: 0 0 12px;
 }
 
   .payment-faqs .accordion-container {
@@ -265,7 +269,14 @@ vertical-align: middle;
   <div class="accordion-container">
     {% for block in section.blocks %}
         <div class="accordion" id="{{ block.settings.accordion_id }}">
-          <div class="accordion-header" role="button" tabindex="0" aria-expanded="false">{{ block.settings.accordion_title }}</div>
+          <div class="accordion-header" role="button" tabindex="0" aria-expanded="false">
+            {{ block.settings.accordion_title }}
+            <span class="accordion-chevron" aria-hidden="true">
+              <svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M0.21967 0.21967C0.512563 -0.0732233 0.987437 -0.0732233 1.28033 0.21967L6.75 5.68934L12.2197 0.21967C12.5126 -0.0732233 12.9874 -0.0732233 13.2803 0.21967C13.5732 0.512563 13.5732 0.987437 13.2803 1.28033L7.28033 7.28033C6.98744 7.57322 6.51256 7.57322 6.21967 7.28033L0.21967 1.28033C-0.0732233 0.987437 -0.0732233 0.512563 0.21967 0.21967Z" fill="currentColor"/>
+              </svg>
+            </span>
+          </div>
           <div class="accordion-content-container">         
             <!-- Accordion Content Text -->
             <div class="accordion-content-text">

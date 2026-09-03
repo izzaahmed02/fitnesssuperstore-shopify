@@ -25,8 +25,10 @@ color: #333333;
 
   .payment-methods .accordion-container ul li:before {
     content: "";
-    border: 4px #FE8425 solid !important;
-    border-radius: 50px;
+    width: 8px;
+    height: 8px;
+    background: #3E77AA;
+    border-radius: 50%;
     margin-top: 8px;
     margin-left: -20px;
     position: absolute;
@@ -133,8 +135,14 @@ padding: 0;
 }
 
 .payment-methods .logo-image {
-width: 70px;
-    object-fit: cover;
+  box-sizing: border-box;
+  width: 70px;
+  height: 48px;
+  padding: 6px;
+  background: #FFFFFF;
+  border: 1px solid #EBEBEB;
+  border-radius: 6px;
+  object-fit: contain;
 }
 
 /* Accordion Section */
@@ -158,16 +166,21 @@ font-family: var(--font-body-family);
     margin-bottom: 16px;
 }
 
-.payment-methods .accordion-header::after {
-  content: '>';
-  font-size: 20px;
-  transition: transform 0.3s ease;
-  transform: rotate(90deg);
+.payment-methods .accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.payment-methods .accordion-header.active::after {
-  content: '<';
-  transform: rotate(90deg)!important;
+.payment-methods .accordion-chevron {
+  display: flex;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.payment-methods .accordion-header.active .accordion-chevron {
+  transform: rotate(180deg);
 }
 
 .payment-methods .accordion-content-text {
@@ -181,16 +194,12 @@ font-family: var(--font-body-family);
 
 /* Desktop Styles (> 768px) */
 @media (min-width: 769px) {
-.payment-methods .accordion-header.active::after{
-  display: none;
-}
-  
   .payment-methods .accordion-header {
     cursor: default; /* Non-clickable on desktop */
   }
 
-  .payment-methods .accordion-header::after {
-    content: none; /* Remove +/− indicators */
+  .payment-methods .accordion-chevron {
+    display: none; /* Remove indicator arrow */
   }
 
   .payment-methods .accordion-content-text {
@@ -268,7 +277,14 @@ letter-spacing: 0px;
     {% for block in section.blocks %}
       {% if block.type == 'accordion' %}
         <div class="accordion" id="{{ block.settings.accordion_id }}">
-          <div class="accordion-header" role="button" tabindex="0" aria-expanded="false">{{ block.settings.accordion_title }}</div>
+          <div class="accordion-header" role="button" tabindex="0" aria-expanded="false">
+            <span class="accordion-header-title">{{ block.settings.accordion_title }}</span>
+            <span class="accordion-chevron" aria-hidden="true">
+              <svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M0.21967 0.21967C0.512563 -0.0732233 0.987437 -0.0732233 1.28033 0.21967L6.75 5.68934L12.2197 0.21967C12.5126 -0.0732233 12.9874 -0.0732233 13.2803 0.21967C13.5732 0.512563 13.5732 0.987437 13.2803 1.28033L7.28033 7.28033C6.98744 7.57322 6.51256 7.57322 6.21967 7.28033L0.21967 1.28033C-0.0732233 0.987437 -0.0732233 0.512563 0.21967 0.21967Z" fill="currentColor"/>
+              </svg>
+            </span>
+          </div>
           <div class="accordion-content-container">
             <div class="accordion-content-text">
                {% if block.settings.num_logos > 0 %}
