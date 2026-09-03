@@ -223,16 +223,17 @@
                 {% render 'labor-day-sale-note', product: product %}
 
                 <div>
-                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
+                  {%- assign _variant = product.selected_or_first_available_variant -%}
+                  {% if _variant.compare_at_price > _variant.price %}
                     <span class="pr_custom_compare_price"
                       >As high as:
-                      <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
+                      <s>{{ _variant.compare_at_price | money_with_currency -}}</s>
                     </span>
                   {% endif %}
                   {% if product.metafields.custom.saleprice_name != blank %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
-                      current_price: product.selected_or_first_available_variant.compare_at_price,
+                      current_price: _variant.price,
                       sale_price: product.metafields.custom.sale_price
                     %}
                   {% else %}
@@ -243,16 +244,10 @@
                         show_badges: true,
                         price_class: 'price--large'
                       -%}
-
-                      {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
-                      %}
+                      {% if _variant.compare_at_price > _variant.price %}
                         <span class="you-save"
                           >You save
-                          {{
-                            product.metafields.custom.retail_price
-                            | minus: product.selected_or_first_available_variant.price
-                            | money
-                          -}}
+                          {{ _variant.compare_at_price | minus: _variant.price | money -}}
                         </span>
                       {% endif %}
                     </div>
@@ -870,16 +865,17 @@
 
                 <div class="product__price-row">
                 <div class="product__prices hidden lg:block">
-                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
+                  {%- assign _variant = product.selected_or_first_available_variant -%}
+                  {% if _variant.compare_at_price > _variant.price %}
                     <span class="pr_custom_compare_price"
                       >As high as:
-                      <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
+                      <s>{{ _variant.compare_at_price | money_with_currency -}}</s>
                     </span>
                   {% endif %}
                   {% if product.metafields.custom.saleprice_name != blank %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
-                      current_price: product.selected_or_first_available_variant.compare_at_price,
+                      current_price: _variant.price,
                       sale_price: product.metafields.custom.sale_price
                     %}
                   {% else %}
@@ -890,16 +886,10 @@
                         show_badges: true,
                         price_class: 'price--large'
                       -%}
-
-                      {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
-                      %}
+                      {% if _variant.compare_at_price > _variant.price %}
                         <span class="you-save"
                           >You save
-                          {{
-                            product.metafields.custom.retail_price
-                            | minus: product.selected_or_first_available_variant.price
-                            | money
-                          -}}
+                          {{ _variant.compare_at_price | minus: _variant.price | money -}}
                         </span>
                       {% endif %}
                     </div>
@@ -957,10 +947,24 @@
 
                   <div class="product_price_with_options-contaniner">
                     <div class="product_prices">
+                      {%- comment -%}
+                        "Total with options" must build on the price the customer actually pays.
+                        When the promo banner is active (custom.saleprice_name set and
+                        custom.sale_price below the variant price) that banner price is the
+                        selling price; otherwise it is the native variant price.
+                      {%- endcomment -%}
+                      {%- assign twp_variant = product.selected_or_first_available_variant -%}
+                      {%- assign twp_price = twp_variant.price -%}
+                      {%- if product.metafields.custom.saleprice_name != blank -%}
+                        {%- assign twp_sale = product.metafields.custom.sale_price | replace: ',', '' | times: 100.0 -%}
+                        {%- if twp_sale > 0 and twp_price > twp_sale -%}
+                          {%- assign twp_price = twp_sale -%}
+                        {%- endif -%}
+                      {%- endif -%}
                       <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
                         <div class="pr_custom_price-container">
-                           <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{  product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
-                            {{ product.selected_or_first_available_variant.price | money }}
+                           <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{ twp_price | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
+                            {{ twp_price | money }}
                           </p>
                         </div>
                       </div>

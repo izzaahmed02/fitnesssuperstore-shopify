@@ -371,21 +371,17 @@
                 {% render 'labor-day-sale-note', product: product %}
 
                 <div>
-                 {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
-  <span class="pr_custom_compare_price"
-    >As high as:
-    <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
-  </span>
-{% elsif product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
-  <span class="pr_custom_compare_price"
-    >As high as:
-    <s>{{ product.selected_or_first_available_variant.compare_at_price | money_with_currency -}}</s>
-  </span>
-{% endif %}
+                  {%- assign _variant = product.selected_or_first_available_variant -%}
+                  {% if _variant.compare_at_price > _variant.price %}
+                    <span class="pr_custom_compare_price"
+                      >As high as:
+                      <s>{{ _variant.compare_at_price | money_with_currency -}}</s>
+                    </span>
+                  {% endif %}
                   {% if product.metafields.custom.saleprice_name != blank %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
-                      current_price: product.selected_or_first_available_variant.compare_at_price,
+                      current_price: _variant.price,
                       sale_price: product.metafields.custom.sale_price
                     %}
                   {% else %}
@@ -397,17 +393,12 @@
                         price_class: 'price--large'
                       -%}
 
-                      {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
-  <span class="you-save"
-    >You save
-    {{ product.metafields.custom.retail_price | minus: product.selected_or_first_available_variant.price | money -}}
-  </span>
-{% elsif product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
-  <span class="you-save"
-    >You save
-    {{ product.selected_or_first_available_variant.compare_at_price | minus: product.selected_or_first_available_variant.price | money -}}
-  </span>
-{% endif %}
+                      {% if _variant.compare_at_price > _variant.price %}
+                        <span class="you-save"
+                          >You save
+                          {{ _variant.compare_at_price | minus: _variant.price | money -}}
+                        </span>
+                      {% endif %}
                     </div>
                   {% endif %}
                 </div>
@@ -1125,21 +1116,17 @@
 {% render 'labor-day-sale-note', product: product, hide_on_mobile: true %}
 
                 <div class="product__prices hidden lg:block">
-                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
-  <span class="pr_custom_compare_price"
-    >As high as:
-    <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
-  </span>
-{% elsif product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
-  <span class="pr_custom_compare_price"
-    >As high as:
-    <s>{{ product.selected_or_first_available_variant.compare_at_price | money_with_currency -}}</s>
-  </span>
-{% endif %}
+                  {%- assign _variant = product.selected_or_first_available_variant -%}
+                  {% if _variant.compare_at_price > _variant.price %}
+                    <span class="pr_custom_compare_price"
+                      >As high as:
+                      <s>{{ _variant.compare_at_price | money_with_currency -}}</s>
+                    </span>
+                  {% endif %}
                   {% if product.metafields.custom.saleprice_name != blank %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
-                      current_price: product.selected_or_first_available_variant.compare_at_price,
+                      current_price: _variant.price,
                       sale_price: product.metafields.custom.sale_price
                     %}
                   {% else %}
@@ -1151,17 +1138,12 @@
                         price_class: 'price--large'
                       -%}
 
-                      {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
-  <span class="you-save"
-    >You save
-    {{ product.metafields.custom.retail_price | minus: product.selected_or_first_available_variant.price | money -}}
-  </span>
-{% elsif product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
-  <span class="you-save"
-    >You save
-    {{ product.selected_or_first_available_variant.compare_at_price | minus: product.selected_or_first_available_variant.price | money -}}
-  </span>
-{% endif %}
+                      {% if _variant.compare_at_price > _variant.price %}
+                        <span class="you-save"
+                          >You save
+                          {{ _variant.compare_at_price | minus: _variant.price | money -}}
+                        </span>
+                      {% endif %}
                     </div>
                   {% endif %}
                  </div>
@@ -1225,19 +1207,32 @@
 
                   <div class="product_price_with_options-contaniner">
                    <div class="product_prices">
-  {%- assign mp_price = product.selected_or_first_available_variant.price -%}
+  {%- assign mp_variant = product.selected_or_first_available_variant -%}
+  {%- assign mp_price = mp_variant.price -%}
   {%- assign mp_compare = 0 -%}
-  {%- if product.metafields.custom.retail_price > mp_price -%}
-    {%- assign mp_compare = product.metafields.custom.retail_price -%}
-  {%- elsif product.selected_or_first_available_variant.compare_at_price > mp_price -%}
-    {%- assign mp_compare = product.selected_or_first_available_variant.compare_at_price -%}
+  {%- if mp_variant.compare_at_price > mp_price -%}
+    {%- assign mp_compare = mp_variant.compare_at_price -%}
+  {%- endif -%}
+
+  {%- comment -%}
+    "Total with options" must build on the price the customer actually pays.
+    When the PACKAGE PRICE banner is active (custom.saleprice_name set and
+    custom.sale_price below the variant price) that banner price is the
+    selling price; otherwise it is the native variant price.
+  {%- endcomment -%}
+  {%- assign mp_selling = mp_price -%}
+  {%- if product.metafields.custom.saleprice_name != blank -%}
+    {%- assign mp_sale = product.metafields.custom.sale_price | replace: ',', '' | times: 100.0 -%}
+    {%- if mp_sale > 0 and mp_price > mp_sale -%}
+      {%- assign mp_selling = mp_sale -%}
+    {%- endif -%}
   {%- endif -%}
   
 
   <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
     <div class="pr_custom_price-container">
-       <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{  product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
-        {{ product.selected_or_first_available_variant.price | money }}
+       <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{ mp_selling | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
+        {{ mp_selling | money }}
       </p>
        {% if mp_compare > mp_price %}
     <span class="pr_custom_compare_price">
