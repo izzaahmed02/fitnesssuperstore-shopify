@@ -268,7 +268,7 @@ letter-spacing: 0px;
     {% for block in section.blocks %}
       {% if block.type == 'accordion' %}
         <div class="accordion" id="{{ block.settings.accordion_id }}">
-          <div class="accordion-header">{{ block.settings.accordion_title }}</div>
+          <div class="accordion-header" role="button" tabindex="0" aria-expanded="false">{{ block.settings.accordion_title }}</div>
           <div class="accordion-content-container">
             <div class="accordion-content-text">
                {% if block.settings.num_logos > 0 %}
@@ -292,105 +292,84 @@ letter-spacing: 0px;
 
 <script>
 // JavaScript for Accordion and Sidebar Functionality
-function initializeAccordionsAndSidebar() {
-  const isMobile = window.innerWidth <= 768;
+//
+// Listeners are bound ONCE per section instance via event delegation on each
+// instance's own .accordion-container / .sidebar root, so a mobile resize
+// (address bar show/hide, orientation change, keyboard open/close) never
+// re-registers duplicate handlers. isMobile is re-checked at click time
+// instead of re-binding on every resize. Desktop's "always open" display is
+// handled entirely by CSS (.accordion-content-text is display:block above
+// 768px regardless of .active), so no JS pass is needed for that state.
+document.querySelectorAll('.payment-methods').forEach(function (root) {
+  if (root.dataset.paymentMethodsInit) return;
+  root.dataset.paymentMethodsInit = '1';
 
-  // Remove existing event listeners from accordion headers
-  document.querySelectorAll('.payment-methods .accordion-header').forEach(header => {
-    header.removeEventListener('click', toggleAccordion);
-  });
+  const accordionContainer = root.querySelector('.accordion-container');
+  const sidebar = root.querySelector('.sidebar');
 
-  // Accordion functionality for mobile
-  if (isMobile) {
-    document.querySelectorAll('.payment-methods .accordion-header').forEach(header => {
-      header.addEventListener('click', toggleAccordion);
+  function toggleAccordion(header) {
+    if (window.innerWidth > 768) return; // desktop: always open, non-interactive
+    const content = header.nextElementSibling.querySelector('.accordion-content-text');
+    if (!content) return;
+    const isActive = content.classList.contains('active');
+
+    accordionContainer.querySelectorAll('.accordion-content-text').forEach(item => item.classList.remove('active'));
+    accordionContainer.querySelectorAll('.accordion-header').forEach(item => {
+      item.classList.remove('active');
+      item.setAttribute('aria-expanded', 'false');
     });
 
-    function toggleAccordion() {
-      const content = this.nextElementSibling.querySelector('.payment-methods .accordion-content-text');
-      const isActive = content.classList.contains('active');
-
-      // Close all other accordions
-      document.querySelectorAll('.payment-methods .accordion-content-text').forEach(item => {
-        item.classList.remove('active');
-      });
-      document.querySelectorAll('.payment-methods .accordion-header').forEach(item => {
-        item.classList.remove('active');
-      });
-
-      // Toggle the clicked accordion
-      if (!isActive) {
-        content.classList.add('active');
-        this.classList.add('active');
-      }
-    }
-  } else {
-    // On desktop, ensure all accordion content is visible
-    document.querySelectorAll('.payment-methods .accordion-content-text').forEach(content => {
+    if (!isActive) {
       content.classList.add('active');
-    });
-    document.querySelectorAll('.payment-methods .accordion-header').forEach(header => {
       header.classList.add('active');
+      header.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  if (accordionContainer) {
+    accordionContainer.addEventListener('click', function (e) {
+      const header = e.target.closest('.accordion-header');
+      if (header) toggleAccordion(header);
+    });
+    accordionContainer.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const header = e.target.closest('.accordion-header');
+      if (!header) return;
+      e.preventDefault();
+      toggleAccordion(header);
     });
   }
 
-  // Sidebar link click handling
-  document.querySelectorAll('.payment-methods .sidebar-link').forEach(link => {
-    link.addEventListener('click', function(e) {
-      e.preventDefault(); // Prevent default anchor behavior
-      const targetId = this.getAttribute('href').substring(1); // Get target ID without #
+  function setActiveSidebarLink(link) {
+    sidebar.querySelectorAll('li').forEach(li => li.classList.remove('active'));
+    sidebar.querySelectorAll('a').forEach(a => a.classList.remove('active'));
+    link.parentElement.classList.add('active');
+    link.classList.add('active');
+  }
+
+  if (sidebar) {
+    sidebar.addEventListener('click', function (e) {
+      const link = e.target.closest('.sidebar-link');
+      if (!link) return;
+      e.preventDefault();
+      const targetId = link.getAttribute('href').substring(1);
       const targetElement = document.getElementById(targetId);
-
-      // Remove active class from all sidebar li and a elements
-      document.querySelectorAll('.payment-methods .sidebar li').forEach(li => {
-        li.classList.remove('active');
-      });
-      document.querySelectorAll('.payment-methods .sidebar a').forEach(a => {
-        a.classList.remove('active');
-      });
-
-      // Add active class to the clicked link's parent li and the link itself
-      this.parentElement.classList.add('active');
-      this.classList.add('active');
-
-      // Scroll to the target accordion section
-      if (targetElement) {
-        targetElement.scrollIntoView({ behavior: 'smooth' });
-      }
+      setActiveSidebarLink(link);
+      if (targetElement) targetElement.scrollIntoView({ behavior: 'smooth' });
     });
-  });
 
-  // Highlight sidebar item based on URL hash on page load
-  const hash = window.location.hash.substring(1); // Get hash without #
-  if (hash) {
-    const targetLink = document.querySelector(`.payment-methods .sidebar a[href="#${hash}"]`);
-    if (targetLink) {
-      // Remove active classes from all
-      document.querySelectorAll('.payment-methods .sidebar li').forEach(li => {
-        li.classList.remove('active');
-      });
-      document.querySelectorAll('.sidebar a').forEach(a => {
-        a.classList.remove('active');
-      });
-
-      // Add active class to the matching link and its parent li
-      targetLink.classList.add('active');
-      targetLink.parentElement.classList.add('active');
-
-      // Scroll to the target section
+    // Highlight sidebar item based on URL hash on page load
+    const hash = window.location.hash.substring(1);
+    if (hash) {
+      const targetLink = sidebar.querySelector(`a[href="#${hash}"]`);
       const targetElement = document.getElementById(hash);
-      if (targetElement) {
+      if (targetLink && targetElement) {
+        setActiveSidebarLink(targetLink);
         targetElement.scrollIntoView({ behavior: 'smooth' });
       }
     }
   }
-}
-
-// Initialize on page load
-initializeAccordionsAndSidebar();
-
-// Re-initialize on window resize
-window.addEventListener('resize', initializeAccordionsAndSidebar);
+});
 </script>
 
 {% schema %}

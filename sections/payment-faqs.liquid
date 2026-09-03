@@ -265,7 +265,7 @@ vertical-align: middle;
   <div class="accordion-container">
     {% for block in section.blocks %}
         <div class="accordion" id="{{ block.settings.accordion_id }}">
-          <div class="accordion-header"><p>{{ block.settings.accordion_title }}</p></div>
+          <div class="accordion-header" role="button" tabindex="0" aria-expanded="false">{{ block.settings.accordion_title }}</div>
           <div class="accordion-content-container">         
             <!-- Accordion Content Text -->
             <div class="accordion-content-text">
@@ -278,113 +278,60 @@ vertical-align: middle;
 </div>
 
 <script>
-// JavaScript for Accordion and Sidebar Functionality
-function initializeAccordionsAndSidebar() {
-  const headers = document.querySelectorAll('.payment-faqs .accordion-header');
-  const sidebarLinks = document.querySelectorAll('.payment-faqs .sidebar-link');
+// JavaScript for Accordion Functionality
+//
+// Bound ONCE per section instance via event delegation on that instance's own
+// .accordion-container, so a resize (address bar show/hide, orientation
+// change, keyboard open/close on mobile) never re-registers duplicate click
+// handlers. This section's markup has no .sidebar-link elements (the sidebar
+// here is a static heading, not a nav), so the previous dead sidebar-link
+// code path has been removed along with the resize-driven rebinding.
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.payment-faqs .accordion-container').forEach(function (container) {
+    if (container.dataset.paymentFaqsInit) return;
+    container.dataset.paymentFaqsInit = '1';
 
-  // Remove existing event listeners
-  headers.forEach(header => {
-    header.removeEventListener('click', toggleAccordion);
-  });
-  sidebarLinks.forEach(link => {
-    link.removeEventListener('click', handleSidebarClick);
-  });
+    function toggleAccordion(header) {
+      const content = header.nextElementSibling.querySelector('.accordion-content-text');
+      if (!content) return;
+      const isActive = content.classList.contains('active');
 
-  // Accordion functionality
-  headers.forEach(header => {
-    header.addEventListener('click', toggleAccordion);
-  });
+      container.querySelectorAll('.accordion-content-text').forEach(item => item.classList.remove('active'));
+      container.querySelectorAll('.accordion-header').forEach(item => {
+        item.classList.remove('active');
+        item.setAttribute('aria-expanded', 'false');
+      });
 
-  function toggleAccordion() {
-    const content = this.nextElementSibling.querySelector('.accordion-content-text');
-    const isActive = content.classList.contains('active');
-    const accordionId = this.parentElement.id;
-
-    // Close all other accordions
-    document.querySelectorAll('.payment-faqs .accordion-content-text').forEach(item => {
-      item.classList.remove('active');
-    });
-    document.querySelectorAll('.payment-faqs .accordion-header').forEach(item => {
-      item.classList.remove('active');
-    });
-
-    // Toggle the clicked accordion
-    if (!isActive) {
-      content.classList.add('active');
-      this.classList.add('active');
-      
-      // Update sidebar active state
-      updateSidebarActiveState(accordionId);
-    }
-  }
-
-  // Sidebar link functionality
-  sidebarLinks.forEach(link => {
-    link.addEventListener('click', handleSidebarClick);
-  });
-
-  function handleSidebarClick(e) {
-    e.preventDefault();
-    const targetId = this.getAttribute('href').substring(1);
-    const targetElement = document.getElementById(targetId);
-
-    // Update sidebar active state
-    updateSidebarActiveState(targetId);
-
-    // Scroll to target
-    if (targetElement) {
-      targetElement.scrollIntoView({ behavior: 'smooth' });
-      
-      // Open the accordion
-      const header = targetElement.querySelector('.accordion-header');
-      const content = targetElement.querySelector('.accordion-content-text');
-      if (header && content && !content.classList.contains('active')) {
-        headers.forEach(h => h.classList.remove('active'));
-        document.querySelectorAll('.payment-faqs .accordion-content-text').forEach(c => c.classList.remove('active'));
-        header.classList.add('active');
+      if (!isActive) {
         content.classList.add('active');
-      }
-    }
-  }
-
-  function updateSidebarActiveState(targetId) {
-    sidebarLinks.forEach(link => {
-      const li = link.parentElement;
-      li.classList.remove('active');
-      link.classList.remove('active');
-      if (link.getAttribute('href') === `#${targetId}`) {
-        li.classList.add('active');
-        link.classList.add('active');
-      }
-    });
-  }
-
-  // Handle initial page load with hash
-  const hash = window.location.hash.substring(1);
-  if (hash) {
-    const targetElement = document.getElementById(hash);
-    if (targetElement) {
-      targetElement.scrollIntoView({ behavior: 'smooth' });
-      const header = targetElement.querySelector('.accordion-header');
-      const content = targetElement.querySelector('.accordion-content-text');
-      if (header && content) {
         header.classList.add('active');
-        content.classList.add('active');
+        header.setAttribute('aria-expanded', 'true');
       }
-      updateSidebarActiveState(hash);
     }
-  }
-}
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', initializeAccordionsAndSidebar);
+    container.addEventListener('click', function (e) {
+      const header = e.target.closest('.accordion-header');
+      if (header) toggleAccordion(header);
+    });
+    container.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const header = e.target.closest('.accordion-header');
+      if (!header) return;
+      e.preventDefault();
+      toggleAccordion(header);
+    });
 
-// Re-initialize on window resize
-let resizeTimer;
-window.addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(initializeAccordionsAndSidebar, 250);
+    // Handle initial page load with hash
+    const hash = window.location.hash.substring(1);
+    if (hash) {
+      const targetElement = document.getElementById(hash);
+      if (targetElement && container.contains(targetElement)) {
+        targetElement.scrollIntoView({ behavior: 'smooth' });
+        const header = targetElement.querySelector('.accordion-header');
+        if (header) toggleAccordion(header);
+      }
+    }
+  });
 });
 </script>
 
