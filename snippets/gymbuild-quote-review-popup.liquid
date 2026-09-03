@@ -28,15 +28,20 @@
   assembled, nothing is submitted anywhere. That wiring (and the target
   webhook, e.g. n8n) is future work — see CLAUDE.md's "Data Wiring Notes".
 
-  TWO FIELDS ARE DELIBERATE PLACEHOLDERS, not real data (explicit
-  direction, since neither has a real source yet):
+  TWO FIELDS HAD NO REAL DATA SOURCE YET (updated 2026-09-03: hidden from
+  customers rather than shown as TODO placeholders, per explicit direction):
   - "Package code" — Figma's "GYMPKG-1500SQFTB" matches no real field on
     this product (checked live: closest are the product_code metafield
-    "FF-BYOG" and mpn/vendor_part_no "BYOG-1500", neither matches). Shown
-    as a literal "TODO" string until a real field exists post-metaobjects.
-  - "Delivery & Installation Options" (the select + its "?" tooltip) —
-    no real option list or tooltip copy exists yet. Options are literal
-    "TODO" strings; replace once approved.
+    "FF-BYOG" and mpn/vendor_part_no "BYOG-1500", neither matches). The
+    whole Details-list line is omitted until a real field exists
+    post-metaobjects — don't add it back as a TODO string.
+  - "Delivery & Installation Options" — no real option list or tooltip
+    copy exists yet (Figma's "Curbside"/"White Glove" labels are
+    themselves unapproved copy, not just missing a "TODO:" prefix — see
+    CLAUDE.md non-negotiable #7). The <select> is left with only its
+    blank "Select your preference" option and the "?" tooltip is
+    removed; add the real <option> values/labels once approved, not
+    before.
 
   The disclaimer paragraph ("Equipment subtotal only...") is rendered
   verbatim from Figma and is real customer-facing copy — per CLAUDE.md
@@ -98,9 +103,8 @@
       <div class="gymbuild-quote-review-modal__details">
         <p class="gymbuild-quote-review-modal__section-heading">Details:</p>
         <ul class="gymbuild-quote-review-modal__details-list">
-          <li>Package code: <span class="gymbuild-quote-review-modal__todo">TODO: confirm after metaobjects are created</span></li>
           <li>Shopify SKU: {{ current_variant.sku }}</li>
-          <li>Total Package Weight: {{ current_variant.weight_in_unit | weight_with_unit: current_variant.weight_unit }}</li>
+          <li>Total Package Weight: {{ current_variant.weight | weight_with_unit: current_variant.weight_unit }}</li>
         </ul>
       </div>
 
@@ -123,12 +127,9 @@
           <div class="gymbuild-quote-review-modal__field">
             <label for="GymBuildReviewDelivery-{{ section.id }}">
               Delivery &amp; Installation Options
-              <span class="gymbuild-quote-review-modal__tooltip" tabindex="0" title="TODO: confirm real delivery &amp; installation options copy" aria-label="TODO: confirm real delivery &amp; installation options copy">?</span>
             </label>
             <select id="GymBuildReviewDelivery-{{ section.id }}" name="delivery_preference">
               <option value="">Select your preference</option>
-              <option value="todo_curbside">TODO: Curbside Delivery</option>
-              <option value="todo_white_glove">TODO: White Glove Delivery + Install</option>
             </select>
           </div>
         </div>
@@ -304,11 +305,6 @@
     color: #4b4b52;
   }
 
-  .gymbuild-quote-review-modal__todo {
-    color: #b45309;
-    font-style: italic;
-  }
-
   .gymbuild-quote-review-modal__swaps {
     margin-bottom: 18px;
   }
@@ -403,20 +399,6 @@
 
   .gymbuild-quote-review-modal__field textarea {
     resize: vertical;
-  }
-
-  .gymbuild-quote-review-modal__tooltip {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #e5e5e5;
-    color: #4b4b52;
-    font-size: 11px;
-    font-weight: 700;
-    cursor: help;
   }
 
   .gymbuild-quote-review-modal__disclaimer {
