@@ -300,6 +300,23 @@ letter-spacing: 0px;
 // instead of re-binding on every resize. Desktop's "always open" display is
 // handled entirely by CSS (.accordion-content-text is display:block above
 // 768px regardless of .active), so no JS pass is needed for that state.
+// The site header is position:sticky and overlays the top of the viewport, so
+// scrolling a target to y=0 (the browser's default scrollIntoView behaviour)
+// lands it partly underneath the header instead of fully in view. Measure the
+// header at click time rather than assuming a fixed height, since its height
+// differs between mobile and desktop.
+const HEADER_HEIGHT_FALLBACK = 120;
+const HEADING_GAP = 16;
+function stickyHeaderOffset() {
+  const header = document.querySelector('.section-header');
+  const height = header ? Math.round(header.getBoundingClientRect().height) : 0;
+  return (height > 0 ? height : HEADER_HEIGHT_FALLBACK) + HEADING_GAP;
+}
+function scrollToTarget(targetElement) {
+  const top = targetElement.getBoundingClientRect().top + window.scrollY - stickyHeaderOffset();
+  window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
+}
+
 document.querySelectorAll('.payment-methods').forEach(function (root) {
   if (root.dataset.paymentMethodsInit) return;
   root.dataset.paymentMethodsInit = '1';
@@ -355,7 +372,7 @@ document.querySelectorAll('.payment-methods').forEach(function (root) {
       const targetId = link.getAttribute('href').substring(1);
       const targetElement = document.getElementById(targetId);
       setActiveSidebarLink(link);
-      if (targetElement) targetElement.scrollIntoView({ behavior: 'smooth' });
+      if (targetElement) scrollToTarget(targetElement);
     });
 
     // Highlight sidebar item based on URL hash on page load
@@ -365,7 +382,7 @@ document.querySelectorAll('.payment-methods').forEach(function (root) {
       const targetElement = document.getElementById(hash);
       if (targetLink && targetElement) {
         setActiveSidebarLink(targetLink);
-        targetElement.scrollIntoView({ behavior: 'smooth' });
+        scrollToTarget(targetElement);
       }
     }
   }
