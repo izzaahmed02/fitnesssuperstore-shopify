@@ -17,22 +17,21 @@
     <div class="sr-form-card" data-sr-form-card>
       {% form 'contact', id: 'ShowroomCheckModel', class: 'sr-form' %}
         {%- if form.posted_successfully? -%}
-          <div class="sr-form-success" data-sr-success>
+          {%- comment -%} No-JS fallback success state (page was reloaded) {%- endcomment -%}
+          <div class="sr-form-success" data-sr-success role="status">
             <div class="sr-form-success__top">
               <div class="sr-form-success__icon" aria-hidden="true">
                 <svg viewBox="0 0 80 80" width="80" height="80"><circle cx="40" cy="40" r="33.33" fill="#00A344"/><path fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M27 41.5l9 9 17-19"/></svg>
               </div>
               <div class="sr-form-success__text">
-                <h3>{{ s.success_heading }}</h3>
+                <h3><span class="sr-form-success__l1">{{ s.success_line1 }}</span><span class="sr-form-success__l2">{{ s.success_line2 }}</span></h3>
                 <p>{{ s.success_text }}</p>
               </div>
             </div>
             <a class="sr-btn sr-btn--primary sr-btn--block" href="{{ request.path }}#sr-check-model">{{ s.success_button_label }}</a>
           </div>
         {%- else -%}
-          {%- if form.errors -%}
-            <div class="sr-form-errors">{{ form.errors | default_errors }}</div>
-          {%- endif -%}
+          <div class="sr-form-errors" data-sr-errors role="alert"{% unless form.errors %} hidden{% endunless %}>{% if form.errors %}{{ form.errors | default_errors }}{% endif %}</div>
 
           <input type="hidden" name="contact[form_type]" value="Benicia Showroom — Check a Model">
           <input type="hidden" name="contact[source_page]" value="{{ request.origin }}{{ request.path }}">
@@ -95,7 +94,7 @@
             <textarea id="sr-compare" name="contact[compare_notes]" rows="2" placeholder="e.g. comparing to the FSR100"></textarea>
           </div>
 
-          <button type="submit" class="sr-btn sr-btn--primary sr-btn--block" data-sr-event="check_model_submit">
+          <button type="submit" class="sr-btn sr-btn--primary sr-btn--block">
             {{ s.form_button_label }}
           </button>
 
@@ -103,6 +102,22 @@
         {%- endif -%}
       {% endform %}
     </div>
+
+    {%- comment -%} Success markup used by the in-place (AJAX) submit {%- endcomment -%}
+    <template data-sr-success-tpl>
+      <div class="sr-form-success" data-sr-success role="status" tabindex="-1">
+        <div class="sr-form-success__top">
+          <div class="sr-form-success__icon" aria-hidden="true">
+            <svg viewBox="0 0 80 80" width="80" height="80"><circle cx="40" cy="40" r="33.33" fill="#00A344"/><path fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M27 41.5l9 9 17-19"/></svg>
+          </div>
+          <div class="sr-form-success__text">
+            <h3><span class="sr-form-success__l1">{{ s.success_line1 }}</span><span class="sr-form-success__l2">{{ s.success_line2 }}</span></h3>
+            <p>{{ s.success_text }}</p>
+          </div>
+        </div>
+        <button type="button" class="sr-btn sr-btn--primary sr-btn--block" data-sr-new-request>{{ s.success_button_label }}</button>
+      </div>
+    </template>
   </div>
 </section>
 <script src="{{ 'showroom-benicia.js' | asset_url }}" defer></script>
@@ -120,7 +135,8 @@
     { "type": "text", "id": "form_point_2", "label": "Point 2", "default": "We'll suggest a comparable model if yours has sold" },
     { "type": "text", "id": "form_button_label", "label": "Submit button label", "default": "Submit Request" },
     { "type": "textarea", "id": "form_fineprint", "label": "Fine print", "default": "A team member will confirm whether the requested model or a comparable option is available to view. Submitting this form does not reserve equipment." },
-    { "type": "text", "id": "success_heading", "label": "Success heading", "default": "Thank you. Your request has been received." },
+    { "type": "text", "id": "success_line1", "label": "Success heading — row 1", "default": "Thank you" },
+    { "type": "text", "id": "success_line2", "label": "Success heading — row 2", "default": "Your request has been received" },
     { "type": "textarea", "id": "success_text", "label": "Success text", "default": "A team member will contact you using your preferred contact method to confirm the equipment is available before your visit." },
     { "type": "text", "id": "success_button_label", "label": "Success button label", "default": "New Request" }
   ],

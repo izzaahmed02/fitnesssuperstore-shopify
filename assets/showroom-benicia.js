@@ -21,10 +21,86 @@
       push(name, { location: el.getAttribute('data-sr-location') || '' });
     });
 
-    // Check a Model form: submit event + contact-method input typing
-    var form = document.getElementById('ShowroomCheckModel');
-    if (form) {
-      form.addEventListener('submit', function () { push('check_model_submit', { location: 'check_model_form' }); });
+    // Check a Model form: in-place (AJAX) submit through the native contact form.
+    // Falls back to a normal submit when JS or fetch is unavailable.
+    var card0 = document.querySelector('[data-sr-form-card]');
+    var formEl0 = card0 && card0.querySelector('#ShowroomCheckModel');
+    // Cache the pristine form markup so "New Request" can restore it without a reload.
+    if (card0 && formEl0 && formEl0.querySelector('button[type="submit"]')) {
+      window.__srFormHTML = card0.innerHTML;
+    }
+
+    function showSuccess(card) {
+      var tpl = document.querySelector('[data-sr-success-tpl]');
+      if (tpl && 'content' in tpl) {
+        card.innerHTML = '';
+        card.appendChild(tpl.content.cloneNode(true));
+      }
+      // Fire exactly once, only after Shopify accepts the submission.
+      push('check_model_submit', { location: 'check_model_form' });
+      var succ = card.querySelector('.sr-form-success');
+      if (succ) { try { succ.focus(); } catch (e) {} }
+    }
+
+    function showErrors(form, html) {
+      var box = form.querySelector('[data-sr-errors]');
+      var msg = '';
+      try {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        var node = doc.querySelector('#ShowroomCheckModel [data-sr-errors]') || doc.querySelector('#ShowroomCheckModel .sr-form-errors');
+        if (node) msg = node.innerHTML;
+      } catch (e) {}
+      if (!box) {
+        box = document.createElement('div');
+        box.className = 'sr-form-errors';
+        box.setAttribute('data-sr-errors', '');
+        box.setAttribute('role', 'alert');
+        form.insertBefore(box, form.firstChild);
+      }
+      box.innerHTML = msg || 'Sorry, something went wrong. Please review the form and try again.';
+      box.hidden = false;
+      box.setAttribute('tabindex', '-1');
+      try { box.focus(); } catch (e) {}
+    }
+
+    if (window.fetch) {
+      document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (!form || form.id !== 'ShowroomCheckModel') return;
+        // Let native HTML5 validation handle invalid input (submit won't fire when invalid).
+        e.preventDefault();
+        var card = form.closest('[data-sr-form-card]');
+        var btn = form.querySelector('button[type="submit"]');
+        if (btn) btn.disabled = true;
+        var action = form.getAttribute('action') || '/contact';
+        fetch(action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          credentials: 'same-origin'
+        })
+          .then(function (res) { return res.text().then(function (t) { return { url: res.url, text: t }; }); })
+          .then(function (o) {
+            var ok = /[?&]contact_posted=true/.test(o.url) || /[?&]contact_posted=true/.test(o.text);
+            if (ok && card) { showSuccess(card); }
+            else { showErrors(form, o.text); if (btn) btn.disabled = false; }
+          })
+          .catch(function () { if (btn) btn.disabled = false; form.submit(); });
+      });
+
+      // "New Request" — restore the form in the same card, no page reload.
+      document.addEventListener('click', function (e) {
+        var nr = e.target.closest('[data-sr-new-request]');
+        if (!nr) return;
+        e.preventDefault();
+        var card = nr.closest('[data-sr-form-card]');
+        if (card && window.__srFormHTML) {
+          card.innerHTML = window.__srFormHTML;
+          var f = card.querySelector('#ShowroomCheckModel');
+          var first = f && f.querySelector('input:not([type="hidden"]), select, textarea');
+          if (first) { try { first.focus(); } catch (e) {} }
+        }
+      });
     }
 
     // Video walkthrough: click-to-play overlay (no autoplay)
