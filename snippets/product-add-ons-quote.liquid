@@ -175,26 +175,7 @@
 
                             {%- liquid
                               assign addon_price = add_on_variant.price
-                              assign addon_compare = 0
-
-                              # Resolve the compare-at price from whichever source is populated:
-                              # 1) native variant compare-at (a genuine sale price)
-                              # 2) product-level max compare-at
-                              # 3) custom.retail_price metafield (the "As high as" / MSRP used on the main PDP)
-                              if add_on_variant.compare_at_price > addon_price
-                                assign addon_compare = add_on_variant.compare_at_price
-                              elsif add_on_product.compare_at_price_max > addon_price
-                                assign addon_compare = add_on_product.compare_at_price_max
-                              elsif add_on_product.metafields.custom.retail_price.value > addon_price
-                                assign addon_compare = add_on_product.metafields.custom.retail_price.value
-                              endif
                             -%}
-
-                            {% if addon_compare > addon_price %}
-                              <p class="product-add-ons__compare">
-                                As high as: <s>{{ addon_compare | money }}</s>
-                              </p>
-                            {% endif %}
 
                             <div class="product-add-ons__price">
                               <span>Price:</span>
@@ -416,24 +397,6 @@
 
     .product-add-ons__price span {
       font-weight: 700;
-    }
-
-    .product-add-ons__price s {
-      margin-left: 4px;
-      color: #777;
-      font-weight: 400;
-    }
-
-    .product-add-ons__compare {
-      margin: 10px 0 0;
-      font-size: 13px;
-      line-height: 1.3;
-      color: #777;
-      font-weight: 400;
-    }
-
-    .product-add-ons__compare s {
-      color: #777;
     }
 
     .product-add-ons__form {
