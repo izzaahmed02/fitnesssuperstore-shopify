@@ -1,3 +1,12 @@
+{%- comment -%}
+  #775: French Fitness permanent comparison pricing ("As high as:" / MSRP, the crossed-out
+  reference price and the permanent "You save" badge) is suppressed brand-wide. The selling
+  price and any time-limited promotion are untouched. When suppressed the elements are not
+  rendered at all, which the variant-repaint script below handles: every lookup of
+  .pr_custom_compare_price / .you-save is null-guarded, so it simply no-ops.
+  See snippets/ff-permanent-compare-hidden.
+{%- endcomment -%}
+{%- capture hide_perm_price -%}{%- render 'ff-permanent-compare-hidden', product: product -%}{%- endcapture -%}
 {% style %}
   #shopify-section-{{ section.id }} .product-main-container{
     display: grid;
@@ -293,7 +302,7 @@
                   {%comment %}
                   {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
                    {%endcomment %}
-                    {% unless is_gift_cards_template %}
+                    {% unless is_gift_cards_template or hide_perm_price contains 'true' %}
                       <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
                         >As high as:
                         <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
@@ -325,7 +334,9 @@
                        <div>
 
 
-                      <span class="you-save pm-empty"></span>
+                      {% unless hide_perm_price contains 'true' %}
+                        <span class="you-save pm-empty"></span>
+                      {% endunless %}
 
                     </div>
 
@@ -796,7 +807,7 @@
 
                 <div class="product__prices hidden lg:block">
 
-                     {% unless is_gift_cards_template %}
+                     {% unless is_gift_cards_template or hide_perm_price contains 'true' %}
                       <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
                         >As high as:
                         <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
@@ -821,7 +832,9 @@
                        <div>
 
 
-                     <span class="you-save pm-empty"></span>
+                     {% unless hide_perm_price contains 'true' %}
+                       <span class="you-save pm-empty"></span>
+                     {% endunless %}
                     </div>
 
                       {% endif %}
@@ -947,7 +960,11 @@
                               data-variant-id="{{ product.selected_or_first_available_variant.id }}"
                             >
                               {%- if product.selected_or_first_available_variant.quantity_price_breaks.size > 0 -%}
-                                {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                                {%- comment -%} #775: stays nil on French Fitness, so the crossed-out volume reference price is not rendered. {%- endcomment -%}
+                                {%- assign variant_price_compare = nil -%}
+                                {%- if hide_perm_price contains 'false' -%}
+                                  {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                                {%- endif -%}
                                 <div class="price-per-item">
                                   {%- if variant_price_compare -%}
                                     <dl class="price-per-item--current">
@@ -987,7 +1004,11 @@
                                 {%- assign variant_price = product.selected_or_first_available_variant.price
                                   | money_with_currency
                                 -%}
-                                {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                                {%- comment -%} #775: stays nil on French Fitness, so the crossed-out volume reference price is not rendered. {%- endcomment -%}
+                                {%- assign variant_price_compare = nil -%}
+                                {%- if hide_perm_price contains 'false' -%}
+                                  {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                                {%- endif -%}
                                 <div class="price-per-item">
                                   {%- if variant_price_compare -%}
                                     <dl class="price-per-item--current">
@@ -1437,7 +1458,11 @@
                         data-variant-id="{{ product.selected_or_first_available_variant.id }}"
                       >
                         {%- if product.selected_or_first_available_variant.quantity_price_breaks.size > 0 -%}
-                          {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                          {%- comment -%} #775: stays nil on French Fitness, so the crossed-out volume reference price is not rendered. {%- endcomment -%}
+                          {%- assign variant_price_compare = nil -%}
+                          {%- if hide_perm_price contains 'false' -%}
+                            {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                          {%- endif -%}
                           <div class="price-per-item">
                             {%- if variant_price_compare -%}
                               <dl class="price-per-item--current">
@@ -1477,7 +1502,11 @@
                           {%- assign variant_price = product.selected_or_first_available_variant.price
                             | money_with_currency
                           -%}
-                          {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                          {%- comment -%} #775: stays nil on French Fitness, so the crossed-out volume reference price is not rendered. {%- endcomment -%}
+                          {%- assign variant_price_compare = nil -%}
+                          {%- if hide_perm_price contains 'false' -%}
+                            {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                          {%- endif -%}
                           <div class="price-per-item">
                             {%- if variant_price_compare -%}
                               <dl class="price-per-item--current">

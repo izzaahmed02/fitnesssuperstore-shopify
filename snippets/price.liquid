@@ -10,7 +10,13 @@
 
   Usage:
   {% render 'price', product: product %}
+
+  #775: on French Fitness products the crossed-out permanent reference price is
+  suppressed (the selling price and volume price range still render). Callers
+  that pass no product at all are unaffected: product.vendor is then nil, the
+  rule returns 'false', and this snippet behaves exactly as before.
 {% endcomment %}
+{%- capture hide_perm_price -%}{%- render 'ff-permanent-compare-hidden', product: product -%}{%- endcapture -%}
 {%- liquid
   if use_variant
     assign target = product.selected_or_first_available_variant
@@ -73,7 +79,7 @@
     {%- endcomment -%}
     <div class="price__regular">
       {%- if product.quantity_price_breaks_configured? -%}
-        {%- if show_compare_at_price and compare_at_price -%}
+        {%- if show_compare_at_price and compare_at_price and hide_perm_price contains 'false' -%}
           {%- unless product.price_varies == false and product.compare_at_price_varies %}
             <span class="visually-hidden visually-hidden--inline">
               {{- 'products.product.price.regular_price' | t -}}
