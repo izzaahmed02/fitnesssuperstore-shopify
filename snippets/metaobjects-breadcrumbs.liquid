@@ -1,6 +1,9 @@
 {% comment %}
-  1. Use prioritized metaobject breadcrumbs if available.
-  2. If still empty, use first assigned collection.
+  Product breadcrumb navigation.
+  Uses prioritized metaobject paths when available and falls back to the first
+  product collection. Desktop keeps the full hierarchy. Mobile shows Home and
+  the immediate parent collection in one compact row; the current product
+  remains available to assistive technology without repeating the visible title.
 {% endcomment %}
 
 {% assign all_breadcrumb_objects = product.metafields.custom.breadcrumb_paths.value | sort: "priority" %}
@@ -34,41 +37,97 @@
   {% assign default_coll = product.collections.first %}
   {% assign source_flag = "default" %}
 {% endif %}
-<div class="customBreadcrumbs">
-<div class="custom-breadcrumbs">
-  <div class="page-width">
-    <div class="custom-breadcrumbs__wrapper">
-      <div class="custom-breadcrumbs__navigation">
 
-        {% assign domain_origin = request.origin %}
+{% style %}
+  @media screen and (max-width: 749px) {
+    .pdp-breadcrumbs .page-width {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
 
-        {% if source_flag == "metaobject" %}
-          <a href="{{ domain_origin }}/" metaobject>Home</a>
-          {% assign nav_steps = active_path.steps.value %}
-          {% assign nav_titles = active_path.custom_titles.value %}
+    .pdp-breadcrumbs .custom-breadcrumbs__navigation {
+      align-items: center;
+      display: flex;
+      min-height: 44px;
+      min-width: 0;
+      overflow: hidden;
+      padding: 8px 0;
+      white-space: nowrap;
+    }
 
-          {% for nav_coll in nav_steps %}
-            {% if nav_coll.handle != blank %}
+    .pdp-breadcrumbs .breadcrumb-segment--ancestor {
+      display: none;
+    }
+
+    .pdp-breadcrumbs .breadcrumb-segment--parent {
+      align-items: center;
+      display: flex;
+      min-width: 0;
+    }
+
+    .pdp-breadcrumbs .breadcrumb-segment--parent a {
+      display: block;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pdp-breadcrumbs .breadcrumb-current {
+      border: 0;
+      clip: rect(0 0 0 0);
+      clip-path: inset(50%);
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      padding: 0;
+      position: absolute;
+      white-space: nowrap;
+      width: 1px;
+    }
+  }
+{% endstyle %}
+
+<nav class="customBreadcrumbs pdp-breadcrumbs" aria-label="Breadcrumb">
+  <div class="custom-breadcrumbs">
+    <div class="page-width">
+      <div class="custom-breadcrumbs__wrapper">
+        <div class="custom-breadcrumbs__navigation">
+          {% assign domain_origin = request.origin %}
+
+          {% if source_flag == "metaobject" %}
+            <a class="breadcrumb-home" href="{{ domain_origin }}/">Home</a>
+            {% assign nav_steps = active_path.steps.value %}
+            {% assign nav_titles = active_path.custom_titles.value %}
+
+            {% for nav_coll in nav_steps %}
+              {% if nav_coll.handle != blank %}
+                <span class="breadcrumb-segment{% unless forloop.last %} breadcrumb-segment--ancestor{% else %} breadcrumb-segment--parent{% endunless %}">
+                  {% render 'icon-arrow-right-breadcrumbs' %}
+                  {% assign idx = forloop.index0 %}
+                  <a href="{{ domain_origin }}/collections/{{ nav_coll.handle }}">
+                    {{ nav_titles[idx] | default: nav_coll.title }}
+                  </a>
+                </span>
+              {% endif %}
+            {% endfor %}
+            <span class="breadcrumb-current">
               {% render 'icon-arrow-right-breadcrumbs' %}
-              {% assign idx = forloop.index0 %}
-              <a href="{{ domain_origin }}/collections/{{ nav_coll.handle }}">
-                {{ nav_titles[idx] | default: nav_coll.title }}
-              </a>
-            {% endif %}
-          {% endfor %}
-          {% render 'icon-arrow-right-breadcrumbs' %}
-          <span aria-current="page">{{ product.title }}</span>
+              <span aria-current="page">{{ product.title }}</span>
+            </span>
 
-        {% elsif source_flag == "default" %}
-          <a href="{{ domain_origin }}/" default>Home</a>
-          {% render 'icon-arrow-right-breadcrumbs' %}
-          <a href="{{ domain_origin }}/collections/{{ default_coll.handle }}">{{ default_coll.title }}</a>
-          {% render 'icon-arrow-right-breadcrumbs' %}
-          <span aria-current="page">{{ product.title }}</span>
-        {% endif %}
-
+          {% elsif source_flag == "default" %}
+            <a class="breadcrumb-home" href="{{ domain_origin }}/">Home</a>
+            <span class="breadcrumb-segment breadcrumb-segment--parent">
+              {% render 'icon-arrow-right-breadcrumbs' %}
+              <a href="{{ domain_origin }}/collections/{{ default_coll.handle }}">{{ default_coll.title }}</a>
+            </span>
+            <span class="breadcrumb-current">
+              {% render 'icon-arrow-right-breadcrumbs' %}
+              <span aria-current="page">{{ product.title }}</span>
+            </span>
+          {% endif %}
+        </div>
       </div>
     </div>
   </div>
-</div>
-</div>
+</nav>
