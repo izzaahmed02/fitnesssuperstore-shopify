@@ -24,35 +24,40 @@
   opens this popup, not this internal action) — everything is visual-only,
   nothing submits or mutates a cart.
 
-  TEMPORARY PLACEHOLDER DATA: the "Package Inclusions" tabs/grid below are
-  populated from the same real add_on_product blocks used by the
-  Include-in-Quote carousel further down this page (product-add-ons-quote.liquid)
-  — chosen only because they're real, already-live products, NOT because
-  their categories ("Mats", "Storage Racks", "Other Accessories") match
-  Figma's actual package-inclusion categories (Selectorized, Plate Loaded,
-  Treadmills, etc.). This whole block is meant to be replaced once the
-  variant-metafield -> metaobject data model is built (see CLAUDE.md's
-  "Data Wiring Notes" section) — do not treat this category grouping as
-  real or ship it as-is long-term.
+  PLACEHOLDER DATA REMOVED (2026-09-03): the "Package Inclusions"
+  tabs/grid below were populated from the same real add_on_product
+  blocks used by the Include-in-Quote carousel further down this page
+  (product-add-ons-quote.liquid) — chosen only because they're real,
+  already-live products, NOT because their categories ("Mats", "Storage
+  Racks", "Other Accessories") match Figma's actual package-inclusion
+  categories (Selectorized, Plate Loaded, Treadmills, etc.). Per
+  explicit direction, that data source is now emptied below
+  (gymbuild_addon_blocks = empty) so nothing placeholder renders while
+  the real variant-metafield -> metaobject data model is being built
+  (see CLAUDE.md's "Data Wiring Notes" section for the wiring plan).
+
+  Do NOT delete the markup/JS below this point when wiring the real
+  data later — per that wiring plan, only the gymbuild_addon_blocks
+  assignment needs to change (to a loop over
+  current_variant.metafields.custom.<field>.value once that field
+  exists); every data-item-*/data-item-pool attribute this markup
+  emits, and all the swap-view JS below, stay exactly as they are.
 
   SWAP INTERACTION (Figma node 4544:92078): clicking "Swap" on an included
   card switches the drawer body + header into a "Swap to:" sub-view (same
   drawer, no new modal — toggled via the .is-swap-view class on
   .gymbuild-customize-drawer__content), showing alternatives with a price
-  delta (+/- $X). "Back to build" returns to the main tabs/grid.
-
-  Per explicit direction, this is now functional against the SAME
-  temporary placeholder data described above: an item's "alternates" are
-  the other products already sharing its placeholder tab_heading category
-  (e.g. the other 2 "Mats" products), and clicking an alternative actually
-  swaps it in (updates the card's image/title + the footer subtotal live).
-  The price deltas are real arithmetic on real product prices — only the
-  category grouping itself is placeholder. All of this gets replaced once
-  the variant-metafield -> metaobject data model exists.
+  delta (+/- $X). "Back to build" returns to the main tabs/grid. This
+  logic is untouched and will work again as soon as
+  gymbuild_addon_blocks yields real data.
 {% endcomment -%}
 
 {%- liquid
-  assign gymbuild_addon_blocks = section.blocks | where: 'type', 'add_on_product'
+  # TEMPORARY PLACEHOLDER DATA REMOVED (2026-09-03) - was:
+  #   section.blocks | where: 'type', 'add_on_product'
+  # Re-point this at the real metaobject-backed source once it exists;
+  # see the comment above and CLAUDE.md's "Data Wiring Notes".
+  assign gymbuild_addon_blocks = empty
 -%}
 
 <modal-dialog id="GymBuildCustomizeModal-{{ section.id }}" class="gymbuild-customize-drawer">
