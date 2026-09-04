@@ -1,23 +1,90 @@
-name: CWV Regression Checks
+name: Package PR787 exact-SHA Shopify preview
 
 on:
   push:
     branches:
-      - '**'
-  pull_request:
+      - 'ai/package-pr787-preview-2026-09-03'
+
+permissions:
+  contents: write
 
 jobs:
-  cwv-regression:
+  package-preview:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out repository
+      - name: Check out packaging branch
         uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          fetch-depth: 2
 
-      - name: Run CWV regression script
-        run: python scripts/cwv_regression_test.py
+      - name: Verify immutable source parent
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_SHA='79632e18698eaf396f267457bbc5e47e04996c13'
+          ACTUAL_PARENT="$(git rev-parse HEAD^)"
+          test "$ACTUAL_PARENT" = "$SOURCE_SHA"
+          echo "Verified packaging commit parent: $SOURCE_SHA"
+
+      - name: Build Shopify theme archive and checksum manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_SHA='79632e18698eaf396f267457bbc5e47e04996c13'
+          ARCHIVE='theme-pr787-79632e1.zip'
+          MANIFEST='manifest-pr787-79632e1.txt'
+
+          rm -rf theme-package "$ARCHIVE" "$MANIFEST"
+          mkdir theme-package
+          cp -R assets config layout locales sections snippets templates theme-package/
+          (
+            cd theme-package
+            zip -qr "../$ARCHIVE" .
+          )
+
+          {
+            echo 'Fitness Superstore Shopify Preview Package'
+            echo "Exact source SHA: $SOURCE_SHA"
+            echo "Packaging workflow commit: $GITHUB_SHA"
+            echo 'Scope: complete theme snapshot at the exact source SHA; candidate differs from main in 13 approved files.'
+            echo
+            echo 'MD5 checksums for the 13 approved changed files:'
+            for file in \
+              assets/facets-product-index.js \
+              sections/homepage-popular-fitness.liquid \
+              sections/main-product-comb.liquid \
+              sections/main-product-home-gym-packages.liquid \
+              sections/main-product-variants.liquid \
+              sections/main-product.liquid \
+              snippets/homepage-product-items-home.liquid \
+              snippets/product-add-ons.liquid \
+              snippets/product-item.liquid \
+              snippets/product-items-home.liquid \
+              snippets/related-items-colln.liquid \
+              snippets/related-items.liquid \
+              snippets/super-sale.liquid
+            do
+              md5sum "$file"
+            done
+          } > "$MANIFEST"
+
+          unzip -t "$ARCHIVE"
+          cat "$MANIFEST"
+
+      - name: Publish temporary prerelease asset
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG='preview-pr787-79632e1'
+          SOURCE_SHA='79632e18698eaf396f267457bbc5e47e04996c13'
+          gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes || true
+          gh release create "$TAG" \
+            theme-pr787-79632e1.zip \
+            manifest-pr787-79632e1.txt \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$SOURCE_SHA" \
+            --title 'Temporary Shopify preview package — PR787 / 79632e1' \
+            --notes-file manifest-pr787-79632e1.txt \
+            --prerelease
