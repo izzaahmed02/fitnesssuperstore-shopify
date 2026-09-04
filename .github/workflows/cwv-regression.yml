@@ -1,4 +1,4 @@
-name: Package PR787 exact-SHA Shopify preview
+name: Publish direct PR787 Shopify archive
 
 on:
   push:
@@ -9,24 +9,24 @@ permissions:
   contents: write
 
 jobs:
-  package-preview:
+  publish-direct-archive:
     runs-on: ubuntu-latest
     steps:
       - name: Check out packaging branch
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
-      - name: Verify immutable source parent
+      - name: Verify theme tree is identical to exact source SHA
         shell: bash
         run: |
           set -euo pipefail
           SOURCE_SHA='79632e18698eaf396f267457bbc5e47e04996c13'
-          ACTUAL_PARENT="$(git rev-parse HEAD^)"
-          test "$ACTUAL_PARENT" = "$SOURCE_SHA"
-          echo "Verified packaging commit parent: $SOURCE_SHA"
+          git cat-file -e "$SOURCE_SHA^{commit}"
+          git diff --quiet "$SOURCE_SHA" -- assets config layout locales sections snippets templates
+          echo "Verified theme directories are identical to $SOURCE_SHA"
 
-      - name: Build Shopify theme archive and checksum manifest
+      - name: Build archive and checksum manifest
         shell: bash
         run: |
           set -euo pipefail
@@ -71,20 +71,25 @@ jobs:
           unzip -t "$ARCHIVE"
           cat "$MANIFEST"
 
-      - name: Publish temporary prerelease asset
+      - name: Publish temporary direct-download branch
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG='preview-pr787-79632e1'
-          SOURCE_SHA='79632e18698eaf396f267457bbc5e47e04996c13'
-          gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes || true
-          gh release create "$TAG" \
-            theme-pr787-79632e1.zip \
-            manifest-pr787-79632e1.txt \
-            --repo "$GITHUB_REPOSITORY" \
-            --target "$SOURCE_SHA" \
-            --title 'Temporary Shopify preview package — PR787 / 79632e1' \
-            --notes-file manifest-pr787-79632e1.txt \
-            --prerelease
+          ARCHIVE_BRANCH='ai/theme-archive-pr787-79632e1'
+          ARCHIVE='theme-pr787-79632e1.zip'
+          MANIFEST='manifest-pr787-79632e1.txt'
+          WORKDIR="$(mktemp -d)"
+
+          cp "$ARCHIVE" "$MANIFEST" "$WORKDIR/"
+          cd "$WORKDIR"
+          git init
+          git checkout -b "$ARCHIVE_BRANCH"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$ARCHIVE" "$MANIFEST"
+          git commit -m 'chore: temporary exact-SHA Shopify preview archive'
+          gh auth setup-git
+          git remote add origin "https://github.com/$GITHUB_REPOSITORY.git"
+          git push --force origin "HEAD:refs/heads/$ARCHIVE_BRANCH"
