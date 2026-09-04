@@ -75,11 +75,13 @@
   <div class="accordion-container">
     {% for block in section.blocks %}
       <div class="accordion-item">
-        <button class="accordion-header-info {% if forloop.first %}active{% endif %}" 
+        <button class="accordion-header-info"
+                type="button"
                 data-tab="tab-{{ block.id }}"
-                aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                aria-expanded="false"
                 aria-controls="tab-{{ block.id }}">
-          {{ block.settings.tab_title }}
+          <span class="accordion-header-info__text">{{ block.settings.tab_title }}</span>
+          {% render 'chevron' %}
         </button>
         <div class="accordion-content-info tab-pane {% if forloop.first %}active{% endif %}" 
              id="tab-{{ block.id }}"
@@ -124,7 +126,7 @@
   border: none;
   padding: 10px 20px;
   position: relative;
-  font-family: DM Sans;
+  font-family: var(--font-body-family);
   cursor: pointer;
 }
 
@@ -176,17 +178,23 @@
 }
 
 .tab-information .paraDiv strong {
-  font-family: DM Sans;
+  font-family: var(--font-body-family);
   font-weight: 700;
   font-size: 24px;
   line-height: 32px;
 }
 
 .tab-information .paraDiv p {
-  font-family: DM Sans;
+  font-family: var(--font-body-family);
   font-weight: 400;
   font-size: 16px;
   line-height: 24px;
+}
+
+/* The li must be the containing block, otherwise the absolutely positioned
+   bullet escapes a collapsed (max-height: 0) accordion panel on mobile. */
+.tab-information .paraDiv li {
+  position: relative;
 }
 
 .tab-information .paraDiv li:before {
@@ -207,7 +215,7 @@
 }
 
 .tab-information {
-  background: #F5F5F5;
+  background: #FAF9F9;
 }
 
   
@@ -228,11 +236,12 @@
   }
 
   .tab-information .accordion-header-info p {
-    font-family: DM Sans;
+    font-family: var(--font-body-family);
     font-weight: 700;
     font-size: 18px;
     line-height: 24px;
     letter-spacing: 0px;
+    color: #000000;
     margin: 0;
   }
 
@@ -244,38 +253,55 @@
     display: block;
   }
 
+  /* 16px between rows, so each 40px row sits on a 56px pitch */
   .tab-information .tax-info-tabs .accordion-item {
-    margin-bottom: 2px;
+    margin-bottom: 16px;
     height: auto !important;
+  }
+
+  .tab-information .tax-info-tabs .accordion-item:last-child {
+    margin-bottom: 0;
   }
 
   .tab-information .tax-info-tabs .accordion-header-info {
     width: 100%;
-    font-size: 16px;
-    font-weight: 500;
-    font-family: DM Sans;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    font-family: var(--font-body-family);
+    font-size: 18px;
+    line-height: 24px;
+    font-weight: 700;
+    color: #000000;
     background: transparent;
     border: none;
-    padding: 15px 0;
+    padding: 8px 0;
     text-align: left;
     cursor: pointer;
-    position: relative;
   }
 
-  .tab-information .tax-info-tabs .accordion-header-info::after {
-    content: '>';
-    position: absolute;
-    right: 15px;
-    font-size: 20px;
-    top: 30%;
-    transform: translateY(-50%);
+  .tab-information .tax-info-tabs .accordion-header-info .accordion-chevron {
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
     transition: transform 0.3s ease;
-    transform: rotate(90deg);
   }
 
-  .tab-information .tax-info-tabs .accordion-header-info.active::after {
-    content: '<';
-    
+  .tab-information .tax-info-tabs .accordion-header-info[aria-expanded='true'] .accordion-chevron {
+    transform: rotate(180deg);
+  }
+
+  /* Every panel participates on mobile; `is-open` (not the desktop tab's
+     `active`) decides which one is expanded, so the page opens fully collapsed. */
+  .tab-information .tax-info-tabs .tab-pane {
+    display: flex;
+  }
+
+  /* Neutralise the desktop tab row layout on the preselected first pane. */
+  .tab-information .tax-info-tabs .tab-pane.active {
+    align-items: stretch;
+    gap: 0;
   }
 
   .tab-information .tax-info-tabs .accordion-content-info {
@@ -288,11 +314,11 @@
     border: none;
   }
 
-  .tab-information .tax-info-tabs .accordion-content-info.active {
-    max-height: 1000px;
-    padding: 15px 0;
+  .tab-information .tax-info-tabs .accordion-content-info.is-open {
+    max-height: 3000px;
+    padding: 12px 0 4px;
     flex-direction: column;
-    gap:0;
+    gap: 0;
   }
 
   .tab-information .tax-info-tabs .accordion-content-info .paraDiv {
@@ -313,7 +339,7 @@
   }
 
   .tab-information .paraDiv strong{
-    font-family: DM Sans;
+    font-family: var(--font-body-family);
 font-weight: 700;
 font-size: 16px;
 line-height: 24px;
@@ -321,7 +347,7 @@ letter-spacing: 0;
   }
 
   .tab-information .paraDiv li{
-    font-family: DM Sans;
+    font-family: var(--font-body-family);
 font-weight: 400;
 font-size: 16px;
 line-height: 24px;
@@ -331,67 +357,69 @@ letter-spacing: 0px;
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Tab functionality for desktop
-  const tabs = document.querySelectorAll('.tab-information .tab-nav button');
-  const panes = document.querySelectorAll('.tab-information .tab-pane');
+document.addEventListener('DOMContentLoaded', function () {
+  var root = document.getElementById('shopify-section-{{ section.id }}');
+  if (!root) return;
 
-  tabs.forEach(tab => {
-    tab.addEventListener('click', function() {
-      tabs.forEach(t => {
+  // Desktop: tab strip.
+  var tabs = Array.prototype.slice.call(root.querySelectorAll('.tab-nav button'));
+  var panes = Array.prototype.slice.call(root.querySelectorAll('.tab-pane'));
+
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      tabs.forEach(function (t) {
         t.classList.remove('active');
         t.setAttribute('aria-selected', 'false');
       });
-      panes.forEach(p => p.classList.remove('active'));
+      panes.forEach(function (p) {
+        p.classList.remove('active');
+      });
       this.classList.add('active');
       this.setAttribute('aria-selected', 'true');
-      document.getElementById(this.getAttribute('data-tab')).classList.add('active');
+      var pane = root.querySelector('[id="' + this.getAttribute('data-tab') + '"]');
+      if (pane) pane.classList.add('active');
     });
   });
 
-  // Accordion functionality for mobile
-  const accordionHeaders = document.querySelectorAll('.tab-information .accordion-header-info');
+  // Mobile: accordion. `is-open` is separate from the desktop tab's `active`
+  // so the mobile view starts with every row collapsed, as the design shows.
+  var headers = Array.prototype.slice.call(root.querySelectorAll('.accordion-header-info'));
 
-  accordionHeaders.forEach(header => {
-    header.addEventListener('click', function() {
-      const content = this.nextElementSibling;
-      const isActive = this.classList.contains('active');
+  function closeAll() {
+    headers.forEach(function (h) {
+      h.classList.remove('active');
+      h.setAttribute('aria-expanded', 'false');
+    });
+    panes.forEach(function (p) {
+      p.classList.remove('is-open');
+      p.style.maxHeight = '';
+    });
+  }
 
-      // Close all accordions
-      accordionHeaders.forEach(h => {
-        h.classList.remove('active');
-        h.setAttribute('aria-expanded', 'false');
-      });
-      document.querySelectorAll('.tab-information .accordion-content-info').forEach(c => {
-        c.classList.remove('active');
-        c.style.maxHeight = '0';
-      });
-
-      // Open the clicked accordion if it wasn't already active
-      if (!isActive) {
+  headers.forEach(function (header) {
+    header.addEventListener('click', function () {
+      var content = this.nextElementSibling;
+      var wasOpen = this.classList.contains('active');
+      closeAll();
+      if (!wasOpen && content) {
         this.classList.add('active');
         this.setAttribute('aria-expanded', 'true');
-        content.classList.add('active');
+        content.classList.add('is-open');
         content.style.maxHeight = content.scrollHeight + 'px';
       }
     });
   });
 
-  // Recalculate heights on window resize
-  window.addEventListener('resize', function() {
-    document.querySelectorAll('.tab-information .accordion-content-info.active').forEach(content => {
+  function refreshOpenHeights() {
+    root.querySelectorAll('.accordion-content-info.is-open').forEach(function (content) {
       content.style.maxHeight = content.scrollHeight + 'px';
     });
-  });
+  }
 
-  // Handle image load to adjust height
-  document.querySelectorAll('.tab-information .tab-image img').forEach(img => {
-    img.addEventListener('load', function() {
-      const content = img.closest('.accordion-content-info');
-      if (content.classList.contains('active')) {
-        content.style.maxHeight = content.scrollHeight + 'px';
-      }
-    });
+  window.addEventListener('resize', refreshOpenHeights);
+
+  root.querySelectorAll('.tab-image img').forEach(function (img) {
+    img.addEventListener('load', refreshOpenHeights);
   });
 });
 </script>

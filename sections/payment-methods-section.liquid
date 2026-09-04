@@ -5,7 +5,7 @@
  }
 
  .payment-methods .accordion-container ol li{
-    font-family: DM Sans;
+    font-family: var(--font-body-family);
 font-weight: 400;
 font-size: 14px;
 line-height: 20px;
@@ -63,7 +63,7 @@ color: #333333;
   display: block;
   text-decoration: none;
   color: #000;
-  font-family: DM Sans;
+  font-family: var(--font-body-family);
   font-weight: 700;
   font-size: 18px;
   line-height: 24px;
@@ -109,7 +109,7 @@ padding: 0;
 .payment-methods .sidebar h3 {
   padding: 0px;
   margin: 0px;
-  font-family: DM Sans;
+  font-family: var(--font-heading-family);
     font-weight: 700;
     font-size: 40px;
     line-height: 52px;
@@ -150,7 +150,7 @@ width: 70px;
 }
 
 .payment-methods .accordion-header {
-font-family: DM Sans;
+font-family: var(--font-body-family);
     font-weight: 700;
     font-size: 24px;
     line-height: 32px;
@@ -158,21 +158,25 @@ font-family: DM Sans;
     margin-bottom: 16px;
 }
 
-.payment-methods .accordion-header::after {
-  content: '>';
-  font-size: 20px;
+.payment-methods .accordion-header .accordion-chevron {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
   transition: transform 0.3s ease;
-  transform: rotate(90deg);
 }
 
-.payment-methods .accordion-header.active::after {
-  content: '<';
-  transform: rotate(90deg)!important;
+.payment-methods .accordion-header.active .accordion-chevron {
+  transform: rotate(180deg);
+}
+
+.payment-methods .accordion-header:focus-visible {
+  outline: 2px solid #D83D0E;
+  outline-offset: 2px;
 }
 
 .payment-methods .accordion-content-text {
 
-font-family: DM Sans;
+font-family: var(--font-body-family);
     font-weight: 400;
     font-size: 16px;
     line-height: 24px;
@@ -181,16 +185,12 @@ font-family: DM Sans;
 
 /* Desktop Styles (> 768px) */
 @media (min-width: 769px) {
-.payment-methods .accordion-header.active::after{
-  display: none;
-}
-  
   .payment-methods .accordion-header {
     cursor: default; /* Non-clickable on desktop */
   }
 
-  .payment-methods .accordion-header::after {
-    content: none; /* Remove +/− indicators */
+  .payment-methods .accordion-header .accordion-chevron {
+    display: none; /* Content is always expanded on desktop */
   }
 
   .payment-methods .accordion-content-text {
@@ -198,50 +198,59 @@ font-family: DM Sans;
   }
 }
 
-/* Mobile Styles (≤ 768px) */
+/* Mobile Styles (≤ 768px) — matches "Payment Methods - Mobile" in Figma */
 @media (max-width: 768px) {
   .payment-methods .payment-methods-container {
     flex-direction: column;
+    padding: 24px 16px;
+    gap: 0;
   }
 
   .payment-methods .sidebar {
     width: 100%;
     position: static;
     border-right: none;
-    border-bottom: 1px solid #ddd;
-    display: none;
+    border-bottom: none;
+    display: none; /* The accordion headers are the mobile method list */
   }
 
   .payment-methods .accordion-container {
-    padding: 20px 0;
+    padding: 0;
+  }
+
+  /* 16px between rows, so each 40px row sits on a 56px pitch */
+  .payment-methods .accordion {
+    border-bottom: none;
+    margin-bottom: 16px;
+  }
+
+  .payment-methods .accordion:last-child {
+    margin-bottom: 0;
   }
 
   .payment-methods .accordion-header {
-    cursor: pointer; 
-    font-family: DM Sans;
-font-weight: 700;
-font-size: 18px;
-line-height: 24px;
-letter-spacing: 0px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 0;
     margin-bottom: 0;
-
+    font-family: var(--font-body-family);
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 24px;
+    letter-spacing: 0px;
+    color: #000000;
   }
 
-  .payment-methods .accordion-content-container{
-    padding-top: 20px;
+  .payment-methods .accordion-content-container {
+    padding-top: 0;
   }
-
-  .payment-methods .payment-methods-container{
-    padding: 16px;
-  }
-
-  .payment-methods .accordion {
-    border-bottom: none;
-    margin-bottom: 0;
-}
 
   .payment-methods .accordion-content-text {
     display: none; /* Hidden by default on mobile */
+    padding-top: 16px;
   }
 
   .payment-methods .accordion-content-text.active {
@@ -268,8 +277,11 @@ letter-spacing: 0px;
     {% for block in section.blocks %}
       {% if block.type == 'accordion' %}
         <div class="accordion" id="{{ block.settings.accordion_id }}">
-          <div class="accordion-header">{{ block.settings.accordion_title }}</div>
-          <div class="accordion-content-container">
+          <div class="accordion-header" aria-controls="{{ section.id }}-{{ block.id }}-content">
+            <span class="accordion-header__text">{{ block.settings.accordion_title }}</span>
+            {% render 'chevron' %}
+          </div>
+          <div class="accordion-content-container" id="{{ section.id }}-{{ block.id }}-content">
             <div class="accordion-content-text">
                {% if block.settings.num_logos > 0 %}
               <div class="logo-container">
@@ -291,106 +303,104 @@ letter-spacing: 0px;
 </div>
 
 <script>
-// JavaScript for Accordion and Sidebar Functionality
-function initializeAccordionsAndSidebar() {
-  const isMobile = window.innerWidth <= 768;
+(function () {
+  var root = document.getElementById('shopify-section-{{ section.id }}');
+  if (!root) return;
 
-  // Remove existing event listeners from accordion headers
-  document.querySelectorAll('.payment-methods .accordion-header').forEach(header => {
-    header.removeEventListener('click', toggleAccordion);
-  });
+  var MOBILE = '(max-width: 768px)';
+  var headers = Array.prototype.slice.call(root.querySelectorAll('.accordion-header'));
+  var links = Array.prototype.slice.call(root.querySelectorAll('.sidebar-link'));
 
-  // Accordion functionality for mobile
-  if (isMobile) {
-    document.querySelectorAll('.payment-methods .accordion-header').forEach(header => {
-      header.addEventListener('click', toggleAccordion);
-    });
+  function isMobile() {
+    return window.matchMedia(MOBILE).matches;
+  }
 
-    function toggleAccordion() {
-      const content = this.nextElementSibling.querySelector('.payment-methods .accordion-content-text');
-      const isActive = content.classList.contains('active');
-
-      // Close all other accordions
-      document.querySelectorAll('.payment-methods .accordion-content-text').forEach(item => {
-        item.classList.remove('active');
-      });
-      document.querySelectorAll('.payment-methods .accordion-header').forEach(item => {
-        item.classList.remove('active');
-      });
-
-      // Toggle the clicked accordion
-      if (!isActive) {
-        content.classList.add('active');
-        this.classList.add('active');
-      }
-    }
-  } else {
-    // On desktop, ensure all accordion content is visible
-    document.querySelectorAll('.payment-methods .accordion-content-text').forEach(content => {
-      content.classList.add('active');
-    });
-    document.querySelectorAll('.payment-methods .accordion-header').forEach(header => {
-      header.classList.add('active');
+  function closeAll() {
+    headers.forEach(function (header) {
+      header.classList.remove('active');
+      header.setAttribute('aria-expanded', 'false');
+      var content = header.parentElement.querySelector('.accordion-content-text');
+      if (content) content.classList.remove('active');
     });
   }
 
-  // Sidebar link click handling
-  document.querySelectorAll('.payment-methods .sidebar-link').forEach(link => {
-    link.addEventListener('click', function(e) {
-      e.preventDefault(); // Prevent default anchor behavior
-      const targetId = this.getAttribute('href').substring(1); // Get target ID without #
-      const targetElement = document.getElementById(targetId);
+  function openHeader(header) {
+    header.classList.add('active');
+    header.setAttribute('aria-expanded', 'true');
+    var content = header.parentElement.querySelector('.accordion-content-text');
+    if (content) content.classList.add('active');
+  }
 
-      // Remove active class from all sidebar li and a elements
-      document.querySelectorAll('.payment-methods .sidebar li').forEach(li => {
-        li.classList.remove('active');
-      });
-      document.querySelectorAll('.payment-methods .sidebar a').forEach(a => {
-        a.classList.remove('active');
-      });
+  function toggle(header) {
+    var wasOpen = header.classList.contains('active');
+    closeAll();
+    if (!wasOpen) openHeader(header);
+  }
 
-      // Add active class to the clicked link's parent li and the link itself
-      this.parentElement.classList.add('active');
-      this.classList.add('active');
+  headers.forEach(function (header) {
+    header.addEventListener('click', function () {
+      if (isMobile()) toggle(header);
+    });
 
-      // Scroll to the target accordion section
-      if (targetElement) {
-        targetElement.scrollIntoView({ behavior: 'smooth' });
+    header.addEventListener('keydown', function (event) {
+      if (!isMobile()) return;
+      if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+        event.preventDefault();
+        toggle(header);
       }
     });
   });
 
-  // Highlight sidebar item based on URL hash on page load
-  const hash = window.location.hash.substring(1); // Get hash without #
-  if (hash) {
-    const targetLink = document.querySelector(`.payment-methods .sidebar a[href="#${hash}"]`);
-    if (targetLink) {
-      // Remove active classes from all
-      document.querySelectorAll('.payment-methods .sidebar li').forEach(li => {
-        li.classList.remove('active');
+  // Desktop shows every panel and exposes no controls; mobile is a collapsed accordion.
+  function applyBreakpoint() {
+    if (isMobile()) {
+      headers.forEach(function (header) {
+        header.setAttribute('role', 'button');
+        header.setAttribute('tabindex', '0');
+        if (!header.hasAttribute('aria-expanded')) {
+          header.setAttribute('aria-expanded', 'false');
+        }
       });
-      document.querySelectorAll('.sidebar a').forEach(a => {
-        a.classList.remove('active');
+    } else {
+      headers.forEach(function (header) {
+        header.removeAttribute('role');
+        header.removeAttribute('tabindex');
+        header.removeAttribute('aria-expanded');
+        header.classList.add('active');
+        var content = header.parentElement.querySelector('.accordion-content-text');
+        if (content) content.classList.add('active');
       });
-
-      // Add active class to the matching link and its parent li
-      targetLink.classList.add('active');
-      targetLink.parentElement.classList.add('active');
-
-      // Scroll to the target section
-      const targetElement = document.getElementById(hash);
-      if (targetElement) {
-        targetElement.scrollIntoView({ behavior: 'smooth' });
-      }
     }
   }
-}
 
-// Initialize on page load
-initializeAccordionsAndSidebar();
+  function setActiveLink(targetId) {
+    links.forEach(function (link) {
+      var isTarget = link.getAttribute('href') === '#' + targetId;
+      link.classList.toggle('active', isTarget);
+      link.parentElement.classList.toggle('active', isTarget);
+    });
+  }
 
-// Re-initialize on window resize
-window.addEventListener('resize', initializeAccordionsAndSidebar);
+  links.forEach(function (link) {
+    link.addEventListener('click', function (event) {
+      event.preventDefault();
+      var targetId = this.getAttribute('href').substring(1);
+      // Resolve inside this section so a second instance never steals the target.
+      var target = root.querySelector('[id="' + targetId + '"]');
+      setActiveLink(targetId);
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  var hash = window.location.hash.substring(1);
+  if (hash && root.querySelector('[id="' + hash + '"]')) {
+    setActiveLink(hash);
+    root.querySelector('[id="' + hash + '"]').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  applyBreakpoint();
+  window.addEventListener('resize', applyBreakpoint);
+})();
 </script>
 
 {% schema %}
