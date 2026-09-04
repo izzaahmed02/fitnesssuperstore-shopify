@@ -139,7 +139,8 @@ padding: 0;
 
 .payment-methods .logo-image {
 width: 70px;
-    object-fit: cover;
+    height: auto;
+    object-fit: contain;
 }
 
 /* Accordion Section */
@@ -293,7 +294,16 @@ font-family: var(--font-body-family);
                 {% for i in (1..block.settings.num_logos) %}
                   {% assign logo_key = 'logo_' | append: i %}
                   {% if block.settings[logo_key] %}
-                    <img src="{{ block.settings[logo_key] | img_url: '100x' }}" alt="{{ block.settings.accordion_title }} Logo {{ i }}" class="logo-image">
+                    {{-
+                      block.settings[logo_key]
+                      | image_url: width: 210
+                      | image_tag:
+                        class: 'logo-image',
+                        widths: '70, 140, 210',
+                        sizes: '70px',
+                        loading: 'lazy',
+                        alt: block.settings.accordion_title
+                    -}}
                   {% endif %}
                 {% endfor %}
               </div>
