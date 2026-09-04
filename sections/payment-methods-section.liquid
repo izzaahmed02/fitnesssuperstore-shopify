@@ -96,8 +96,13 @@ color: #333333;
 
 .payment-methods .sidebar {
 
+  /* --pm-sticky-top is measured from the theme's sticky header at runtime, so
+     the box parks just below it instead of behind it. The fallback covers the
+     moment before the script runs. */
   position: sticky;
-  top: 20px;
+  top: var(--pm-sticky-top, 20px);
+  max-height: calc(100vh - var(--pm-sticky-top, 20px) - 20px);
+  overflow-y: auto;
   height: fit-content;
 padding: 0;
   flex: 1;
@@ -371,6 +376,7 @@ font-family: var(--font-body-family);
         if (content) content.classList.add('active');
       });
     }
+    updateStickyRoom();
   }
 
   function setActiveLink(targetId) {
@@ -452,11 +458,52 @@ font-family: var(--font-body-family);
     if (current.id) setActiveLink(current.id);
   }
 
+  // The header shrinks once the page scrolls, so the offset the sidebar parks
+  // at is re-measured rather than assumed.
+  var appliedStickyTop = null;
+
+  function updateStickyTop() {
+    var offset = Math.round(stickyBottom() + 16);
+    if (offset === appliedStickyTop) return;
+    appliedStickyTop = offset;
+    root.style.setProperty('--pm-sticky-top', offset + 'px');
+  }
+
+  // A sticky box is released by its container one box-height before the
+  // container ends, and the last method is far shorter than the box - so
+  // without this the list has already slid away by the time you reach it.
+  // Topping up the column keeps the list on screen for every method.
+  function updateStickyRoom() {
+    var list = root.querySelector('.accordion-container');
+    var sidebar = root.querySelector('.sidebar');
+    if (!list || !sidebar || !panels.length) return;
+    if (!sidebarVisible()) {
+      list.style.paddingBottom = '';
+      return;
+    }
+    var shortfall = sidebar.offsetHeight - panels[panels.length - 1].offsetHeight;
+    list.style.paddingBottom = shortfall > 0 ? shortfall + 'px' : '';
+  }
+
+  function onScroll() {
+    updateStickyTop();
+    syncActiveToScroll();
+  }
+
   window.addEventListener('scroll', function () {
     if (spyQueued) return;
     spyQueued = true;
-    window.requestAnimationFrame(syncActiveToScroll);
+    window.requestAnimationFrame(onScroll);
   }, { passive: true });
+
+  window.addEventListener('resize', function () {
+    updateStickyTop();
+    updateStickyRoom();
+  });
+  updateStickyTop();
+  updateStickyRoom();
+  // Panel heights settle once the method logos have loaded.
+  window.addEventListener('load', updateStickyRoom);
 
   var hash = window.location.hash.substring(1);
   var deepLinked = hash && root.querySelector('[id="' + hash + '"]');
