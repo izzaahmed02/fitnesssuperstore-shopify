@@ -420,20 +420,22 @@ document.addEventListener("DOMContentLoaded", function() {
         {% render 'pdp-table-images', table: tbl %}
       {%- elsif tbl.table_type == 'Table with header' or tbl.table_type == 'Table without header' -%}
         {%- comment -%}
-          Full-scan table-type detection (PR #640 reconciliation contract, Tim decision 2026-09-02).
+          Full-scan table-type detection (PR #640 reconciliation contract; Tim source-gate 2026-09-03).
           Inspect EVERY cell across ALL columns. Route per the required matrix:
             1. no populated records            -> render nothing (no heading/shell)
             2. homogeneous attribute-only      -> simple renderer
             3. homogeneous values-only         -> simple renderer
             4. every populated record has both -> label/value renderer
-            5. mixed / orphan / ragged         -> NO customer-facing table; emit nonvisual QA diagnostic; HOLD
-          No hard-coding; no CSS hiding; mixed/ragged never falls back to the simple renderer.
+            5. mixed / orphan / ragged / blank-record-in-populated / zero-cell-column
+                                               -> NO customer-facing table; emit nonvisual QA diagnostic; HOLD
+          No hard-coding; no CSS hiding.
         {%- endcomment -%}
         {%- assign populated_records = 0 -%}
         {%- assign shape_attr_only = false -%}
         {%- assign shape_val_only = false -%}
         {%- assign shape_both = false -%}
         {%- assign col_len_seen = '' -%}
+        {%- assign blank_records = 0 -%}
         {%- assign is_ragged = false -%}
         {%- for col in tbl.table_headers.value -%}
           {%- assign this_col_len = 0 -%}
@@ -443,19 +445,22 @@ document.addEventListener("DOMContentLoaded", function() {
             {%- assign v_blank = true -%}
             {%- if cell.attribute != blank -%}{%- assign a_blank = false -%}{%- endif -%}
             {%- if cell.values != blank -%}{%- assign v_blank = false -%}{%- endif -%}
-            {%- unless a_blank and v_blank -%}
+            {%- if a_blank and v_blank -%}
+              {%- assign blank_records = blank_records | plus: 1 -%}
+            {%- else -%}
               {%- assign populated_records = populated_records | plus: 1 -%}
-              {%- if a_blank == false and v_blank == false -%}{%- assign shape_both = true -%}
-              {%- elsif a_blank == false and v_blank -%}{%- assign shape_attr_only = true -%}
-              {%- elsif a_blank and v_blank == false -%}{%- assign shape_val_only = true -%}
+              {%- if a_blank == false and v_blank == false -%}
+                {%- assign shape_both = true -%}
+              {%- elsif a_blank == false and v_blank -%}
+                {%- assign shape_attr_only = true -%}
+              {%- elsif a_blank and v_blank == false -%}
+                {%- assign shape_val_only = true -%}
               {%- endif -%}
-            {%- endunless -%}
+            {%- endif -%}
           {%- endfor -%}
-          {%- if this_col_len > 0 -%}
-            {%- assign col_len_seen = col_len_seen | append: this_col_len | append: ',' -%}
-          {%- endif -%}
+          {%- assign col_len_seen = col_len_seen | append: this_col_len | append: ',' -%}
         {%- endfor -%}
-        {%- comment -%} ragged: more than one distinct populated-column length {%- endcomment -%}
+        {%- comment -%} ragged: more than one distinct source-column length (zero-cell columns included) {%- endcomment -%}
         {%- assign col_len_list = col_len_seen | split: ',' | uniq -%}
         {%- if col_len_list.size > 1 -%}{%- assign is_ragged = true -%}{%- endif -%}
         {%- assign shape_count = 0 -%}
@@ -464,7 +469,7 @@ document.addEventListener("DOMContentLoaded", function() {
         {%- if shape_both -%}{%- assign shape_count = shape_count | plus: 1 -%}{%- endif -%}
         {%- if populated_records == 0 -%}
           {%- comment -%} nothing to render {%- endcomment -%}
-        {%- elsif is_ragged or shape_count > 1 -%}
+        {%- elsif blank_records > 0 or is_ragged or shape_count > 1 -%}
           <!-- PDP-TABLE-QA-HOLD: MALFORMED_DATA_SHAPE -->
         {%- elsif shape_both -%}
           {% render 'pdp-table-comparison', table: tbl %}
@@ -725,20 +730,22 @@ document.addEventListener("DOMContentLoaded", function() {
                   {% render 'pdp-table-images', table: tbl %}
                 {%- elsif tbl.table_type == 'Table with header' or tbl.table_type == 'Table without header' -%}
                   {%- comment -%}
-                    Full-scan table-type detection (PR #640 reconciliation contract, Tim decision 2026-09-02).
+                    Full-scan table-type detection (PR #640 reconciliation contract; Tim source-gate 2026-09-03).
                     Inspect EVERY cell across ALL columns. Route per the required matrix:
                       1. no populated records            -> render nothing (no heading/shell)
                       2. homogeneous attribute-only      -> simple renderer
                       3. homogeneous values-only         -> simple renderer
                       4. every populated record has both -> label/value renderer
-                      5. mixed / orphan / ragged         -> NO customer-facing table; emit nonvisual QA diagnostic; HOLD
-                    No hard-coding; no CSS hiding; mixed/ragged never falls back to the simple renderer.
+                      5. mixed / orphan / ragged / blank-record-in-populated / zero-cell-column
+                                                         -> NO customer-facing table; emit nonvisual QA diagnostic; HOLD
+                    No hard-coding; no CSS hiding.
                   {%- endcomment -%}
                   {%- assign populated_records = 0 -%}
                   {%- assign shape_attr_only = false -%}
                   {%- assign shape_val_only = false -%}
                   {%- assign shape_both = false -%}
                   {%- assign col_len_seen = '' -%}
+                  {%- assign blank_records = 0 -%}
                   {%- assign is_ragged = false -%}
                   {%- for col in tbl.table_headers.value -%}
                     {%- assign this_col_len = 0 -%}
@@ -748,19 +755,22 @@ document.addEventListener("DOMContentLoaded", function() {
                       {%- assign v_blank = true -%}
                       {%- if cell.attribute != blank -%}{%- assign a_blank = false -%}{%- endif -%}
                       {%- if cell.values != blank -%}{%- assign v_blank = false -%}{%- endif -%}
-                      {%- unless a_blank and v_blank -%}
+                      {%- if a_blank and v_blank -%}
+                        {%- assign blank_records = blank_records | plus: 1 -%}
+                      {%- else -%}
                         {%- assign populated_records = populated_records | plus: 1 -%}
-                        {%- if a_blank == false and v_blank == false -%}{%- assign shape_both = true -%}
-                        {%- elsif a_blank == false and v_blank -%}{%- assign shape_attr_only = true -%}
-                        {%- elsif a_blank and v_blank == false -%}{%- assign shape_val_only = true -%}
+                        {%- if a_blank == false and v_blank == false -%}
+                          {%- assign shape_both = true -%}
+                        {%- elsif a_blank == false and v_blank -%}
+                          {%- assign shape_attr_only = true -%}
+                        {%- elsif a_blank and v_blank == false -%}
+                          {%- assign shape_val_only = true -%}
                         {%- endif -%}
-                      {%- endunless -%}
+                      {%- endif -%}
                     {%- endfor -%}
-                    {%- if this_col_len > 0 -%}
-                      {%- assign col_len_seen = col_len_seen | append: this_col_len | append: ',' -%}
-                    {%- endif -%}
+                    {%- assign col_len_seen = col_len_seen | append: this_col_len | append: ',' -%}
                   {%- endfor -%}
-                  {%- comment -%} ragged: more than one distinct populated-column length {%- endcomment -%}
+                  {%- comment -%} ragged: more than one distinct source-column length (zero-cell columns included) {%- endcomment -%}
                   {%- assign col_len_list = col_len_seen | split: ',' | uniq -%}
                   {%- if col_len_list.size > 1 -%}{%- assign is_ragged = true -%}{%- endif -%}
                   {%- assign shape_count = 0 -%}
@@ -769,7 +779,7 @@ document.addEventListener("DOMContentLoaded", function() {
                   {%- if shape_both -%}{%- assign shape_count = shape_count | plus: 1 -%}{%- endif -%}
                   {%- if populated_records == 0 -%}
                     {%- comment -%} nothing to render {%- endcomment -%}
-                  {%- elsif is_ragged or shape_count > 1 -%}
+                  {%- elsif blank_records > 0 or is_ragged or shape_count > 1 -%}
                     <!-- PDP-TABLE-QA-HOLD: MALFORMED_DATA_SHAPE -->
                   {%- elsif shape_both -%}
                     {% render 'pdp-table-comparison', table: tbl %}
