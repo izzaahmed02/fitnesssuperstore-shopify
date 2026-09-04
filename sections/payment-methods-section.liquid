@@ -388,14 +388,57 @@ font-family: var(--font-body-family);
       // Resolve inside this section so a second instance never steals the target.
       var target = root.querySelector('[id="' + targetId + '"]');
       setActiveLink(targetId);
-      if (target) target.scrollIntoView({ behavior: 'smooth' });
+      if (!target) return;
+      // Hold the highlight on the clicked item until the smooth scroll settles,
+      // so it does not flicker through every section on the way there.
+      lockSpy();
+      target.scrollIntoView({ behavior: 'smooth' });
     });
   });
+
+  // Follow the reader: highlight the method whose block the page is showing.
+  var panels = Array.prototype.slice.call(root.querySelectorAll('.accordion'));
+  var spyLockedUntil = 0;
+  var spyQueued = false;
+
+  function lockSpy() {
+    spyLockedUntil = Date.now() + 900;
+  }
+
+  function sidebarVisible() {
+    var sidebar = root.querySelector('.sidebar');
+    return sidebar && sidebar.offsetParent !== null;
+  }
+
+  function syncActiveToScroll() {
+    spyQueued = false;
+    if (Date.now() < spyLockedUntil || !sidebarVisible() || !panels.length) return;
+
+    // A quarter of the way down the viewport reads as "what I am looking at",
+    // and clears any sticky header without needing to measure it.
+    var line = window.innerHeight * 0.25;
+    var current = panels[0];
+    panels.forEach(function (panel) {
+      if (panel.getBoundingClientRect().top <= line) current = panel;
+    });
+
+    // Past the last block, the last item stays selected rather than resetting.
+    if (current.id) setActiveLink(current.id);
+  }
+
+  window.addEventListener('scroll', function () {
+    if (spyQueued) return;
+    spyQueued = true;
+    window.requestAnimationFrame(syncActiveToScroll);
+  }, { passive: true });
 
   var hash = window.location.hash.substring(1);
   if (hash && root.querySelector('[id="' + hash + '"]')) {
     setActiveLink(hash);
+    lockSpy();
     root.querySelector('[id="' + hash + '"]').scrollIntoView({ behavior: 'smooth' });
+  } else {
+    syncActiveToScroll();
   }
 
   applyBreakpoint();
