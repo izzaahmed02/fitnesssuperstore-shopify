@@ -381,6 +381,35 @@ font-family: var(--font-body-family);
     });
   }
 
+  // The theme header is `position: sticky; top: 0`, so scrolling a block flush
+  // to the top of the viewport parks its heading underneath the header.
+  var SCROLL_GAP = 16;
+
+  function stickyBottom() {
+    var header = document.querySelector('.section-header');
+    if (!header) return 0;
+    var position = window.getComputedStyle(header).position;
+    if (position !== 'sticky' && position !== 'fixed') return 0;
+    return Math.max(0, header.getBoundingClientRect().bottom);
+  }
+
+  function scrollToPanel(target) {
+    lockSpy();
+    var top = window.scrollY + target.getBoundingClientRect().top - stickyBottom() - SCROLL_GAP;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+
+    // The header collapses as the page scrolls, so its height when the click
+    // lands is not its height when the scroll stops. Re-measure once it has
+    // settled and close any gap that is still covering the heading.
+    window.setTimeout(function () {
+      var covered = stickyBottom() + SCROLL_GAP - target.getBoundingClientRect().top;
+      if (covered > 1) {
+        window.scrollBy({ top: -covered, behavior: 'smooth' });
+        lockSpy();
+      }
+    }, 600);
+  }
+
   links.forEach(function (link) {
     link.addEventListener('click', function (event) {
       event.preventDefault();
@@ -388,11 +417,7 @@ font-family: var(--font-body-family);
       // Resolve inside this section so a second instance never steals the target.
       var target = root.querySelector('[id="' + targetId + '"]');
       setActiveLink(targetId);
-      if (!target) return;
-      // Hold the highlight on the clicked item until the smooth scroll settles,
-      // so it does not flicker through every section on the way there.
-      lockSpy();
-      target.scrollIntoView({ behavior: 'smooth' });
+      if (target) scrollToPanel(target);
     });
   });
 
@@ -414,9 +439,10 @@ font-family: var(--font-body-family);
     spyQueued = false;
     if (Date.now() < spyLockedUntil || !sidebarVisible() || !panels.length) return;
 
-    // A quarter of the way down the viewport reads as "what I am looking at",
-    // and clears any sticky header without needing to measure it.
-    var line = window.innerHeight * 0.25;
+    // Just under the sticky header: the block whose heading has most recently
+    // passed beneath it is the one being read.
+    var header = stickyBottom();
+    var line = header ? header + 24 : window.innerHeight * 0.25;
     var current = panels[0];
     panels.forEach(function (panel) {
       if (panel.getBoundingClientRect().top <= line) current = panel;
@@ -433,10 +459,10 @@ font-family: var(--font-body-family);
   }, { passive: true });
 
   var hash = window.location.hash.substring(1);
-  if (hash && root.querySelector('[id="' + hash + '"]')) {
+  var deepLinked = hash && root.querySelector('[id="' + hash + '"]');
+  if (deepLinked) {
     setActiveLink(hash);
-    lockSpy();
-    root.querySelector('[id="' + hash + '"]').scrollIntoView({ behavior: 'smooth' });
+    scrollToPanel(deepLinked);
   } else {
     syncActiveToScroll();
   }
