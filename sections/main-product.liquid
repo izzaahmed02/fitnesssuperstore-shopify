@@ -230,7 +230,18 @@
                       <s>{{ _variant.compare_at_price | money_with_currency -}}</s>
                     </span>
                   {% endif %}
-                  {% if product.metafields.custom.saleprice_name != blank %}
+                  {%- comment -%}
+                    Choose this branch on the same condition the banner actually
+                    renders on - a sale name alone is not a sale. Gating on the name
+                    only meant a product whose sale_price is blank, zero, or not below
+                    the regular price took the banner branch, the banner then declined
+                    to render, and the PDP showed no price at all.
+                  {%- endcomment -%}
+                  {%- assign _sale_price_cents = 0 -%}
+                  {%- if product.metafields.custom.saleprice_name != blank -%}
+                    {%- assign _sale_price_cents = product.metafields.custom.sale_price | replace: ',', '' | times: 100.0 -%}
+                  {%- endif -%}
+                  {% if _sale_price_cents > 0 and _variant.price > _sale_price_cents %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
                       current_price: _variant.price,
@@ -872,7 +883,18 @@
                       <s>{{ _variant.compare_at_price | money_with_currency -}}</s>
                     </span>
                   {% endif %}
-                  {% if product.metafields.custom.saleprice_name != blank %}
+                  {%- comment -%}
+                    Choose this branch on the same condition the banner actually
+                    renders on - a sale name alone is not a sale. Gating on the name
+                    only meant a product whose sale_price is blank, zero, or not below
+                    the regular price took the banner branch, the banner then declined
+                    to render, and the PDP showed no price at all.
+                  {%- endcomment -%}
+                  {%- assign _sale_price_cents = 0 -%}
+                  {%- if product.metafields.custom.saleprice_name != blank -%}
+                    {%- assign _sale_price_cents = product.metafields.custom.sale_price | replace: ',', '' | times: 100.0 -%}
+                  {%- endif -%}
+                  {% if _sale_price_cents > 0 and _variant.price > _sale_price_cents %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
                       current_price: _variant.price,
