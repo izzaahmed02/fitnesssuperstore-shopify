@@ -312,78 +312,99 @@ vertical-align: middle;
 
 <script>
 (function () {
-  var root = document.getElementById('shopify-section-{{ section.id }}');
-  if (!root) return;
+  var SECTION_ID = '{{ section.id }}';
 
-  var headers = Array.prototype.slice.call(root.querySelectorAll('.accordion-header'));
-  var sidebarLinks = Array.prototype.slice.call(root.querySelectorAll('.sidebar-link'));
+  function init() {
+    var root = document.getElementById('shopify-section-' + SECTION_ID);
+    // Re-entry guard: the section can be initialised from more than one path.
+    // This is a property rather than a data attribute on purpose - an
+    // attribute serialises into the markup, so a section rebuilt from its own
+    // outerHTML would arrive already flagged and never bind its handlers.
+    if (!root || root.__paymentFaqsBound) return;
+    root.__paymentFaqsBound = true;
 
-  function contentOf(header) {
-    return header.parentElement.querySelector('.accordion-content-text');
-  }
+    var headers = Array.prototype.slice.call(root.querySelectorAll('.accordion-header'));
+    var sidebarLinks = Array.prototype.slice.call(root.querySelectorAll('.sidebar-link'));
 
-  function closeAll() {
-    headers.forEach(function (header) {
-      header.classList.remove('active');
-      header.setAttribute('aria-expanded', 'false');
-      var content = contentOf(header);
-      if (content) content.classList.remove('active');
-    });
-  }
-
-  function openHeader(header) {
-    header.classList.add('active');
-    header.setAttribute('aria-expanded', 'true');
-    var content = contentOf(header);
-    if (content) content.classList.add('active');
-  }
-
-  function toggle(header) {
-    var wasOpen = header.classList.contains('active');
-    var id = header.parentElement.id;
-    closeAll();
-    if (!wasOpen) {
-      openHeader(header);
-      setActiveLink(id);
+    function contentOf(header) {
+      return header.parentElement.querySelector('.accordion-content-text');
     }
-  }
 
-  function setActiveLink(targetId) {
-    sidebarLinks.forEach(function (link) {
-      var isTarget = link.getAttribute('href') === '#' + targetId;
-      link.classList.toggle('active', isTarget);
-      link.parentElement.classList.toggle('active', isTarget);
-    });
-  }
+    function closeAll() {
+      headers.forEach(function (header) {
+        header.classList.remove('active');
+        header.setAttribute('aria-expanded', 'false');
+        var content = contentOf(header);
+        if (content) content.classList.remove('active');
+      });
+    }
 
-  headers.forEach(function (header) {
-    header.addEventListener('click', function () {
-      toggle(header);
-    });
+    function openHeader(header) {
+      header.classList.add('active');
+      header.setAttribute('aria-expanded', 'true');
+      var content = contentOf(header);
+      if (content) content.classList.add('active');
+    }
 
-    header.addEventListener('keydown', function (event) {
-      if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
-        event.preventDefault();
-        toggle(header);
-      }
-    });
-  });
-
-  sidebarLinks.forEach(function (link) {
-    link.addEventListener('click', function (event) {
-      event.preventDefault();
-      var targetId = this.getAttribute('href').substring(1);
-      // Resolve inside this section so a second instance never steals the target.
-      var target = root.querySelector('[id="' + targetId + '"]');
-      setActiveLink(targetId);
-      if (!target) return;
-      target.scrollIntoView({ behavior: 'smooth' });
-      var header = target.querySelector('.accordion-header');
-      if (header && !header.classList.contains('active')) {
-        closeAll();
+    function toggle(header) {
+      var wasOpen = header.classList.contains('active');
+      var id = header.parentElement.id;
+      closeAll();
+      if (!wasOpen) {
         openHeader(header);
+        setActiveLink(id);
       }
+    }
+
+    function setActiveLink(targetId) {
+      sidebarLinks.forEach(function (link) {
+        var isTarget = link.getAttribute('href') === '#' + targetId;
+        link.classList.toggle('active', isTarget);
+        link.parentElement.classList.toggle('active', isTarget);
+      });
+    }
+
+    headers.forEach(function (header) {
+      header.addEventListener('click', function () {
+        toggle(header);
+      });
+
+      header.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+          event.preventDefault();
+          toggle(header);
+        }
+      });
     });
+
+    sidebarLinks.forEach(function (link) {
+      link.addEventListener('click', function (event) {
+        event.preventDefault();
+        var targetId = this.getAttribute('href').substring(1);
+        // Resolve inside this section so a second instance never steals the target.
+        var target = root.querySelector('[id="' + targetId + '"]');
+        setActiveLink(targetId);
+        if (!target) return;
+        target.scrollIntoView({ behavior: 'smooth' });
+        var header = target.querySelector('.accordion-header');
+        if (header && !header.classList.contains('active')) {
+          closeAll();
+          openHeader(header);
+        }
+      });
+    });
+  }
+
+  // The theme editor re-renders a section after the document has loaded, so
+  // the rebuilt markup has to be initialised again rather than left inert.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  document.addEventListener('shopify:section:load', function (event) {
+    if (event.detail && String(event.detail.sectionId) === SECTION_ID) init();
   });
 })();
 </script>

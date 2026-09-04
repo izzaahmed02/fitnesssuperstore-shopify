@@ -365,69 +365,91 @@ letter-spacing: 0px;
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  var root = document.getElementById('shopify-section-{{ section.id }}');
-  if (!root) return;
+(function () {
+  var SECTION_ID = '{{ section.id }}';
 
-  // Desktop: tab strip.
-  var tabs = Array.prototype.slice.call(root.querySelectorAll('.tab-nav button'));
-  var panes = Array.prototype.slice.call(root.querySelectorAll('.tab-pane'));
+  function init() {
+    var root = document.getElementById('shopify-section-' + SECTION_ID);
+    // Re-entry guard: the section can be initialised from more than one path.
+    // This is a property rather than a data attribute on purpose - an
+    // attribute serialises into the markup, so a section rebuilt from its own
+    // outerHTML would arrive already flagged and never bind its handlers.
+    if (!root || root.__taxTabsBound) return;
+    root.__taxTabsBound = true;
 
-  tabs.forEach(function (tab) {
-    tab.addEventListener('click', function () {
-      tabs.forEach(function (t) {
-        t.classList.remove('active');
-        t.setAttribute('aria-selected', 'false');
+    // Desktop: tab strip.
+    var tabs = Array.prototype.slice.call(root.querySelectorAll('.tab-nav button'));
+    var panes = Array.prototype.slice.call(root.querySelectorAll('.tab-pane'));
+
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        tabs.forEach(function (t) {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        panes.forEach(function (p) {
+          p.classList.remove('active');
+        });
+        this.classList.add('active');
+        this.setAttribute('aria-selected', 'true');
+        var pane = root.querySelector('[id="' + this.getAttribute('data-tab') + '"]');
+        if (pane) pane.classList.add('active');
+      });
+    });
+
+    // Mobile: accordion. `is-open` is separate from the desktop tab's `active`
+    // so the mobile view starts with every row collapsed, as the design shows.
+    var headers = Array.prototype.slice.call(root.querySelectorAll('.accordion-header-info'));
+
+    function closeAll() {
+      headers.forEach(function (h) {
+        h.classList.remove('active');
+        h.setAttribute('aria-expanded', 'false');
       });
       panes.forEach(function (p) {
-        p.classList.remove('active');
+        p.classList.remove('is-open');
+        p.style.maxHeight = '';
       });
-      this.classList.add('active');
-      this.setAttribute('aria-selected', 'true');
-      var pane = root.querySelector('[id="' + this.getAttribute('data-tab') + '"]');
-      if (pane) pane.classList.add('active');
-    });
-  });
+    }
 
-  // Mobile: accordion. `is-open` is separate from the desktop tab's `active`
-  // so the mobile view starts with every row collapsed, as the design shows.
-  var headers = Array.prototype.slice.call(root.querySelectorAll('.accordion-header-info'));
-
-  function closeAll() {
-    headers.forEach(function (h) {
-      h.classList.remove('active');
-      h.setAttribute('aria-expanded', 'false');
+    headers.forEach(function (header) {
+      header.addEventListener('click', function () {
+        var content = this.nextElementSibling;
+        var wasOpen = this.classList.contains('active');
+        closeAll();
+        if (!wasOpen && content) {
+          this.classList.add('active');
+          this.setAttribute('aria-expanded', 'true');
+          content.classList.add('is-open');
+          content.style.maxHeight = content.scrollHeight + 'px';
+        }
+      });
     });
-    panes.forEach(function (p) {
-      p.classList.remove('is-open');
-      p.style.maxHeight = '';
-    });
-  }
 
-  headers.forEach(function (header) {
-    header.addEventListener('click', function () {
-      var content = this.nextElementSibling;
-      var wasOpen = this.classList.contains('active');
-      closeAll();
-      if (!wasOpen && content) {
-        this.classList.add('active');
-        this.setAttribute('aria-expanded', 'true');
-        content.classList.add('is-open');
+    function refreshOpenHeights() {
+      root.querySelectorAll('.accordion-content-info.is-open').forEach(function (content) {
         content.style.maxHeight = content.scrollHeight + 'px';
-      }
-    });
-  });
+      });
+    }
 
-  function refreshOpenHeights() {
-    root.querySelectorAll('.accordion-content-info.is-open').forEach(function (content) {
-      content.style.maxHeight = content.scrollHeight + 'px';
+    window.addEventListener('resize', refreshOpenHeights);
+
+    root.querySelectorAll('.tab-image img').forEach(function (img) {
+      img.addEventListener('load', refreshOpenHeights);
     });
   }
 
-  window.addEventListener('resize', refreshOpenHeights);
+  // The theme editor re-renders a section long after DOMContentLoaded has
+  // fired, so binding only to that event leaves the rebuilt markup inert -
+  // the tabs then behave oddly until the page is reloaded.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 
-  root.querySelectorAll('.tab-image img').forEach(function (img) {
-    img.addEventListener('load', refreshOpenHeights);
+  document.addEventListener('shopify:section:load', function (event) {
+    if (event.detail && String(event.detail.sectionId) === SECTION_ID) init();
   });
-});
+})();
 </script>
