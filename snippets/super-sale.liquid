@@ -126,7 +126,15 @@
 
 {% assign sale_price_cents = sale_price | replace: ',', '' | times: 100.0 %}
 
-{% if current_price > sale_price_cents %}
+{%- comment -%}
+  Guard against a blank or zero sale_price. This banner renders whenever
+  custom.saleprice_name is set, so without the > 0 check a product carrying a
+  name but no sale value would show a $0.00 package price, while "Total with
+  options" - which requires sale_price > 0 - kept using the regular price.
+  That is the same banner/total mismatch this work set out to remove, so both
+  sides must test the sale value identically.
+{%- endcomment -%}
+{% if sale_price_cents > 0 and current_price > sale_price_cents %}
   <div class="price-banner">
     <div class="price-banner__prices">
       <span class="price-banner__price">
