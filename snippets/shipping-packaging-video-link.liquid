@@ -1,30 +1,44 @@
 {%- comment -%}
-  Shop by Strength Product Line — packaging-video CTA on the PDP "Ships" row.
+  PDP shipping-row enhancement.
 
-  Remediation per Tim French, thread "Update needed — Shop by Strength Product
-  Line shipping block / packaging video" (2026-07-17 and 2026-07-21 reviews).
+  Controlled behavior:
+    1. A crate/manual presentation is data-driven. It appears only when:
+       - custom.ships is exactly "New in Crate" (case-insensitive), and
+       - custom.manual_link or custom.manual_file contains a usable manual URL.
+       Visible result after the existing "Ships:" label:
+       New in Crate (Assembly Manual Link). Installation Options Available
 
-    1. No hardcoded SKU/handle exclusion list. Suppression is driven by controlled
-       product data: the boolean metafield custom.packaging_video_exception.
-       Rule: every product in the "shop-by-strength-product-line" collection shows
-       the CTA UNLESS it carries an approved, documented exception (metafield == true).
+    2. In crate/manual mode, the representative packaging video and packaging
+       disclosure are suppressed. Otherwise the existing Shop by Strength
+       Product Line packaging-video behavior remains unchanged.
 
-    2. CTA text is "Watch Packaging Example".
+    3. No SKU or product-handle production exceptions are hardcoded here.
+       Product eligibility is controlled through product metafields.
 
-    3. CTA is a real link to the packaging video that opens in a new tab with
-       target="_blank" rel="noopener noreferrer".
+    4. Compact information-block CSS is loaded globally on every product page
+       from assets/pdp-info-compact.css through layout/theme.liquid.
 
-    4. Video URL is read from the controlled product metafield custom.watch_packaging_video,
-       with a single theme-level fallback defined ONCE here (not repeated across the three
-       PDP sections: main-product, main-product-comb, main-product-variants).
-
-    5. Representative-example disclaimer: the approved generic copy is defined ONCE here as
-       the shared fallback, so it does not have to be populated on ~239 products. The
-       metafield custom.packaging_disclaimer is an OPTIONAL per-product override. The
-       disclaimer is presented through a native <details>/<summary> disclosure, which is
-       touch- and keyboard-accessible without JS (not a title-only tooltip).
+  Source thread: "Remove Blanket Wrap Packaging on Most Products."
+  Production remains gated by unpublished-theme QA and Tim approval.
 {%- endcomment -%}
+
 {%- liquid
+  assign shipping_value = product.metafields.custom.ships.value | default: product.metafields.custom.ships | strip
+  assign normalized_shipping_value = shipping_value | downcase
+
+  assign manual_url = product.metafields.custom.manual_link.value
+  if manual_url == blank
+    assign manual_file = product.metafields.custom.manual_file.value
+    if manual_file != blank
+      assign manual_url = manual_file.url
+    endif
+  endif
+
+  assign crate_manual_mode = false
+  if normalized_shipping_value == 'new in crate' and manual_url != blank
+    assign crate_manual_mode = true
+  endif
+
   assign in_strength_line = false
   for collection in product.collections
     if collection.handle contains 'shop-by-strength-product-line'
@@ -39,7 +53,7 @@
   endif
 
   assign show_packaging_video = false
-  if in_strength_line and is_exception == false
+  if in_strength_line and is_exception == false and crate_manual_mode == false
     assign show_packaging_video = true
   endif
 
@@ -53,18 +67,17 @@
     assign packaging_disclaimer = 'All French Fitness strength product-line equipment receives protective blanket wrapping for freight transit. Depending on the model and shipment, primary packaging may also include manufacturer cartons, a pallet or wood frame, and/or a wooden crate. Some components or hardware may arrive pre-installed for transport and assembly. This video shows a representative packaging example; exact packaging may vary by model and shipment.'
   endif
 -%}
-{%- if show_packaging_video -%}
-  {%- comment -%}
-    Keep the "—" separator OUTSIDE the link. The anchor is underlined/clickable, so a
-    dash inside it would look like part of the link (per the main-branch fix that moved
-    the dash out of the old .more-info span).
 
-    The inline dash/link lives in a <span>; the block-level <details> disclosure is a
-    SIBLING of that span (not nested inside it) so the markup is valid. Dynamic values
-    are escaped: the href via `escape`, and the optional disclaimer override via
-    `escape | newline_to_br` so admin-entered text cannot be interpreted as markup while
-    line breaks are preserved.
-  {%- endcomment -%}
+{%- if crate_manual_mode -%}
+  <span class="pdp-crate-manual">
+    (<a
+      class="pdp-crate-manual__link"
+      href="{{ manual_url | escape }}"
+      target="_blank"
+      rel="noopener noreferrer"
+    >Assembly Manual Link</a>). Installation Options Available
+  </span>
+{%- elsif show_packaging_video -%}
   <span class="packaging-video">
     —
     <a
@@ -78,25 +91,4 @@
     <summary class="packaging-video__summary">Packaging details <span class="packaging-video__caret" aria-hidden="true">{% render 'icon-caret' %}</span></summary>
     <span class="packaging-video__disclaimer">{{ packaging_disclaimer | escape | newline_to_br }}</span>
   </details>
-  {%- comment -%}
-    The theme-wide `summary` reset in base.css.liquid removes the native disclosure
-    marker (list-style: none + hidden ::-webkit-details-marker), so add a visible caret
-    affordance using the theme's icon-caret snippet (styled by the existing
-    `summary .icon-caret` rule) and rotate it on [open] to signal expanded/collapsed state.
-  {%- endcomment -%}
-  <style>
-    .packaging-video__caret {
-      display: inline-flex;
-      vertical-align: middle;
-      transition: transform 0.15s ease;
-    }
-    .packaging-video__details[open] .packaging-video__caret {
-      transform: rotate(180deg);
-    }
-    .packaging-video__link,
-    .packaging-video__summary {
-      text-decoration: underline;
-      font-weight: 700;
-    }
-  </style>
 {%- endif -%}
