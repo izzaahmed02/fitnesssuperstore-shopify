@@ -1,47 +1,66 @@
-# Source-Locked French Fitness Comparison Preview
+# Source-Locked French Fitness Comparison Preview — REV3
 
 Status: **DRAFT / REVIEW ONLY / DO NOT MERGE OR PUBLISH**
 
-This branch contains a non-runtime preview for the existing indexed article:
+Existing indexed article:
 
 `/blogs/comparisons/french-fitness-dual-adjustable-pulley-functional-trainers-comparison`
 
-## What ChatGPT completed
+Unpublished Shopify staging article:
 
-- Reconciled the full current Shopify collection denominator: **29 product records**.
-- Selected **8 representative buying-path rows** covering **9 active product records**.
-- Built a field-level source register with **112 source-lock rows**.
-- Corrected the submitted employee draft, which contained blank denominator decisions, placeholder source rows, four incomplete model rows, an incorrect FFS-DAP status, and an incorrect DAP50 SKU.
-- Created an unpublished Shopify article preview; the existing indexed article was not changed.
+`gid://shopify/Article/614721388860`
 
-## Eight comparison rows
+Controlling candidate body:
 
-1. FFB/FFS Dual Adjustable Pulley color family — `FFB-DAP` / `FFS-DAP`
-2. DAP50 compact DAP — `FF-DAP50`
-3. Telluride open-arm crossover — `FF-TRIDE-DCC`
-4. Wall-mounted rack functional trainer 1:1 — `FF-WMRFT11`
-5. Wall-mounted rack functional trainer 2:1 — `FF-WMRFT21`
-6. SRFT8 freestanding rack functional trainer — `FF-SRFT8`
-7. FSR90 non-counterbalanced Smith all-in-one — `FF-FSR90`
-8. FSR110 counterbalanced Smith all-in-one — `FF-FSR110`
+`docs/staging/seo-comparison-chart/preview.html`
 
-## Scope and controls
+Local candidate SHA-256 before Shopify normalization:
 
-- Evidence/staging files only; no Liquid, section, snippet, template, asset, config, runtime, or live-theme file is changed.
-- No live Shopify publication, redirect, canonical, indexing, collection, PDP, feed, price, inventory, shipping, warranty, or installation change.
-- No merge is approved.
-- GitHub item `#248` in this repository is unrelated (`paylater minor fixes`) and must not be treated as the comparison project.
-- The separate `specs_features` audit/PR remains outside this article pilot.
+`9f42fb2f88bff6a98bd23a6e86329e6f042fd4fd8d0e25c568c9d1c7a1cd0a3a`
 
-## Review acceptance criteria
+## REV3 execution state
 
-- Confirm all eight rows and every source-backed public field against the attached source-lock workbook.
-- Confirm all product links resolve to the exact active PDPs.
-- Confirm no live price, availability, shipping, delivery, installation, or warranty claim appears.
-- Confirm the table works at approximately 375 px without clipping content irretrievably.
-- Confirm heading hierarchy, link labels, accessibility, analytics requirements, canonical target, and rollback plan.
-- Return PASS/HOLD with exact defects only; do not rewrite the strategy or create another implementation branch.
+- The unpublished Shopify staging article was updated with this controlling body on September 4, 2026.
+- The existing indexed article remains unchanged.
+- The GitHub preview must match this body in content. Shopify may normalize whitespace without changing rendered content.
+- The article body begins with H2 because the Shopify article template supplies the page H1.
+- The candidate includes eight source-controlled product images, one six-question FAQ set with matching FAQPage JSON-LD, descriptive links, 44 px minimum link targets, contained horizontal table scrolling, and non-executing analytics data hooks.
 
-## Approval gate
+## Evidence universe and selection
 
-The preview may be reviewed, commented on, and corrected in this branch. Publication, merge, or replacement of the existing article requires Tim's separate written approval after independent QA.
+The source-lock workbook covers 32 product records: 29 returned by collection `gid://shopify/Collection/515799548220` plus three active legacy-tagged products outside the collection. No product tags or collection rules were changed.
+
+Eight comparison rows cover nine active products:
+
+1. FFB/FFS Dual Adjustable Pulley family — `FFB-DAP` / `FFS-DAP`
+2. DAP50 — `FF-DAP50`
+3. Telluride — `FF-TRIDE-DCC`
+4. Wall Mounted Rack Functional Trainer 1:1 — `FF-WMRFT11`
+5. Wall Mounted Rack Functional Trainer 2:1 — `FF-WMRFT21`
+6. SRFT8 — `FF-SRFT8`
+7. FSR90 — `FF-FSR90` (active legacy-tagged product outside the current automated collection)
+8. FSR110 Light Commercial — `FF-FSR110`
+
+## Yusra HOLD disposition
+
+- B1 corrected: CTA uses `/pages/contact`.
+- B2/B3 corrected: one controlling body and one six-question visible FAQ/schema set.
+- B4 corrected in the workbook: 32-record universe and all three outside-collection dispositions.
+- B5 controlled: rollback/release procedure is committed; a fresh live-article body snapshot remains mandatory in the same session as any approved live update.
+- N1–N6 corrected: tap targets, link labels, purchase-time stack constraint, heading hierarchy, readable workbook dates, and exact source-controlled model titles.
+
+## Structured-data and analytics gates
+
+The body contains matching FAQPage markup. Article/BlogPosting schema is intentionally held for rendered-theme review so the release uses the final canonical URL, author, image, original `datePublished`, actual release-time `dateModified`, and no duplicate entity.
+
+The body contains data hooks for `comparison_pdp_click`, `comparison_cta_click`, `comparison_faq_open`, and `comparison_table_scroll`. Runtime binding remains a separate Izza/Yusra release gate.
+
+## Holds
+
+- No live article update.
+- No publication or merge.
+- No redirect, canonical/indexing, product, tag, collection, price, inventory, feed, shipping, installation, or warranty change.
+- No Liquid, section, snippet, template, asset, config, or runtime-theme change is included.
+- The separate `specs_features` project remains outside this pilot.
+
+Live publication requires Yusra PASS, Izza rendered-theme/analytics/release confirmation, a fresh in-session rollback snapshot, exact post-write readback, and Tim's separate written GO.
