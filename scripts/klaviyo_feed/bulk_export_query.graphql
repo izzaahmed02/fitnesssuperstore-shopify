@@ -1,0 +1,48 @@
+# Read-only Shopify Admin bulk export feeding build_klaviyo_feed.py.
+# Submit via bulkOperationRunQuery, poll the operation to COMPLETED, download the
+# result JSONL. Read-only: no mutation of Shopify data.
+{
+  products(query: "status:active published_status:published") {
+    edges {
+      node {
+        id
+        title
+        handle
+        status
+        vendor
+        productType
+        description
+        onlineStoreUrl
+        publishedAt
+        updatedAt
+        category { id fullName }
+        featuredMedia { preview { image { url } } }
+        mf_product_code: metafield(namespace: "custom", key: "product_code") { value }
+        mf_mpn: metafield(namespace: "custom", key: "mpn") { value }
+        mf_upc: metafield(namespace: "custom", key: "upc_code") { value }
+        mf_condition: metafield(namespace: "custom", key: "condition_state") { value }
+        mf_main_category: metafield(namespace: "custom", key: "main_category") { value }
+        mf_sub_category: metafield(namespace: "custom", key: "sub_category") { value }
+        mf_brand: metafield(namespace: "custom", key: "brand") { value }
+        mf_gpc: metafield(namespace: "mm-google-shopping", key: "google_product_category") { value }
+        mf_canonical: metafield(namespace: "custom", key: "product_canonical_url") { value }
+        variants {
+          edges {
+            node {
+              id
+              sku
+              title
+              price
+              compareAtPrice
+              barcode
+              availableForSale
+              inventoryQuantity
+              inventoryPolicy
+              image { url }
+            }
+          }
+        }
+      }
+    }
+  }
+}
