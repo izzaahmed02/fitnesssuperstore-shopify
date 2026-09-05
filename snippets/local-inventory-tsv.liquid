@@ -1,0 +1,143 @@
+{%- comment -%}
+  Local Inventory Ads feed (Google Merchant Center "local product inventory").
+
+  Renders a tab-delimited file with exactly four columns:
+      id, store_code, availability, quantity
+
+  Usage: bound to an alternate collection template so the source cohort is the
+  collection in the URL, e.g.
+
+      /collections/french-fitness-showroom-products?view=local-inventory-tsv
+
+  Rules (per Tim, Sept 4 items 4.1-4.5 and Sept 5 item 4.6 resolution):
+    - id            legacy SKU / product code exactly as in the primary Google
+                    feed. Never the numeric Shopify product or variant ID.
+                    One row per SKU, deduplicated, no parent-product rows.
+    - store_code    fixed, see STORE_CODE below.
+    - availability  in_stock only when the variant is web-in-stock AND the
+                    maximum stated processing time is MAX_LEAD_BUSINESS_DAYS
+                    business days or less. Everything else out_of_stock.
+                    Values are lowercase with an underscore.
+    - quantity      0 whenever availability is out_of_stock. When in_stock, see
+                    QUANTITY_MODE below.
+{%- endcomment -%}
+
+{%- assign TAB = '	' -%}
+{%- assign NL = '
+' -%}
+
+{%- comment -%} Merchant Center store code. Do not change without Tim's GO. {%- endcomment -%}
+{%- assign STORE_CODE = 'FSS1' -%}
+
+{%- comment -%} Two weeks, expressed in business days. {%- endcomment -%}
+{%- assign MAX_LEAD_BUSINESS_DAYS = 10 -%}
+
+{%- comment -%}
+  QUANTITY_MODE:
+    'stopgap' - emit 1 for in_stock and 0 for out_of_stock. This mirrors the
+                interim fs_local_inventory_clean.tsv and avoids publishing
+                Shopify's orderability numbers (9,989 / 449,511 / -9,999),
+                which are not real shelf counts and would fail Google's
+                inventory verification.
+    'shopify' - emit variant.inventory_quantity. Only switch to this once
+                Shopify carries real Benicia counts.
+{%- endcomment -%}
+{%- assign QUANTITY_MODE = 'stopgap' -%}
+
+{%- capture feed -%}
+id{{ TAB }}store_code{{ TAB }}availability{{ TAB }}quantity
+{%- assign seen_skus = '|' -%}
+{%- paginate collection.products by 1000 -%}
+  {%- for product in collection.products -%}
+    {%- for variant in product.variants -%}
+
+      {%- assign sku = variant.sku | strip -%}
+      {%- if sku == blank -%}
+        {%- continue -%}
+      {%- endif -%}
+
+      {%- assign sku_key = '|' | append: sku | append: '|' -%}
+      {%- if seen_skus contains sku_key -%}
+        {%- continue -%}
+      {%- endif -%}
+      {%- assign seen_skus = seen_skus | append: sku | append: '|' -%}
+
+      {%- comment -%}
+        Processing Time source, most specific first. This is the field rendered
+        on the PDP as "Processing Time".
+      {%- endcomment -%}
+      {%- assign lead_raw = variant.metafields.custom.processing_time_long_variant -%}
+      {%- if lead_raw == blank -%}
+        {%- assign lead_raw = product.metafields.custom.processing_time_long -%}
+      {%- endif -%}
+      {%- if lead_raw == blank -%}
+        {%- assign lead_raw = product.metafields.custom.processing_time -%}
+      {%- endif -%}
+      {%- assign lead = lead_raw | downcase | strip -%}
+
+      {%- comment -%}
+        Parse the MAXIMUM stated lead time, in business days. "3-7 Business
+        Days" yields 7, not 3. Weeks are converted at 5 business days per week.
+        A blank or unparseable value yields -1, which never qualifies.
+      {%- endcomment -%}
+      {%- assign lead_days = -1 -%}
+      {%- if lead contains 'business day' -%}
+        {%- assign lead_token = lead | split: 'business day' | first | strip | split: ' ' | last | split: '-' | last | strip -%}
+        {%- assign lead_number = lead_token | times: 1 -%}
+        {%- if lead_number > 0 -%}
+          {%- assign lead_days = lead_number -%}
+        {%- endif -%}
+      {%- elsif lead contains 'week' -%}
+        {%- assign lead_token = lead | split: 'week' | first | strip | split: ' ' | last | split: '-' | last | strip -%}
+        {%- assign lead_number = lead_token | times: 1 -%}
+        {%- if lead_number > 0 -%}
+          {%- assign lead_days = lead_number | times: 5 -%}
+        {%- endif -%}
+      {%- endif -%}
+
+      {%- comment -%} Shopify quantity for the single Benicia location. {%- endcomment -%}
+      {%- assign tracked = true -%}
+      {%- if variant.inventory_management == blank -%}
+        {%- assign tracked = false -%}
+      {%- endif -%}
+      {%- assign shopify_qty = variant.inventory_quantity | times: 1 -%}
+
+      {%- assign availability = 'out_of_stock' -%}
+      {%- if variant.available -%}
+        {%- if lead_days > 0 and lead_days <= MAX_LEAD_BUSINESS_DAYS -%}
+          {%- if tracked == false -%}
+            {%- assign availability = 'in_stock' -%}
+          {%- elsif shopify_qty > 0 -%}
+            {%- assign availability = 'in_stock' -%}
+          {%- endif -%}
+        {%- endif -%}
+      {%- endif -%}
+
+      {%- comment -%}
+        Hard out_of_stock guards. These can only demote a row, never promote it.
+      {%- endcomment -%}
+      {%- if lead contains 'restock' -%}
+        {%- assign availability = 'out_of_stock' -%}
+      {%- endif -%}
+      {%- assign pt_filter = product.metafields.custom.processing_time_filter | downcase -%}
+      {%- if pt_filter contains 'out of stock' -%}
+        {%- assign availability = 'out_of_stock' -%}
+      {%- endif -%}
+
+      {%- assign quantity = 0 -%}
+      {%- if availability == 'in_stock' -%}
+        {%- if QUANTITY_MODE == 'shopify' and tracked and shopify_qty > 0 -%}
+          {%- assign quantity = shopify_qty -%}
+        {%- else -%}
+          {%- assign quantity = 1 -%}
+        {%- endif -%}
+      {%- endif -%}
+
+      {{- NL -}}{{- sku -}}{{- TAB -}}{{- STORE_CODE -}}{{- TAB -}}{{- availability -}}{{- TAB -}}{{- quantity -}}
+
+    {%- endfor -%}
+  {%- endfor -%}
+{%- endpaginate -%}
+{%- endcapture -%}
+{{- feed | strip -}}
+{{- NL -}}
