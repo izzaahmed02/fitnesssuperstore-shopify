@@ -1,26 +1,13 @@
-# Local Inventory Ads feed
+# Local Inventory Ads feed — build spec
 
-Automated replacement for the manually uploaded local inventory files
-(`fs_local_inventory_clean.tsv`, `fs_showroom_local_inventory.tsv`) and for the
-retired MultiFeeds generators `googlelocalproductfs` (Kw8IzXtZ0M),
-`googlelocalproduct` (6wUGHTNaQV) and `binglocalproductfs` (jcbvWljOP_).
+Per Tim's Sept 5 decisions, this feed is generated **from the same MultiFeeds
+source that generates the primary Google feed**, not from the Shopify theme.
+The theme-hosted variant (`collection.local-inventory-tsv`) was retired before
+publish: id parity and inclusion parity must not depend on hand curation, and
+Liquid cannot read the MultiFeeds inclusion list.
 
-## Stable URL
-
-```
-https://www.fitnesssuperstore.com/collections/<collection-handle>?view=local-inventory-tsv
-```
-
-Intended cohort (pending confirmation):
-
-```
-https://www.fitnesssuperstore.com/collections/french-fitness-showroom-products?view=local-inventory-tsv
-```
-
-The URL never changes, so Merchant Center can be pointed at it once and left on
-a daily scheduled fetch. The cohort is whatever the collection contains, so
-adding or removing a showroom product in Shopify changes the feed on the next
-fetch with no code change.
+This file is the spec MultiFeeds must implement, and the record of how the
+rules were validated against the live Merchant Center exports on 2026-09-05.
 
 ## Output
 
@@ -30,121 +17,93 @@ Tab-delimited, exactly four columns, header row first:
 id	store_code	availability	quantity
 ```
 
-| Column | Source | Rule |
-| --- | --- | --- |
-| `id` | derived, see **ID rule** | The offer ID the primary Google feed uses for that variant, which is *not* always the SKU. Blank SKUs skipped, duplicates dropped, no parent-product rows. |
-| `store_code` | constant | `FSS1`. Changing it requires Tim's explicit GO. |
-| `availability` | see below | `in_stock` or `out_of_stock`, lowercase with underscore. |
-| `quantity` | see below | `0` whenever `out_of_stock`. |
-
-## ID rule
+## 1. `id` — three schemes, not one
 
 Verified against the live `googleshoppingfs` and `googleshoppingfrenchfitness`
-exports on 2026-09-05. MultiFeeds uses three schemes, not one:
+exports. A row whose id does not match the primary offer ID processes as
+"Offer does not exist".
 
-| Case | Offer ID | Rows in current cohort |
+| Case | Offer ID | Rows in cohort |
 | --- | --- | --- |
-| Multi-variant product | `<product.id>-<variant.id>` | 45 |
+| Multi-variant product | `<product ID>-<variant ID>` | 45 |
 | Single-variant with `custom.old_legacy_product_code` | that legacy code (`FFT-CFDI` → `FFA-CFDI`) | 1 |
 | Everything else | `variant.sku` | 220 |
 
-A row whose id does not match the primary offer ID processes as
-"Offer does not exist". Emitting `variant.sku` for all rows produced 225 matches
-and 170 unmatched against the live exports; the rule above produces 266 matches
-and 0 unmatched.
+**The primary feed export is the authority on which scheme applies per row —
+never assume.** Keying every row on the SKU matches only 225 of the cohort.
 
-## Inclusion parity — the one thing this template cannot solve
+## 2. `store_code`
 
-The primary feed does not carry every variant in the collection. Of the 420
-variants in `french-fitness-showroom-products`, **154 have no primary offer at
-all**, and nothing readable from Shopify separates them — they are ACTIVE,
-published, and span the same prices as included items (a $24 dumbbell is in the
-feed, a $22 collar is not). The inclusion rule lives in the MultiFeeds source
-configuration, which Liquid cannot read.
+`FSS1`. Not changed without Tim's explicit GO.
 
-Two ways to close it:
+## 3. Eligibility gate — `custom.processing_time_filter` is primary
 
-1. **Generate the local feed from the same MultiFeeds source as the primary
-   feed.** Guarantees both id parity and inclusion parity, because it inherits
-   both. Recommended.
-2. **Point this template at a collection that mirrors the primary feed's
-   contents**, and keep that collection in sync.
+| Filter value | Eligible |
+| --- | --- |
+| `Ships in 2 weeks or less` | yes |
+| `Ships in 2-5 weeks` | no |
+| `Ships in 5 weeks or more` | no |
+| `Out of Stock` | no |
 
-Until one of those is in place, expect an unmatched-offer count equal to
-whatever is in the collection but not in the primary feed.
+When the filter is **missing**, fall back to the three-metafield cascade,
+most-specific-first, and parse the **maximum** stated lead time (the 7 in
+"3-7"), eligible at 10 business days or less; weeks convert at 5 business days:
 
-## Availability rule
+1. `custom.processing_time_long_variant` (variant)
+2. `custom.processing_time_long` (product)
+3. `custom.processing_time` (product)
 
-`in_stock` only when **both** hold:
+Missing both the filter and the cascade = **not eligible**.
 
-1. The variant is web-in-stock (`variant.available`), and its tracked Shopify
-   quantity is greater than zero.
-2. The **maximum** stated processing time is 10 business days (two weeks) or
-   less.
+In the current cohort 219 rows are gated by the filter and 47 by the fallback
+(multi-variant products carry the processing time per variant, so the
+product-level filter is unset on them). No row lacks a gate entirely.
 
-Processing Time is read most-specific-first:
+## 4. `availability`
 
-1. `variant.metafields.custom.processing_time_long_variant`
-2. `product.metafields.custom.processing_time_long`
-3. `product.metafields.custom.processing_time`
+| Case | Value |
+| --- | --- |
+| Eligible | `on_display_to_order` |
+| Not eligible | `out_of_stock` |
 
-These are the fields the PDP renders as "Processing Time" (for example
-`FFT-SLCLE` → "Ships from our Warehouse in 3-7 Business Days + Transit Time").
+`on_display_to_order` is the accurate claim for showroom display units that ship
+to the customer, and matches the Merchant Center "Products on display in store"
+setup and the shipping-policy page. Never publish `in_stock`.
 
-Parsing takes the maximum of the range — the `7` in `3-7`, not the `3`. Weeks
-convert at five business days per week, so `2-4 Weeks` is 20 business days and
-does not qualify. A blank, restock-pending, or unparseable value is
-`out_of_stock`.
+## 5. `quantity`
 
-Two guards can only demote a row, never promote it:
+`1` for eligible, `0` for not eligible. `on_display_to_order` does not require a
+quantity, so the `1` is belt-and-suspenders only.
 
-- Processing Time containing `restock` (for example "Expected Restock: October
-  2026").
-- `product.metafields.custom.processing_time_filter` set to `Out of Stock`.
+**Never publish Shopify's stored numbers** — 9,989 on FFS-PFRD, 449,511 on the
+hex dumbbells, negatives on out-of-stock items. They are orderability
+placeholders, not shelf counts, and are what failed Google's inventory
+verification on the retired files. True shelf counts are a separate physical
+count task and do not block launch.
 
-## Quantity
+## 6. Exclusions
 
-`QUANTITY_MODE` at the top of `snippets/local-inventory-tsv.liquid`:
+A variant with **no primary offer gets no local row**. 154 of the 420 variants
+in the showroom collection have no offer in either primary feed — mostly
+accessories (bands, collars, bumper plates, medicine balls). Nothing readable in
+Shopify distinguishes them: all ACTIVE, all published, overlapping prices (a $24
+vinyl dumbbell is in the feed, a $22 collar is not). Expanding the MultiFeeds
+inclusion list to add accessories is a separate controlled change after launch
+stabilises.
 
-- `stopgap` (current): `1` for `in_stock`, `0` for `out_of_stock`. This matches
-  the interim clean file and deliberately avoids publishing Shopify's
-  orderability numbers — 9,989 / 449,511 / -9,999 — which are not real shelf
-  counts and are exactly the placeholder quantities that failed Google's
-  inventory verification on the retired MultiFeeds files.
-- `shopify`: emits `variant.inventory_quantity`. The store has a single
-  location, 537 Stone Rd STE F, Benicia CA 94510, so that value already *is*
-  the Benicia number. Only switch once those counts are real.
+## Current cohort
 
-## Verification
+| | |
+| --- | --- |
+| Variants in `french-fitness-showroom-products` | 420 |
+| Published rows | 266 |
+| `on_display_to_order` | 250 |
+| `out_of_stock` | 16 |
+| Excluded, no primary offer | 154 |
+| Projected unmatched offers | 0 |
 
-1. Fetch the URL and confirm the header row and four columns.
-2. Confirm row count matches the collection's product count plus extra variants.
-3. Confirm no numeric Shopify IDs, no blank IDs, no duplicate IDs.
-4. Confirm every `out_of_stock` row has quantity `0`.
-5. Point Merchant Center at the URL on a daily schedule and check diagnostics
-   for "Offer does not exist" after processing.
+## Retired
 
-## Open items to confirm in Merchant Center before go-live
-
-These are not defects in the template. They are id-matching and scope risks that
-only Merchant Center or Tim can settle, found while validating the first
-generated cohort (395 rows off `french-fitness-showroom-products`).
-
-1. **Offer-ID match is unproven.** Every id is a Shopify SKU rather than a
-   numeric product ID, which is what the retired files got wrong. But that does
-   not prove each SKU exists as a *processed* offer ID in the primary Google
-   feed. A dry-run upload is the only proof; watch for "Offer does not exist".
-2. **One known legacy-code conflict.** `FFT-CFDI` (French Fitness Tahoe
-   Commercial Flat / Decline / Incline Bench) carries
-   `custom.old_legacy_product_code = ["FFA-CFDI"]`. If the primary feed lists
-   that product under `FFA-CFDI`, the local row keyed to `FFT-CFDI` will not
-   match. This is the only such conflict across the cohort — every other variant
-   has the metafield unset.
-3. **Case sensitivity.** Merchant Center offer IDs are case-sensitive. Three ids
-   are not upper-case: `ff-dgmb-s10-430`, `ff-dgmb-s10-625`, and `770atE3`. The
-   feed emits the SKU exactly as Shopify stores it, which is correct behaviour;
-   if the primary feed normalises case, these three will not match.
-4. **Cohort scope.** The collection holds three non-French-Fitness products —
-   `770atE3` (Cybex), `LF-DSE3HD95R` (Life Fitness), `BSLDGDR24` (Body-Solid) —
-   and does **not** contain `FFS-PFRD`. Confirm whether the local cohort is the
-   showroom collection as-is or French Fitness only.
+`googlelocalproductfs` (Kw8IzXtZ0M), `googlelocalproduct` (6wUGHTNaQV) and
+`binglocalproductfs` (jcbvWljOP_) are retired once the replacement processes
+clean, not before, so there is never a gap with no local source.
