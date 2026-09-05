@@ -1,0 +1,56 @@
+# Klaviyo custom-catalog feed rebuild (source 24138).
+#
+# Manual only. The 4-hour schedule required by runbook Step 4 is deliberately
+# commented out: no host or fixed URL has been chosen yet, and production
+# cutover on source 24138 is on HOLD pending Tim's written GO. Leaving the
+# schedule inactive means merging this branch cannot silently begin publishing
+# a production feed.
+#
+# This job validates a rebuild only. It does not publish, and it does not touch
+# the Klaviyo source URL or mapping.
+
+name: Klaviyo Feed Rebuild
+
+on:
+  workflow_dispatch:
+    inputs:
+      jsonl_artifact:
+        description: 'Name of the uploaded Shopify bulk-export JSONL artifact'
+        required: true
+  # schedule:
+  #   - cron: '0 */4 * * *'   # enable only after hosting is approved and the URL is fixed
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download bulk-export JSONL
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.jsonl_artifact }}
+          path: ./export
+
+      - name: Build feed and enforce the minimum-count guard
+        run: |
+          python3 scripts/klaviyo_feed/build_klaviyo_feed.py \
+            --jsonl "$(ls ./export/*.jsonl | head -1)" \
+            --out ./out \
+            --min-items 3000
+
+      - name: Upload build outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: klaviyo-feed-build
+          path: |
+            out/build_report.json
+            out/exceptions.csv
+            out/emitted_ids.txt
