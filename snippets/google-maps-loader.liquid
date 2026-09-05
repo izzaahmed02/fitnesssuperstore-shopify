@@ -1,0 +1,35 @@
+{%- comment -%}
+  Loads the Google Maps JavaScript API once per page and exposes
+  window.googleMapsReady, a promise that resolves when google.maps exists.
+
+  Render this from any section that needs the API, then wait on the promise.
+  Do not assume the API is present on window load - loading is deliberately
+  deferred for Core Web Vitals, so it is normally NOT ready by then.
+
+  Idempotent: rendering it more than once on a page is a no-op.
+  If the script fails to load the promise stays unresolved and dependent
+  sections simply do not initialise, which matches the previous behaviour.
+{%- endcomment -%}
+<script>
+  window.googleMapsReady = window.googleMapsReady || new Promise(function (resolve) {
+    var requested = false;
+
+    function loadGoogleMaps() {
+      if (requested) return;
+      requested = true;
+      var mapsScript = document.createElement('script');
+      mapsScript.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyC1KAxFSFi-ORhUWVMuZfaHGyjAF-pmVDw";
+      mapsScript.defer = true;
+      mapsScript.onload = resolve;
+      document.head.appendChild(mapsScript);
+    }
+
+    ['scroll', 'mousemove', 'touchstart', 'keydown', 'click'].forEach(function (evt) {
+      window.addEventListener(evt, loadGoogleMaps, { once: true, passive: true });
+    });
+
+    window.addEventListener('load', function () {
+      window.setTimeout(loadGoogleMaps, 1200);
+    }, { once: true });
+  });
+</script>
