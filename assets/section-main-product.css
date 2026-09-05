@@ -1612,8 +1612,13 @@ a.product__text {
   padding: 12px 16px;
 }
 
+.labor-day-sale-card__row {
+  display: block;
+}
+
 .labor-day-sale-card__badge {
   display: inline-block;
+  flex: 0 0 auto;
   background-color: var(--primary-orange, #D83D0E);
   color: #fff;
   font-size: 1.1rem;
@@ -1623,6 +1628,7 @@ a.product__text {
   text-transform: uppercase;
   padding: 4px 10px;
   border-radius: 999px;
+  white-space: nowrap;
 }
 
 .labor-day-sale-card__payoff {
@@ -1652,15 +1658,33 @@ a.product__text {
   }
 
   .labor-day-sale-card {
-    padding: 12px;
+    padding: 10px 12px;
+  }
+
+  /* Single compact line on mobile: badge + payoff inline, no stacking. The fine
+     print is dropped here rather than shortened in place - "10% off - $X in cart"
+     already varies in width with the price, and adding "Ends ..." after it risks
+     wrapping to a second row on narrow phones, which the mobile spec disallows. */
+  .labor-day-sale-card__row {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 8px;
+    min-width: 0;
   }
 
   .labor-day-sale-card__payoff {
-    font-size: 1.4rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    font-size: 1.3rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .labor-day-sale-card__meta {
-    font-size: 1.2rem;
+    display: none;
   }
 
   .campaign-sale-container.hide-on-mobile {
