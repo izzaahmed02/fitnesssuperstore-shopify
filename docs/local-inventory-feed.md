@@ -87,3 +87,28 @@ Two guards can only demote a row, never promote it:
 4. Confirm every `out_of_stock` row has quantity `0`.
 5. Point Merchant Center at the URL on a daily schedule and check diagnostics
    for "Offer does not exist" after processing.
+
+## Open items to confirm in Merchant Center before go-live
+
+These are not defects in the template. They are id-matching and scope risks that
+only Merchant Center or Tim can settle, found while validating the first
+generated cohort (395 rows off `french-fitness-showroom-products`).
+
+1. **Offer-ID match is unproven.** Every id is a Shopify SKU rather than a
+   numeric product ID, which is what the retired files got wrong. But that does
+   not prove each SKU exists as a *processed* offer ID in the primary Google
+   feed. A dry-run upload is the only proof; watch for "Offer does not exist".
+2. **One known legacy-code conflict.** `FFT-CFDI` (French Fitness Tahoe
+   Commercial Flat / Decline / Incline Bench) carries
+   `custom.old_legacy_product_code = ["FFA-CFDI"]`. If the primary feed lists
+   that product under `FFA-CFDI`, the local row keyed to `FFT-CFDI` will not
+   match. This is the only such conflict across the cohort — every other variant
+   has the metafield unset.
+3. **Case sensitivity.** Merchant Center offer IDs are case-sensitive. Three ids
+   are not upper-case: `ff-dgmb-s10-430`, `ff-dgmb-s10-625`, and `770atE3`. The
+   feed emits the SKU exactly as Shopify stores it, which is correct behaviour;
+   if the primary feed normalises case, these three will not match.
+4. **Cohort scope.** The collection holds three non-French-Fitness products —
+   `770atE3` (Cybex), `LF-DSE3HD95R` (Life Fitness), `BSLDGDR24` (Body-Solid) —
+   and does **not** contain `FFS-PFRD`. Confirm whether the local cohort is the
+   showroom collection as-is or French Fitness only.
