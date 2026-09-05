@@ -10,9 +10,9 @@
       /collections/french-fitness-showroom-products?view=local-inventory-tsv
 
   Rules (per Tim, Sept 4 items 4.1-4.5 and Sept 5 item 4.6 resolution):
-    - id            legacy SKU / product code exactly as in the primary Google
-                    feed. Never the numeric Shopify product or variant ID.
-                    One row per SKU, deduplicated, no parent-product rows.
+    - id            the offer ID the primary Google feed uses for that variant.
+                    That is NOT always the SKU - see the id rule below.
+                    One row per offer ID, deduplicated, no parent-product rows.
     - store_code    fixed, see STORE_CODE below.
     - availability  in_stock only when the variant is web-in-stock AND the
                     maximum stated processing time is MAX_LEAD_BUSINESS_DAYS
@@ -20,6 +20,30 @@
                     Values are lowercase with an underscore.
     - quantity      0 whenever availability is out_of_stock. When in_stock, see
                     QUANTITY_MODE below.
+
+  ID RULE - verified against the live googleshoppingfs and
+  googleshoppingfrenchfitness exports on 2026-09-05. MultiFeeds does not use one
+  scheme, it uses three, and a local row whose id does not match the primary
+  offer ID processes as "Offer does not exist":
+
+    1. Multi-variant product -> "<product.id>-<variant.id>". MultiFeeds keys
+       every variant of a multi-variant product this way, so the SKU is wrong
+       for all of them (45 rows in the current showroom cohort).
+    2. Single-variant product carrying custom.old_legacy_product_code ->
+       that legacy code. MultiFeeds keys the offer by the legacy code and puts
+       the current SKU in old_id. Only FFT-CFDI does this today, keyed FFA-CFDI.
+    3. Otherwise -> variant.sku. This covers the large majority.
+
+  KNOWN LIMITATION - INCLUSION PARITY. This template emits a row for every
+  variant in the collection, but the primary feed does not carry every one of
+  them: 154 of the 420 variants in the showroom collection have no primary
+  offer at all, and nothing visible in Shopify distinguishes them (they are
+  ACTIVE, published, and span the same price range as included items - a $24
+  dumbbell is in the feed while a $22 collar is not). The inclusion rule lives
+  in the MultiFeeds source configuration, which Liquid cannot read. So this
+  template alone cannot guarantee zero unmatched offers. Either point it at a
+  collection that mirrors the primary feed's contents, or generate the local
+  feed from the same MultiFeeds source that generates the primary feed.
 {%- endcomment -%}
 
 {%- assign TAB = '	' -%}
@@ -56,11 +80,23 @@ id{{ TAB }}store_code{{ TAB }}availability{{ TAB }}quantity
         {%- continue -%}
       {%- endif -%}
 
-      {%- assign sku_key = '|' | append: sku | append: '|' -%}
-      {%- if seen_skus contains sku_key -%}
+      {%- comment -%} Offer ID, per the three-part ID RULE documented above. {%- endcomment -%}
+      {%- if product.variants.size > 1 -%}
+        {%- assign offer_id = product.id | append: '-' | append: variant.id -%}
+      {%- else -%}
+        {%- assign legacy_code = variant.metafields.custom.old_legacy_product_code.value | first | strip -%}
+        {%- if legacy_code != blank -%}
+          {%- assign offer_id = legacy_code -%}
+        {%- else -%}
+          {%- assign offer_id = sku -%}
+        {%- endif -%}
+      {%- endif -%}
+
+      {%- assign offer_key = '|' | append: offer_id | append: '|' -%}
+      {%- if seen_skus contains offer_key -%}
         {%- continue -%}
       {%- endif -%}
-      {%- assign seen_skus = seen_skus | append: sku | append: '|' -%}
+      {%- assign seen_skus = seen_skus | append: offer_id | append: '|' -%}
 
       {%- comment -%}
         Processing Time source, most specific first. This is the field rendered
@@ -133,7 +169,7 @@ id{{ TAB }}store_code{{ TAB }}availability{{ TAB }}quantity
         {%- endif -%}
       {%- endif -%}
 
-      {{- NL -}}{{- sku -}}{{- TAB -}}{{- STORE_CODE -}}{{- TAB -}}{{- availability -}}{{- TAB -}}{{- quantity -}}
+      {{- NL -}}{{- offer_id -}}{{- TAB -}}{{- STORE_CODE -}}{{- TAB -}}{{- availability -}}{{- TAB -}}{{- quantity -}}
 
     {%- endfor -%}
   {%- endfor -%}

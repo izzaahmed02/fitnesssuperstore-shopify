@@ -32,10 +32,46 @@ id	store_code	availability	quantity
 
 | Column | Source | Rule |
 | --- | --- | --- |
-| `id` | `variant.sku` | Legacy SKU / product code, matching the primary Google feed. Never the numeric Shopify product or variant ID. Blank SKUs are skipped, duplicates are dropped, no parent-product rows. |
+| `id` | derived, see **ID rule** | The offer ID the primary Google feed uses for that variant, which is *not* always the SKU. Blank SKUs skipped, duplicates dropped, no parent-product rows. |
 | `store_code` | constant | `FSS1`. Changing it requires Tim's explicit GO. |
 | `availability` | see below | `in_stock` or `out_of_stock`, lowercase with underscore. |
 | `quantity` | see below | `0` whenever `out_of_stock`. |
+
+## ID rule
+
+Verified against the live `googleshoppingfs` and `googleshoppingfrenchfitness`
+exports on 2026-09-05. MultiFeeds uses three schemes, not one:
+
+| Case | Offer ID | Rows in current cohort |
+| --- | --- | --- |
+| Multi-variant product | `<product.id>-<variant.id>` | 45 |
+| Single-variant with `custom.old_legacy_product_code` | that legacy code (`FFT-CFDI` → `FFA-CFDI`) | 1 |
+| Everything else | `variant.sku` | 220 |
+
+A row whose id does not match the primary offer ID processes as
+"Offer does not exist". Emitting `variant.sku` for all rows produced 225 matches
+and 170 unmatched against the live exports; the rule above produces 266 matches
+and 0 unmatched.
+
+## Inclusion parity — the one thing this template cannot solve
+
+The primary feed does not carry every variant in the collection. Of the 420
+variants in `french-fitness-showroom-products`, **154 have no primary offer at
+all**, and nothing readable from Shopify separates them — they are ACTIVE,
+published, and span the same prices as included items (a $24 dumbbell is in the
+feed, a $22 collar is not). The inclusion rule lives in the MultiFeeds source
+configuration, which Liquid cannot read.
+
+Two ways to close it:
+
+1. **Generate the local feed from the same MultiFeeds source as the primary
+   feed.** Guarantees both id parity and inclusion parity, because it inherits
+   both. Recommended.
+2. **Point this template at a collection that mirrors the primary feed's
+   contents**, and keep that collection in sync.
+
+Until one of those is in place, expect an unmatched-offer count equal to
+whatever is in the collection but not in the primary feed.
 
 ## Availability rule
 
