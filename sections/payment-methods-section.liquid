@@ -5,7 +5,7 @@
  }
 
  .payment-methods .accordion-container ol li{
-    font-family: DM Sans;
+    font-family: var(--font-body-family);
 font-weight: 400;
 font-size: 14px;
 line-height: 20px;
@@ -63,7 +63,7 @@ color: #333333;
   display: block;
   text-decoration: none;
   color: #000;
-  font-family: DM Sans;
+  font-family: var(--font-body-family);
   font-weight: 700;
   font-size: 18px;
   line-height: 24px;
@@ -96,8 +96,13 @@ color: #333333;
 
 .payment-methods .sidebar {
 
+  /* --pm-sticky-top is measured from the theme's sticky header at runtime, so
+     the box parks just below it instead of behind it. The fallback covers the
+     moment before the script runs. */
   position: sticky;
-  top: 20px;
+  top: var(--pm-sticky-top, 20px);
+  max-height: calc(100vh - var(--pm-sticky-top, 20px) - 20px);
+  overflow-y: auto;
   height: fit-content;
 padding: 0;
   flex: 1;
@@ -109,7 +114,7 @@ padding: 0;
 .payment-methods .sidebar h3 {
   padding: 0px;
   margin: 0px;
-  font-family: DM Sans;
+  font-family: var(--font-heading-family);
     font-weight: 700;
     font-size: 40px;
     line-height: 52px;
@@ -134,7 +139,8 @@ padding: 0;
 
 .payment-methods .logo-image {
 width: 70px;
-    object-fit: cover;
+    height: auto;
+    object-fit: contain;
 }
 
 /* Accordion Section */
@@ -150,7 +156,7 @@ width: 70px;
 }
 
 .payment-methods .accordion-header {
-font-family: DM Sans;
+font-family: var(--font-body-family);
     font-weight: 700;
     font-size: 24px;
     line-height: 32px;
@@ -158,21 +164,25 @@ font-family: DM Sans;
     margin-bottom: 16px;
 }
 
-.payment-methods .accordion-header::after {
-  content: '>';
-  font-size: 20px;
+.payment-methods .accordion-header .accordion-chevron {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
   transition: transform 0.3s ease;
-  transform: rotate(90deg);
 }
 
-.payment-methods .accordion-header.active::after {
-  content: '<';
-  transform: rotate(90deg)!important;
+.payment-methods .accordion-header.active .accordion-chevron {
+  transform: rotate(180deg);
+}
+
+.payment-methods .accordion-header:focus-visible {
+  outline: 2px solid #D83D0E;
+  outline-offset: 2px;
 }
 
 .payment-methods .accordion-content-text {
 
-font-family: DM Sans;
+font-family: var(--font-body-family);
     font-weight: 400;
     font-size: 16px;
     line-height: 24px;
@@ -181,16 +191,12 @@ font-family: DM Sans;
 
 /* Desktop Styles (> 768px) */
 @media (min-width: 769px) {
-.payment-methods .accordion-header.active::after{
-  display: none;
-}
-  
   .payment-methods .accordion-header {
     cursor: default; /* Non-clickable on desktop */
   }
 
-  .payment-methods .accordion-header::after {
-    content: none; /* Remove +/− indicators */
+  .payment-methods .accordion-header .accordion-chevron {
+    display: none; /* Content is always expanded on desktop */
   }
 
   .payment-methods .accordion-content-text {
@@ -198,50 +204,59 @@ font-family: DM Sans;
   }
 }
 
-/* Mobile Styles (≤ 768px) */
+/* Mobile Styles (≤ 768px) — matches "Payment Methods - Mobile" in Figma */
 @media (max-width: 768px) {
   .payment-methods .payment-methods-container {
     flex-direction: column;
+    padding: 24px 16px;
+    gap: 0;
   }
 
   .payment-methods .sidebar {
     width: 100%;
     position: static;
     border-right: none;
-    border-bottom: 1px solid #ddd;
-    display: none;
+    border-bottom: none;
+    display: none; /* The accordion headers are the mobile method list */
   }
 
   .payment-methods .accordion-container {
-    padding: 20px 0;
+    padding: 0;
+  }
+
+  /* 16px between rows, so each 40px row sits on a 56px pitch */
+  .payment-methods .accordion {
+    border-bottom: none;
+    margin-bottom: 16px;
+  }
+
+  .payment-methods .accordion:last-child {
+    margin-bottom: 0;
   }
 
   .payment-methods .accordion-header {
-    cursor: pointer; 
-    font-family: DM Sans;
-font-weight: 700;
-font-size: 18px;
-line-height: 24px;
-letter-spacing: 0px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 0;
     margin-bottom: 0;
-
+    font-family: var(--font-body-family);
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 24px;
+    letter-spacing: 0px;
+    color: #000000;
   }
 
-  .payment-methods .accordion-content-container{
-    padding-top: 20px;
+  .payment-methods .accordion-content-container {
+    padding-top: 0;
   }
-
-  .payment-methods .payment-methods-container{
-    padding: 16px;
-  }
-
-  .payment-methods .accordion {
-    border-bottom: none;
-    margin-bottom: 0;
-}
 
   .payment-methods .accordion-content-text {
     display: none; /* Hidden by default on mobile */
+    padding-top: 16px;
   }
 
   .payment-methods .accordion-content-text.active {
@@ -268,15 +283,27 @@ letter-spacing: 0px;
     {% for block in section.blocks %}
       {% if block.type == 'accordion' %}
         <div class="accordion" id="{{ block.settings.accordion_id }}">
-          <div class="accordion-header">{{ block.settings.accordion_title }}</div>
-          <div class="accordion-content-container">
+          <div class="accordion-header" aria-controls="{{ section.id }}-{{ block.id }}-content">
+            <span class="accordion-header__text">{{ block.settings.accordion_title }}</span>
+            {% render 'chevron' %}
+          </div>
+          <div class="accordion-content-container" id="{{ section.id }}-{{ block.id }}-content">
             <div class="accordion-content-text">
                {% if block.settings.num_logos > 0 %}
               <div class="logo-container">
                 {% for i in (1..block.settings.num_logos) %}
                   {% assign logo_key = 'logo_' | append: i %}
                   {% if block.settings[logo_key] %}
-                    <img src="{{ block.settings[logo_key] | img_url: '100x' }}" alt="{{ block.settings.accordion_title }} Logo {{ i }}" class="logo-image">
+                    {{-
+                      block.settings[logo_key]
+                      | image_url: width: 210
+                      | image_tag:
+                        class: 'logo-image',
+                        widths: '70, 140, 210',
+                        sizes: '70px',
+                        loading: 'lazy',
+                        alt: block.settings.accordion_title
+                    -}}
                   {% endif %}
                 {% endfor %}
               </div>
@@ -291,106 +318,236 @@ letter-spacing: 0px;
 </div>
 
 <script>
-// JavaScript for Accordion and Sidebar Functionality
-function initializeAccordionsAndSidebar() {
-  const isMobile = window.innerWidth <= 768;
+(function () {
+  var SECTION_ID = '{{ section.id }}';
 
-  // Remove existing event listeners from accordion headers
-  document.querySelectorAll('.payment-methods .accordion-header').forEach(header => {
-    header.removeEventListener('click', toggleAccordion);
-  });
+  function init() {
+    var root = document.getElementById('shopify-section-' + SECTION_ID);
+    // Re-entry guard: the section can be initialised from more than one path.
+    // This is a property rather than a data attribute on purpose - an
+    // attribute serialises into the markup, so a section rebuilt from its own
+    // outerHTML would arrive already flagged and never bind its handlers.
+    if (!root || root.__paymentMethodsBound) return;
+    root.__paymentMethodsBound = true;
 
-  // Accordion functionality for mobile
-  if (isMobile) {
-    document.querySelectorAll('.payment-methods .accordion-header').forEach(header => {
-      header.addEventListener('click', toggleAccordion);
-    });
+    var MOBILE = '(max-width: 768px)';
+    var headers = Array.prototype.slice.call(root.querySelectorAll('.accordion-header'));
+    var links = Array.prototype.slice.call(root.querySelectorAll('.sidebar-link'));
 
-    function toggleAccordion() {
-      const content = this.nextElementSibling.querySelector('.payment-methods .accordion-content-text');
-      const isActive = content.classList.contains('active');
-
-      // Close all other accordions
-      document.querySelectorAll('.payment-methods .accordion-content-text').forEach(item => {
-        item.classList.remove('active');
-      });
-      document.querySelectorAll('.payment-methods .accordion-header').forEach(item => {
-        item.classList.remove('active');
-      });
-
-      // Toggle the clicked accordion
-      if (!isActive) {
-        content.classList.add('active');
-        this.classList.add('active');
-      }
+    function isMobile() {
+      return window.matchMedia(MOBILE).matches;
     }
-  } else {
-    // On desktop, ensure all accordion content is visible
-    document.querySelectorAll('.payment-methods .accordion-content-text').forEach(content => {
-      content.classList.add('active');
-    });
-    document.querySelectorAll('.payment-methods .accordion-header').forEach(header => {
+
+    function closeAll() {
+      headers.forEach(function (header) {
+        header.classList.remove('active');
+        header.setAttribute('aria-expanded', 'false');
+        var content = header.parentElement.querySelector('.accordion-content-text');
+        if (content) content.classList.remove('active');
+      });
+    }
+
+    function openHeader(header) {
       header.classList.add('active');
-    });
-  }
-
-  // Sidebar link click handling
-  document.querySelectorAll('.payment-methods .sidebar-link').forEach(link => {
-    link.addEventListener('click', function(e) {
-      e.preventDefault(); // Prevent default anchor behavior
-      const targetId = this.getAttribute('href').substring(1); // Get target ID without #
-      const targetElement = document.getElementById(targetId);
-
-      // Remove active class from all sidebar li and a elements
-      document.querySelectorAll('.payment-methods .sidebar li').forEach(li => {
-        li.classList.remove('active');
-      });
-      document.querySelectorAll('.payment-methods .sidebar a').forEach(a => {
-        a.classList.remove('active');
-      });
-
-      // Add active class to the clicked link's parent li and the link itself
-      this.parentElement.classList.add('active');
-      this.classList.add('active');
-
-      // Scroll to the target accordion section
-      if (targetElement) {
-        targetElement.scrollIntoView({ behavior: 'smooth' });
-      }
-    });
-  });
-
-  // Highlight sidebar item based on URL hash on page load
-  const hash = window.location.hash.substring(1); // Get hash without #
-  if (hash) {
-    const targetLink = document.querySelector(`.payment-methods .sidebar a[href="#${hash}"]`);
-    if (targetLink) {
-      // Remove active classes from all
-      document.querySelectorAll('.payment-methods .sidebar li').forEach(li => {
-        li.classList.remove('active');
-      });
-      document.querySelectorAll('.sidebar a').forEach(a => {
-        a.classList.remove('active');
-      });
-
-      // Add active class to the matching link and its parent li
-      targetLink.classList.add('active');
-      targetLink.parentElement.classList.add('active');
-
-      // Scroll to the target section
-      const targetElement = document.getElementById(hash);
-      if (targetElement) {
-        targetElement.scrollIntoView({ behavior: 'smooth' });
-      }
+      header.setAttribute('aria-expanded', 'true');
+      var content = header.parentElement.querySelector('.accordion-content-text');
+      if (content) content.classList.add('active');
     }
+
+    function toggle(header) {
+      var wasOpen = header.classList.contains('active');
+      closeAll();
+      if (!wasOpen) openHeader(header);
+    }
+
+    headers.forEach(function (header) {
+      header.addEventListener('click', function () {
+        if (isMobile()) toggle(header);
+      });
+
+      header.addEventListener('keydown', function (event) {
+        if (!isMobile()) return;
+        if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+          event.preventDefault();
+          toggle(header);
+        }
+      });
+    });
+
+    // Desktop shows every panel and exposes no controls; mobile is a collapsed accordion.
+    function applyBreakpoint() {
+      if (isMobile()) {
+        headers.forEach(function (header) {
+          header.setAttribute('role', 'button');
+          header.setAttribute('tabindex', '0');
+          if (!header.hasAttribute('aria-expanded')) {
+            header.setAttribute('aria-expanded', 'false');
+          }
+        });
+      } else {
+        headers.forEach(function (header) {
+          header.removeAttribute('role');
+          header.removeAttribute('tabindex');
+          header.removeAttribute('aria-expanded');
+          header.classList.add('active');
+          var content = header.parentElement.querySelector('.accordion-content-text');
+          if (content) content.classList.add('active');
+        });
+      }
+      updateStickyRoom();
+    }
+
+    function setActiveLink(targetId) {
+      links.forEach(function (link) {
+        var isTarget = link.getAttribute('href') === '#' + targetId;
+        link.classList.toggle('active', isTarget);
+        link.parentElement.classList.toggle('active', isTarget);
+      });
+    }
+
+    // The theme header is `position: sticky; top: 0`, so scrolling a block flush
+    // to the top of the viewport parks its heading underneath the header.
+    var SCROLL_GAP = 16;
+
+    function stickyBottom() {
+      var header = document.querySelector('.section-header');
+      if (!header) return 0;
+      var position = window.getComputedStyle(header).position;
+      if (position !== 'sticky' && position !== 'fixed') return 0;
+      return Math.max(0, header.getBoundingClientRect().bottom);
+    }
+
+    function scrollToPanel(target) {
+      lockSpy();
+      var top = window.scrollY + target.getBoundingClientRect().top - stickyBottom() - SCROLL_GAP;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+
+      // The header collapses as the page scrolls, so its height when the click
+      // lands is not its height when the scroll stops. Re-measure once it has
+      // settled and close any gap that is still covering the heading.
+      window.setTimeout(function () {
+        var covered = stickyBottom() + SCROLL_GAP - target.getBoundingClientRect().top;
+        if (covered > 1) {
+          window.scrollBy({ top: -covered, behavior: 'smooth' });
+          lockSpy();
+        }
+      }, 600);
+    }
+
+    links.forEach(function (link) {
+      link.addEventListener('click', function (event) {
+        event.preventDefault();
+        var targetId = this.getAttribute('href').substring(1);
+        // Resolve inside this section so a second instance never steals the target.
+        var target = root.querySelector('[id="' + targetId + '"]');
+        setActiveLink(targetId);
+        if (target) scrollToPanel(target);
+      });
+    });
+
+    // Follow the reader: highlight the method whose block the page is showing.
+    var panels = Array.prototype.slice.call(root.querySelectorAll('.accordion'));
+    var spyLockedUntil = 0;
+    var spyQueued = false;
+
+    function lockSpy() {
+      spyLockedUntil = Date.now() + 900;
+    }
+
+    function sidebarVisible() {
+      var sidebar = root.querySelector('.sidebar');
+      return sidebar && sidebar.offsetParent !== null;
+    }
+
+    function syncActiveToScroll() {
+      spyQueued = false;
+      if (Date.now() < spyLockedUntil || !sidebarVisible() || !panels.length) return;
+
+      // Just under the sticky header: the block whose heading has most recently
+      // passed beneath it is the one being read.
+      var header = stickyBottom();
+      var line = header ? header + 24 : window.innerHeight * 0.25;
+      var current = panels[0];
+      panels.forEach(function (panel) {
+        if (panel.getBoundingClientRect().top <= line) current = panel;
+      });
+
+      // Past the last block, the last item stays selected rather than resetting.
+      if (current.id) setActiveLink(current.id);
+    }
+
+    // The header shrinks once the page scrolls, so the offset the sidebar parks
+    // at is re-measured rather than assumed.
+    var appliedStickyTop = null;
+
+    function updateStickyTop() {
+      var offset = Math.round(stickyBottom() + 16);
+      if (offset === appliedStickyTop) return;
+      appliedStickyTop = offset;
+      root.style.setProperty('--pm-sticky-top', offset + 'px');
+    }
+
+    // A sticky box is released by its container one box-height before the
+    // container ends, and the last method is far shorter than the box - so
+    // without this the list has already slid away by the time you reach it.
+    // Topping up the column keeps the list on screen for every method.
+    function updateStickyRoom() {
+      var list = root.querySelector('.accordion-container');
+      var sidebar = root.querySelector('.sidebar');
+      if (!list || !sidebar || !panels.length) return;
+      if (!sidebarVisible()) {
+        list.style.paddingBottom = '';
+        return;
+      }
+      var shortfall = sidebar.offsetHeight - panels[panels.length - 1].offsetHeight;
+      list.style.paddingBottom = shortfall > 0 ? shortfall + 'px' : '';
+    }
+
+    function onScroll() {
+      updateStickyTop();
+      syncActiveToScroll();
+    }
+
+    window.addEventListener('scroll', function () {
+      if (spyQueued) return;
+      spyQueued = true;
+      window.requestAnimationFrame(onScroll);
+    }, { passive: true });
+
+    window.addEventListener('resize', function () {
+      updateStickyTop();
+      updateStickyRoom();
+    });
+    updateStickyTop();
+    updateStickyRoom();
+    // Panel heights settle once the method logos have loaded.
+    window.addEventListener('load', updateStickyRoom);
+
+    var hash = window.location.hash.substring(1);
+    var deepLinked = hash && root.querySelector('[id="' + hash + '"]');
+    if (deepLinked) {
+      setActiveLink(hash);
+      scrollToPanel(deepLinked);
+    } else {
+      syncActiveToScroll();
+    }
+
+    applyBreakpoint();
+    window.addEventListener('resize', applyBreakpoint);
   }
-}
 
-// Initialize on page load
-initializeAccordionsAndSidebar();
+  // The theme editor re-renders a section after the document has loaded, so
+  // the rebuilt markup has to be initialised again rather than left inert.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 
-// Re-initialize on window resize
-window.addEventListener('resize', initializeAccordionsAndSidebar);
+  document.addEventListener('shopify:section:load', function (event) {
+    if (event.detail && String(event.detail.sectionId) === SECTION_ID) init();
+  });
+})();
 </script>
 
 {% schema %}

@@ -23,7 +23,7 @@
 }
 
 .payment-faqs .sidebar h3 {
-  font-family: DM Sans;
+  font-family: var(--font-heading-family);
   font-weight: 700;
   font-size: clamp(24px, 5vw, 32px);
   line-height: 1.3;
@@ -49,7 +49,7 @@
   display: block;
   text-decoration: none;
   color: #000;
-  font-family: DM Sans;
+  font-family: var(--font-body-family);
   font-weight: 700;
   font-size: clamp(14px, 2.5vw, 16px);
   line-height: 1.5;
@@ -71,18 +71,25 @@
 }
 
 .payment-faqs .accordion {
-  border-bottom: 1px solid #E5E5E5;
-  margin: 16px 0;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 0 0 12px;
+}
+
+.payment-faqs .accordion:last-child {
+  margin-bottom: 0;
 }
 
 .payment-faqs .accordion-header {
-  font-family: DM Sans;
+  font-family: var(--font-body-family);
   font-weight: 700;
-  font-size: clamp(16px, 2.5vw, 18px);
-  line-height: 1.5;
+  font-size: 18px;
+  line-height: 24px;
+  color: #000000;
   cursor: pointer;
-  padding: 12px 0;
-  gap: 16px;
+  padding: 0;
+  gap: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -92,23 +99,28 @@
   margin: 0;
 }
 
-.payment-faqs .accordion-header::after {
-  content: '>';
-  font-size: 20px;
-  transition: transform 0.3s ease;
-  transform: rotate(90deg);
+.payment-faqs .accordion-header:focus-visible {
+  outline: 2px solid #D83D0E;
+  outline-offset: 2px;
 }
 
-.payment-faqs .accordion-header.active::after {
-  content: '<';
+.payment-faqs .accordion-header .accordion-chevron {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  transition: transform 0.3s ease;
+}
+
+.payment-faqs .accordion-header.active .accordion-chevron {
+  transform: rotate(180deg);
 }
 
 .payment-faqs .accordion-content-text {
-  font-family: DM Sans;
+  font-family: var(--font-body-family);
   font-weight: 400;
-  font-size: clamp(14px, 2.5vw, 16px);
-  line-height: 1.5;
-  padding: 12px 0;
+  font-size: 16px;
+  line-height: 24px;
+  padding: 12px 0 0;
   display: none;
 }
 
@@ -123,7 +135,7 @@
 }
 
 .payment-faqs .accordion-container ol li {
-  font-family: DM Sans;
+  font-family: var(--font-body-family);
   font-weight: 400;
   font-size: clamp(12px, 2vw, 14px);
   line-height: 1.5;
@@ -200,7 +212,20 @@
   }
 
   .payment-faqs .sidebar h3 {
-    font-size: clamp(20px, 4vw, 24px);
+    font-size: 20px;
+    line-height: 26px;
+    color: #23232B;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .payment-faqs .sidebar p {
+    font-family: var(--font-body-family);
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 24px;
+    color: #393940;
+    margin: 0;
   }
 
   .payment-faqs .sidebar a {
@@ -208,17 +233,17 @@
   }
 
   .payment-faqs .accordion {
-    margin: 0;
-    padding: 0;
+    margin: 0 0 12px;
+    padding: 12px;
   }
 
   .payment-faqs .accordion-header {
-        font-size: 16px;
-        line-height: 24px;
-        font-family: DM Sans;
-        padding: 12px;
-        font-weight: 700;
-
+    font-size: 16px;
+    line-height: 24px;
+    font-family: var(--font-body-family);
+    padding: 0;
+    gap: 8px;
+    font-weight: 700;
   }
 
   .payment-faqs .accordion-container ul li:before{
@@ -231,7 +256,7 @@
   }
 
 .payment-faqs .accordion-content-text p, .payment-faqs .accordion-container ol li, .payment-faqs .accordion-container ul li{
-  font-family: DM Sans;
+  font-family: var(--font-body-family);
   position: relative;
 font-weight: 400;
 font-size: 16px;
@@ -242,9 +267,8 @@ vertical-align: middle;
 }
 
   .payment-faqs .accordion-content-text.active {
-    padding: 12px;
-    padding-top: 0px;
-}
+    padding: 12px 0 0;
+  }
 
   .payment-faqs .accordion-container {
     padding-bottom: 30px;
@@ -265,8 +289,17 @@ vertical-align: middle;
   <div class="accordion-container">
     {% for block in section.blocks %}
         <div class="accordion" id="{{ block.settings.accordion_id }}">
-          <div class="accordion-header"><p>{{ block.settings.accordion_title }}</p></div>
-          <div class="accordion-content-container">         
+          <div
+            class="accordion-header"
+            role="button"
+            tabindex="0"
+            aria-expanded="false"
+            aria-controls="{{ section.id }}-{{ block.id }}-content"
+          >
+            <p>{{ block.settings.accordion_title }}</p>
+            {% render 'chevron' %}
+          </div>
+          <div class="accordion-content-container" id="{{ section.id }}-{{ block.id }}-content">         
             <!-- Accordion Content Text -->
             <div class="accordion-content-text">
               {{ block.settings.accordion_content }}
@@ -278,114 +311,102 @@ vertical-align: middle;
 </div>
 
 <script>
-// JavaScript for Accordion and Sidebar Functionality
-function initializeAccordionsAndSidebar() {
-  const headers = document.querySelectorAll('.payment-faqs .accordion-header');
-  const sidebarLinks = document.querySelectorAll('.payment-faqs .sidebar-link');
+(function () {
+  var SECTION_ID = '{{ section.id }}';
 
-  // Remove existing event listeners
-  headers.forEach(header => {
-    header.removeEventListener('click', toggleAccordion);
-  });
-  sidebarLinks.forEach(link => {
-    link.removeEventListener('click', handleSidebarClick);
-  });
+  function init() {
+    var root = document.getElementById('shopify-section-' + SECTION_ID);
+    // Re-entry guard: the section can be initialised from more than one path.
+    // This is a property rather than a data attribute on purpose - an
+    // attribute serialises into the markup, so a section rebuilt from its own
+    // outerHTML would arrive already flagged and never bind its handlers.
+    if (!root || root.__paymentFaqsBound) return;
+    root.__paymentFaqsBound = true;
 
-  // Accordion functionality
-  headers.forEach(header => {
-    header.addEventListener('click', toggleAccordion);
-  });
+    var headers = Array.prototype.slice.call(root.querySelectorAll('.accordion-header'));
+    var sidebarLinks = Array.prototype.slice.call(root.querySelectorAll('.sidebar-link'));
 
-  function toggleAccordion() {
-    const content = this.nextElementSibling.querySelector('.accordion-content-text');
-    const isActive = content.classList.contains('active');
-    const accordionId = this.parentElement.id;
-
-    // Close all other accordions
-    document.querySelectorAll('.payment-faqs .accordion-content-text').forEach(item => {
-      item.classList.remove('active');
-    });
-    document.querySelectorAll('.payment-faqs .accordion-header').forEach(item => {
-      item.classList.remove('active');
-    });
-
-    // Toggle the clicked accordion
-    if (!isActive) {
-      content.classList.add('active');
-      this.classList.add('active');
-      
-      // Update sidebar active state
-      updateSidebarActiveState(accordionId);
+    function contentOf(header) {
+      return header.parentElement.querySelector('.accordion-content-text');
     }
-  }
 
-  // Sidebar link functionality
-  sidebarLinks.forEach(link => {
-    link.addEventListener('click', handleSidebarClick);
-  });
+    function closeAll() {
+      headers.forEach(function (header) {
+        header.classList.remove('active');
+        header.setAttribute('aria-expanded', 'false');
+        var content = contentOf(header);
+        if (content) content.classList.remove('active');
+      });
+    }
 
-  function handleSidebarClick(e) {
-    e.preventDefault();
-    const targetId = this.getAttribute('href').substring(1);
-    const targetElement = document.getElementById(targetId);
+    function openHeader(header) {
+      header.classList.add('active');
+      header.setAttribute('aria-expanded', 'true');
+      var content = contentOf(header);
+      if (content) content.classList.add('active');
+    }
 
-    // Update sidebar active state
-    updateSidebarActiveState(targetId);
-
-    // Scroll to target
-    if (targetElement) {
-      targetElement.scrollIntoView({ behavior: 'smooth' });
-      
-      // Open the accordion
-      const header = targetElement.querySelector('.accordion-header');
-      const content = targetElement.querySelector('.accordion-content-text');
-      if (header && content && !content.classList.contains('active')) {
-        headers.forEach(h => h.classList.remove('active'));
-        document.querySelectorAll('.payment-faqs .accordion-content-text').forEach(c => c.classList.remove('active'));
-        header.classList.add('active');
-        content.classList.add('active');
+    function toggle(header) {
+      var wasOpen = header.classList.contains('active');
+      var id = header.parentElement.id;
+      closeAll();
+      if (!wasOpen) {
+        openHeader(header);
+        setActiveLink(id);
       }
     }
-  }
 
-  function updateSidebarActiveState(targetId) {
-    sidebarLinks.forEach(link => {
-      const li = link.parentElement;
-      li.classList.remove('active');
-      link.classList.remove('active');
-      if (link.getAttribute('href') === `#${targetId}`) {
-        li.classList.add('active');
-        link.classList.add('active');
-      }
+    function setActiveLink(targetId) {
+      sidebarLinks.forEach(function (link) {
+        var isTarget = link.getAttribute('href') === '#' + targetId;
+        link.classList.toggle('active', isTarget);
+        link.parentElement.classList.toggle('active', isTarget);
+      });
+    }
+
+    headers.forEach(function (header) {
+      header.addEventListener('click', function () {
+        toggle(header);
+      });
+
+      header.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+          event.preventDefault();
+          toggle(header);
+        }
+      });
+    });
+
+    sidebarLinks.forEach(function (link) {
+      link.addEventListener('click', function (event) {
+        event.preventDefault();
+        var targetId = this.getAttribute('href').substring(1);
+        // Resolve inside this section so a second instance never steals the target.
+        var target = root.querySelector('[id="' + targetId + '"]');
+        setActiveLink(targetId);
+        if (!target) return;
+        target.scrollIntoView({ behavior: 'smooth' });
+        var header = target.querySelector('.accordion-header');
+        if (header && !header.classList.contains('active')) {
+          closeAll();
+          openHeader(header);
+        }
+      });
     });
   }
 
-  // Handle initial page load with hash
-  const hash = window.location.hash.substring(1);
-  if (hash) {
-    const targetElement = document.getElementById(hash);
-    if (targetElement) {
-      targetElement.scrollIntoView({ behavior: 'smooth' });
-      const header = targetElement.querySelector('.accordion-header');
-      const content = targetElement.querySelector('.accordion-content-text');
-      if (header && content) {
-        header.classList.add('active');
-        content.classList.add('active');
-      }
-      updateSidebarActiveState(hash);
-    }
+  // The theme editor re-renders a section after the document has loaded, so
+  // the rebuilt markup has to be initialised again rather than left inert.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
   }
-}
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', initializeAccordionsAndSidebar);
-
-// Re-initialize on window resize
-let resizeTimer;
-window.addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(initializeAccordionsAndSidebar, 250);
-});
+  document.addEventListener('shopify:section:load', function (event) {
+    if (event.detail && String(event.detail.sectionId) === SECTION_ID) init();
+  });
+})();
 </script>
 
 {% schema %}
