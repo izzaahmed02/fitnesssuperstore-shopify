@@ -1,0 +1,359 @@
+{{ 'byor-configurator.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'byor-data.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'byor-visual.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'byor-share.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'byor-configurator.js' | asset_url }}" defer="defer"></script>
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.6 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.6 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+<div class="page-width section-{{ section.id }}-padding">
+  <byor-configurator class="byor">
+    {%- comment -%}
+      Printed build sheet header. Hidden on screen; shown only by the print
+      stylesheet. It names the product explicitly so the printed sheet is
+      correct even though the browser's own page title comes from the
+      product's SEO field.
+    {%- endcomment -%}
+    <div class="byor-print-header">
+      <p class="byor-print-header__title">{{ product.title | default: 'Build Your Own Rig' }}</p>
+      <p class="byor-print-header__meta">{{ shop.name }} · Configured build sheet</p>
+      <p class="byor-print-header__meta" data-byor-print-url></p>
+    </div>
+
+    <div class="byor__intro">
+      <h2 class="byor__heading">{{ section.settings.heading }}</h2>
+      {%- if section.settings.subheading != blank -%}
+        <p class="byor__subheading">{{ section.settings.subheading }}</p>
+      {%- endif -%}
+    </div>
+
+    {%- if section.settings.layouts_heading != blank -%}
+      <h3 class="byor__section-heading">{{ section.settings.layouts_heading }}</h3>
+    {%- endif -%}
+    {%- if section.settings.layouts_note != blank -%}
+      <p class="byor__section-note">{{ section.settings.layouts_note }}</p>
+    {%- endif -%}
+
+    <div class="byor-layouts" data-byor-layouts></div>
+
+    <div class="byor-layout">
+      <div data-byor-steps></div>
+
+      <aside class="byor-summary-panel">
+        <div class="byor-visual" data-byor-visual></div>
+
+        <div data-byor-summary></div>
+
+        <div class="byor-share" data-byor-share hidden>
+          <p class="byor-share__title">{{ section.settings.share_heading }}</p>
+          {%- if section.settings.share_note != blank -%}
+            <p class="byor-note">{{ section.settings.share_note }}</p>
+          {%- endif -%}
+
+          <label class="visually-hidden" for="byor-share-link">Link to this build</label>
+          <input
+            type="text"
+            id="byor-share-link"
+            class="byor-share__link"
+            data-byor-share-link
+            readonly
+          >
+
+          <div class="byor-share__actions">
+            <button type="button" class="button button--secondary" data-byor-copy-link>
+              {{ section.settings.share_copy_label }}
+            </button>
+            <button type="button" class="button button--secondary" data-byor-download>
+              {{ section.settings.share_download_label }}
+            </button>
+            <button type="button" class="button button--secondary" data-byor-print>
+              {{ section.settings.share_print_label }}
+            </button>
+          </div>
+
+          <p class="byor-share__status" data-byor-share-status role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="byor-actions">
+          <button type="button" class="button button--primary" data-byor-add disabled>
+            {{ section.settings.add_button_label }}
+          </button>
+          <p class="byor-status" data-byor-status role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="byor-quote-panel" data-byor-quote-panel hidden>
+          <p class="byor-quote-panel__title">{{ section.settings.quote_heading }}</p>
+          {%- if section.settings.quote_note != blank -%}
+            <p class="byor-note">{{ section.settings.quote_note }}</p>
+          {%- endif -%}
+
+          {%- form 'contact', class: 'byor-quote-form', id: 'byor-quote-form' -%}
+            {%- if form.posted_successfully? -%}
+              <p class="form__message">{{ section.settings.quote_success_message }}</p>
+            {%- elsif form.errors -%}
+              <p class="form__message">{{ form.errors | default_errors }}</p>
+            {%- endif -%}
+
+            <input type="hidden" name="contact[subject]" value="Build Your Own Rig — layout review request">
+            <div class="field">
+              <label class="visually-hidden" for="byor-quote-name">Name</label>
+              <input
+                type="text"
+                id="byor-quote-name"
+                name="contact[name]"
+                placeholder="Name"
+                autocomplete="name"
+                required
+              >
+            </div>
+            <div class="field">
+              <label class="visually-hidden" for="byor-quote-email">Email</label>
+              <input
+                type="email"
+                id="byor-quote-email"
+                name="contact[email]"
+                placeholder="Email"
+                autocomplete="email"
+                required
+              >
+            </div>
+            <div class="field">
+              <label class="visually-hidden" for="byor-quote-phone">Phone</label>
+              <input
+                type="tel"
+                id="byor-quote-phone"
+                name="contact[phone]"
+                placeholder="Phone (optional)"
+                autocomplete="tel"
+              >
+            </div>
+            <div class="field">
+              <label class="visually-hidden" for="byor-quote-notes">Anything else we should know</label>
+              <textarea
+                id="byor-quote-notes"
+                name="contact[notes]"
+                rows="3"
+                placeholder="Anything else we should know — room size, ceiling height, timing"
+              ></textarea>
+            </div>
+            <textarea
+              class="visually-hidden"
+              aria-hidden="true"
+              tabindex="-1"
+              name="contact[body]"
+              data-byor-quote-details
+            ></textarea>
+
+            <button type="submit" class="button">{{ section.settings.quote_button_label }}</button>
+          {%- endform -%}
+        </div>
+      </aside>
+    </div>
+
+    <noscript>
+      <p class="byor-noscript">
+        The rig builder needs JavaScript. You can still
+        <a href="{{ section.settings.contact_link | default: '/pages/contact' }}">contact our team</a>
+        and we will spec the rig with you.
+      </p>
+    </noscript>
+  </byor-configurator>
+
+  {%- if section.settings.roomplanner_url != blank -%}
+    <div class="byor-planner">
+      <p class="byor-planner__title">{{ section.settings.roomplanner_heading }}</p>
+      <p>{{ section.settings.roomplanner_note }}</p>
+      <a
+        class="button button--secondary"
+        href="{{ section.settings.roomplanner_url }}"
+        target="_blank"
+        rel="noopener"
+      >
+        {{ section.settings.roomplanner_button_label }}
+      </a>
+    </div>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "Build Your Own Rig",
+  "tag": "section",
+  "class": "byor-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Build your own rig"
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Intro text",
+      "default": "Start from a standard layout, then adjust every piece. We show you the exact parts list as you build."
+    },
+    {
+      "type": "header",
+      "content": "Standard layouts"
+    },
+    {
+      "type": "text",
+      "id": "layouts_heading",
+      "label": "Layouts heading",
+      "default": "Start from a standard layout"
+    },
+    {
+      "type": "textarea",
+      "id": "layouts_note",
+      "label": "Layouts note",
+      "default": "Pick the closest match and change anything you like below. One section is the smallest rig we build."
+    },
+    {
+      "type": "header",
+      "content": "Cart"
+    },
+    {
+      "type": "text",
+      "id": "add_button_label",
+      "label": "Add to cart button",
+      "default": "Add this rig to cart"
+    },
+    {
+      "type": "header",
+      "content": "Save and share"
+    },
+    {
+      "type": "text",
+      "id": "share_heading",
+      "label": "Save/share heading",
+      "default": "Save or share this build"
+    },
+    {
+      "type": "textarea",
+      "id": "share_note",
+      "label": "Save/share note",
+      "default": "Your link reopens this exact rig, so you can come back to it or send it to us."
+    },
+    {
+      "type": "text",
+      "id": "share_copy_label",
+      "label": "Copy link button",
+      "default": "Copy link"
+    },
+    {
+      "type": "text",
+      "id": "share_download_label",
+      "label": "Download button",
+      "default": "Download parts list"
+    },
+    {
+      "type": "text",
+      "id": "share_print_label",
+      "label": "Print button",
+      "default": "Print / save as PDF"
+    },
+    {
+      "type": "header",
+      "content": "Quote review"
+    },
+    {
+      "type": "text",
+      "id": "quote_heading",
+      "label": "Quote heading",
+      "default": "Send this build for layout review"
+    },
+    {
+      "type": "textarea",
+      "id": "quote_note",
+      "label": "Quote note",
+      "default": "We will confirm the parts list, fit and anchoring before anything ships."
+    },
+    {
+      "type": "text",
+      "id": "quote_button_label",
+      "label": "Quote button",
+      "default": "Send my build"
+    },
+    {
+      "type": "textarea",
+      "id": "quote_success_message",
+      "label": "Quote success message",
+      "default": "Thanks — we have your build and will come back to you."
+    },
+    {
+      "type": "url",
+      "id": "contact_link",
+      "label": "Contact page link"
+    },
+    {
+      "type": "header",
+      "content": "Roomplanner"
+    },
+    {
+      "type": "text",
+      "id": "roomplanner_heading",
+      "label": "Roomplanner heading",
+      "default": "Plan this rig in your room"
+    },
+    {
+      "type": "textarea",
+      "id": "roomplanner_note",
+      "label": "Roomplanner note",
+      "default": "Lay your rig out to scale, then send us the plan for review."
+    },
+    {
+      "type": "url",
+      "id": "roomplanner_url",
+      "label": "Roomplanner link"
+    },
+    {
+      "type": "text",
+      "id": "roomplanner_button_label",
+      "label": "Roomplanner button",
+      "default": "Open Roomplanner"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 52
+    }
+  ],
+  "presets": [
+    {
+      "name": "Build Your Own Rig"
+    }
+  ]
+}
+{% endschema %}

@@ -7,7 +7,13 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!container) return null;
 
   const productInfo = container.querySelector(".product__info-wrapper");
+  // The fixed buy box is released once the next block of page content reaches
+  // the viewport. On the Build Your Own Rig template the configurator sits
+  // between the buy box and the extra-info block, so it has to count as that
+  // boundary — otherwise the buy box stays fixed and floats over the whole
+  // builder. Other product pages have no .byor-section and are unaffected.
   const productExtraInfo =
+    document.querySelector(".byor-section") ||
     container.querySelector(".product__extra_info") ||
     document.querySelector(".product__extra_info");
 
