@@ -155,7 +155,7 @@ def link_of(product):
     return (product.get("onlineStoreUrl") or "").strip()
 
 
-def build_row(product, variant):
+def build_row(product, variant, legacy_taxonomy=None):
     sku = (variant.get("sku") or "").strip()
     price_raw = variant.get("price")
     try:
@@ -166,6 +166,15 @@ def build_row(product, variant):
     condition = mf(product, "mf_condition").lower()
     upc = mf(product, "mf_upc")
     mpn = mf(product, "mf_mpn") or mf(product, "mf_product_code") or sku
+
+    # product_type and product_category are the only two fields whose wording the
+    # legacy feed owns rather than Shopify. Carry the live catalog's strings
+    # forward where we have them so the mapping and downstream category filters
+    # keep working; fall back to Shopify-derived values for new SKUs.
+    legacy = (legacy_taxonomy or {}).get(sku) or {}
+    product_type = legacy.get("product_type") or product_type_of(product)
+    product_category = legacy.get("product_category") or product_category_of(product)
+    taxonomy_source = "legacy_carry_forward" if legacy.get("product_type") else "shopify_derived"
 
     return {
         "id": sku,
@@ -179,8 +188,8 @@ def build_row(product, variant):
         "mpn": mpn,
         "upc": upc,
         "sku": sku,
-        "product_type": product_type_of(product),
-        "product_category": product_category_of(product),
+        "product_type": product_type,
+        "product_category": product_category,
         "inventory_quantity": variant.get("inventoryQuantity"),
         "inventory_policy": 0 if (variant.get("inventoryPolicy") or "").upper() == "DENY" else 1,
         "published": True,
@@ -191,6 +200,7 @@ def build_row(product, variant):
         "_product_status": product.get("status") or "",
         "_compare_at_price": variant.get("compareAtPrice"),
         "_barcode": variant.get("barcode") or "",
+        "_taxonomy_source": taxonomy_source,
     }
 
 
@@ -264,9 +274,22 @@ def main(argv=None):
         default=3000,
         help="Minimum-count guard; a feed smaller than this fails reconciliation",
     )
+    parser.add_argument(
+        "--legacy-taxonomy",
+        help=(
+            "JSON map of legacy SKU -> {product_type, product_category}, taken from a "
+            "read-only pull of the current catalog. Preserves the legacy wording of "
+            "those two fields; without it both are derived from Shopify instead."
+        ),
+    )
     args = parser.parse_args(argv)
 
     os.makedirs(args.out, exist_ok=True)
+
+    legacy_taxonomy = {}
+    if args.legacy_taxonomy:
+        with open(args.legacy_taxonomy, "r", encoding="utf-8") as handle:
+            legacy_taxonomy = json.load(handle)
 
     products, variants_by_parent, malformed = load_bulk_jsonl(args.jsonl)
 
@@ -278,7 +301,7 @@ def main(argv=None):
             products_without_variants.append(gid)
             continue
         for variant in variants:
-            candidates.append(build_row(product, variant))
+            candidates.append(build_row(product, variant, legacy_taxonomy))
 
     sku_counts = Counter(row["id"] for row in candidates if row["id"])
 
@@ -324,6 +347,7 @@ def main(argv=None):
             "_product_status",
             "_compare_at_price",
             "_barcode",
+            "_taxonomy_source",
             "_emitted",
             "_reasons",
         ],
@@ -412,6 +436,9 @@ def main(argv=None):
             "accounted": accounted,
         },
         "exception_reason_counts": dict(sorted(reason_counts.items())),
+        "taxonomy_source_counts": dict(
+            Counter(row["_taxonomy_source"] for row in review if row["_emitted"])
+        ),
         "duplicate_emitted_ids": duplicate_emitted,
         "duplicate_sku_analysis": {
             "distinct_duplicated_skus": len(duplicated_skus),
