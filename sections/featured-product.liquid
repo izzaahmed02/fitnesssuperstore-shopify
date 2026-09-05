@@ -2,10 +2,17 @@
   #775: on French Fitness products the crossed-out permanent reference price is suppressed.
   See snippets/ff-permanent-compare-hidden.
 {%- endcomment -%}
-{%- capture hide_perm_price -%}{%- render 'ff-permanent-compare-hidden', product: product -%}{%- endcapture -%}
 {%- liquid
   assign product = section.settings.product
 -%}
+{%- comment -%}
+  The capture MUST follow the assign above. This section has no ambient `product`
+  object - it comes from section.settings.product - so capturing the guard first
+  passed nil into the snippet, product.vendor was nil, and the guard returned
+  'false' for every product including French Fitness. The suppression silently
+  did nothing on this surface.
+{%- endcomment -%}
+{%- capture hide_perm_price -%}{%- render 'ff-permanent-compare-hidden', product: product -%}{%- endcapture -%}
 
 <product-info
   data-section="{{ section.id }}"
