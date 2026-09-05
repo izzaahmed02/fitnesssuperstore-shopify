@@ -56,7 +56,7 @@ recommendation-event history line up.
 | `id`, `sku` | `variant.sku` |
 | `title` | `product.title` |
 | `description` | `product.description`, tags and whitespace collapsed |
-| `link` | `custom.product_canonical_url`, else `product.onlineStoreUrl` |
+| `link` | `custom.product_canonical_url`, else `product.onlineStoreUrl`; multi-variant products are deep-linked with `?variant=<id>` so each row resolves to its own variant |
 | `image_link` | `variant.image`, else `product.featuredMedia` |
 | `price` | `variant.price` — Admin base price verbatim, no promotional discount inferred |
 | `availability` | `In Stock` / `Out of Stock` / `Backorder`, from `availableForSale` + inventory policy |
@@ -84,18 +84,25 @@ each exception line stays individually explainable.
 Blocking:
 
 - `BLANK_SKU` — no SKU, so no stable feed id.
-- `DUPLICATE_SKU_NAMED_IN_AUDIT_HOLD` — one of the five SKUs named in the audit.
-- `DUPLICATE_SKU_RCHD_FAMILY_SAME_ROOT_CAUSE` — same defect, wider blast radius:
-  Rubber Coated Hex Dumbbell SKUs exist both as standalone single-SKU products
-  and as variants of one multi-variant parent. Held on the same basis until the
-  SKUs are made unique in Shopify.
-- `DUPLICATE_SKU_UNEXPECTED` — a duplicate outside both known groups. This must
-  be empty; a non-empty count means a new identity problem to triage.
+- `duplicate_sku_parent_preferred` — the same SKU is carried both by a standalone
+  product and by a variant of the preferred multi-variant parent
+  (`PREFERRED_PARENT_PRODUCT_IDS`). The parent's variant row wins and the
+  standalone row is dropped, so the SKU reaches the feed exactly once. Nothing
+  changes in Shopify: both products stay live on the site and no SKU is renamed.
+- `DUPLICATE_SKU_UNEXPECTED` — a duplicate with no preferred parent to resolve
+  it, so no row wins and all are held. This must be empty; a non-empty count
+  means a new identity problem to triage.
+- `GIFT_CERTIFICATE` — gift certificates are not products and are absent from
+  the current catalog; they must not enter a recommendation feed.
+- `BLANK_REQUIRED_FIELD_<FIELD>` — `description`, `product_type` or
+  `product_category` blank. The source 24138 mapping requires these, so a blank
+  risks an item-level sync failure. All 3,221 live catalog items carry both
+  taxonomy fields populated, which is consistent with that.
 - `ZERO_OR_NEGATIVE_PRICE`, `UNPARSEABLE_PRICE`, `MISSING_PRODUCT_URL`,
   `MISSING_IMAGE`.
 
-Warnings: `BLANK_DESCRIPTION`, `BLANK_UPC`, `BLANK_CONDITION`,
-`BLANK_PRODUCT_TYPE`, `BLANK_PRODUCT_CATEGORY`.
+Warnings (reported, still emitted): `BLANK_UPC`, `BLANK_CONDITION`. These are
+demonstrably optional — the live catalog holds items with them blank today.
 
 ## 5. Pre-cutover backup and rollback feed
 
