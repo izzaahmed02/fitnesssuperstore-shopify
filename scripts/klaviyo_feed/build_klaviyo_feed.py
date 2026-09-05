@@ -24,22 +24,32 @@ import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 
-# SKUs named in the READ-ONLY AUDIT thread (2026-09-05 boundaries) as held out
-# of scope until they are made unique in Shopify. These turned out to be five of
-# a larger family sharing one root cause -- see RCHD_FAMILY_PREFIX below.
-AUDIT_NAMED_DUPLICATE_SKUS = {
-    "FF-RCHD5-50",
-    "FF-RCHD5-75",
-    "FF-RCHD5-100",
-    "FF-RCHD2-5-22-5",
-    "FF-RCHD2-5-25",
+# Rubber Coated Hex Dumbbell SKUs exist twice in Shopify: once as standalone
+# single-SKU products and once as variants of this multi-variant parent. Both
+# versions stay live on the site; the duplication is resolved in the feed only.
+# Per the 2026-09-05 decision the parent's variant row wins and the standalone
+# row is dropped, so all 45 SKUs reach the feed exactly once.
+PREFERRED_PARENT_PRODUCT_IDS = {
+    "gid://shopify/Product/10247596147004",  # French Fitness Rubber Coated Hex Dumbbell (New)
 }
 
-# Rubber Coated Hex Dumbbell SKUs exist twice in Shopify: once as standalone
-# single-SKU products and once as variants of a single multi-variant parent.
-# Same defect as the five SKUs named in the audit, so it gets its own reason code
-# rather than being reported as an unexplained duplicate.
-RCHD_FAMILY_PREFIX = "FF-RCHD"
+DUPLICATE_PARENT_PREFERRED = "duplicate_sku_parent_preferred"
+
+# Fields the source 24138 mapping requires. A blank risks an item-level sync
+# failure, so a blank excludes the row instead of merely warning. Verified
+# against the live catalog: all 3,221 items carry product_type and
+# product_category populated, while upc, mpn and condition are blank on some.
+REQUIRED_MAPPED_FIELDS = ("description", "product_type", "product_category")
+
+# Gift certificates are not products and are absent from the current catalog.
+# They must not enter a product-recommendation feed.
+GIFT_CERTIFICATE_SKU_PREFIX = "GFT-"
+
+
+def is_gift_certificate(row):
+    return row["id"].upper().startswith(GIFT_CERTIFICATE_SKU_PREFIX) or (
+        "gift certificate" in row["title"].lower()
+    )
 
 # Feed keys, in the order the existing source 24138 mapping consumes them.
 FEED_KEYS = [
@@ -148,14 +158,25 @@ def image_of(product, variant):
     return ((media.get("image") or {}).get("url") or "").strip()
 
 
-def link_of(product):
-    canonical = mf(product, "mf_canonical")
-    if canonical:
-        return canonical
-    return (product.get("onlineStoreUrl") or "").strip()
+def link_of(product, variant=None, variant_count=1):
+    """Product PDP, deep-linked to the variant when the product has several.
+
+    A variant-level feed needs one distinct link per row; without the variant
+    parameter every variant of a product would share the parent's URL and land
+    the reader on whichever variant Shopify defaults to.
+    """
+    url = mf(product, "mf_canonical") or (product.get("onlineStoreUrl") or "").strip()
+    if not url or variant_count <= 1 or not variant:
+        return url
+
+    variant_id = (variant.get("id") or "").rsplit("/", 1)[-1]
+    if not variant_id.isdigit():
+        return url
+    separator = "&" if "?" in url else "?"
+    return f"{url}{separator}variant={variant_id}"
 
 
-def build_row(product, variant, legacy_taxonomy=None):
+def build_row(product, variant, legacy_taxonomy=None, variant_count=1):
     sku = (variant.get("sku") or "").strip()
     price_raw = variant.get("price")
     try:
@@ -180,7 +201,7 @@ def build_row(product, variant, legacy_taxonomy=None):
         "id": sku,
         "title": product.get("title") or "",
         "description": plain_text(product.get("description")),
-        "link": link_of(product),
+        "link": link_of(product, variant, variant_count),
         "image_link": image_of(product, variant),
         "price": price,
         "availability": availability_of(variant),
@@ -204,6 +225,31 @@ def build_row(product, variant, legacy_taxonomy=None):
     }
 
 
+def resolve_duplicates(candidates, sku_counts):
+    """Decide, deterministically, which row wins for each duplicated SKU.
+
+    A SKU carried both by a standalone product and by a preferred multi-variant
+    parent resolves to the parent's variant row; the standalone row is dropped.
+    Duplicates that do not involve a preferred parent are left unresolved so
+    they surface as an unexpected identity problem instead of being absorbed.
+
+    Mutates each row's `_dup_resolution` in place.
+    """
+    by_sku = defaultdict(list)
+    for row in candidates:
+        row["_dup_resolution"] = ""
+        if row["id"] and sku_counts[row["id"]] > 1:
+            by_sku[row["id"]].append(row)
+
+    for rows in by_sku.values():
+        preferred = [r for r in rows if r["_shopify_product_id"] in PREFERRED_PARENT_PRODUCT_IDS]
+        # Exactly one parent claim is required; zero or several is not resolvable.
+        if len(preferred) != 1:
+            continue
+        for row in rows:
+            row["_dup_resolution"] = "preferred" if row is preferred[0] else "dropped"
+
+
 def classify(row, sku_counts):
     """Return (blocking_reasons, warning_reasons) for one candidate row.
 
@@ -217,11 +263,10 @@ def classify(row, sku_counts):
     if not sku:
         blocking.append("BLANK_SKU")
     elif sku_counts[sku] > 1:
-        if sku in AUDIT_NAMED_DUPLICATE_SKUS:
-            blocking.append("DUPLICATE_SKU_NAMED_IN_AUDIT_HOLD")
-        elif sku.startswith(RCHD_FAMILY_PREFIX):
-            blocking.append("DUPLICATE_SKU_RCHD_FAMILY_SAME_ROOT_CAUSE")
-        else:
+        resolution = row.get("_dup_resolution")
+        if resolution == "dropped":
+            blocking.append(DUPLICATE_PARENT_PREFERRED)
+        elif resolution != "preferred":
             blocking.append("DUPLICATE_SKU_UNEXPECTED")
 
     if row["price"] is None:
@@ -234,16 +279,23 @@ def classify(row, sku_counts):
     if not row["image_link"]:
         blocking.append("MISSING_IMAGE")
 
-    if not row["description"]:
-        warnings.append("BLANK_DESCRIPTION")
+    if is_gift_certificate(row):
+        blocking.append("GIFT_CERTIFICATE")
+
+    # description, product_type and product_category are required by the source
+    # 24138 mapping, so a blank would risk an item-level sync failure. All 3,221
+    # items in the live catalog carry both taxonomy fields populated, which is
+    # consistent with that. Exclude rather than gamble at cutover.
+    for field in REQUIRED_MAPPED_FIELDS:
+        if not row[field]:
+            blocking.append(f"BLANK_REQUIRED_FIELD_{field.upper()}")
+
+    # upc, condition and mpn are demonstrably optional: the live catalog holds
+    # items with those blank today, so a blank is reported but not excluded.
     if not row["upc"]:
         warnings.append("BLANK_UPC")
     if not row["condition"]:
         warnings.append("BLANK_CONDITION")
-    if not row["product_type"]:
-        warnings.append("BLANK_PRODUCT_TYPE")
-    if not row["product_category"]:
-        warnings.append("BLANK_PRODUCT_CATEGORY")
 
     return blocking, warnings
 
@@ -301,9 +353,10 @@ def main(argv=None):
             products_without_variants.append(gid)
             continue
         for variant in variants:
-            candidates.append(build_row(product, variant, legacy_taxonomy))
+            candidates.append(build_row(product, variant, legacy_taxonomy, len(variants)))
 
     sku_counts = Counter(row["id"] for row in candidates if row["id"])
+    resolve_duplicates(candidates, sku_counts)
 
     feed = []
     exceptions = []
@@ -348,6 +401,7 @@ def main(argv=None):
             "_compare_at_price",
             "_barcode",
             "_taxonomy_source",
+            "_dup_resolution",
             "_emitted",
             "_reasons",
         ],
@@ -443,20 +497,19 @@ def main(argv=None):
         "duplicate_sku_analysis": {
             "distinct_duplicated_skus": len(duplicated_skus),
             "excluded_rows": sum(sku_counts[sku] for sku in duplicated_skus),
-            "named_in_audit_hold": sorted(
-                sku for sku in duplicated_skus if sku in AUDIT_NAMED_DUPLICATE_SKUS
-            ),
-            "same_root_cause_not_previously_named": sorted(
+            "resolved_parent_preferred": sorted(
                 sku
                 for sku in duplicated_skus
-                if sku not in AUDIT_NAMED_DUPLICATE_SKUS
-                and sku.startswith(RCHD_FAMILY_PREFIX)
+                if any(
+                    r["id"] == sku and r["_dup_resolution"] == "preferred" for r in candidates
+                )
             ),
-            "outside_known_families": sorted(
+            "unresolved": sorted(
                 sku
                 for sku in duplicated_skus
-                if sku not in AUDIT_NAMED_DUPLICATE_SKUS
-                and not sku.startswith(RCHD_FAMILY_PREFIX)
+                if not any(
+                    r["id"] == sku and r["_dup_resolution"] == "preferred" for r in candidates
+                )
             ),
             "claiming_shopify_products": dict(duplicate_parents.most_common()),
         },

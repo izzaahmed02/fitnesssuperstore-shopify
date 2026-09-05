@@ -89,30 +89,42 @@ class BuilderTests(unittest.TestCase):
         _, _, feed = self.build([node, variant])
         self.assertEqual(list(feed[0].keys()), builder.FEED_KEYS)
 
-    def test_duplicate_sku_is_excluded_and_reconciles(self):
+    def test_duplicate_with_no_preferred_parent_stays_unresolved(self):
         a, av = product(1, "DUP", "10.00")
         b, bv = product(2, "DUP", "20.00")
         code, report, feed = self.build([a, av, b, bv])
+        # neither row is the preferred parent, so neither wins and both are held
         self.assertEqual(feed, [])
         self.assertEqual(report["counts"]["excluded"], 2)
         self.assertEqual(report["counts"]["accounted"], report["counts"]["variant_rows"])
-        # a duplicate outside the known families must be surfaced, not absorbed
-        self.assertEqual(
-            report["duplicate_sku_analysis"]["outside_known_families"], ["DUP"]
-        )
-        # min_items guard trips, so reconciliation is not clean
+        self.assertEqual(report["duplicate_sku_analysis"]["unresolved"], ["DUP"])
+        self.assertEqual(report["exception_reason_counts"]["DUPLICATE_SKU_UNEXPECTED"], 2)
         self.assertEqual(code, 1)
 
-    def test_named_and_family_duplicates_get_distinct_reason_codes(self):
-        a, av = product(1, "FF-RCHD5-50", "10.00")
-        b, bv = product(2, "FF-RCHD5-50", "10.00")
-        c, cv = product(3, "FF-RCHD10", "10.00")
-        d, dv = product(4, "FF-RCHD10", "10.00")
-        _, report, _ = self.build([a, av, b, bv, c, cv, d, dv])
-        reasons = report["exception_reason_counts"]
-        self.assertEqual(reasons["DUPLICATE_SKU_NAMED_IN_AUDIT_HOLD"], 2)
-        self.assertEqual(reasons["DUPLICATE_SKU_RCHD_FAMILY_SAME_ROOT_CAUSE"], 2)
-        self.assertEqual(report["duplicate_sku_analysis"]["outside_known_families"], [])
+    def test_parent_preferred_wins_and_standalone_is_dropped(self):
+        parent_id = int(
+            sorted(builder.PREFERRED_PARENT_PRODUCT_IDS)[0].rsplit("/", 1)[-1]
+        )
+        standalone, sv = product(1, "FF-RCHD5-50", "10.00")
+        parent, pv = product(parent_id, "FF-RCHD5-50", "12.00")
+        # give the parent a second variant so it looks like the real multi-variant product
+        extra = dict(pv, id=f"gid://shopify/ProductVariant/{parent_id}2", sku="FF-RCHD10")
+        _, report, feed = self.build([standalone, sv, parent, pv, extra])
+
+        by_sku = {item["id"]: item for item in feed}
+        # the surviving row is the parent's, at the parent's price, deep-linked
+        self.assertEqual(by_sku["FF-RCHD5-50"]["price"], 12.0)
+        self.assertIn(f"?variant={parent_id}1", by_sku["FF-RCHD5-50"]["link"])
+        self.assertEqual(
+            report["exception_reason_counts"][builder.DUPLICATE_PARENT_PREFERRED], 1
+        )
+        self.assertEqual(
+            report["duplicate_sku_analysis"]["resolved_parent_preferred"],
+            ["FF-RCHD5-50"],
+        )
+        self.assertEqual(report["duplicate_sku_analysis"]["unresolved"], [])
+        # the SKU reaches the feed exactly once
+        self.assertEqual(report["duplicate_emitted_ids"], [])
 
     def test_blank_sku_and_zero_price_are_excluded(self):
         node, variant = product(1, "", "0.00")
@@ -120,6 +132,32 @@ class BuilderTests(unittest.TestCase):
         self.assertEqual(feed, [])
         self.assertEqual(len(report["blank_sku_rows"]), 1)
         self.assertIn("ZERO_OR_NEGATIVE_PRICE", report["exception_reason_counts"])
+
+    def test_blank_required_mapped_field_excludes_the_row(self):
+        node, variant = product(1, "SKU-1", "10.00")
+        node["description"] = ""
+        _, report, feed = self.build([node, variant])
+        self.assertEqual(feed, [])
+        self.assertIn(
+            "BLANK_REQUIRED_FIELD_DESCRIPTION", report["exception_reason_counts"]
+        )
+
+    def test_blank_optional_field_only_warns(self):
+        node, variant = product(1, "SKU-1", "10.00")
+        node["mf_upc"] = {"value": ""}
+        _, report, feed = self.build([node, variant])
+        # upc is blank on live catalog items, so it must not exclude the row
+        self.assertEqual(len(feed), 1)
+        self.assertEqual(report["counts"]["excluded"], 0)
+        self.assertIn("BLANK_UPC", report["exception_reason_counts"])
+
+    def test_gift_certificates_never_enter_the_feed(self):
+        by_sku, sv = product(1, "GFT-100", "100.00")
+        by_title, tv = product(2, "OTHER-1", "100.00")
+        by_title["title"] = "Fitness Superstore Gift Certificate"
+        _, report, feed = self.build([by_sku, sv, by_title, tv])
+        self.assertEqual(feed, [])
+        self.assertEqual(report["exception_reason_counts"]["GIFT_CERTIFICATE"], 2)
 
     def test_backorder_when_overselling_at_zero_stock(self):
         node, variant = product(1, "SKU-1", "10.00")
