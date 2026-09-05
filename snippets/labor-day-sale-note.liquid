@@ -8,6 +8,11 @@
 
   Accepts:
     product         (Product)  required
+    section_id      (string)   required for variant-aware updates. Pass section.id - it
+                               is not in scope inside a {% render %}. It builds the
+                               container id that assets/product-info.js swaps on variant
+                               change; without it the card keeps the first variant's
+                               prices. The two copies get distinct ids so both update.
     hide_on_mobile  (boolean)  optional. Pass true on the desktop-layout copy so it
                                does not also render on mobile (the mobile-layout copy
                                is rendered without it and is the one shown on phones).
@@ -23,12 +28,26 @@
     Remanufactured 5% (collection 512180715836, all must be true):
       title contains 'Remanufactured' AND type == 'Product Index'
 
-  DISPLAY: renders as a compact sale card, not a free-text paragraph. The payoff line
-  (percentage + discounted price) is computed in Liquid from product.price rather than
-  read from settings.sale_promo_ff / settings.sale_promo_reman, so it always matches the
-  real discount. Those two settings still gate the card per branch (blank = hidden) and
-  the end date shown comes from settings.laborday_end, so a future sale only needs the
-  theme settings updated - no code edit.
+  DISPLAY: renders as a compact sale card, not a free-text paragraph. The card sits
+  directly beneath the main price block so its struck-through "was" figure reads as the
+  page price being crossed out. Both figures are computed in Liquid from the same variant
+  price the main price block renders (selected_or_first_available_variant), rather than
+  read from settings.sale_promo_ff / settings.sale_promo_reman, so they always match the
+  real discount. Those two settings still gate the card per branch (blank = hidden).
+
+  The strikethrough is presentational only: a plain <span> with a CSS line-through inside
+  the card. The main price element and the product structured data are deliberately left
+  alone - the price Google crawls stays the official price, matching the product feed.
+
+  Because both figures are variant-specific, the card must re-render when the shopper
+  picks a different variant. product-info.js only swaps elements it names by id, so the
+  container carries LaborDaySaleCard-<section id> (mobile copy) or
+  LaborDaySaleCard-Desktop-<section id> (the hide_on_mobile copy) and both ids are in
+  that script's update list. Rename one and the card silently goes stale.
+
+  END DATE: settings.laborday_end is an EXCLUSIVE boundary (the window check below stops
+  rendering at that instant), so formatting it verbatim would advertise one day too many.
+  The fine print shows the last day the sale is actually live: end - 1 second.
 {% endcomment %}
 {%- liquid
   assign in_ff = false
@@ -68,17 +87,42 @@
   {%- assign in_window = true -%}
 {%- endif -%}
 {%- if campaign_kind != '' and in_window -%}
-  <div class="campaign-sale-container{% if hide_on_mobile %} hide-on-mobile{% endif %}">
+  {%- liquid
+    comment
+      Mirror the main price block, which renders with use_variant: true - product.price is
+      the family MINIMUM and would strike through a figure the shopper never sees.
+    endcomment
+    assign card_price = product.selected_or_first_available_variant.price | default: product.price
+    if campaign_kind == 'reman'
+      assign card_discount = '5% off'
+      assign card_sale_price = card_price | times: 0.95
+    else
+      assign card_discount = '10% off'
+      assign card_sale_price = card_price | times: 0.9
+    endif
+    comment
+      laborday_end is exclusive - back off one second so the copy names the last day the
+      sale is actually live (an end of Sep 8 00:00 reads as "Ends Sep. 7").
+    endcomment
+    assign last_day_s = end_s | minus: 1
+  -%}
+  <div
+    {% if section_id != blank %}id="LaborDaySaleCard{% if hide_on_mobile %}-Desktop{% endif %}-{{ section_id }}"{% endif %}
+    class="campaign-sale-container{% if hide_on_mobile %} hide-on-mobile{% endif %}"
+  >
     <div class="labor-day-sale-card">
       <div class="labor-day-sale-card__row">
         <span class="labor-day-sale-card__badge">Labor day sale</span>
-        {%- if campaign_kind == 'ff' -%}
-          <p class="labor-day-sale-card__payoff">10% off — {{ product.price | times: 0.9 | money }} in cart</p>
-        {%- elsif campaign_kind == 'reman' -%}
-          <p class="labor-day-sale-card__payoff">5% off — {{ product.price | times: 0.95 | money }} in cart</p>
-        {%- endif -%}
+        <span class="labor-day-sale-card__was"
+          ><span class="visually-hidden">Regular price </span>{{ card_price | money }}</span
+        >
+        <span class="labor-day-sale-card__now"
+          ><span class="visually-hidden">Sale price </span>{{ card_sale_price | money }} in cart</span
+        >
       </div>
-      <p class="labor-day-sale-card__meta">Applied automatically at checkout · Ends {{ settings.laborday_end | date: "%b. %-d" }}</p>
+      <p class="labor-day-sale-card__meta">
+        {{ card_discount }} applied automatically at checkout{% if end_s > 0 %} · Ends {{ last_day_s | date: "%b. %-d" }}{% endif %}
+      </p>
     </div>
   </div>
 {%- endif -%}
