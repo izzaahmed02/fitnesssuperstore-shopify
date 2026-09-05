@@ -24,8 +24,13 @@ signed download URLs out of email, chat, screenshots and this repository.
 python3 scripts/klaviyo_feed/build_klaviyo_feed.py \
     --jsonl staging-bulk-<id>.jsonl \
     --out ./out \
-    --min-items 3000
+    --min-items 3000 \
+    --legacy-taxonomy legacy_taxonomy.json
 ```
+
+`--legacy-taxonomy` is a JSON map of legacy SKU to `{product_type, product_category}`,
+built from a read-only pull of the current catalog. It preserves the legacy wording
+of those two fields; see section 3.
 
 Standard library only, no network, no Klaviyo key. Exit status is non-zero when
 reconciliation fails, so it is safe to gate a scheduled rebuild on it.
@@ -61,12 +66,15 @@ recommendation-event history line up.
 | `product_type` | `custom.main_category > custom.sub_category` |
 | `product_category` | Shopify Standard Product Taxonomy `category.fullName` |
 
-`product_type` and `product_category` are the two fields whose **wording**
-differs from the legacy feed: the legacy catalog carried a Volusion breadcrumb
-(`Home > Home > ...`) and a Google product-taxonomy name, neither of which
-exists verbatim in Shopify. Confirm both against the read-only source 24138
-mapping screen before any cutover, or carry the legacy strings forward from the
-pre-cutover catalog backup. Every other field is a like-for-like replacement.
+`product_type` and `product_category` are the two fields whose **wording** the
+legacy feed owns rather than Shopify: the legacy catalog carried a Volusion
+breadcrumb (`Home > Home > ...`) and a Google product-taxonomy name, neither of
+which exists verbatim in Shopify. Pass `--legacy-taxonomy` to carry those exact
+strings forward for every SKU already in the catalog, so the source 24138 mapping
+and any downstream category filters keep working untouched. SKUs with no legacy
+row fall back to Shopify-derived wording; `build_report.json` reports the split
+under `taxonomy_source_counts`, and `review.csv` flags each row's
+`_taxonomy_source`. Every other field is a like-for-like replacement.
 
 ## 4. Exception reason codes
 
@@ -89,7 +97,38 @@ Blocking:
 Warnings: `BLANK_DESCRIPTION`, `BLANK_UPC`, `BLANK_CONDITION`,
 `BLANK_PRODUCT_TYPE`, `BLANK_PRODUCT_CATEGORY`.
 
-## 5. Hosting and the 4-hour rebuild — NOT yet stood up
+## 5. Pre-cutover backup and rollback feed
+
+```
+export KLAVIYO_API_KEY=...      # read-only key, environment variable only
+python3 scripts/klaviyo_feed/klaviyo_backup.py --out ./backup --make-restore-feed
+```
+
+Read-only by construction: the client issues HTTP GET and implements no write
+verb. Writes `catalog_items.jsonl`, `catalog_variants.jsonl`,
+`catalog_categories.jsonl`, `restore-feed.json` and `backup_report.json`.
+
+`restore-feed.json` reproduces the catalog exactly as it stands, defects
+included — that is the point: re-publishing it returns the catalog to its
+pre-cutover state. Store the JSONL files and `restore-feed.json` in the approved
+company location; `backup_report.json` is the only artifact safe to attach to
+email.
+
+This must be run from an environment with egress to `a.klaviyo.com`. The key
+lives in the environment only — never on the command line, in email, in chat or
+in this repository.
+
+## 6. Tests
+
+```
+python3 scripts/klaviyo_feed/test_klaviyo_feed.py
+```
+
+Offline, no credentials, no network. Covers the field mapping, the exception
+reason codes, the reconciliation and minimum-count guards, the legacy taxonomy
+carry-forward, and that the backup client exposes no write verb.
+
+## 7. Hosting and the 4-hour rebuild — NOT yet stood up
 
 Runbook Steps 3-4 need a host that gives a fixed HTTPS URL that never changes.
 That host is not chosen yet, so no URL exists to confirm and nothing is
