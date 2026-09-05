@@ -290,25 +290,28 @@
                 {% render 'labor-day-sale-note', product: product %}
 
                 <div class="product__prices here">
-                  {%comment %}
-                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
-                   {%endcomment %}
-                    {% unless is_gift_cards_template %}
-                      <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
-                        >As high as:
-                        <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
-                      </span>
-                    {% endunless %}
-                    {% comment %}
-                  {% endif %}
-                   {%endcomment %}
-
-
-
-                  {% if product.metafields.custom.saleprice_name != blank %}
+                  {%- assign _variant = product.selected_or_first_available_variant -%}
+                  {% unless is_gift_cards_template %}
+                    <span class="pr_custom_compare_price{% unless _variant.compare_at_price > _variant.price %} pm-empty{% endunless %}"
+                      >As high as:
+                      <s>{{ _variant.compare_at_price | money_with_currency -}}</s>
+                    </span>
+                  {% endunless %}
+                  {%- comment -%}
+                    Choose this branch on the same condition the banner actually
+                    renders on - a sale name alone is not a sale. Gating on the name
+                    only meant a product whose sale_price is blank, zero, or not below
+                    the regular price took the banner branch, the banner then declined
+                    to render, and the PDP showed no price at all.
+                  {%- endcomment -%}
+                  {%- assign _sale_price_cents = 0 -%}
+                  {%- if product.metafields.custom.saleprice_name != blank -%}
+                    {%- assign _sale_price_cents = product.metafields.custom.sale_price | replace: ',', '' | times: 100.0 -%}
+                  {%- endif -%}
+                  {% if _sale_price_cents > 0 and _variant.price > _sale_price_cents %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
-                      current_price: product.selected_or_first_available_variant.compare_at_price,
+                      current_price: _variant.price,
                       sale_price: product.metafields.custom.sale_price
                     %}
                   {% else %}
@@ -319,18 +322,15 @@
                         show_badges: true,
                         price_class: 'price--large'
                       -%}
-
-                      {% comment %}{% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %} {% endcomment %}
-
-                       <div>
-
-
-                      <span class="you-save pm-empty"></span>
-
+                      <div>
+                        {% if _variant.compare_at_price > _variant.price %}
+                          <span class="you-save">You save {{ _variant.compare_at_price | minus: _variant.price | money }}</span>
+                        {% else %}
+                          <span class="you-save pm-empty"></span>
+                        {% endif %}
+                      </div>
                     </div>
-
-                      {% endif %}
-                    </div>
+                  {% endif %}
                 </div>
 
 
@@ -795,18 +795,28 @@
 {% render 'labor-day-sale-note', product: product, hide_on_mobile: true %}
 
                 <div class="product__prices hidden lg:block">
-
-                     {% unless is_gift_cards_template %}
-                      <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
-                        >As high as:
-                        <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
-                      </span>
-                    {% endunless %}
-
-                  {% if product.metafields.custom.saleprice_name != blank %}
+                  {%- assign _variant = product.selected_or_first_available_variant -%}
+                  {% unless is_gift_cards_template %}
+                    <span class="pr_custom_compare_price{% unless _variant.compare_at_price > _variant.price %} pm-empty{% endunless %}"
+                      >As high as:
+                      <s>{{ _variant.compare_at_price | money_with_currency -}}</s>
+                    </span>
+                  {% endunless %}
+                  {%- comment -%}
+                    Choose this branch on the same condition the banner actually
+                    renders on - a sale name alone is not a sale. Gating on the name
+                    only meant a product whose sale_price is blank, zero, or not below
+                    the regular price took the banner branch, the banner then declined
+                    to render, and the PDP showed no price at all.
+                  {%- endcomment -%}
+                  {%- assign _sale_price_cents = 0 -%}
+                  {%- if product.metafields.custom.saleprice_name != blank -%}
+                    {%- assign _sale_price_cents = product.metafields.custom.sale_price | replace: ',', '' | times: 100.0 -%}
+                  {%- endif -%}
+                  {% if _sale_price_cents > 0 and _variant.price > _sale_price_cents %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
-                      current_price: product.selected_or_first_available_variant.compare_at_price,
+                      current_price: _variant.price,
                       sale_price: product.metafields.custom.sale_price
                     %}
                   {% else %}
@@ -817,15 +827,15 @@
                         show_badges: true,
                         price_class: 'price--large'
                       -%}
-
-                       <div>
-
-
-                     <span class="you-save pm-empty"></span>
+                      <div>
+                        {% if _variant.compare_at_price > _variant.price %}
+                          <span class="you-save">You save {{ _variant.compare_at_price | minus: _variant.price | money }}</span>
+                        {% else %}
+                          <span class="you-save pm-empty"></span>
+                        {% endif %}
+                      </div>
                     </div>
-
-                      {% endif %}
-                    </div>
+                  {% endif %}
                 </div>
 
 
@@ -883,10 +893,24 @@
 
                    <div class="product_price_with_options-contaniner">
                     <div class="product_prices">
+                      {%- comment -%}
+                        "Total with options" must build on the price the customer actually pays.
+                        When the promo banner is active (custom.saleprice_name set and
+                        custom.sale_price below the variant price) that banner price is the
+                        selling price; otherwise it is the native variant price.
+                      {%- endcomment -%}
+                      {%- assign twp_variant = product.selected_or_first_available_variant -%}
+                      {%- assign twp_price = twp_variant.price -%}
+                      {%- if product.metafields.custom.saleprice_name != blank -%}
+                        {%- assign twp_sale = product.metafields.custom.sale_price | replace: ',', '' | times: 100.0 -%}
+                        {%- if twp_sale > 0 and twp_price > twp_sale -%}
+                          {%- assign twp_price = twp_sale -%}
+                        {%- endif -%}
+                      {%- endif -%}
                       <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
                         <div class="pr_custom_price-container">
-                          <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{  product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
-                            {{ product.selected_or_first_available_variant.price | money }}
+                          <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{ twp_price | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
+                            {{ twp_price | money }}
                           </p>
                         </div>
                       </div>
