@@ -8,6 +8,11 @@
 
   Accepts:
     product         (Product)  required
+    section_id      (string)   required for variant-aware updates. Pass section.id - it
+                               is not in scope inside a {% render %}. It builds the
+                               container id that assets/product-info.js swaps on variant
+                               change; without it the card keeps the first variant's
+                               prices. The two copies get distinct ids so both update.
     hide_on_mobile  (boolean)  optional. Pass true on the desktop-layout copy so it
                                does not also render on mobile (the mobile-layout copy
                                is rendered without it and is the one shown on phones).
@@ -33,6 +38,12 @@
   The strikethrough is presentational only: a plain <span> with a CSS line-through inside
   the card. The main price element and the product structured data are deliberately left
   alone - the price Google crawls stays the official price, matching the product feed.
+
+  Because both figures are variant-specific, the card must re-render when the shopper
+  picks a different variant. product-info.js only swaps elements it names by id, so the
+  container carries LaborDaySaleCard-<section id> (mobile copy) or
+  LaborDaySaleCard-Desktop-<section id> (the hide_on_mobile copy) and both ids are in
+  that script's update list. Rename one and the card silently goes stale.
 
   END DATE: settings.laborday_end is an EXCLUSIVE boundary (the window check below stops
   rendering at that instant), so formatting it verbatim would advertise one day too many.
@@ -95,7 +106,10 @@
     endcomment
     assign last_day_s = end_s | minus: 1
   -%}
-  <div class="campaign-sale-container{% if hide_on_mobile %} hide-on-mobile{% endif %}">
+  <div
+    {% if section_id != blank %}id="LaborDaySaleCard{% if hide_on_mobile %}-Desktop{% endif %}-{{ section_id }}"{% endif %}
+    class="campaign-sale-container{% if hide_on_mobile %} hide-on-mobile{% endif %}"
+  >
     <div class="labor-day-sale-card">
       <div class="labor-day-sale-card__row">
         <span class="labor-day-sale-card__badge">Labor day sale</span>

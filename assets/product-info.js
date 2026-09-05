@@ -174,6 +174,8 @@ customElements.get('product-info') ||
             a && r && ((r.innerHTML = a.innerHTML), r.classList.toggle('hidden', i(a)));
           };
           (a('price'),
+            a('LaborDaySaleCard'),
+            a('LaborDaySaleCard-Desktop'),
             a('Sku', ({ classList: t }) => t.contains('hidden')),
             a('Inventory', ({ innerText: t }) => '' === t),
             a('Volume'),
