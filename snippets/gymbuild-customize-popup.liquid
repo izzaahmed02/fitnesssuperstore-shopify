@@ -1,0 +1,894 @@
+{%- comment %}
+  "Customize this build" popup for the GymBuild PDP
+  (sections/main-product-ab-test-asjads-pdp.liquid only).
+  Figma: file XBaAGVhSupd0fvIcXd28qw, node 4539:86140.
+
+  Opened via a <modal-opener data-modal="#GymBuildCustomizeModal-{{ section.id }}">
+  wrapped around the existing "Customize this build" button in the main
+  section file. Reuses Dawn's <modal-dialog> custom element
+  (assets/global.js) for open/close/focus-trap/ESC/backdrop-click — no new
+  JS needed for that part.
+
+  IMPORTANT: <modal-dialog>'s connectedCallback moves this element to be a
+  direct child of <body> at runtime. That means none of its CSS can rely on
+  #shopify-section-{{ section.id }} scoping (it won't be nested under the
+  section wrapper by the time it's shown) — every rule below is a plain,
+  globally-scoped .gymbuild-customize-drawer* class instead, same approach
+  section-main-product.css already uses for .product-popup-modal.
+
+  P0 (see CLAUDE.md, this popup is the original target of the Hard P0
+  Rules): footer says "Estimated equipment subtotal" (never "Total"), no
+  "shipping calculated at checkout" copy. Per explicit direction, the
+  submit button keeps Figma's "Request Quote Review" label rather than
+  "View selected build" (that label is for the PDP-level entry point that
+  opens this popup, not this internal action) — everything is visual-only,
+  nothing submits or mutates a cart.
+
+  PLACEHOLDER DATA REMOVED (2026-09-03): the "Package Inclusions"
+  tabs/grid below were populated from the same real add_on_product
+  blocks used by the Include-in-Quote carousel further down this page
+  (product-add-ons-quote.liquid) — chosen only because they're real,
+  already-live products, NOT because their categories ("Mats", "Storage
+  Racks", "Other Accessories") match Figma's actual package-inclusion
+  categories (Selectorized, Plate Loaded, Treadmills, etc.). Per
+  explicit direction, that data source is now emptied below
+  (gymbuild_addon_blocks = empty) so nothing placeholder renders while
+  the real variant-metafield -> metaobject data model is being built
+  (see CLAUDE.md's "Data Wiring Notes" section for the wiring plan).
+
+  Do NOT delete the markup/JS below this point when wiring the real
+  data later — per that wiring plan, only the gymbuild_addon_blocks
+  assignment needs to change (to a loop over
+  current_variant.metafields.custom.<field>.value once that field
+  exists); every data-item-*/data-item-pool attribute this markup
+  emits, and all the swap-view JS below, stay exactly as they are.
+
+  SWAP INTERACTION (Figma node 4544:92078): clicking "Swap" on an included
+  card switches the drawer body + header into a "Swap to:" sub-view (same
+  drawer, no new modal — toggled via the .is-swap-view class on
+  .gymbuild-customize-drawer__content), showing alternatives with a price
+  delta (+/- $X). "Back to build" returns to the main tabs/grid. This
+  logic is untouched and will work again as soon as
+  gymbuild_addon_blocks yields real data.
+{% endcomment -%}
+
+{%- liquid
+  # TEMPORARY PLACEHOLDER DATA REMOVED (2026-09-03) - was:
+  #   section.blocks | where: 'type', 'add_on_product'
+  # Re-point this at the real metaobject-backed source once it exists;
+  # see the comment above and CLAUDE.md's "Data Wiring Notes".
+  assign gymbuild_addon_blocks = empty
+-%}
+
+<modal-dialog id="GymBuildCustomizeModal-{{ section.id }}" class="gymbuild-customize-drawer">
+  <div
+    role="dialog"
+    aria-label="Customize this build"
+    aria-modal="true"
+    class="gymbuild-customize-drawer__content"
+    tabindex="-1"
+  >
+    <div class="gymbuild-customize-drawer__header">
+      <h2 class="gymbuild-customize-drawer__title">Customize this build</h2>
+      <button type="button" class="gymbuild-customize-drawer__back" data-gymbuild-back>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Back to build
+      </button>
+      <button
+        type="button"
+        id="ModalClose-GymBuildCustomize-{{ section.id }}"
+        class="gymbuild-customize-drawer__close"
+        aria-label="{{ 'accessibility.close' | t }}"
+      >
+        {% render 'icon-close' %}
+      </button>
+    </div>
+
+    <div class="gymbuild-customize-drawer__body">
+      <div class="gymbuild-customize-drawer__main-view">
+      {% if product.variants.size > 1 %}
+        <fieldset class="gymbuild-customize-drawer__size-cards" role="radiogroup" aria-label="{{ product.options_with_values.first.name }}">
+          <legend class="visually-hidden">{{ product.options_with_values.first.name }}</legend>
+          {% for variant in product.variants %}
+            <label class="gymbuild-customize-drawer__size-card{% if variant.id == current_variant.id %} is-selected{% endif %}{% unless variant.available %} is-soldout{% endunless %}">
+              <input
+                type="radio"
+                class="gymbuild-customize-drawer__size-card-input"
+                name="GymBuildCustomizeSize-{{ section.id }}"
+                value="{{ variant.id }}"
+                data-variant-url="{{ variant.url }}"
+                {% if variant.id == current_variant.id %}checked{% endif %}
+                {% unless variant.available %}disabled{% endunless %}
+              >
+              <span class="gymbuild-customize-drawer__size-card-title">{{ variant.title }}</span>
+              {%- if variant.metafields.custom.size_description != blank -%}
+                <span class="gymbuild-customize-drawer__size-card-desc">{{ variant.metafields.custom.size_description }}</span>
+              {%- endif -%}
+              <span class="gymbuild-customize-drawer__size-card-price">Starting at {{ variant.price | money }}</span>
+            </label>
+          {% endfor %}
+        </fieldset>
+      {% endif %}
+
+      {% if gymbuild_addon_blocks.size > 0 %}
+        <div class="gymbuild-customize-drawer__tabs" role="tablist" aria-label="Package inclusion categories">
+          {%- liquid
+            assign rendered_tabs = ''
+            assign tab_index = 0
+          -%}
+          {% for block in gymbuild_addon_blocks %}
+            {%- liquid
+              assign tab_heading = block.settings.tab_heading | default: 'Included'
+              assign tab_key = tab_heading | handleize
+
+              capture tab_token
+                echo '|'
+                echo tab_key
+                echo '|'
+              endcapture
+            -%}
+
+            {% unless rendered_tabs contains tab_token %}
+              <button
+                type="button"
+                class="gymbuild-customize-drawer__tab{% if tab_index == 0 %} is-active{% endif %}"
+                role="tab"
+                aria-selected="{% if tab_index == 0 %}true{% else %}false{% endif %}"
+                aria-controls="GymBuildInclusionsPanel-{{ section.id }}-{{ tab_key }}"
+                id="GymBuildInclusionsTab-{{ section.id }}-{{ tab_key }}"
+                data-tab="{{ tab_key }}"
+              >
+                {{ tab_heading }}
+              </button>
+
+              {%- liquid
+                assign rendered_tabs = rendered_tabs | append: tab_token
+                assign tab_index = tab_index | plus: 1
+              -%}
+            {% endunless %}
+          {% endfor %}
+        </div>
+
+        <div class="gymbuild-customize-drawer__panels">
+          {%- liquid
+            assign rendered_panels = ''
+            assign panel_index = 0
+          -%}
+
+          {% for block in gymbuild_addon_blocks %}
+            {%- liquid
+              assign panel_heading = block.settings.tab_heading | default: 'Included'
+              assign panel_key = panel_heading | handleize
+
+              capture panel_token
+                echo '|'
+                echo panel_key
+                echo '|'
+              endcapture
+            -%}
+
+            {% unless rendered_panels contains panel_token %}
+              <div
+                class="gymbuild-customize-drawer__panel{% if panel_index == 0 %} is-active{% endif %}"
+                id="GymBuildInclusionsPanel-{{ section.id }}-{{ panel_key }}"
+                role="tabpanel"
+                aria-labelledby="GymBuildInclusionsTab-{{ section.id }}-{{ panel_key }}"
+                data-panel="{{ panel_key }}"
+                {% unless panel_index == 0 %}hidden{% endunless %}
+              >
+                <p class="gymbuild-customize-drawer__panel-heading">Package Inclusions:</p>
+                <div class="gymbuild-customize-drawer__grid">
+                  {% for card_block in gymbuild_addon_blocks %}
+                    {%- liquid
+                      assign card_tab_heading = card_block.settings.tab_heading | default: 'Included'
+                      assign card_tab_key = card_tab_heading | handleize
+                      assign inclusion_product = card_block.settings.product
+                    -%}
+
+                    {% if card_tab_key == panel_key and inclusion_product != blank %}
+                      {%- liquid
+                        assign inclusion_title = card_block.settings.custom_title | default: inclusion_product.title
+                        assign inclusion_variant = inclusion_product.selected_or_first_available_variant
+                        assign inclusion_image_url = inclusion_product.featured_image | image_url: width: 300
+
+                        capture inclusion_pool_json
+                          echo '['
+                          assign pool_first = true
+                          for pool_block in gymbuild_addon_blocks
+                            assign pool_tab_key = pool_block.settings.tab_heading | default: 'Included' | handleize
+                            if pool_tab_key == card_tab_key and pool_block.settings.product != blank
+                              assign pool_product = pool_block.settings.product
+                              assign pool_variant = pool_product.selected_or_first_available_variant
+                              assign pool_title = pool_block.settings.custom_title | default: pool_product.title
+                              assign pool_image_url = pool_product.featured_image | image_url: width: 300
+                              unless pool_first
+                                echo ','
+                              endunless
+                              echo '{"id":'
+                              echo pool_variant.id | json
+                              echo ',"title":'
+                              echo pool_title | json
+                              echo ',"image":'
+                              echo pool_image_url | json
+                              echo ',"price":'
+                              echo pool_variant.price
+                              echo '}'
+                              assign pool_first = false
+                            endif
+                          endfor
+                          echo ']'
+                        endcapture
+                      -%}
+                      <div
+                        class="gymbuild-customize-drawer__card"
+                        data-gymbuild-item
+                        data-item-id="{{ inclusion_variant.id }}"
+                        data-item-title="{{ inclusion_title | escape }}"
+                        data-item-image="{{ inclusion_image_url }}"
+                        data-item-price="{{ inclusion_variant.price }}"
+                        data-item-pool="{{ inclusion_pool_json | escape }}"
+                        data-original-id="{{ inclusion_variant.id }}"
+                        data-original-title="{{ inclusion_title | escape }}"
+                        data-original-image="{{ inclusion_image_url }}"
+                        data-original-price="{{ inclusion_variant.price }}"
+                      >
+                        <div class="gymbuild-customize-drawer__card-image-wrap">
+                          {% if inclusion_product.featured_image %}
+                            {%- liquid
+                              assign inclusion_image_alt = inclusion_product.featured_image.alt | default: inclusion_product.title | escape
+                            -%}
+                            {{
+                              inclusion_product.featured_image
+                              | image_url: width: 300
+                              | image_tag:
+                                loading: 'lazy',
+                                widths: '150, 220, 300',
+                                sizes: '150px',
+                                alt: inclusion_image_alt,
+                                class: 'gymbuild-customize-drawer__card-image'
+                            }}
+                          {% else %}
+                            {{ 'product-1' | placeholder_svg_tag: 'gymbuild-customize-drawer__card-image placeholder-svg' }}
+                          {% endif %}
+                        </div>
+
+                        <p class="gymbuild-customize-drawer__card-title">{{ inclusion_title }}</p>
+                        <p class="gymbuild-customize-drawer__card-count">1 item</p>
+
+                        <button type="button" class="gymbuild-customize-drawer__swap-btn" data-gymbuild-swap-btn{% if inclusion_pool_json contains ',' %}{% else %} disabled{% endif %}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M4 12a8 8 0 0 1 13.66-5.66M20 12a8 8 0 0 1-13.66 5.66" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M17 3v4h-4M7 21v-4h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                          Swap
+                        </button>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+
+              {%- liquid
+                assign rendered_panels = rendered_panels | append: panel_token
+                assign panel_index = panel_index | plus: 1
+              -%}
+            {% endunless %}
+          {% endfor %}
+        </div>
+      {% endif %}
+      </div>
+
+      <div class="gymbuild-customize-drawer__swap-view">
+        <div class="gymbuild-customize-drawer__swap-current" data-gymbuild-swap-current></div>
+        <p class="gymbuild-customize-drawer__panel-heading">Swap to:</p>
+        <div class="gymbuild-customize-drawer__swap-grid" data-gymbuild-swap-grid></div>
+      </div>
+    </div>
+
+    <div class="gymbuild-customize-drawer__footer" data-base-price="{{ current_variant.price }}">
+      <div class="gymbuild-customize-drawer__footer-row">
+        <span class="gymbuild-customize-drawer__footer-label">Estimated equipment subtotal</span>
+        <span class="gymbuild-customize-drawer__footer-price" data-gymbuild-subtotal>{{ current_variant.price | money }}</span>
+      </div>
+      <button type="button" class="gymbuild-customize-drawer__submit" data-gymbuild-open-review>Request Quote Review</button>
+    </div>
+  </div>
+</modal-dialog>
+
+<style>
+  .gymbuild-customize-drawer {
+    box-sizing: border-box;
+    position: fixed;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    z-index: -1;
+    background: rgba(35, 35, 43, 0.4);
+  }
+
+  .gymbuild-customize-drawer[open] {
+    opacity: 1;
+    visibility: visible;
+    z-index: 101;
+  }
+
+  .gymbuild-customize-drawer__content {
+    box-sizing: border-box;
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    /* Figma node 4539:86140: drawer frame is 704px of a 1440px reference
+       viewport (x=736, width=704) — ~48.9%, i.e. half the screen. */
+    width: 50%;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 280ms ease;
+  }
+
+  @media screen and (max-width: 749px) {
+    .gymbuild-customize-drawer__content {
+      width: 100%;
+    }
+  }
+
+  .gymbuild-customize-drawer[open] .gymbuild-customize-drawer__content {
+    transform: translateX(0);
+  }
+
+  .gymbuild-customize-drawer__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid #edeff3;
+    flex: 0 0 auto;
+  }
+
+  .gymbuild-customize-drawer__title {
+    font-size: 22px;
+    line-height: 28px;
+    font-weight: 700;
+    color: #23232b;
+    margin: 0;
+  }
+
+  .gymbuild-customize-drawer__back {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 700;
+    color: #23232b;
+  }
+
+  .gymbuild-customize-drawer__content.is-swap-view .gymbuild-customize-drawer__back {
+    display: inline-flex;
+  }
+
+  .gymbuild-customize-drawer__content.is-swap-view .gymbuild-customize-drawer__title {
+    display: none;
+  }
+
+  .gymbuild-customize-drawer__close {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 4px;
+    cursor: pointer;
+    color: #23232b;
+    line-height: 0;
+  }
+
+  /* icon-close.liquid hardcodes fill="#F2F2F2" (built for a dark
+     background) — nearly invisible on this drawer's white background.
+     Override just here rather than editing the shared snippet, which
+     is used in 18+ other places across the theme. */
+  .gymbuild-customize-drawer__close .icon-close path {
+    fill: #23232b;
+  }
+
+  .gymbuild-customize-drawer__body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 20px 24px;
+  }
+
+  .gymbuild-customize-drawer__swap-view {
+    display: none;
+  }
+
+  .gymbuild-customize-drawer__content.is-swap-view .gymbuild-customize-drawer__main-view {
+    display: none;
+  }
+
+  .gymbuild-customize-drawer__content.is-swap-view .gymbuild-customize-drawer__swap-view {
+    display: block;
+  }
+
+  .gymbuild-customize-drawer__size-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 0 0 20px;
+    border: 0;
+    padding: 0;
+  }
+
+  .gymbuild-customize-drawer__size-card-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .gymbuild-customize-drawer__size-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    background: #fff;
+  }
+
+  .gymbuild-customize-drawer__size-card.is-selected {
+    border-color: #d83d0e;
+    border-width: 2px;
+    padding: 11px;
+  }
+
+  .gymbuild-customize-drawer__size-card.is-soldout {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .gymbuild-customize-drawer__size-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #23232b;
+  }
+
+  .gymbuild-customize-drawer__size-card-desc {
+    font-size: 11px;
+    line-height: 16px;
+    color: #808080;
+  }
+
+  .gymbuild-customize-drawer__size-card-price {
+    font-size: 13px;
+    font-weight: 700;
+    color: #d83d0e;
+  }
+
+  .gymbuild-customize-drawer__tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid #e6e1df;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    margin-bottom: 16px;
+  }
+
+  .gymbuild-customize-drawer__tab {
+    position: relative;
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 12px 14px;
+    min-width: max-content;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    color: #23232b;
+    cursor: pointer;
+  }
+
+  .gymbuild-customize-drawer__tab::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: transparent;
+    border-radius: 999px;
+  }
+
+  .gymbuild-customize-drawer__tab.is-active::after {
+    background: #ef3b12;
+  }
+
+  .gymbuild-customize-drawer__panel-heading {
+    font-size: 15px;
+    font-weight: 700;
+    color: #23232b;
+    margin: 0 0 12px;
+  }
+
+  .gymbuild-customize-drawer__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .gymbuild-customize-drawer__card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-width: 0;
+    background: #fff;
+    border: 1px solid #eee9e7;
+    border-radius: 10px;
+    overflow: hidden;
+    padding-bottom: 10px;
+  }
+
+  .gymbuild-customize-drawer__card-image-wrap {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: #faf9f9;
+  }
+
+  .gymbuild-customize-drawer__card-image {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    padding: 8px;
+  }
+
+  .gymbuild-customize-drawer__card-title {
+    margin: 8px 10px 0;
+    font-size: 12px;
+    line-height: 1.3;
+    font-weight: 700;
+    color: #23232b;
+    min-height: 31px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .gymbuild-customize-drawer__card-count {
+    margin: 4px 10px 8px;
+    font-size: 11px;
+    color: #808080;
+  }
+
+  .gymbuild-customize-drawer__swap-btn {
+    margin: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 34px;
+    border: 1px solid #d3d9e5;
+    border-radius: 6px;
+    background: #fff;
+    color: #23232b;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .gymbuild-customize-drawer__swap-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .gymbuild-customize-drawer__swap-current {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border: 1px solid #eee9e7;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 20px;
+  }
+
+  .gymbuild-customize-drawer__swap-current-image {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    background: #faf9f9;
+    border-radius: 6px;
+    flex: 0 0 auto;
+  }
+
+  .gymbuild-customize-drawer__swap-current-info {
+    min-width: 0;
+  }
+
+  .gymbuild-customize-drawer__swap-current-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #23232b;
+  }
+
+  .gymbuild-customize-drawer__swap-current-count {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: #808080;
+  }
+
+  .gymbuild-customize-drawer__swap-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .gymbuild-customize-drawer__swap-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-width: 0;
+    background: #fff;
+    border: 1px solid #eee9e7;
+    border-radius: 10px;
+    overflow: hidden;
+    padding: 0 0 10px;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+  }
+
+  .gymbuild-customize-drawer__swap-card-image-wrap {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: #faf9f9;
+  }
+
+  .gymbuild-customize-drawer__swap-card-image {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    padding: 8px;
+  }
+
+  .gymbuild-customize-drawer__swap-card-title {
+    margin: 8px 10px 0;
+    font-size: 12px;
+    line-height: 1.3;
+    font-weight: 700;
+    color: #23232b;
+    min-height: 31px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .gymbuild-customize-drawer__swap-card-delta {
+    margin: 6px 10px 0;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .gymbuild-customize-drawer__swap-card-delta.is-increase {
+    color: #d83d0e;
+  }
+
+  .gymbuild-customize-drawer__swap-card-delta.is-decrease {
+    color: #12693a;
+  }
+
+  .gymbuild-customize-drawer__footer {
+    flex: 0 0 auto;
+    border-top: 1px solid #edeff3;
+    padding: 16px 24px 20px;
+  }
+
+  .gymbuild-customize-drawer__footer-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .gymbuild-customize-drawer__footer-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: #23232b;
+  }
+
+  .gymbuild-customize-drawer__footer-price {
+    font-size: 20px;
+    font-weight: 700;
+    color: #f1592a;
+  }
+
+  .gymbuild-customize-drawer__submit {
+    width: 100%;
+    min-height: 48px;
+    border: 0;
+    border-radius: 8px;
+    background: #d83d0e;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  @media screen and (max-width: 576px) {
+    .gymbuild-customize-drawer__size-cards {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .gymbuild-customize-drawer__grid,
+    .gymbuild-customize-drawer__swap-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var modal = document.getElementById('GymBuildCustomizeModal-{{ section.id }}');
+    if (!modal) return;
+
+    var sizeRadios = modal.querySelectorAll('input[name="GymBuildCustomizeSize-{{ section.id }}"]');
+    sizeRadios.forEach(function (radio) {
+      radio.addEventListener('change', function () {
+        if (radio.checked && radio.dataset.variantUrl) {
+          window.location.href = radio.dataset.variantUrl;
+        }
+      });
+    });
+
+    var tabs = Array.from(modal.querySelectorAll('[data-tab]'));
+    var panels = Array.from(modal.querySelectorAll('[data-panel]'));
+
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        tabs.forEach(function (t) {
+          var isActive = t === tab;
+          t.classList.toggle('is-active', isActive);
+          t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+
+        panels.forEach(function (panel) {
+          var isActive = panel.dataset.panel === tab.dataset.tab;
+          panel.classList.toggle('is-active', isActive);
+          panel.hidden = !isActive;
+        });
+      });
+    });
+
+    // "Swap to:" sub-view — same drawer, no new modal. See snippet's top
+    // comment (Figma node 4544:92078) for the visual-only/TEMPORARY-data
+    // caveats around this.
+    var content = modal.querySelector('.gymbuild-customize-drawer__content');
+    var footer = modal.querySelector('.gymbuild-customize-drawer__footer');
+    var subtotalEl = modal.querySelector('[data-gymbuild-subtotal]');
+    var swapCurrentEl = modal.querySelector('[data-gymbuild-swap-current]');
+    var swapGridEl = modal.querySelector('[data-gymbuild-swap-grid]');
+    var backBtn = modal.querySelector('[data-gymbuild-back]');
+    var runningTotalCents = footer ? parseInt(footer.dataset.basePrice, 10) || 0 : 0;
+    var activeCard = null;
+
+    function formatMoney(cents) {
+      return '$' + (cents / 100).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function formatDelta(deltaCents) {
+      if (deltaCents === 0) return '';
+      var sign = deltaCents > 0 ? '+ ' : '- ';
+      return sign + formatMoney(Math.abs(deltaCents));
+    }
+
+    function showMainView() {
+      content.classList.remove('is-swap-view');
+      activeCard = null;
+    }
+
+    function showSwapView(card) {
+      var pool;
+      try {
+        pool = JSON.parse(card.dataset.itemPool || '[]');
+      } catch (e) {
+        pool = [];
+      }
+
+      var currentId = card.dataset.itemId;
+      var currentPriceCents = parseInt(card.dataset.itemPrice, 10) || 0;
+      var alternates = pool.filter(function (p) {
+        return String(p.id) !== String(currentId);
+      });
+
+      if (!alternates.length) return;
+
+      activeCard = card;
+
+      if (swapCurrentEl) {
+        swapCurrentEl.innerHTML =
+          '<img class="gymbuild-customize-drawer__swap-current-image" src="' + card.dataset.itemImage + '" alt="" loading="lazy">' +
+          '<div class="gymbuild-customize-drawer__swap-current-info">' +
+          '<p class="gymbuild-customize-drawer__swap-current-title">' + card.dataset.itemTitle + '</p>' +
+          '<p class="gymbuild-customize-drawer__swap-current-count">1 item</p>' +
+          '</div>';
+      }
+
+      if (swapGridEl) {
+        swapGridEl.innerHTML = '';
+        alternates.forEach(function (alt) {
+          var deltaCents = alt.price - currentPriceCents;
+          var deltaClass = deltaCents > 0 ? 'is-increase' : (deltaCents < 0 ? 'is-decrease' : '');
+
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'gymbuild-customize-drawer__swap-card';
+          btn.dataset.altId = alt.id;
+          btn.dataset.altTitle = alt.title;
+          btn.dataset.altImage = alt.image;
+          btn.dataset.altPrice = alt.price;
+          btn.innerHTML =
+            '<div class="gymbuild-customize-drawer__swap-card-image-wrap">' +
+            '<img class="gymbuild-customize-drawer__swap-card-image" src="' + alt.image + '" alt="" loading="lazy">' +
+            '</div>' +
+            '<p class="gymbuild-customize-drawer__swap-card-title">' + alt.title + '</p>' +
+            '<p class="gymbuild-customize-drawer__swap-card-delta ' + deltaClass + '">' + formatDelta(deltaCents) + '</p>';
+
+          btn.addEventListener('click', function () {
+            selectAlternate(alt, deltaCents);
+          });
+
+          swapGridEl.appendChild(btn);
+        });
+      }
+
+      content.classList.add('is-swap-view');
+    }
+
+    function selectAlternate(alt, deltaCents) {
+      if (!activeCard) return;
+
+      var image = activeCard.querySelector('.gymbuild-customize-drawer__card-image');
+      var title = activeCard.querySelector('.gymbuild-customize-drawer__card-title');
+
+      if (image) image.setAttribute('src', alt.image);
+      if (title) title.textContent = alt.title;
+
+      activeCard.dataset.itemId = alt.id;
+      activeCard.dataset.itemTitle = alt.title;
+      activeCard.dataset.itemImage = alt.image;
+      activeCard.dataset.itemPrice = alt.price;
+
+      runningTotalCents += deltaCents;
+      if (subtotalEl) subtotalEl.textContent = formatMoney(runningTotalCents);
+
+      showMainView();
+    }
+
+    modal.querySelectorAll('[data-gymbuild-swap-btn]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var card = btn.closest('[data-gymbuild-item]');
+        if (card) showSwapView(card);
+      });
+    });
+
+    if (backBtn) {
+      backBtn.addEventListener('click', showMainView);
+    }
+  })();
+</script>
