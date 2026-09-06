@@ -24,7 +24,7 @@
   being published to the Online Store. The automatic discounts still target the
   collections by ID, so this note matches exactly which products get discounted.
     French Fitness 10% (collection 519462814012, all must be true):
-      vendor == 'French Fitness' AND type != 'Product (Hidden)' AND no 'july4-exclude' tag
+      vendor == 'French Fitness' AND type != 'Product (Hidden)' AND no 'july4-exclude' or 'labor-day-price-marked' tag
     Remanufactured 5% (collection 512180715836, all must be true):
       title contains 'Remanufactured' AND type == 'Product Index'
 
@@ -54,7 +54,7 @@
   assign in_reman = false
 
   if product.vendor == 'French Fitness' and product.type != 'Product (Hidden)'
-    unless product.tags contains 'july4-exclude'
+    unless product.tags contains 'july4-exclude' or product.tags contains 'labor-day-price-marked'
       assign in_ff = true
     endunless
   endif
@@ -86,13 +86,34 @@
 {%- elsif start_s > 0 and end_s > 0 and now_s >= start_s and now_s < end_s -%}
   {%- assign in_window = true -%}
 {%- endif -%}
-{%- if campaign_kind != '' and in_window -%}
+{%- liquid
+  comment
+    Suppress the offer when the selected variant cannot be purchased. Mirror the
+    native buy-buttons availability and minimum-quantity gate; do not alter stock.
+    Preview mode bypasses dates only, never availability or discount eligibility.
+  endcomment
+  assign campaign_variant = product.selected_or_first_available_variant
+  assign campaign_available = false
+  if campaign_variant != blank and campaign_variant.available
+    assign campaign_available = true
+    if campaign_variant.inventory_management == 'shopify' and campaign_variant.inventory_policy != 'continue'
+      if campaign_variant.quantity_rule.min > campaign_variant.inventory_quantity
+        assign campaign_available = false
+      endif
+    endif
+  endif
+  assign show_campaign = false
+  if campaign_kind != '' and in_window and campaign_available
+    assign show_campaign = true
+  endif
+-%}
+{%- if show_campaign -%}
   {%- liquid
     comment
       Mirror the main price block, which renders with use_variant: true - product.price is
       the family MINIMUM and would strike through a figure the shopper never sees.
     endcomment
-    assign card_price = product.selected_or_first_available_variant.price | default: product.price
+    assign card_price = campaign_variant.price
     if campaign_kind == 'reman'
       assign card_discount = '5% off'
       assign card_sale_price = card_price | times: 0.95
@@ -106,10 +127,17 @@
     endcomment
     assign last_day_s = end_s | minus: 1
   -%}
+{%- endif -%}
+{%- comment -%}
+  Keep both update targets even when empty. product-info.js replaces innerHTML only
+  when both old and new IDs exist, so removing the wrapper makes sold-out/available
+  variant transitions stale. Whitespace trimming plus :empty removes the empty gap.
+{%- endcomment -%}
   <div
     {% if section_id != blank %}id="LaborDaySaleCard{% if hide_on_mobile %}-Desktop{% endif %}-{{ section_id }}"{% endif %}
     class="campaign-sale-container{% if hide_on_mobile %} hide-on-mobile{% endif %}"
   >
+    {%- if show_campaign -%}
     <div class="labor-day-sale-card">
       <div class="labor-day-sale-card__row">
         <span class="labor-day-sale-card__badge">Labor day sale</span>
@@ -124,5 +152,12 @@
         {{ card_discount }} applied automatically at checkout{% if end_s > 0 %} · Ends {{ last_day_s | date: "%b. %-d" }}{% endif %}
       </p>
     </div>
+    {%- endif -%}
   </div>
-{%- endif -%}
+
+{% stylesheet %}
+  .campaign-sale-container:empty {
+    display: none !important;
+    margin: 0 !important;
+  }
+{% endstylesheet %}
