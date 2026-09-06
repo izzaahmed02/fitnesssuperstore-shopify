@@ -1222,16 +1222,18 @@
           {% endfor %}
 
           {%- comment -%}
-            Delivery & Warranty / Key Specs / What's Included tabs hidden on the
-            GymBuild PDP (2026-09-04, requested in chat). Kill-switched with
-            {% if false %} rather than deleted so the real metafield-driven
-            content (condition/grade/warranty/ships/etc. + the
-            metainfo_custom_tab_CdMYgn "Key Specs" and metainfo_custom_tab_YCpeCp
-            "What's Included" blocks in templates/product.ab-test-asjads-pdp.json)
-            stays intact for whenever this needs to come back. To restore: delete
-            the {% if false %} / {% endif %} pair below, no other changes needed.
+            Key Specs / What's Included stay hidden on the GymBuild PDP
+            (requested in chat 2026-09-06) — only the Delivery & Warranty tab
+            renders below. Both metainfo_custom_tab blocks
+            (metainfo_custom_tab_CdMYgn "Key Specs", metainfo_custom_tab_YCpeCp
+            "What's Included" in templates/product.ab-test-asjads-pdp.json)
+            are left untouched in block_order; this is just not looping over
+            them here. To bring either back: re-add a
+            `{% for block in section.blocks %}{% if block.type ==
+            'metainfo_custom_tab' %}...{% endif %}{% endfor %}` loop for the
+            tab-nav button and a matching one for the tab panel (see git
+            history on this file for the exact prior markup).
           {%- endcomment -%}
-          {% if false %}
           <div class="metainfo-wrapper metainfo-tabs-wrapper">
             <div class="metainfo-tabs-nav" role="tablist">
               <button
@@ -1244,22 +1246,6 @@
               >
                 Delivery &amp; Warranty
               </button>
-
-              {% for block in section.blocks %}
-                {% if block.type == 'metainfo_custom_tab' and block.settings.title != blank %}
-                  <button
-                    type="button"
-                    class="metainfo-tab-button"
-                    data-metainfo-tab-button="custom-tab-{{ section.id }}-{{ block.id }}"
-                    role="tab"
-                    aria-controls="metainfo-tab-panel-custom-tab-{{ section.id }}-{{ block.id }}"
-                    aria-selected="false"
-                    {{ block.shopify_attributes }}
-                  >
-                    {{ block.settings.title }}
-                  </button>
-                {% endif %}
-              {% endfor %}
             </div>
 
             <div class="metainfo-tabs-content">
@@ -1369,30 +1355,8 @@
                   </div>
                 {% endif %}
               </div>
-
-              {% for block in section.blocks %}
-                {% if block.type == 'metainfo_custom_tab' and block.settings.title != blank %}
-                  <div
-                    class="metainfo-tab-panel"
-                    id="metainfo-tab-panel-custom-tab-{{ section.id }}-{{ block.id }}"
-                    data-metainfo-tab-panel="custom-tab-{{ section.id }}-{{ block.id }}"
-                    role="tabpanel"
-                  >
-                    <div class="metainfo-tab-custom-content">
-                      {% if block.settings.custom_liquid != blank %}
-                        {{ block.settings.custom_liquid }}
-                      {% elsif block.settings.content != blank %}
-                        {{ block.settings.content }}
-                      {% elsif request.design_mode %}
-                        <p>Add content or connect a metafield for this tab.</p>
-                      {% endif %}
-                    </div>
-                  </div>
-                {% endif %}
-              {% endfor %}
             </div>
           </div>
-          {% endif %}
 
           {% assign meta_object_3rd_party = product.metafields.custom['3rd_party'].value %}
           {% if meta_object_3rd_party != blank and meta_object_3rd_party.google_material != blank %}
