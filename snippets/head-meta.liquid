@@ -1,11 +1,23 @@
 <meta charset="utf-8">
-{% render 'optimization', postpone_loading: 'init' %}         
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="">
 
 {% assign base_url = shop.url | replace: 'http://', 'https://' %}
 {% assign https_canonical_url = canonical_url | replace_first: 'http://', 'https://' %}
+
+{% if template contains 'collection' and collection and collection.products.first.featured_media %}
+  {%- assign first_card_image = collection.products.first.featured_media -%}
+  <link rel="preconnect" href="https://cdn.shopify.com" crossorigin>
+  <link
+    rel="preload"
+    as="image"
+    href="{{ first_card_image | image_url: width: 533 }}"
+    imagesrcset="{{ first_card_image | image_url: width: 165 }} 165w, {{ first_card_image | image_url: width: 360 }} 360w, {{ first_card_image | image_url: width: 533 }} 533w, {{ first_card_image | image_url: width: 720 }} 720w"
+    imagesizes="(min-width: {{ settings.page_width }}px) {{ settings.page_width | minus: 130 | divided_by: 4 }}px, (min-width: 990px) calc((100vw - 130px) / 4), (min-width: 750px) calc((100vw - 120px) / 3), calc((100vw - 35px) / 2)"
+    fetchpriority="high"
+  >
+{% endif %}
 
 {% if template contains 'product' and product and product.featured_media %}
   <link rel="preconnect" href="https://cdn.shopify.com" crossorigin>
