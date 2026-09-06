@@ -1,85 +1,52 @@
 {%- comment -%}
-  Pre-payment return disclosure for the product page.
-
-  Implements the product-page/pre-payment disclosure required before the revised
-  return policy goes live (see the canonical Gmail thread "Return Policy Revised
-  - Please Implement - Based on #49046 Core Health Return Issue").
-
-  Renders nothing unless BOTH are true:
-    1. settings.return_policy_v3_live is ON (Theme settings > Return Policy
-       Disclosure). Default OFF, because this text states the revised policy and
-       must not be shown to customers before Tim's go-live notice.
-    2. The product has custom.return_policy_class set.
-
-  An unclassified product renders nothing rather than guessing, so a product is
-  never labelled from a brand-name text match — vendor values do not reliably
-  equal the customer-facing brand.
-
-  Accepts: product
+  DRAFT — NOT APPROVED FOR PUBLICATION — 2026-09-06.
+  Source-aligned copy and link corrections for V3; no new eligibility rules.
+  Based on benicia-showroom dc9f359a981914cbf0dca68b11e235a851bac7fa.
+  Keep settings.return_policy_v3_live OFF until final human release.
+  Blank/unrecognized classifications render nothing; they are launch exceptions,
+  NOT evidence that a customer accepted final sale. No vendor-name inference.
+  Preview QA must set return_policy_url to the approved V3 preview URL.
 {%- endcomment -%}
 
 {%- if settings.return_policy_v3_live -%}
-  {%- assign policy_class = product.metafields.custom.return_policy_class.value | strip | upcase -%}
-
-  {%- if policy_class != blank -%}
-    {%- liquid
-      case policy_class
-        when 'RETURN ELIGIBLE'
-          assign disclosure_label = 'Return eligible'
-          assign disclosure_text = 'This item may qualify for a voluntary return if you request a Return Authorization in writing within 14 days of delivery and all policy conditions are met. Approved returns carry a 25% restocking fee plus actual outbound and return freight, and any completed delivery or installation charge is nonrefundable.'
-          assign disclosure_modifier = 'is-eligible'
-        when 'FINAL SALE'
-          assign disclosure_label = 'Final sale'
-          assign disclosure_text = 'This item is not eligible for a voluntary return, including for fit, size, ceiling height, access or preference, and installation does not change that. Defects, freight damage, wrong items and incomplete shipments are handled under the applicable warranty or claim process, not as returns.'
-          assign disclosure_modifier = 'is-final'
-        when 'CUSTOM/SPECIAL ORDER'
-          assign disclosure_label = 'Custom / special order — final sale'
-          assign disclosure_text = 'This item is built or ordered to your specification and is not eligible for a voluntary return or for cancellation once production or ordering begins. Defects, freight damage, wrong items and incomplete shipments are handled under the applicable warranty or claim process.'
-          assign disclosure_modifier = 'is-final'
-        when 'REMANUFACTURED/USED/OPEN BOX'
-          assign disclosure_label = 'Remanufactured / used / open box — final sale'
-          assign disclosure_text = 'This item is not eligible for a voluntary return. Minor cosmetic characteristics such as scratches, touch-up paint and finish variation are normal and are not grounds for return. It is serviced under warranty; report suspected transit damage within 7 days of delivery with photos.'
-          assign disclosure_modifier = 'is-final'
-        else
-          assign disclosure_label = ''
-      endcase
-    -%}
-
-    {%- if disclosure_label != blank -%}
-      <div class="return-disclosure return-disclosure--{{ disclosure_modifier }}">
-        <p class="return-disclosure__label">{{ disclosure_label }}</p>
-        <p class="return-disclosure__text">
-          {{ disclosure_text }}
-          {%- if settings.return_policy_url != blank %}
-            <a href="{{ settings.return_policy_url }}">Read the full Cancellations, Returns &amp; Refunds Policy</a>.
-          {%- endif %}
-        </p>
-      </div>
-
-      {%- style -%}
-        .return-disclosure {
-          border: 1px solid #e5e5e5;
-          border-left: 4px solid #6b7280;
-          border-radius: 8px;
-          padding: 1.2rem 1.6rem;
-          margin: 1.6rem 0;
-          background: #fafafa;
-        }
-        .return-disclosure--is-final { border-left-color: #d83d0e; }
-        .return-disclosure--is-eligible { border-left-color: #2e7d32; }
-        .return-disclosure__label {
-          margin: 0 0 .4rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: .04em;
-          font-size: 1.2rem;
-        }
-        .return-disclosure__text {
-          margin: 0;
-          font-size: 1.3rem;
-          line-height: 1.5;
-        }
-      {%- endstyle -%}
-    {%- endif -%}
+  {%- assign policy_class = product.metafields.custom.return_policy_class.value | default: '' | strip | upcase -%}
+  {%- assign disclosure_label = '' -%}
+  {%- assign disclosure_text = '' -%}
+  {%- assign disclosure_modifier = '' -%}
+  {%- assign policy_url = settings.return_policy_url | default: '/pages/return-policy' -%}
+  {%- liquid
+    case policy_class
+      when 'RETURN ELIGIBLE'
+        assign disclosure_label = 'Return eligible — conditions apply'
+        assign disclosure_text = 'Request a Return Authorization in writing within 14 calendar days after delivery. Eligibility is subject to all policy conditions. Approved voluntary returns carry a 25% restocking fee, actual outbound freight even when shipping was free, and customer responsibility for return removal, disassembly, professional repackaging, loading and freight. Completed delivery and installation charges are nonrefundable, and costs paid directly to an approved provider are not deducted again. Defect, damage, wrong-item and incomplete-shipment claims follow the applicable claim process and law.'
+        assign disclosure_modifier = 'is-eligible'
+      when 'FINAL SALE'
+        assign disclosure_label = 'Final sale — no voluntary returns'
+        assign disclosure_text = 'This item is not eligible for a voluntary return for fit, size, ceiling height, access, preference or changing your mind. Installation does not make it returnable. Defects, freight damage, wrong items and incomplete shipments follow the applicable warranty or order-correction process; rights that cannot lawfully be waived remain available.'
+        assign disclosure_modifier = 'is-final'
+      when 'CUSTOM/SPECIAL ORDER'
+        assign disclosure_label = 'Custom / special order — final sale'
+        assign disclosure_text = 'This item is not eligible for a voluntary return. Before shipment, any cancellation restriction is governed by the custom or special-order terms disclosed before purchase. After dispatch, the final-sale terms apply. Defects, freight damage, wrong items and incomplete shipments follow the applicable claim process and law.'
+        assign disclosure_modifier = 'is-final'
+      when 'REMANUFACTURED/USED/OPEN BOX'
+        assign disclosure_label = 'Remanufactured / used / open box — final sale'
+        assign disclosure_text = 'This item is not eligible for a voluntary return. Normal minor cosmetic characteristics of remanufactured equipment are not grounds for a preference return. Defects, freight damage, wrong items and incomplete shipments follow the coverage, condition disclosures and legal remedies applicable to the product. Report suspected freight damage promptly under the full policy below.'
+        assign disclosure_modifier = 'is-final'
+    endcase
+  -%}
+  {%- if disclosure_label != blank -%}
+    <div class="return-disclosure return-disclosure--{{ disclosure_modifier }}">
+      <p class="return-disclosure__label">{{ disclosure_label | escape }}</p>
+      <p class="return-disclosure__text">{{ disclosure_text | escape }}</p>
+      <p class="return-disclosure__text"><a href="{{ policy_url | escape }}">Read the full Cancellations, Returns &amp; Refunds Policy</a></p>
+    </div>
+    {%- style -%}
+      .return-disclosure { border: 1px solid #e5e5e5; border-left: 4px solid #6b7280; border-radius: 8px; padding: 1.2rem 1.6rem; margin: 1.6rem 0; background: #fafafa; }
+      .return-disclosure--is-final { border-left-color: #d83d0e; }
+      .return-disclosure--is-eligible { border-left-color: #2e7d32; }
+      .return-disclosure__label { margin: 0 0 .4rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 1.2rem; }
+      .return-disclosure__text { margin: 0; font-size: 1.3rem; line-height: 1.5; }
+      .return-disclosure__text + .return-disclosure__text { margin-top: .8rem; }
+    {%- endstyle -%}
   {%- endif -%}
 {%- endif -%}
