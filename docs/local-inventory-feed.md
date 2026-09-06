@@ -1,13 +1,36 @@
 # Local Inventory Ads feed — build spec
 
-Per Tim's Sept 5 decisions, this feed is generated **from the same MultiFeeds
-source that generates the primary Google feed**, not from the Shopify theme.
-The theme-hosted variant (`collection.local-inventory-tsv`) was retired before
-publish: id parity and inclusion parity must not depend on hand curation, and
-Liquid cannot read the MultiFeeds inclusion list.
+Per Tim's Sept 5 direction, this feed is a **stable Shopify URL that Merchant
+Center fetches on a schedule**, replacing his temporary manual upload
+`fs_showroom_local_inventory.tsv`.
 
-This file is the spec MultiFeeds must implement, and the record of how the
-rules were validated against the live Merchant Center exports on 2026-09-05.
+## URL
+
+```
+https://www.fitnesssuperstore.com/collections/french-fitness-showroom-products?view=local-inventory-tsv
+```
+
+The URL never changes. Availability and quantity re-derive from live Shopify on
+every fetch, so adding a showroom product or changing its processing time
+changes the feed on the next fetch with no code change.
+
+## How membership is handled
+
+The one thing Liquid cannot derive is which offers the primary feed carries.
+154 of the 420 variants in the showroom collection have no primary offer, and
+nothing readable in Shopify separates them: same product type (`Product Index`),
+overlapping tags, all ACTIVE and published, overlapping prices - a $24 vinyl
+dumbbell is in the feed while a $22 collar is not.
+
+So membership comes from `snippets/local-inventory-offer-allowlist.liquid`, a
+generated list of the 266 offer IDs the primary feeds carry. This splits the
+problem the right way round:
+
+- **Changes daily** - availability and quantity, derived live from Shopify.
+- **Changes rarely** - which offers exist, regenerated only when the MultiFeeds
+  inclusion list changes, which is a controlled change Tim owns.
+
+Regeneration steps are in the header of that snippet.
 
 ## Output
 
