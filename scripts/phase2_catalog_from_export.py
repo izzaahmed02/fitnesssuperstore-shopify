@@ -45,6 +45,15 @@ CARRY_FORWARD = (
 )
 
 
+def clean_sku(value):
+    """Strip the leading apostrophe Excel adds to numeric-looking SKUs.
+
+    Three Precor SKUs (931, 933, 935) come out of the export as `\'931` and
+    stop matching the feed's `old_id` without this.
+    """
+    return (value or "").strip().lstrip("'").strip()
+
+
 def grams_to_pounds(value):
     try:
         return round(float(value) / 453.59237, 2)
@@ -72,16 +81,16 @@ def read_rows(paths):
 
 
 def build(paths):
-    rows = [r for r in read_rows(paths) if (r.get("Variant SKU") or "").strip()]
+    rows = [r for r in read_rows(paths) if clean_sku(r.get("Variant SKU"))]
 
     # A product's variant count decides whether a new offer gets a composite id.
     variants_per_handle = defaultdict(set)
     for row in rows:
-        variants_per_handle[row["Handle"].strip()].add(row["Variant SKU"].strip())
+        variants_per_handle[row["Handle"].strip()].add(clean_sku(row["Variant SKU"]))
 
     records, seen = [], set()
     for row in rows:
-        sku = row["Variant SKU"].strip()
+        sku = clean_sku(row["Variant SKU"])
         handle = row["Handle"].strip()
         if (handle, sku) in seen:
             continue
