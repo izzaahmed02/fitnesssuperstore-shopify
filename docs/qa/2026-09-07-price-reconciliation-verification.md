@@ -209,6 +209,49 @@ SHA and say so. Not by reset or force-push. Until the named candidate and the ac
 agree, I cannot issue a candidate-scoped PASS, because there is no unambiguous candidate to
 name in it.
 
+## 6a. Klaviyo isolation — verified live, and it is not safe by default
+
+Tim's 4 September instruction: "Prove that the staging store/order cannot feed the production
+integration or send customer-facing messages." Checked against the live account.
+
+| | |
+|---|---|
+| Account | `TzT9tw`, **`test_account: false`** — live production |
+| Sender | `sales@fitnesssuperstore.com`, reply-to `sales.cs@fitnesssuperstore.com` |
+| Flow | `WPkNcF` "Post-Purchase Flow", **status `live`**, updated 2026-06-10 |
+| Trigger | metric `X59qfY` "Placed Order", **fed by the Shopify integration** (`0eMvjm`) |
+| Email actions | 5 total — **3 are `live`** (Post Purchase Email 1, 2, 5), 2 are `manual` |
+| `transactional` | **`false` on all five** — these are marketing sends, not receipts |
+| `smart_sending_enabled` | **`false` on all five** — no dedupe, so a repeated test order sends again |
+
+**The internal-address allow-list, named exactly.** The flow's `profile_filter` carries a
+`not-contains @fitnesssuperstore.com` condition alongside five `equals` conditions for:
+
+`carlos@`, `carlos.reyes@`, `izza@`, `zafran@`, `tim@fitnesssuperstore.com`
+
+So Tim's warning is confirmed, and it is broader than the two addresses he named. **A staging
+checkout using any of those five can enter a live flow and send live marketing email from
+`sales@fitnesssuperstore.com`.** Any other `@fitnesssuperstore.com` address is excluded by the
+`not-contains` condition.
+
+Two things follow:
+
+1. **Test-address rule for the staging matrix:** never use those five. An internal address
+   that is not on the list is a reasonable second line of defence, but only that.
+2. **The primary proof is still outstanding and is not visible from the API.** Whether the
+   staging store is connected to this Klaviyo account can only be read from Klaviyo Settings →
+   Integrations → Shopify, which shows the connected store domain. Until someone confirms that
+   `api-testing-izza-qash.myshopify.com` is **not** connected, the isolation requirement is
+   unmet regardless of which address is used. This is the single check that closes it.
+
+**Separately, worth a look by whoever owns the flow.** Those six conditions sit in one
+`condition_groups` entry. Under Klaviyo's model conditions inside a group are ANDed and groups
+are ORed, and an email cannot both not-contain the domain and equal an address at that domain,
+so as written the group reads as unsatisfiable. The flow is live with live actions, so either
+it is being evaluated as an OR allow-list or the filter is not doing what it appears to.
+Knowing which matters before anyone treats it as a guard. Not a Phase 2 blocker, and I have
+changed nothing.
+
 ## 7. Disposition
 
 **PASS** — calculations (9/9), the exact-ID proposal and its isolation, the affected-parent
@@ -224,6 +267,9 @@ at the actual head, and the cohort provenance closure.
    the §4 guard.
 2. **Qash's nine bounded correction proposals with backups, regression tests and rollback**,
    due 2026-09-08 2:00 PM. §1–§4 verify the inputs to those proposals, not the proposals.
+
+**Klaviyo isolation** — the allow-list is now named (§6a) and the one remaining check is
+reading the connected store domain in Klaviyo Settings → Integrations → Shopify.
 
 **Still BLOCKED from the prior round**, unchanged and not mine to clear: named staging access
 and Partner visibility of `qash-izza-bundle`; confirmed test-payment mode on the staging
