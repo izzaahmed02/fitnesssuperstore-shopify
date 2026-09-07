@@ -47,8 +47,15 @@ from collections import Counter, defaultdict
 from decimal import Decimal, InvalidOperation
 
 # Google stopped using US tax attributes in July 2025; Tim's Sept 7 containment
-# note drops them outright. Any of these in the template header are not emitted.
-TAX_COLUMNS = {"tax", "tax_category"}
+# note drops them outright. The live headers carry three: `tax` (populated
+# `US:CA:8.375:n` on every row), `tax_category`, and the long-form
+# `tax(country:location_group_name:...)`. Matched by prefix so a header variant
+# cannot slip one through.
+TAX_COLUMN_PREFIX = "tax"
+
+
+def is_tax_column(name):
+    return name == "tax" or name == "tax_category" or name.startswith("tax(")
 
 SERIES_LABEL_MIN_PRICE = Decimal("1000")
 
@@ -175,9 +182,16 @@ def to_decimal(value):
 
 
 def price_field(value):
-    """Google wants `1234.00 USD`."""
+    """`249 USD`, `188.1 USD` - the exports' own formatting.
+
+    Trailing zeros are trimmed rather than padded to two places, so a
+    regenerated row differs from the live row only where the number differs.
+    """
     amount = to_decimal(value)
-    return "" if amount is None else f"{amount:.2f} USD"
+    if amount is None:
+        return ""
+    text = format(amount.normalize(), "f")
+    return f"{text} USD"
 
 
 def availability(record):
@@ -286,9 +300,14 @@ def build_row(template_columns, sku, record, offer_id, context):
     if compare_at is not None and price is not None and compare_at > price:
         row["price"] = price_field(compare_at)
         row["sale_price"] = price_field(price)
+        # woolytech mirrors the regular price into compare_price on sale rows.
+        if "compare_price" in row:
+            row["compare_price"] = format(compare_at.normalize(), "f")
     else:
         row["price"] = price_field(price)
         row["sale_price"] = ""
+        if "compare_price" in row:
+            row["compare_price"] = ""
 
     if "image_link" in row and record.get("image_url"):
         row["image_link"] = record["image_url"]
@@ -387,17 +406,40 @@ def resolve_fs_duplicates(rows, mode, report):
 def generate(feed_name, current_path, catalog, context, add_skus, dedupe_mode,
              out_dir):
     template_columns, current_rows = read_tsv(current_path)
-    emit_columns = [c for c in template_columns if c not in TAX_COLUMNS]
-    dropped_tax = [c for c in template_columns if c in TAX_COLUMNS]
+    emit_columns = [c for c in template_columns if not is_tax_column(c)]
+    dropped_tax = [c for c in template_columns if is_tax_column(c)]
 
+    # Carry-through source per SKU. Where a SKU has more than one export row
+    # (see conflicting_ids below) the row that already carries shipping wins, so
+    # collapsing a duplicate keeps the rate rather than dropping it. Otherwise
+    # first row wins.
     previous = {}
     for row in current_rows:
         sku = (row.get(SKU_COLUMN) or "").strip()
-        if sku:
-            previous.setdefault(sku, row)
+        if not sku:
+            continue
+        held = previous.get(sku)
+        if held is None or (not (held.get("shipping") or "").strip()
+                            and (row.get("shipping") or "").strip()):
+            previous[sku] = row
     context = dict(context, previous=previous)
 
     existing_ids = existing_offer_ids(current_rows)
+
+    # A SKU carrying two different offer ids is the same product served twice.
+    # Live case: five hex dumbbell set SKUs each appear under both a bare-SKU id
+    # and a composite id, at different prices, with only one carrying shipping.
+    # existing_offer_ids refuses to pick one, so these fall through to a minted
+    # id — which collapses the pair onto the composite scheme the product's other
+    # 40 variants already use. Correct, but too consequential to report as
+    # "added", so it gets its own row in the diff.
+    ids_per_sku = defaultdict(set)
+    for row in current_rows:
+        sku = (row.get(SKU_COLUMN) or "").strip()
+        if sku:
+            ids_per_sku[sku].add((row.get("id") or "").strip())
+    conflicting_ids = {sku: sorted(ids) for sku, ids in ids_per_sku.items()
+                       if len(ids) > 1}
     members = [(row.get(SKU_COLUMN) or "").strip() for row in current_rows]
     members = [sku for sku in members if sku]
 
@@ -415,7 +457,7 @@ def generate(feed_name, current_path, catalog, context, add_skus, dedupe_mode,
         is_new = sku not in existing_ids
         offer_id = mint_offer_id(record) if is_new else existing_ids[sku]
         offer_id = rekey_monster(offer_id, record)
-        if is_new:
+        if is_new and sku not in conflicting_ids:
             added.append((sku, offer_id))
         row = build_row(emit_columns, sku, record, offer_id, context)
         row["_variant_id"] = record["variant_id"]
@@ -436,7 +478,13 @@ def generate(feed_name, current_path, catalog, context, add_skus, dedupe_mode,
     for row in rows:
         sku = row[SKU_COLUMN]
         old = existing_ids.get(sku, "")
-        if old != row["id"]:
+        if sku in conflicting_ids:
+            id_changes.append({
+                "feed": feed_name, "sku": sku,
+                "old_id": " | ".join(conflicting_ids[sku]),
+                "new_id": row["id"], "change": "collapsed-duplicate",
+            })
+        elif old != row["id"]:
             id_changes.append({
                 "feed": feed_name, "sku": sku, "old_id": old,
                 "new_id": row["id"],
@@ -477,6 +525,7 @@ def generate(feed_name, current_path, catalog, context, add_skus, dedupe_mode,
         "unlabelled": unlabelled,
         "missing_from_shopify": missing_from_shopify,
         "duplicate_ids": duplicate_ids,
+        "conflicting_ids": conflicting_ids,
         "notes": report,
     }
     return summary
@@ -535,6 +584,9 @@ def print_summary(summary):
     print(f"\n=== {summary['feed']} -> {summary['out']}")
     print(f"  rows in / out              : {summary['rows_in']} / {summary['rows_out']}")
     print(f"  offers added               : {len(summary['added'])}")
+    if summary["conflicting_ids"]:
+        print(f"  duplicate SKUs collapsed   : {len(summary['conflicting_ids'])}"
+              f" -> {sorted(summary['conflicting_ids'])[:6]}")
     print(f"  offers removed             : {len(summary['removed'])}")
     print(f"  id changes (diff report)   : {len(summary['id_changes'])}")
     print(f"  tax columns dropped        : {summary['tax_columns_dropped'] or 'none'}")
