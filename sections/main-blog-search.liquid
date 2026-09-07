@@ -71,7 +71,7 @@
   <!-- Divider BELOW results -->
   <div class="blog-search-divider"></div>
 
-  <!-- Search index. Excerpt and tags only. Article body text is deliberately NOT output here. -->
+  <!-- Search index. Title, excerpt, tags and publication time only; body text is deliberately excluded. -->
   <div style="display:none;" id="all-articles-container">
     {% assign handles = section.settings.blog_handles | split: "," %}
     {% for handle in handles %}
@@ -85,12 +85,14 @@
               assign card_excerpt = article.excerpt | strip_html | strip
             endif
             assign card_tags = article.tags | join: ' '
+            assign published_epoch = article.published_at | date: '%s'
           -%}
           <div
             class="article-data"
             data-title="{{ article.title | strip_html | escape }}"
             data-excerpt="{{ card_excerpt | escape }}"
             data-tags="{{ card_tags | escape }}"
+            data-published-at="{{ published_epoch | escape }}"
           >
             {% render 'article-card',
               article: article,
@@ -111,9 +113,8 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('blog-live-search');
-  const container   = document.getElementById('blog-search-results');
-  const divider     = document.querySelector('.blog-search-divider');
-  const wrapper     = document.querySelector('.blog-search-wrapper');
+  const container = document.getElementById('blog-search-results');
+  const divider = document.querySelector('.blog-search-divider');
 
   if (!searchInput || !container) return;
 
@@ -123,16 +124,34 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('#all-articles-container .article-data')
   );
 
-  // Index built from title + cleaned excerpt + tags only.
-  // Article body text is never loaded into the page or matched against.
+  const normalize = value => (value || '').toLowerCase();
+
+  // The index deliberately excludes article body text. Publication time is used
+  // only as the deterministic tie-breaker after relevance is calculated.
   const index = allArticles.map(el => ({
-    el: el,
-    haystack: [
-      el.dataset.title   || '',
-      el.dataset.excerpt || '',
-      el.dataset.tags    || ''
-    ].join(' ').toLowerCase()
+    el,
+    title: normalize(el.dataset.title),
+    excerpt: normalize(el.dataset.excerpt),
+    tags: normalize(el.dataset.tags),
+    publishedAt: Number(el.dataset.publishedAt || 0)
   }));
+
+  function scoreMatch(item, query) {
+    let score = 0;
+
+    if (item.title === query) {
+      score += 1000;
+    } else if (item.title.startsWith(query)) {
+      score += 600;
+    } else if (item.title.includes(query)) {
+      score += 400;
+    }
+
+    if (item.tags.includes(query)) score += 200;
+    if (item.excerpt.includes(query)) score += 100;
+
+    return score;
+  }
 
   // Empty state is created in JS so no placeholder copy sits in the page source.
   let noResults = null;
@@ -162,18 +181,27 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    let matches = 0;
+    // Evaluate every configured Blog article before applying the display cap.
+    // This prevents the administrative blog_handles order from becoming the
+    // search ranking. Relevance wins first; newer publication wins ties.
+    const matches = index
+      .map(item => ({ item, score: scoreMatch(item, query) }))
+      .filter(result => result.score > 0)
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        if (b.item.publishedAt !== a.item.publishedAt) {
+          return b.item.publishedAt - a.item.publishedAt;
+        }
+        return a.item.title.localeCompare(b.item.title);
+      })
+      .slice(0, MAX_RESULTS);
 
-    for (let i = 0; i < index.length; i++) {
-      if (matches >= MAX_RESULTS) break;
-      if (index[i].haystack.includes(query)) {
-        container.appendChild(index[i].el.cloneNode(true));
-        matches++;
-      }
-    }
+    matches.forEach(result => {
+      container.appendChild(result.item.el.cloneNode(true));
+    });
 
-    showNoResults(matches === 0);
-    if (divider) divider.style.display = matches > 0 ? 'block' : 'none';
+    showNoResults(matches.length === 0);
+    if (divider) divider.style.display = matches.length > 0 ? 'block' : 'none';
   }
 
   function updateURL(query) {
@@ -188,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderResults(query);
   });
 
-  // Restore on back / reload
+  // Restore on back / reload.
   const params = new URLSearchParams(window.location.search);
   const initialQuery = params.get('q');
 
