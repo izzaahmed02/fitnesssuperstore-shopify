@@ -96,12 +96,30 @@ This is already the pattern in the account: the "FSR Final Upload - 7 rows
 Option B is not what Tim's email specified, so it needs his go-ahead. Worth putting
 to him, because it reaches the same outcome without the 2,196-row exposure.
 
-## Confirming the id scheme
+## Id scheme: CONFIRMED as the bare SKU
 
-Neither option can proceed on a guess. In Merchant Center, Products, find any one
-of the ten and read its ID: if it shows `FFT-SLCLE` the feed keys on the SKU, if it
-shows `9878647144764` it keys on the numeric product ID. That single check settles
-it for all ten, since all ten are single-variant with no legacy product code.
+Read directly off the `supplemental_priority_labels_v2.csv` raw-attributes panel on
+the GMC product pages (2026-09-07), which is the source's own contribution to each
+product and therefore authoritative:
+
+| Product | id in v2 | custom_label_3 | custom_label_4 |
+| --- | --- | --- | --- |
+| FFT-LPSCR | `FFT-LPSCR` | p1_hero | Tahoe Series |
+| FFB-45DLLP | `FFB-45DLLP` | p1_hero | FFB Black Series |
+| FFT-SLCLE | `FFT-SLCLE` | p1_hero | Tahoe Series |
+
+So the numeric product IDs in the April supplementals were the earlier scheme and
+must not be reused. `--id-scheme sku` is correct.
+
+v2's schema is exactly three columns: `id`, `custom_label_3`, `custom_label_4`.
+
+The same panels show these offers each already carry several supplementals, each
+contributing separate attributes: `Supplement Feed - additional attributes`
+(promotion_id), `Flowboost Labelizer` (custom_label_0 plus performance metrics),
+`display_ads_id_supplemental_full(1).csv` (display_ads_id) and v2 (the two labels).
+That is direct evidence for Option B: a source carrying only `id` and `title` is the
+pattern already in production here. None of the existing supplementals on these
+SKUs supplies a `title`, so there is no precedence conflict to resolve.
 
 ## Title rules
 
