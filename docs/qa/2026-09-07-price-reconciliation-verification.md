@@ -153,8 +153,13 @@ $649.00 regular, so it is MSRP, not a regular-price source.
 ## 5. Tests and runtime at the actual head — PASS, and my earlier open item is closed
 
 Reproduced locally at `ee21546e8825f7fc8edf78d02417a059c98d1ddd`. Toolchain now pinned by
-`rust-toolchain.toml` (rustc 1.94.1, `wasm32-wasip1`), Shopify CLI 4.7.0, function-runner
-9.2.2, build via `shopify app function build`.
+`rust-toolchain.toml` (rustc 1.94.1, `wasm32-wasip1`), function-runner 9.2.2, build via
+`shopify app function build`.
+
+One deliberate difference, disclosed: CI pins `SHOPIFY_CLI_VERSION: 4.7.1` and I ran **4.7.0**.
+The instruction count still matched to the instruction, which is a stronger result than a
+like-for-like run would have been — it shows the count is stable across that patch difference
+rather than being an artefact of one exact CLI build.
 
 | Check | Reported | Measured |
 |---|---|---|
