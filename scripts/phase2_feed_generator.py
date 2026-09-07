@@ -82,16 +82,25 @@ def read_csv_skipping_comments(path):
     return list(csv.DictReader(lines))
 
 
-def read_catalog(path):
-    """SKU -> variant record.
+def read_catalog(path, product_id_hints=None):
+    """SKU -> variant record, plus the SKUs that stayed ambiguous.
 
-    SKU is not unique in Shopify. The open-box variants are the live case: each
-    `-OOB` SKU exists both on the parent product and on a separate DRAFT "(OOB)"
-    product. A DRAFT product cannot serve in a feed at all, so preferring the
-    ACTIVE variant resolves that shape without guessing. A SKU still ambiguous
-    after that filter is dropped and reported — picking one would silently
-    change which variant's price the feed publishes.
+    SKU is not unique in Shopify, in two distinct shapes:
+
+    * Each `-OOB` SKU exists on the parent product and again on a separate DRAFT
+      "(OOB)" product. A DRAFT product cannot serve in a feed, so preferring
+      ACTIVE resolves it.
+    * ~198 SKUs exist on TWO ACTIVE products at the same price: the combined
+      parent (e.g. `french-fitness-rubber-coated-hex-dumbbell-new`, 45 variants)
+      and a legacy standalone product per SKU (`...-50-lbs-single-new`). This is
+      the combined-listing duplication, and ACTIVE-preference cannot split it.
+
+    For the second shape the feed itself is the tie-break: a row already keyed on
+    a composite id names its product, so `product_id_hints` maps SKU -> that
+    product id and the matching record wins. What is left over is genuinely
+    undecidable from the data and is reported, never guessed.
     """
+    hints = product_id_hints or {}
     by_sku = defaultdict(list)
     with open(path, encoding="utf-8") as fh:
         for line in fh:
@@ -110,11 +119,32 @@ def read_catalog(path):
             active = [r for r in candidates if r.get("status") == "ACTIVE"]
             if active:
                 candidates = active
+        if len(candidates) > 1 and sku in hints:
+            matching = [r for r in candidates
+                        if str(r.get("product_id") or "") == hints[sku]]
+            if len(matching) == 1:
+                candidates = matching
         if len(candidates) == 1:
             catalog[sku] = candidates[0]
         else:
             ambiguous.append(sku)
     return catalog, sorted(ambiguous)
+
+
+def product_id_hints_from_feeds(paths):
+    """SKU -> product id, read off composite offer ids in the live feeds."""
+    hints = {}
+    for path in paths:
+        _, rows = read_tsv(path)
+        for row in rows:
+            sku = (row.get(SKU_COLUMN) or "").strip()
+            offer_id = (row.get("id") or "").strip()
+            if not sku or "-" not in offer_id:
+                continue
+            head, _, tail = offer_id.partition("-")
+            if head.isdigit() and tail.isdigit():
+                hints[sku] = head
+    return hints
 
 
 def read_labels(path):
@@ -207,6 +237,11 @@ def mint_offer_id(record):
     to extend.
     """
     if (record.get("total_variants") or 1) > 1:
+        if not record.get("product_id") or not record.get("variant_id"):
+            # A composite id needs both halves. Returning the SKU here would
+            # quietly put a multi-variant offer on the wrong id scheme, so the
+            # row is refused and reported instead.
+            return None
         return f"{record['product_id']}-{record['variant_id']}"
     return record["sku"]
 
@@ -259,15 +294,28 @@ def route_additions(add_skus, explicit, catalog, memberships, routing):
     return per_feed, unroutable
 
 
-def rekey_monster(offer_id, record):
+def rekey_monster(offer_id, record, log=None):
     """Transform 3a: the bare Monster product id is never a valid offer id.
 
     Ten variants shared it. Re-keying is approved as an intentional catalog fix;
     applying it here as well keeps a regenerated feed from reintroducing it.
+
+    Without a variant id there is nothing to re-key with. The CSV-export
+    catalogue source has no variant ids at all, and appending a missing one
+    yields `<product>-None` on every row - one broken id shared by all ten,
+    which is worse than the bare id it replaced. So the bare id is kept and the
+    row reported; use the Admin API catalogue source to actually re-key.
     """
     if offer_id != MONSTER_PRODUCT_ID:
         return offer_id
-    return f"{MONSTER_PRODUCT_ID}-{record['variant_id']}"
+    variant_id = record.get("variant_id")
+    if not variant_id:
+        if log is not None:
+            log.append(
+                f"SKIP re-key {offer_id} (sku {record.get('sku')}): catalogue has "
+                "no variant id, so the composite id cannot be built")
+        return offer_id
+    return f"{MONSTER_PRODUCT_ID}-{variant_id}"
 
 
 # ----------------------------------------------------------------- row build
@@ -404,7 +452,7 @@ def resolve_fs_duplicates(rows, mode, report):
 
 
 def generate(feed_name, current_path, catalog, context, add_skus, dedupe_mode,
-             out_dir):
+             out_dir, drop_unresolved=False):
     template_columns, current_rows = read_tsv(current_path)
     emit_columns = [c for c in template_columns if not is_tax_column(c)]
     dropped_tax = [c for c in template_columns if is_tax_column(c)]
@@ -443,7 +491,7 @@ def generate(feed_name, current_path, catalog, context, add_skus, dedupe_mode,
     members = [(row.get(SKU_COLUMN) or "").strip() for row in current_rows]
     members = [sku for sku in members if sku]
 
-    report, rows, missing_from_shopify, added = [], [], [], []
+    report, rows, missing_from_shopify, added, unmintable = [], [], [], [], []
     seen = set()
 
     for sku in members + sorted(add_skus):
@@ -452,11 +500,31 @@ def generate(feed_name, current_path, catalog, context, add_skus, dedupe_mode,
         seen.add(sku)
         record = catalog.get(sku)
         if not record:
+            # The catalogue cannot describe this SKU - deleted, ambiguous, or
+            # absent from the export. Dropping it would silently pull a live
+            # offer out of Shopping, which is a merchandising decision and not
+            # one to take on missing data. The current row is carried through
+            # untouched and reported; --drop-unresolved opts into removal.
             missing_from_shopify.append(sku)
+            if not drop_unresolved and sku in previous:
+                carried = {c: previous[sku].get(c, "") for c in emit_columns}
+                carried["_variant_id"] = None
+                rows.append(carried)
             continue
         is_new = sku not in existing_ids
         offer_id = mint_offer_id(record) if is_new else existing_ids[sku]
-        offer_id = rekey_monster(offer_id, record)
+        if not offer_id:
+            # No composite id can be built (multi-variant SKU, catalogue has no
+            # variant id). Falling back to an id already serving this SKU keeps
+            # the offer live on a valid id, which also collapses a duplicate
+            # pair onto one row. Dropping it instead would remove a live offer
+            # over missing catalogue data.
+            unmintable.append(sku)
+            fallback = previous.get(sku, {}).get("id", "").strip()
+            if not fallback:
+                continue
+            offer_id = fallback
+        offer_id = rekey_monster(offer_id, record, report)
         if is_new and sku not in conflicting_ids:
             added.append((sku, offer_id))
         row = build_row(emit_columns, sku, record, offer_id, context)
@@ -524,6 +592,7 @@ def generate(feed_name, current_path, catalog, context, add_skus, dedupe_mode,
         "blank_shipping": blank_shipping,
         "unlabelled": unlabelled,
         "missing_from_shopify": missing_from_shopify,
+        "unmintable": unmintable,
         "duplicate_ids": duplicate_ids,
         "conflicting_ids": conflicting_ids,
         "notes": report,
@@ -595,8 +664,12 @@ def print_summary(summary):
     print(f"  duplicate ids              : {len(summary['duplicate_ids'])}")
     if summary["duplicate_ids"]:
         print(f"    REMAINING: {sorted(summary['duplicate_ids'])}")
+    if summary["unmintable"]:
+        print(f"  no id could be minted     : {len(summary['unmintable'])}"
+              f" -> {summary['unmintable'][:6]} (multi-variant, catalogue has no "
+              "variant id)")
     if summary["missing_from_shopify"]:
-        print(f"  in feed, not in Shopify    : {len(summary['missing_from_shopify'])}"
+        print(f"  SKU not in catalogue       : {len(summary['missing_from_shopify'])}"
               f" -> {summary['missing_from_shopify'][:10]}")
     for note in summary["notes"]:
         print(f"    {note}")
@@ -625,6 +698,11 @@ def main(argv=None):
     parser.add_argument("--out-dir", default="out")
     parser.add_argument("--dedupe-mode", choices=("drop-oob", "rekey-oob"),
                         default="drop-oob")
+    parser.add_argument("--drop-unresolved", action="store_true",
+                        help="remove rows whose SKU the catalogue cannot "
+                             "describe. Default keeps them unchanged and "
+                             "reports them, so a catalogue gap never pulls a "
+                             "live offer out of Shopping.")
     parser.add_argument("--series-price-basis", choices=("selling", "regular"),
                         default="selling",
                         help="which price the $1,000 custom_label_4 floor reads: "
@@ -635,7 +713,8 @@ def main(argv=None):
                              "write no feed files")
     args = parser.parse_args(argv)
 
-    catalog, ambiguous = read_catalog(args.catalog)
+    hints = product_id_hints_from_feeds([args.current_ff, args.current_fs])
+    catalog, ambiguous = read_catalog(args.catalog, hints)
     labels_by_sku, labels_by_id = read_labels(args.labels)
     titles = read_titles(args.titles)
     shipping = read_shipping(args.shipping)
@@ -708,7 +787,8 @@ def main(argv=None):
     summaries = []
     for feed_name, path in feeds:
         summary = generate(feed_name, path, catalog, context,
-                           additions[feed_name], args.dedupe_mode, out_dir)
+                           additions[feed_name], args.dedupe_mode, out_dir,
+                           args.drop_unresolved)
         summaries.append(summary)
         print_summary(summary)
 
@@ -727,13 +807,16 @@ def main(argv=None):
         print(f"\n  {len(ambiguous)} SKUs appear on more than one Shopify variant "
               f"and were skipped: {ambiguous[:10]}")
 
+    total_duplicate_ids = sum(len(s["duplicate_ids"]) for s in summaries)
+
     print("\n=== gates before cutover")
+    print(f"  [{'FAIL' if total_duplicate_ids else ' OK '}] every offer id is unique")
     print(f"  [{'FAIL' if total_unlabelled else ' OK '}] every row carries custom_label_3")
     print(f"  [{'WARN' if total_blank else ' OK '}] every row carries shipping")
     print(f"  [{' OK ' if len(titles) == 10 else 'WARN'}] {len(titles)} title overrides applied")
     print(f"  [{'HOLD' if total_id_changes else ' OK '}] id diff report to Tim before repointing")
 
-    return 1 if total_unlabelled else 0
+    return 1 if (total_unlabelled or total_duplicate_ids) else 0
 
 
 if __name__ == "__main__":
