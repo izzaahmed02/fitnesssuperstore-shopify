@@ -37,6 +37,14 @@ class HeaderMenu extends DetailsDisclosure {
     super();
     this.header = document.querySelector('.header-wrapper');
     this.closeTimer = null;
+    this.summary = this.mainDetailsToggle.querySelector('summary');
+
+    // global.js sets role="button" on these summaries, which suppresses the
+    // native <summary> Enter/Space toggle in Safari/WebKit and is inconsistent
+    // across browsers. Own the keyboard toggle here so it always works.
+    if (this.summary) {
+      this.summary.addEventListener('keydown', this.onSummaryKeydown.bind(this));
+    }
   }
 
   connectedCallback() {
@@ -44,6 +52,32 @@ class HeaderMenu extends DetailsDisclosure {
 
     this.mainDetailsToggle.addEventListener('mouseenter', this.openOnHover.bind(this));
     this.mainDetailsToggle.addEventListener('mouseleave', this.closeOnLeave.bind(this));
+  }
+
+  onSummaryKeydown(event) {
+    if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') return;
+
+    // Prevent both the native toggle (where it still fires) and Space-scrolling
+    // the page, so this handler is the single source of truth across browsers.
+    event.preventDefault();
+
+    if (this.mainDetailsToggle.hasAttribute('open')) {
+      this.close();
+    } else {
+      this.open();
+    }
+  }
+
+  open() {
+    document.querySelectorAll('header-menu details[open]').forEach((openMenu) => {
+      if (openMenu !== this.mainDetailsToggle) {
+        openMenu.removeAttribute('open');
+        openMenu.querySelector('summary')?.setAttribute('aria-expanded', false);
+      }
+    });
+
+    this.mainDetailsToggle.setAttribute('open', '');
+    this.summary?.setAttribute('aria-expanded', true);
   }
 
   onToggle() {
@@ -61,16 +95,7 @@ class HeaderMenu extends DetailsDisclosure {
 
   openOnHover() {
     clearTimeout(this.closeTimer);
-
-    document.querySelectorAll('header-menu details[open]').forEach((openMenu) => {
-      if (openMenu !== this.mainDetailsToggle) {
-        openMenu.removeAttribute('open');
-        openMenu.querySelector('summary')?.setAttribute('aria-expanded', false);
-      }
-    });
-
-    this.mainDetailsToggle.setAttribute('open', '');
-    this.mainDetailsToggle.querySelector('summary')?.setAttribute('aria-expanded', true);
+    this.open();
   }
 
   closeOnLeave() {
