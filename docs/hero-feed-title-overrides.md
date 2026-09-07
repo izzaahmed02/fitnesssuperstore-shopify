@@ -65,6 +65,44 @@ intersected with the showroom cohort and both are `inCollection(showroom) = fals
 Their presence in the primary feed is simply not evidenced by a file that never
 covered them, so they are the two to spot-check first in GMC after upload.
 
+## Two ways to land the titles
+
+Merchant Center will not give the v2 file back. The source is `File (manual)`, and
+its detail page offers only View update history, Update by using SFTP, and Update.
+Its advanced options also show **"Do not retain items no longer provided in the
+source"**, and the last run reports **2,196 rows, 2,196 matched**. Together those
+mean a v3 must carry all 2,196 rows: every row omitted loses its `custom_label_3`
+and `custom_label_4` as soon as the file processes.
+
+### Option A - v3, per Tim's instruction
+
+Needs the real v2 file, which only Tim (who uploaded it) or Larianne has. Ask for
+it, then run `build_supplemental_v3.py`. Do not reconstruct 2,196 rows by hand, and
+do not use a Products export as the base: that is the merged output of every source
+across all products, so it changes the row scope and writes merged values back as
+if they were supplemental truth.
+
+### Option B - a separate title-only supplemental (lower risk)
+
+A supplemental contributes only the attributes it carries, so a source holding just
+`id` and `title` cannot touch the label columns. v2 keeps supplying them, and the
+Product Lines asset groups cannot go dark by this route at all.
+
+This is already the pattern in the account: the "FSR Final Upload - 7 rows
+(id, title)" source is a title-only supplemental on the same primary.
+
+`scripts/build_title_only_supplemental.py --id-scheme sku|product_id` emits it.
+
+Option B is not what Tim's email specified, so it needs his go-ahead. Worth putting
+to him, because it reaches the same outcome without the 2,196-row exposure.
+
+## Confirming the id scheme
+
+Neither option can proceed on a guess. In Merchant Center, Products, find any one
+of the ten and read its ID: if it shows `FFT-SLCLE` the feed keys on the SKU, if it
+shows `9878647144764` it keys on the numeric product ID. That single check settles
+it for all ten, since all ten are single-variant with no legacy product code.
+
 ## Title rules
 
 - Exact strings, character for character. The separator is an **en dash (U+2013)**,
