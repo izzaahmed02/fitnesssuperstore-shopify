@@ -371,13 +371,12 @@ def build_row(template_columns, sku, record, offer_id, context):
 
     # Delta 1: labels. Series only above the $1,000 floor.
     #
-    # Which price the floor reads matters, and the two answers disagree on real
-    # rows: Monster FF-MSS-94-3T sells for $327 against a $1,319 compare-at, so
-    # `regular` labels it Monster Series and `selling` does not. Default is
-    # `selling` — the floor is there to keep the Product Lines asset groups on
-    # high-value machines, and $327 is what the customer actually pays. It is
-    # also the more robust basis while the fake-MSRP compare-at values are under
-    # separate review. Switch with --series-price-basis regular.
+    # The spec is "series only where price >= $1,000". `price` is a literal
+    # column in both feeds and it carries the regular price, so the floor reads
+    # that, not the selling price. The two disagree on five rows — Monster
+    # FF-MSS-94-3T publishes price 1319 and sale_price 327 — where reading the
+    # regular price is what earns the series label. --series-price-basis selling
+    # is the alternative if that turns out not to be the intent.
     tier, series = context["labels_by_sku"].get(
         sku, context["labels_by_id"].get(offer_id, ("", "")))
     row["custom_label_3"] = tier
@@ -704,10 +703,11 @@ def main(argv=None):
                              "reports them, so a catalogue gap never pulls a "
                              "live offer out of Shopping.")
     parser.add_argument("--series-price-basis", choices=("selling", "regular"),
-                        default="selling",
-                        help="which price the $1,000 custom_label_4 floor reads: "
-                             "the selling price (default) or the regular price "
-                             "before any compare-at discount")
+                        default="regular",
+                        help="which price the $1,000 custom_label_4 floor reads. "
+                             "Default `regular` follows the spec's \"price >= "
+                             "$1,000\", price being the feed column carrying the "
+                             "regular price; `selling` reads sale_price instead")
     parser.add_argument("--allow-missing-labels", action="store_true",
                         help="dry run only: report instead of aborting, and "
                              "write no feed files")

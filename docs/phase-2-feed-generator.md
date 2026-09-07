@@ -67,20 +67,20 @@ writes to `<out-dir>/dry-run/` and still exits non-zero.
 supplemental source. The join is on SKU with an offer-id fallback, because ids
 are exactly what may change at cutover.
 
-Series labels apply only at **$1,000 and above**. Which price that floor reads is
-a real fork, and the two answers disagree on live rows: Monster `FF-MSS-94-3T`
-sells for $327 against a $1,319 compare-at.
+Series labels apply only at **$1,000 and above**. The spec is *"series only
+where price >= $1,000"*, and `price` is a literal column in both feeds carrying
+the regular price — so the floor reads that column, not the selling price.
 
-| `--series-price-basis` | `FF-MSS-94-3T` |
+The two readings disagree on five rows, all of which publish a compare-at above
+$1,000 and a sale price below it:
+
+| `--series-price-basis` | `FF-MSS-94-3T` (price 1319, sale_price 327) |
 | --- | --- |
-| `selling` (default) | no series label |
-| `regular` | `Monster Series` |
+| `regular` (default) | `Monster Series` |
+| `selling` | no series label |
 
-Default is `selling`. The floor exists to keep the Product Lines asset groups on
-high-value machines, $327 is what the customer actually pays, and it is the more
-robust basis while the compare-at values are under separate review in the
-"kill fake MSRP" thread. **Tim: one word switches this if you meant the regular
-price.**
+Default is `regular`, following the spec's wording. `selling` is there if that
+turns out not to be the intent.
 
 ### 2. Hero titles
 
