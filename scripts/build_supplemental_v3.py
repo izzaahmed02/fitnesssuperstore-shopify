@@ -26,9 +26,24 @@ TABLE = pathlib.Path(__file__).resolve().parent.parent / "feeds" / "hero-title-o
 REQUIRED_V2_COLUMNS = ("custom_label_3", "custom_label_4")
 
 
-def load_overrides() -> dict[str, str]:
-    rows = list(csv.DictReader(TABLE.open(encoding="utf-8")))
-    return {r["offer_id"]: r["title"] for r in rows}
+def load_overrides() -> list[dict[str, str]]:
+    return list(csv.DictReader(TABLE.open(encoding="utf-8")))
+
+
+def candidate_keys(row: dict[str, str]) -> list[tuple[str, str]]:
+    """Every id form the primary feed could plausibly be using for this offer.
+
+    The feed has been keyed on the bare SKU (current, per the 2026-09 exports)
+    and on the numeric Shopify product ID (the April supplementals were built
+    that way). Both are checked rather than assumed, so the file's own ids win.
+    """
+    pid, vid = row["shopify_product_id"], row["shopify_variant_id"]
+    return [
+        ("sku", row["sku"]),
+        ("product_id", pid),
+        ("product-variant", f"{pid}-{vid}"),
+        ("variant_id", vid),
+    ]
 
 
 def main() -> int:
@@ -64,17 +79,47 @@ def main() -> int:
             print(f"REFUSING TO WRITE: {p}", file=sys.stderr)
         return 2
 
+    # Resolve each approved SKU to whichever id form this file actually uses.
     ids_in_file = {r["id"] for r in rows}
-    missing_ids = [i for i in overrides if i not in ids_in_file]
-    if missing_ids:
+    resolved: dict[str, str] = {}
+    schemes: dict[str, str] = {}
+    unmatched = []
+    ambiguous = []
+
+    for row in overrides:
+        hits = [(name, key) for name, key in candidate_keys(row) if key in ids_in_file]
+        if not hits:
+            unmatched.append(row["sku"])
+        elif len(hits) > 1:
+            ambiguous.append(f"{row['sku']} matches {', '.join(k for _, k in hits)}")
+        else:
+            name, key = hits[0]
+            resolved[key] = row["title"]
+            schemes[row["sku"]] = name
+
+    if unmatched or ambiguous:
         # Tim's rule: if any id errors, stop and reply - do not improvise ids.
+        if unmatched:
+            print(
+                "REFUSING TO WRITE: no id in the supplemental matches these approved SKUs "
+                "under any known scheme (SKU, product ID, product-variant, variant ID): "
+                + ", ".join(unmatched),
+                file=sys.stderr,
+            )
+        for a in ambiguous:
+            print(f"REFUSING TO WRITE: ambiguous id match - {a}", file=sys.stderr)
+        print("Stop and reply to Tim rather than inventing ids or adding new rows.", file=sys.stderr)
+        return 3
+
+    distinct = sorted(set(schemes.values()))
+    if len(distinct) > 1:
         print(
-            "REFUSING TO WRITE: these approved offer ids are not in the supplemental: "
-            + ", ".join(missing_ids)
-            + "\nStop and reply to Tim rather than inventing ids or adding new rows.",
+            "REFUSING TO WRITE: the ten offers resolve under mixed id schemes ("
+            + "; ".join(f"{s}={sorted(k for k, v in schemes.items() if v == s)}" for s in distinct)
+            + "). That is unexpected for ten single-variant products - stop and reply to Tim.",
             file=sys.stderr,
         )
-        return 3
+        return 5
 
     if "title" not in fieldnames:
         fieldnames.append("title")
@@ -82,12 +127,12 @@ def main() -> int:
     applied = 0
     for row in rows:
         # Empty title = untouched in a supplemental feed. Every non-hero row stays empty.
-        title = overrides.get(row["id"], "")
+        title = resolved.get(row["id"], "")
         row["title"] = title
         if title:
             applied += 1
 
-    if applied != len(overrides):
+    if applied != len(resolved):
         print(f"REFUSING TO WRITE: applied {applied} titles, expected {len(overrides)}", file=sys.stderr)
         return 4
 
@@ -103,6 +148,7 @@ def main() -> int:
     print(f"  rows            {len(rows)}  (unchanged from input)")
     print(f"  columns         {', '.join(fieldnames)}")
     print(f"  titles set      {applied} (all other title cells empty = untouched)")
+    print(f"  id scheme       {distinct[0]} - matched against the file's own ids, not assumed")
     print(f"  custom_label_3  {labelled_3} rows still populated")
     print(f"  custom_label_4  {labelled_4} rows still populated")
     print("\nUpload this file via the Update button on the existing supplemental source.")

@@ -30,18 +30,20 @@ def main() -> int:
 
     seen = set()
     for row in rows:
-        sku, offer_id = row["sku"], row["offer_id"]
+        sku = row["sku"]
         title, keyword = row["title"], row["keyword_phrase"]
 
-        if offer_id in seen:
-            failures.append(f"{sku}: duplicate offer_id {offer_id}")
-        seen.add(offer_id)
+        if sku in seen:
+            failures.append(f"{sku}: duplicate SKU")
+        seen.add(sku)
 
-        # All 10 are single-variant products with no custom.old_legacy_product_code,
-        # so the primary feed keys them on the bare SKU. Verified against Shopify
-        # and the googleshoppingfs / googleshoppingfrenchfitness exports.
-        if offer_id != sku:
-            failures.append(f"{sku}: offer_id {offer_id} does not match the verified SKU scheme")
+        # The id scheme is resolved against the live file at build time rather than
+        # hardcoded here, because the feed has been keyed on the bare SKU (current)
+        # and on the numeric product ID (the April supplementals). Both mappings are
+        # carried so build_supplemental_v3.py can match whichever the file uses.
+        for col in ("shopify_product_id", "shopify_variant_id"):
+            if not row[col].isdigit():
+                failures.append(f"{sku}: {col} {row[col]!r} is not a numeric Shopify id")
 
         if len(title) > GMC_TITLE_MAX:
             failures.append(f"{sku}: title is {len(title)} chars, over the {GMC_TITLE_MAX} limit")

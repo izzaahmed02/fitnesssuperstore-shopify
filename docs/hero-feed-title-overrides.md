@@ -30,26 +30,40 @@ Re-uploading anything built from the earlier labels-only file wipes the series
 values and takes the Product Lines asset groups dark. `scripts/build_supplemental_v3.py`
 refuses to write if the input has no `custom_label_4`, which is exactly that mistake.
 
-## Offer ids
+## Offer ids: resolved against the file, never assumed
 
-The primary feeds use three id schemes (see
-[`local-inventory-feed.md`](local-inventory-feed.md)): `<product ID>-<variant ID>`
-for multi-variant products, `custom.old_legacy_product_code` where set, and
-`variant.sku` for everything else. A row whose id does not match the primary
-offer id processes as "Offer does not exist".
+**Do not hand-key the id column.** The `id` values in the supplemental must match
+whatever the primary feed currently uses, and that has not been stable:
 
-All ten resolve to the **bare SKU**, verified against live Shopify on 2026-09-07:
-every one is ACTIVE, single-variant (`variantsCount = 1`), and carries no
-`custom.old_legacy_product_code` at product or variant level, so the third scheme
-applies. Eight are additionally confirmed present by name in the
-`googleshoppingfs` / `googleshoppingfrenchfitness` export intersection recorded in
-`snippets/local-inventory-offer-allowlist.liquid`.
+- The **April** supplementals (`07_MC_SupplementalFeed_StrengthProductLines_*`,
+  still listed in GMC, two marked `[TEST]`) key on the **numeric Shopify product
+  ID** - e.g. `9878647144764` for FFT-SLCLE. Verified against live Shopify: those
+  numbers are exactly these products' product IDs.
+- The **September** primary feed exports key on the **bare SKU**. Eight of the ten
+  appear by SKU in the export intersection recorded in
+  `snippets/local-inventory-offer-allowlist.liquid` (2026-09-05 fetch).
 
-`FFT-PLCLE` and `FFB-DAP` are absent from that snippet only because it is
+That flip is almost certainly the one Tim raised in "URGENT GMC Issues" in April,
+where the unique identifier was changed from product code to a numeric value and
+he suspected it wiped the GMC performance history. Either way, an id in the wrong
+format processes as "Offer does not exist".
+
+So `feeds/hero-title-overrides.csv` carries the SKU **and** the Shopify product and
+variant IDs, and `scripts/build_supplemental_v3.py` resolves each offer against the
+downloaded file's own `id` column, trying SKU, product ID, `<product>-<variant>`,
+and variant ID. It reports which scheme matched, and refuses to write if any of the
+ten matches none, if a match is ambiguous, or if the ten resolve under mixed
+schemes. Whatever v2 uses, the output matches it.
+
+Supporting facts from live Shopify (2026-09-07): all ten products are ACTIVE,
+single-variant (`variantsCount = 1`), and carry no `custom.old_legacy_product_code`
+at product or variant level, so none of them falls into the legacy-code scheme
+described in [`local-inventory-feed.md`](local-inventory-feed.md).
+
+`FFT-PLCLE` and `FFB-DAP` are absent from the allowlist snippet only because it is
 intersected with the showroom cohort and both are `inCollection(showroom) = false`.
-Their id scheme is not in doubt; their presence in the primary feed is simply not
-evidenced by a file that never covered them, so they are the two to spot-check
-first in GMC after upload.
+Their presence in the primary feed is simply not evidenced by a file that never
+covered them, so they are the two to spot-check first in GMC after upload.
 
 ## Title rules
 
