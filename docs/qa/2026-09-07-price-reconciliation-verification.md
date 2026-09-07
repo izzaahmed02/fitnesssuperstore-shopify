@@ -214,7 +214,7 @@ SHA and say so. Not by reset or force-push. Until the named candidate and the ac
 agree, I cannot issue a candidate-scoped PASS, because there is no unambiguous candidate to
 name in it.
 
-## 6a. Klaviyo isolation — verified live, and it is not safe by default
+## 6a. Klaviyo isolation — verified live: PASS, with one standing condition
 
 Tim's 4 September instruction: "Prove that the staging store/order cannot feed the production
 integration or send customer-facing messages." Checked against the live account.
@@ -239,15 +239,37 @@ checkout using any of those five can enter a live flow and send live marketing e
 `sales@fitnesssuperstore.com`.** Any other `@fitnesssuperstore.com` address is excluded by the
 `not-contains` condition.
 
-Two things follow:
+**Isolation at the integration layer — CLOSED, and it passes.** The Klaviyo Shopify
+integration screen was read directly (Integrations → Shopify, Enabled, added 28 Jan 2025). It
+carries a single Store URL:
 
-1. **Test-address rule for the staging matrix:** never use those five. An internal address
-   that is not on the list is a reasonable second line of defence, but only that.
-2. **The primary proof is still outstanding and is not visible from the API.** Whether the
-   staging store is connected to this Klaviyo account can only be read from Klaviyo Settings →
-   Integrations → Shopify, which shows the connected store domain. Until someone confirms that
-   `api-testing-izza-qash.myshopify.com` is **not** connected, the isolation requirement is
-   unmet regardless of which address is used. This is the single check that closes it.
+| | |
+|---|---|
+| Connected store | **`79ef8b-5e.myshopify.com`** |
+| Confirmed identity | `shop.myshopifyDomain` = `79ef8b-5e.myshopify.com`, primary domain `www.fitnesssuperstore.com`, Shopify Plus, `partnerDevelopment: false` — **the production store** |
+| `api-testing-izza-qash.myshopify.com` | **not connected** |
+
+One store, and it is production. So a staging order cannot produce a `Placed Order` event in
+account `TzT9tw`, cannot reach metric `X59qfY`, and therefore cannot trigger flow `WPkNcF`.
+Tim's requirement is met at the integration layer.
+
+**The theme reset does not carry a tracker either — checked.** Onsite tracking is enabled on
+production (app embed on, Viewed Product on, behavioural events on), which raised the question
+of whether resetting `staging-qa` from production would import a production Klaviyo tracker.
+It would not. `origin/main` contains **no** hardcoded public API key, no `static.klaviyo.com`
+and no `klaviyo.js` script tag. The only references are a Shopify **app-embed block** in
+`config/settings_data.json`
+(`shopify://apps/klaviyo-email-marketing-sms/blocks/klaviyo-onsite-embed/...`), which renders
+only on a store where the Klaviyo app is installed, and two `klaviyo-form-Ud8shK` placeholder
+divs that are inert without it.
+
+**So the guard is an installation guard, and it belongs in the stop conditions:** this holds
+only while the Klaviyo app is **not installed on the staging store**. If anyone installs it
+there, the app embed activates and a second integration becomes possible. Nobody should
+install Klaviyo on `api-testing-izza-qash` during this work.
+
+**Test-address rule regardless.** The five allow-listed addresses above should still not be
+used for staging checkouts. That is now a second line of defence rather than the only one.
 
 **Separately, worth a look by whoever owns the flow.** Those six conditions sit in one
 `condition_groups` entry. Under Klaviyo's model conditions inside a group are ANDed and groups
@@ -273,8 +295,8 @@ at the actual head, and the cohort provenance closure.
 2. **Qash's nine bounded correction proposals with backups, regression tests and rollback**,
    due 2026-09-08 2:00 PM. §1–§4 verify the inputs to those proposals, not the proposals.
 
-**Klaviyo isolation** — the allow-list is now named (§6a) and the one remaining check is
-reading the connected store domain in Klaviyo Settings → Integrations → Shopify.
+**Klaviyo isolation — PASS**, with one standing condition: the integration is connected to the
+production store only and the theme carries no hardcoded tracker, so a staging order cannot trigger the live flow. The condition is that the Klaviyo app must never be installed on the staging store. §6a.
 
 **Still BLOCKED from the prior round**, unchanged and not mine to clear: named staging access
 and Partner visibility of `qash-izza-bundle`; confirmed test-payment mode on the staging
