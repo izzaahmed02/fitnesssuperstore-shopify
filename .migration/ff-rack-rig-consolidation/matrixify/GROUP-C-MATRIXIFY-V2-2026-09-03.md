@@ -57,6 +57,22 @@ The script validates:
 - zero obsolete collection-handle references in the update values; and
 - 123 original obsolete references retained in the matching rollback values.
 
+## Live control update — 2026-09-07
+
+The canonical Gmail thread was reviewed through Umer's latest checkpoint request. No later Iqra v2 dry-run result, import result, Saliha QA, or Izza verifier result was present.
+
+A fresh Shopify Admin GraphQL read-back confirmed:
+
+- all 58 pending metaobject IDs still exist under `product_option_help_text`;
+- the 58 remain in their pre-v2 old-link state, so no Group C v2 import was detected;
+- all five source collections and all five target collections remain published;
+- source/target counts remain matched at `116/116`, `16/16`, `29/29`, `56/56`, and `13/13`; and
+- no redirect exists for any of the five source collection paths.
+
+The live Org Chart now lists Zafran as **Former / Inactive / Do Not Route** effective 2026-09-03. Do not assign him or include `zafran@fitnesssuperstore.com` in new To/CC/BCC. Izza remains the current development/GitHub lead and interim architecture triage owner. Yusra is the current replacement rendered-crawl owner for this migration because she is active on Izza's FitnessSuperstore.com development team and previously completed the JavaScript-rendered crawl method in this exact canonical thread.
+
+The existing Migration Action Summary remains the canonical tracker. A direct attempt to add the current live-status panel on 2026-09-07 was blocked by Google Sheets `403 PERMISSION_DENIED`; Control Tower must record the same status in the existing tracker rather than creating another tracker.
+
 ## Required gate
 
 Run a new Matrixify dry run using the v2 update file. Required result:
@@ -75,8 +91,8 @@ After import:
 
 1. Saliha independently verifies all 74 Group C records and zero obsolete Group C handles.
 2. Izza runs the whole-store verifier and confirms the five source collections are still published and no redirects exist.
-3. Zafran runs one JavaScript-rendered targeted crawl.
+3. Yusra runs one JavaScript-rendered desktop/mobile targeted crawl and posts PASS or the exact residual page, old URL, and rendered component.
 4. Iqra saves the final dated source/target count-and-handle snapshot.
-5. Umer / Control Tower posts one consolidated `READY FOR TIM CUTOVER GO` status in the original Gmail thread.
+5. Umer / Control Tower posts one consolidated `READY FOR TIM CUTOVER GO` status in the original Gmail thread and updates only the existing Migration Action Summary.
 
 The five source collections must **not** be unpublished and the five redirects must **not** be created until Tim gives the separate explicit cutover GO.
