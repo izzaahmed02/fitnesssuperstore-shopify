@@ -279,3 +279,95 @@ SOP, and Tim's separate written GO.
    suppress reviews to reach a target count.
 3. Base-price parity across all nine heights is real, but it is **not** an MSRP/savings
    PASS — see §1b item 6. The compare-at prices exist only on the combined product.
+
+---
+
+## Addendum — confirmed live at checkout, 2026-09-08
+
+Run on unpublished theme 188234072380 via
+`?view=uprights-preview&preview_theme_id=188234072380`. Storefront reads and checkout
+page loads only — no order was placed, and nothing was written to any product,
+inventory, review, feed, app setting or theme.
+
+### A. Cart and checkout identity — PASS
+
+`/cart.js` on a single-item cart returns `variant_id 52686668366140`,
+`product_id 10281641443644`, `sku FF-RR-U-91`, `price 13900`, `variant_title 91"`. All
+nine in-scope heights resolve to the combined variants and 47" is absent from the cart.
+The checkout page carries the same line as `French Fitness Rack & Rig Uprights (New)`
+with `91"` retained. So the exact selected height survives Add to Cart → cart →
+checkout, and the customer transacts against the **combined** record — whose inventory
+items are disjoint from the sources (see §2).
+
+### B. Review-widget fallback — CONFIRMED, and self-documenting
+
+The live PDP renders three separate counts:
+
+- `Product reviews (0)` — the product's own count, zero even on the live theme
+- `Reviews for other products (731)` — the widget's own heading for the fallback set,
+  first entry a five-star review of an **FSR-20 plate-loaded cage**
+- `Store reviews (459)` — the `show_shop_reviews: true` tab
+
+On the preview template the fallback block is gone and only
+"This product hasn't received any reviews yet" remains, while the 108" source PDP under
+the same theme still shows its own single five-star review. The count is **731**, not
+the ~711 in the QA record.
+
+This settles the question: a mis-bound Judge.me product group would render those reviews
+as the product's *own* under "Product reviews". The widget instead labels them as
+belonging to other products. The cause is the `empty_state` fallback, not a grouping
+error, and no review needed to be touched.
+
+### C. NEW DEFECT — processing time is wrong at checkout on a direct variant link
+
+Loading the PDP already on 91" (`?variant=52686668366140`), without touching the height
+picker, produces a cart line and a checkout line reading **"Ships from our Warehouse in
+2-5 Business Days + Transit Time"**. Variant 52686668366140's own
+`custom.processing_time_long_variant` reads **3-7**, matching its source. Side by side at
+US checkout: combined 91" says 2-5, source 91" says 3-7 — same physical upright.
+
+`/cart.js` shows why. The line-item property is supplied by a product-options group, not
+by the variant:
+
+```
+_functionOperation: [ … {"variantId":"gid://shopify/ProductVariant/51461543723324",
+                         "groupHandle":"processing-time",
+                         "defaultValues":"51461543723324"} ]
+```
+
+That default is fixed and does not follow a `?variant=` deep link. It changes only when
+someone clicks through the picker, which is why a sequential nine-height run showed 3-7
+on 108"–142" but a direct load on 91" does not.
+
+Consequence: any customer arriving on a direct variant link — the path used by Google
+Shopping feeds, paid ads and shared links — is shown 2-5 business days on every height,
+understating the promise on the five that are genuinely 3-7 (91", 108", 120", 130",
+142"), and it persists into checkout where a delivery promise becomes a commitment.
+
+Owner: **Izza** — this is an app/options-group defect, not a catalog-content fix. The
+nine variant metafields are correct and need no change.
+
+### D. NEW DEFECT — the combined product is excluded from the Labor Day promotion
+
+Same height, same $139.00 list price, both at US checkout:
+
+| | Line price | Subtotal | Discount applied |
+|---|---|---|---|
+| Combined PDP (variant 52686668366140) | $139.00 | **$139.00** | none |
+| Source 91" PDP (9878830907708) | ~~$139.00~~ $125.10 | **$125.10** | `LABOR DAY SALE — 10% OFF FRENCH FITNESS (-$13.90)`, TOTAL SAVINGS $13.90 |
+
+A customer buying the identical upright through the combined PDP pays **$13.90 more**.
+The automatic discount attaches to the source product and not to the combined one.
+
+An earlier Pakistan-address checkout was discarded as a false negative — the promotion is
+US-scoped, so both sides were re-run with Country/Region = United States.
+
+Unverified hypothesis for whoever owns the promotion: the automatic discount likely
+targets a collection or tag set that the combined product falls outside of, since it is
+`product_type: "Product (Hidden)"` with the `hidden` tag and `seo.hidden = 1` — the same
+`TYPE != 'Product (Hidden)'` exclusion already documented against the Rubber Hex smart
+collections. Not asserted; it needs confirmation by the campaign owner.
+
+This particular sale ends 2026-09-08, but the exclusion mechanism will recur on every
+future promotion until it is understood, and it is a live pricing-integrity issue for any
+combined listing built this way. It is a further reason not to publish this PDP yet.
