@@ -1,0 +1,61 @@
+{% doc %}
+  Presentation-only September 2026 card for the exact approved product IDs.
+  @param {product} product - Current product.
+  @param {string} [section_id] - Section identifier used by variant refresh.
+  @param {boolean} [hide_on_mobile] - Hide the desktop-layout copy on mobile.
+{% enddoc %}
+{% comment %}
+  Reuses the existing LaborDaySaleCard update targets and card CSS.
+  Caller selects this campaign instead of (never alongside) the Labor Day card.
+  The data marker is also emitted for unavailable variants so the caller cannot
+  fall back to an incorrect purchasable-offer card. No inventory or price writes.
+{% endcomment %}
+{%- liquid
+  assign september_ids = '9878150218044,9878474031420,9878486417724,9878553035068,9878553624892,9878595567932,9878600319292,9878603956540,9878614245692,9878638264636,9878926229820,9878928818492,9879165763900,9879173660988,9879183065404,9879210131772' | split: ','
+  assign september_product_id = product.id | append: ''
+  assign september_now = 'now' | date: '%s' | plus: 0
+  assign september_start = '2026-09-08T00:00:00-07:00' | date: '%s' | plus: 0
+  assign september_end = '2026-09-30T23:59:59-07:00' | date: '%s' | plus: 0
+  assign september_active = false
+  if september_ids contains september_product_id
+    if september_now >= september_start and september_now < september_end
+      assign september_active = true
+    endif
+  endif
+  assign september_variant = product.selected_or_first_available_variant
+  assign september_available = false
+  if september_variant != blank and september_variant.available
+    assign september_available = true
+    if september_variant.inventory_management == 'shopify' and september_variant.inventory_policy != 'continue'
+      if september_variant.quantity_rule.min > september_variant.inventory_quantity
+        assign september_available = false
+      endif
+    endif
+  endif
+-%}
+{%- if september_active -%}
+  <div
+    {% if section_id != blank %}id="LaborDaySaleCard{% if hide_on_mobile %}-Desktop{% endif %}-{{ section_id }}"{% endif %}
+    class="campaign-sale-container{% if hide_on_mobile %} hide-on-mobile{% endif %}"
+    data-september-overstock-2026
+  >
+    {%- if september_available -%}
+      {%- assign september_price = september_variant.price -%}
+      {%- assign september_cart_price = september_price | times: 0.9 | round -%}
+      <div class="labor-day-sale-card">
+        <div class="labor-day-sale-card__row">
+          <span class="labor-day-sale-card__badge">September overstock sale</span>
+          <span class="labor-day-sale-card__was"><span class="visually-hidden">Regular price </span>{{ september_price | money }}</span>
+          <span class="labor-day-sale-card__now"><span class="visually-hidden">Price after discount </span>{{ september_cart_price | money }} in cart</span>
+        </div>
+        <p class="labor-day-sale-card__meta">10% off applied automatically at checkout · Ends Sept. 30 · While supplies last</p>
+      </div>
+    {%- endif -%}
+  </div>
+{%- endif -%}
+{% stylesheet %}
+  .campaign-sale-container[data-september-overstock-2026]:empty {
+    display: none !important;
+    margin: 0 !important;
+  }
+{% endstylesheet %}
