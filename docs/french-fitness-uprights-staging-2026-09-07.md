@@ -51,9 +51,9 @@ A  templates/product.uprights-preview.json
    }
 ```
 
-Why this file exists rather than an edit to the shared template: **6,483 live products
-currently use `template_suffix: variants`** (exact count from the Admin API). Editing
-`product.variants.json` in place would change the review widget on all of them. An
+Why this file exists rather than an edit to the shared template: `product.variants.json`
+is a **shared** template carried by products across the catalog, so editing it in place
+would change the review widget on every one of them. An
 alternate template is additive — it renders only for a request that explicitly asks for
 it (`?view=uprights-preview`), so until someone opens that URL it changes nothing for
 any product, including this one.
@@ -92,7 +92,7 @@ today. All are Shopify Admin writes and all wait on their owner plus Tim's GO.
 | 4 | The 36-Inch row's anchor points at `/products/french-fitness-29-rack-rig-upright-new` (the 29" product) and the 47-Inch row's at `…-45-rack-rig-upright-new` (the 45"). Both are empty `<a>` tags wrapping no text | Remove both stray anchors with the 47" row | Ayyaz |
 | 5 | The description image paragraph holds six `<img>` tags; five have no `src` at all | Remove the five empty tags | Ayyaz |
 | 6 | All ten combined variants carry a `compareAtPrice` ($99–$399). **None of the nine source variants has any compare-at price.** Base prices match; the savings claim does not exist on the sources | Do not publish invented MSRP/savings. Either remove the compare-at values or have Tim/Larianne supply a source-backed MSRP | Larianne (decision), Ayyaz (execution) |
-| 7 | The combined product has **none** of the three processing-time metafields the sources carry: `custom.processing_time`, `custom.processing_time_long`, `custom.processing_time_filter` | Populate from the approved source once #8 is resolved | Larianne (source), Ayyaz |
+| 7 | **CORRECTED 2026-09-08 — this is a PASS, not a defect.** Processing time is carried at *variant* level on the combined product, in `custom.processing_time_long_variant`, and all nine in-scope values match their source's `custom.processing_time_long` exactly: 2-5 Business Days on 36"/60"/72"/84", 3-7 Business Days on 91"/108"/120"/130"/142". My earlier statement (and the same statement in Tim's 2026-09-07 message) read product-level metafields only. What remains absent on the combined product is `custom.processing_time` (short label) and `custom.processing_time_filter` (drives collection filtering); the sources carry both | Add the short label and filter fields; no change needed to the long value | Larianne (source), Ayyaz |
 | 8 | 72": source `custom.processing_time` says "Ships in 2-5 Business Days" while `custom.processing_time_filter` says "Out of Stock" — a self-contradiction on the source itself | Resolve at source before copying anything forward | Larianne |
 | 9 | All 12 gallery images have `alt=""` | Apply the nine draft alt strings from Tim's media attachment **after** the visual identity check; the excluded 47" image and the two unassigned images stay flagged | Product Listings |
 
@@ -137,6 +137,15 @@ anything to continue-selling.
 4. **Inventory linkage** — re-read `inventoryLevels` for both inventory items of the
    tested height immediately after, and confirm the expected pool moved (`committed`)
    and the other did not.
+**Result — 72", verified on the preview 2026-09-08.** Selecting 72" resolves to
+`?variant=52686668300604` and Add to Cart places that variant in the cart at $109.00,
+Length 72", processing time "Ships from our Warehouse in 2-5 Business Days + Transit
+Time". `52686668300604` is the **combined** variant, backed by inventory item
+54538879041852 (9,995 available) — not the source variant 50749016277308 / item
+52598678552892, which reads -9,999 and not-for-sale. So the customer buys the combined
+record, and the double-sale exposure is demonstrated rather than inferred. The remaining
+eight heights and the `/cart.js` JSON capture are still open.
+
 5. **Decision gate for Tim / Larianne** — the results only *describe* the current
    architecture; they do not choose one. The two lawful outcomes are:
    - **(a)** the combined variants become the single sellable identity, and the nine
@@ -182,8 +191,12 @@ stays with Larianne and stays separate from these numbers.
 ```
 https://www.fitnesssuperstore.com/products/french-fitness-rack-rig-uprights-new
   ?view=uprights-preview
-  &preview_theme_id=<UNPUBLISHED_THEME_ID>
+  &preview_theme_id=188234072380
 ```
+
+Live as of 2026-09-08. Both parameters are required: `preview_theme_id` alone renders
+the shared `variants` template and still shows the fallback reviews; `view=uprights-preview`
+alone does not exist on the published theme.
 
 - `view=uprights-preview` selects `templates/product.uprights-preview.json` and nothing
   else. It needs **no** write to the product: the product's `templateSuffix` stays
@@ -194,9 +207,11 @@ https://www.fitnesssuperstore.com/products/french-fitness-rack-rig-uprights-new
   change. It stays out of search and out of collections.
 
 **What is still needed, and from whom:** the unpublished theme itself. No uprights
-preview theme exists today — I checked all current themes; MAIN is
-`fitnesssuperstore-shopify/main` (186120208700) and none of the unpublished themes
-covers this work. Creating a theme is a store-level write, so **Izza or Ayyaz** should
+preview theme existed as of 2026-09-07; MAIN is
+`fitnesssuperstore-shopify/main` (186120208700). **Resolved 2026-09-08: unpublished
+theme 188234072380 now exists**, created 05:39 UTC from this branch and confirmed
+UNPUBLISHED via the Admin API. Nothing published. The instruction below stands for
+any future rebuild — creating a theme is a store-level write, so **Izza or Ayyaz** should
 push this branch to a new unpublished theme following the existing naming convention:
 
 ```
@@ -246,7 +261,17 @@ SOP, and Tim's separate written GO.
    evidence through the documented feed delegation, and no feed change is approved here.
 2. "Combined shows 0/0.00 reviews" is imprecise in a way that matters. The combined
    product's `judgeme.badge` metafield exists and reads zero; its `judgeme.widget`
-   metafield is an empty `<div></div>`. So the aggregate is *absent*, not a computed zero
+   metafield is an empty `<div></div>`. **CORRECTED 2026-09-08:** a third metafield,
+   `judgeme.review_widget_data`, is also present and reads
+   `"number_of_reviews":0, "average_rating":"0.00", "reviews":[]`, last updated
+   2026-04-20. So all three Judge.me metafields exist and Judge.me has computed this
+   product's aggregate as a real zero — it is not *absent*, as my earlier note and
+   Tim's 2026-09-07 message both said. That is fully consistent with the `empty_state`
+   fallback explanation: the product genuinely has none of its own reviews, so the
+   widget fell back to other products'. Verified baseline on the 108" source
+   (9878826484028): `judgeme.badge` reads `data-average-rating='5.00'`,
+   `data-number-of-reviews='1'` — one five-star review, confirmed directly rather than
+   relayed. The earlier framing said the aggregate was absent rather than a computed zero
    — which is consistent with the `empty_state` fallback explanation in §1a and not with
    a mis-bound review group. The current Shopify baseline remains the single five-star
    review on the 108" source. Verify the app records and any existing group before any
