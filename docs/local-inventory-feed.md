@@ -130,3 +130,35 @@ stabilises.
 `googlelocalproductfs` (Kw8IzXtZ0M), `googlelocalproduct` (6wUGHTNaQV) and
 `binglocalproductfs` (jcbvWljOP_) are retired once the replacement processes
 clean, not before, so there is never a gap with no local source.
+
+## Interaction with the 114-row primary offer-ID correction
+
+Tim's Sept 7 direction corrects 114 primary-feed rows (13 in
+`googleshoppingfrenchfitness`, 101 in `googleshoppingfs`) that emit a **bare
+numeric Shopify product ID** as the Google offer id, moving them to the variant
+SKU. 14 of those rows collide — two or more variants sharing one product ID, so
+Google keeps one offer and drops the rest.
+
+**Today this feed is not exposed.** The 266 offer IDs in
+`local-inventory-offer-allowlist.liquid` break down as 45 composite
+`<product ID>-<variant ID>`, 1 legacy code and 220 SKU. **Zero are bare
+numeric**, so none of the 114 corrected rows is in the local cohort.
+
+**The exposure is in how the correction is applied.** All 45 composite offers
+belong to one product (`10247596147004`). If the woolytech id mapping is changed
+as a blanket rule — "always emit variant SKU" — rather than per-row against the
+`correct_sku_id` column, those 45 primary offers flip to SKU while this feed
+still emits composite IDs, and all 45 local rows process as "Offer does not
+exist".
+
+So:
+
+- Apply the correction **per row**, scoped to the 114 in the correction file.
+- The composite scheme on `10247596147004` is not part of that set and must not
+  move with it.
+- If the composite offers ever do move to SKU, that is a spec change here:
+  update the scheme table in section 1, the `offer_id` branch at
+  `snippets/local-inventory-tsv.liquid:77`, and regenerate the allowlist — in
+  that order, in one change.
+- Regenerate the allowlist from fresh Merchant Center exports after the
+  correction processes either way, since the primary `id` column is its source.
