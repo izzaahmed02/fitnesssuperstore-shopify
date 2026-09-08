@@ -357,16 +357,17 @@
 
           {%- when 'price' -%}
             <div class="pdp-new__payments" {{ block.shopify_attributes }}>
-              {%- comment -%} Headline price: the variant's own price, STATIC. It carries no
-                  .pr_custom_price class, so priceHelper() (product-custom-options.js) never
-                  rewrites it when options are selected — the running total belongs to the
-                  "Selected configuration total" row above Add to Cart. Still swapped per
-                  variant via the #price-{id} contract in product-info.js, and
-                  data-price-value is kept as the source pdp-new.js reads for the financing
-                  quote. {%- endcomment -%}
+              {%- comment -%} Headline price: the variant's own price, DYNAMIC. Carries the
+                  .pr_custom_price class, so priceHelper() (product-custom-options.js) rewrites
+                  it in step with the running total whenever an option — including Delivery &
+                  Installation — is selected. It is the FIRST .pr_custom_price in the document,
+                  so it is also the element priceHelper() reads data-price-value from as the
+                  base. Still swapped per variant via the #price-{id} contract in
+                  product-info.js, and data-price-value is kept as the source pdp-new.js reads
+                  for the financing quote. {%- endcomment -%}
               <div id="price-{{ section.id }}" role="status" class="pdp-new__price">
                 <div class="pr_custom_price-container">
-                  <p class="pdp-new__price-value{% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{ product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{ cart.currency.symbol }}">
+                  <p class="pdp-new__price-value pr_custom_price{% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{ product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{ cart.currency.symbol }}">
                     {{ product.selected_or_first_available_variant.price | money }}
                   </p>
                 </div>
