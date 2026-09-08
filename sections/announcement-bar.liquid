@@ -54,6 +54,17 @@
     text-decoration: underline;
     }
 
+    /* The mobile bar is CENTERED. base-v2.min.css sets `.announcement-bar__message
+       { text-align: start }` below 990px, which is the only breakpoint where the bar is not
+       centered - desktop is centered by the unscoped rule. `.mobile-text` is the copy shown
+       across this whole range, so the override is scoped to match it rather than to the
+       749px block below. */
+    @media screen and (max-width: 990px) {
+      .announcement-bar__message {
+        text-align: center;
+      }
+    }
+
     /* Labor Day 2026 (PR #758): compact mobile announcement bar, target ~46px vs the 54px cap.
        Root cause (Yusra QA): 12px font at 24px line-height (2.0 ratio) wraps to two lines.
        Fix to QA target: 14px font, 1.2 line-height, 6px padding. To be re-measured by Yusra. */
@@ -76,13 +87,22 @@
         line-height: 1.2;
       }
 
-      /* Raising the font to 14px makes the 84-character mobile string wrap to a THIRD line at
-         320px, which breaks both the 54px cap and the "no third line" rule. The 0.6px tracking
-         in base-v2.min.css costs ~50px of line budget over 84 characters, which is what pushes
-         it over. Measured maximum that still holds two lines at 320/375/390/430 is 0.3px;
-         0.4px and the original 0.6px both spill to three lines at 320px. Set to 0.2px to keep
-         a little tracking with margin below that edge. Tracking is Dmitri's call as visual
-         owner - this is the implementation constraint, not a design preference. */
+      /* Tracking is what buys the single line. The mobile copy is now a SINGLE centered line
+         (bar height 29px, well under the 54px cap). Measured in Chromium at real Lato 700
+         14px against this stylesheet: available width is 316px at a 320px viewport (the
+         `.utility-bar__grid { padding: 0 2px }` rule below 389px overrides `.page-width`'s
+         24px, so 320px is not the tightest case it looks like). The current string renders
+         299px - about 17px of headroom.
+
+         COPY BUDGET: keep the mobile string at or under ~300px rendered, roughly 45
+         characters. Past that it wraps back to two lines. It is not clipped and nothing is
+         hidden, so a longer string degrades to the old two-line bar rather than truncating -
+         but it stops being the single centered line this is tuned for.
+
+         Do not restore the 0.6px tracking from base-v2.min.css: measured, it pushes even the
+         current 45-character string onto two lines at 320, 360 and 390px. Tracking is
+         Dmitri's call as visual owner - this is the implementation constraint, not a design
+         preference. */
       .announcement-bar__message .mobile-text {
         letter-spacing: 0.2px;
       }
