@@ -206,9 +206,60 @@ Consequences worth deciding before publish:
 3. Either give the overstock sale its own bounded card, or move its window, or accept an
    undisclosed checkout discount through Sept 30.
 
-## 6. What was not changed
+## 6. Canary deletion: 3 values deleted and restored, with a process failure
 
-No theme published or edited. No product, price, compare-at value, inventory, tag, discount,
-metafield value or metafield definition changed. No customer contact. No order placed. All reads
-were Admin API reads and read-only bulk queries; the two write-shaped calls used
-(`bulkOperationRunQuery`) only start read jobs.
+A 25-target canary batch was authorised ahead of the full run. It was executed incorrectly and is
+recorded here in full.
+
+**What went wrong.** The batch payload was generated correctly into a file, but the identifiers
+were then transcribed by hand into the mutation call instead of being read from that file. 22 of
+the 25 identifiers sent were wrong: 20 did not correspond to any product, and 2 resolved to real
+non-French-Fitness products (`cybex-425a-arc-trainer-remanufactured` and
+`stairmaster-free-climber-4600cl-stepper-w-blue-console-remanufactured`).
+
+**Damage boundary, verified.** Only 3 metafields were actually deleted, and all 3 were on the
+approved 1,679 list:
+
+| Product | Value |
+|---|---|
+| `french-fitness-fsr100-commercial-functional-smith-rack-system-new` | 559900 |
+| `french-fitness-ff-hc-apu-aluminum-pulley-upgrade-new` (ARCHIVED) | 39900 |
+| `french-fitness-ff-htb20-hip-thrust-bench-platform-new` | 49900 |
+
+The definition count moved 2,129 -> 2,126, confirming exactly three deletions. The two real
+non-French-Fitness products carried no `custom.retail_price`, so nothing outside the approved list
+was deleted. That was luck rather than control: a different wrong identifier could have removed a
+Nautilus or SportsArt value.
+
+**Restored.** All three values were written back with `metafieldsSet` and the store was re-read in
+full. 1,679 populated targets, definition count 2,129, and the value-pair digest is identical to
+the approved baseline `4f94bee59a6c15e623ec5707f398eb1c95669e04cbefd40165f3b8b8d3c10884`. The
+store is in exactly its pre-canary state.
+
+**What the canary did establish.** Deletion alone removes the permanent display with no theme
+publish, on the product itself and wherever it appears in another page's strips:
+
+- `ff-htb20`: its own permanent `You save` block was present before and absent while the value
+  was deleted.
+- `As high as: $5,599.00` (FSR100) was present in the related/add-on strip on the
+  `ff-hdr-3-tier-hex-dumbbell-rack` PDP before, and absent while FSR100's value was deleted.
+
+Boost collection and search cards render app-side and cannot be confirmed from page source; that
+check still needs a browser.
+
+**Method change for the remaining 1,676.** The available write path requires identifiers to be
+typed into each tool call, 1,679 of them across 68 batches. The failure above is a direct
+consequence of that, and a mistyped identifier can land on a real non-French-Fitness product, so
+the run should not continue that way. `ff_retail_price_delete.py` was written for it instead: it
+takes its targets only from the backup CSV, so no identifier can be invented; it re-runs the
+drift check and refuses to start unless live state matches the approved baseline exactly; it
+verifies every batch response against what was sent and stops on the first surprise; it is
+resumable through a progress log; and it has a restore mode. Its safety paths were exercised
+against mocked responses.
+
+## 7. What was not changed
+
+No theme published or edited. No product, price, compare-at value, inventory, tag, discount or
+metafield definition changed. No customer contact. No order placed. The only production writes
+were the three canary deletions in section 6 and their restore, leaving the store at its verified
+baseline.
