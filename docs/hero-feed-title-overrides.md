@@ -65,36 +65,42 @@ intersected with the showroom cohort and both are `inCollection(showroom) = fals
 Their presence in the primary feed is simply not evidenced by a file that never
 covered them, so they are the two to spot-check first in GMC after upload.
 
-## Two ways to land the titles
+## Decision: title-only supplemental (approved)
 
-Merchant Center will not give the v2 file back. The source is `File (manual)`, and
-its detail page offers only View update history, Update by using SFTP, and Update.
-Its advanced options also show **"Do not retain items no longer provided in the
-source"**, and the last run reports **2,196 rows, 2,196 matched**. Together those
-mean a v3 must carry all 2,196 rows: every row omitted loses its `custom_label_3`
-and `custom_label_4` as soon as the file processes.
+Tim approved the title-only supplemental on 2026-09-07: upload `id` + `title` for
+the ten SKUs as its own source, **linked to both primaries**.
 
-### Option A - v3, per Tim's instruction
+The v3 route is not being used. Merchant Center will not return the v2 file (the
+source is `File (manual)`, with no download), and a hand-rebuilt v3 would be
+dangerous: the source's last run reports **2,196 rows, 2,196 matched**, and its
+advanced options are set to **"Do not retain items no longer provided in the
+source"**, so any row omitted from a v3 loses its `custom_label_3` and
+`custom_label_4` on upload. Tim is sending the v2 file to Izza directly for the
+Phase 2 label lookup instead.
 
-Needs the real v2 file, which only Tim (who uploaded it) or Larianne has. Ask for
-it, then run `build_supplemental_v3.py`. Do not reconstruct 2,196 rows by hand, and
-do not use a Products export as the base: that is the merged output of every source
-across all products, so it changes the row scope and writes merged values back as
-if they were supplemental truth.
+A supplemental contributes only the attributes it carries, so this source cannot
+affect the label columns at all. v2 keeps supplying them.
 
-### Option B - a separate title-only supplemental (lower risk)
+`scripts/build_title_only_supplemental.py --id-scheme sku` generates the file.
+`scripts/build_supplemental_v3.py` is retained for the v3 route but is not the
+current path.
 
-A supplemental contributes only the attributes it carries, so a source holding just
-`id` and `title` cannot touch the label columns. v2 keeps supplying them, and the
-Product Lines asset groups cannot go dark by this route at all.
+### Hands off the April supplementals
 
-This is already the pattern in the account: the "FSR Final Upload - 7 rows
-(id, title)" source is a title-only supplemental on the same primary.
+The `07_MC_SupplementalFeed_StrengthProductLines_*` sources key on legacy numeric
+product ids. Per Tim, they are legacy and get cleaned up after the sale. **Do not
+modify or delete them** as part of this work.
 
-`scripts/build_title_only_supplemental.py --id-scheme sku|product_id` emits it.
+### Freeze
 
-Option B is not what Tim's email specified, so it needs his go-ahead. Worth putting
-to him, because it reaches the same outcome without the 2,196-row exposure.
+No title edits on these ten SKUs for **4+ weeks from the moment the new titles
+show in GMC**. Google re-learns matching on stable titles. Record the go-live date
+below when it is confirmed, so the freeze window is auditable.
+
+| | |
+| --- | --- |
+| Titles confirmed live in GMC | _pending verification_ |
+| Freeze ends | _go-live + 4 weeks_ |
 
 ## Id scheme: CONFIRMED as the bare SKU
 
