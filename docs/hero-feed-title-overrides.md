@@ -99,8 +99,19 @@ below when it is confirmed, so the freeze window is auditable.
 
 | | |
 | --- | --- |
-| Titles confirmed live in GMC | _pending verification_ |
-| Freeze ends | _go-live + 4 weeks_ |
+| Titles confirmed live in GMC | **2026-09-08** |
+| Freeze ends | **2026-10-06** (go-live + 28 days) |
+
+Verified in GMC on the two SKUs Tim named. Both show the approved title, both still
+carry `custom_label_3 = p1_hero` and their `custom_label_4` series value from v2,
+both list `hero_titles_supplemental.csv` alongside
+`supplemental_priority_labels_v2.csv` in raw data source attributes, and both are
+Approved and showing on Google and in ads with Needs attention at 0.
+
+| | FFT-SLCLE | FFB-45DLLP |
+| --- | --- | --- |
+| custom_label_3 | p1_hero | p1_hero |
+| custom_label_4 | Tahoe Series | FFB Black Series |
 
 ## Id scheme: CONFIRMED as the bare SKU
 
