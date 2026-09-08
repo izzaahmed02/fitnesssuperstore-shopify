@@ -1,0 +1,152 @@
+# Klaviyo custom-catalog feed — build and publish (source 24138).
+#
+# Runs the read-only Shopify bulk export, builds the hosted feed, enforces the
+# minimum-count guard, and publishes to GitHub Pages behind a fixed custom
+# domain. Nothing here writes to Shopify or Klaviyo, and it never changes the
+# source URL or the field mapping on 24138.
+#
+# The published URL is intended to be stable forever:
+#   https://feeds.fitnesssuperstore.com/klaviyo/catalog.json
+# Because the hostname is company-owned, the backend behind it can later move
+# (R2, S3, a company server) without the Klaviyo source URL ever changing.
+#
+# BEFORE the schedule is enabled, run this once via "Run workflow" and confirm
+# the summary and the published URL. The cron below stays commented until that
+# manual run is green and Tim has given the GO.
+
+name: Klaviyo Feed Publish
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: '0 */4 * * *'   # every 4 hours; enable only after a green manual run
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two publishes race; a half-written feed must never be served.
+concurrency:
+  group: klaviyo-feed-publish
+  cancel-in-progress: false
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Read-only Shopify bulk export
+        env:
+          SHOPIFY_SHOP: ${{ secrets.SHOPIFY_SHOP }}
+          SHOPIFY_ADMIN_TOKEN: ${{ secrets.SHOPIFY_ADMIN_TOKEN }}
+        run: |
+          python3 scripts/klaviyo_feed/shopify_bulk_export.py \
+            --out ./staging-bulk.jsonl \
+            --timeout 1800
+
+      - name: Build feed and enforce the minimum-count guard
+        run: |
+          python3 scripts/klaviyo_feed/build_klaviyo_feed.py \
+            --jsonl ./staging-bulk.jsonl \
+            --out ./out \
+            --min-items 3000 \
+            --legacy-taxonomy scripts/klaviyo_feed/legacy_taxonomy.json
+
+      # The builder exits non-zero unless reconciliation is clean and the feed
+      # clears --min-items, so reaching this step already proves the guard held.
+      # Re-assert it explicitly so the publish can never depend on exit code alone.
+      - name: Verify the feed before publishing
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          report = json.load(open('out/build_report.json'))
+          feed = json.load(open('out/klaviyo_feed.json'))
+          problems = []
+          if not report['reconciliation_clean']:
+              problems.append('reconciliation_clean is false')
+          if report['duplicate_emitted_ids']:
+              problems.append(f"duplicate ids: {report['duplicate_emitted_ids'][:5]}")
+          if len(feed) < report['min_items_guard']:
+              problems.append(f"{len(feed)} items is under the {report['min_items_guard']} guard")
+          if len(feed) != report['counts']['emitted']:
+              problems.append('feed length does not match the reported emitted count')
+          if problems:
+              print('REFUSING TO PUBLISH: ' + '; '.join(problems))
+              sys.exit(1)
+          print(f"feed ok: {len(feed)} items")
+          PY
+
+      - name: Assemble the site
+        run: |
+          mkdir -p site/klaviyo
+          cp out/klaviyo_feed.json site/klaviyo/catalog.json
+          cp out/build_report.json site/klaviyo/build_report.json
+          # Custom domain for Pages. Keeps the Klaviyo source URL fixed.
+          echo 'feeds.fitnesssuperstore.com' > site/CNAME
+          # Nothing here should ever be indexed.
+          printf 'User-agent: *\nDisallow: /\n' > site/robots.txt
+
+      - name: Write the run summary
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          r = json.load(open('out/build_report.json'))
+          c = r['counts']
+          print('## Klaviyo feed build\n')
+          print(f"- emitted: **{c['emitted']}**")
+          print(f"- excluded: {c['excluded']}")
+          print(f"- variant rows: {c['variant_rows']} (accounted {c['accounted']})")
+          print(f"- reconciliation_clean: **{r['reconciliation_clean']}**")
+          print(f"- duplicate_emitted_ids: {r['duplicate_emitted_ids'] or 'none'}")
+          print(f"- feed sha256: `{r['outputs']['klaviyo_feed.json']['sha256']}`")
+          print('\n### Exceptions\n')
+          for reason, count in sorted(r['exception_reason_counts'].items()):
+              print(f"- {reason}: {count}")
+          PY
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
+
+      - name: Upload build outputs for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: klaviyo-feed-build
+          path: |
+            out/build_report.json
+            out/exceptions.csv
+            out/emitted_ids.txt
+          retention-days: 30
+
+      # Staleness and failure monitoring. A silent failure is the one outcome
+      # that must not happen: Klaviyo would keep serving the last good feed with
+      # nobody aware it had stopped refreshing.
+      - name: Notify on failure
+        if: failure()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.FEED_ALERT_SLACK_WEBHOOK }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "::error::Klaviyo feed publish FAILED and no alert webhook is configured."
+            exit 0
+          fi
+          curl -sS -X POST -H 'Content-Type: application/json' \
+            --data "{\"text\":\":rotating_light: Klaviyo feed publish FAILED — run ${GITHUB_RUN_ID}. Source 24138 is still serving the last good feed. https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}" \
+            "$SLACK_WEBHOOK_URL"

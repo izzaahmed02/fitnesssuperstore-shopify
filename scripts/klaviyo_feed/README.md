@@ -135,20 +135,63 @@ Offline, no credentials, no network. Covers the field mapping, the exception
 reason codes, the reconciliation and minimum-count guards, the legacy taxonomy
 carry-forward, and that the backup client exposes no write verb.
 
-## 7. Hosting and the 4-hour rebuild — NOT yet stood up
+## 7. Hosting and the 4-hour rebuild
 
-Runbook Steps 3-4 need a host that gives a fixed HTTPS URL that never changes.
-That host is not chosen yet, so no URL exists to confirm and nothing is
-scheduled. `.github/workflows/klaviyo-feed-rebuild.yml` is a prepared, manual
-(`workflow_dispatch`) rebuild; its schedule is deliberately commented out so
-merging this branch cannot silently start publishing a production feed.
+`.github/workflows/klaviyo-feed-publish.yml` runs the whole pipeline unattended:
+read-only Shopify bulk export, build, minimum-count guard, publish to GitHub
+Pages behind a fixed custom domain, alert on failure.
 
-A static file uploaded once is not a lasting fix. Whatever host is chosen needs:
+Target URL, intended to be permanent:
 
-- a fixed URL, stable across rebuilds;
-- rebuild every 4 hours;
-- the minimum-count guard (`--min-items`) enforced before publish, so a partial
-  export can never overwrite a good feed;
-- failure and staleness notification to a monitored channel;
-- hosted-feed sync only. Do not also drive Catalogs API delta writes at the same
+```
+https://feeds.fitnesssuperstore.com/klaviyo/catalog.json
+```
+
+The hostname is company-owned, so the backend behind it can later move to R2,
+S3 or a company server **without the Klaviyo source URL on 24138 ever
+changing**. That is what makes the "fixed URL that never changes" requirement
+survivable.
+
+### Required secrets and settings
+
+| Setting | Where | Value |
+| --- | --- | --- |
+| `SHOPIFY_SHOP` | repo secret | `<store>.myshopify.com` |
+| `SHOPIFY_ADMIN_TOKEN` | repo secret | Admin API token, `read_products` only |
+| `FEED_ALERT_SLACK_WEBHOOK` | repo secret | Slack incoming-webhook URL (optional; without it a failure only annotates the run) |
+| Pages source | repo Settings → Pages | GitHub Actions |
+| Custom domain | repo Settings → Pages | `feeds.fitnesssuperstore.com` |
+| DNS | DNS provider | `CNAME feeds → <owner>.github.io` |
+
+### Order of operations
+
+1. Add the secrets, enable Pages (source: GitHub Actions), add the custom
+   domain, add the DNS CNAME.
+2. Run the workflow manually once (**Run workflow**). Check the run summary and
+   fetch the URL.
+3. Only when that run is green and Tim has given the GO, uncomment the
+   `schedule:` block to start the 4-hourly rebuild.
+4. Tim pastes the URL into source 24138 and triggers the sync. That is the GO.
+
+### Guards in the pipeline
+
+- `--min-items 3000` in the builder, plus an explicit pre-publish verification
+  step that re-checks `reconciliation_clean`, duplicate ids, and feed length. A
+  partial or inconsistent export cannot overwrite a good feed.
+- `concurrency` prevents two publishes racing, so a half-written feed is never
+  served.
+- Failure posts to the alert webhook. A silent failure is the one outcome that
+  must not happen: Klaviyo would keep serving the last good feed with nobody
+  aware it had stopped refreshing.
+- `robots.txt` disallows everything. Note the feed is still publicly fetchable
+  by design — Klaviyo's hosted custom-catalog source requires a public HTTPS
+  URL. Every field in it is already public on the product pages.
+- Hosted-feed sync only. Do not also drive Catalogs API delta writes at the same
   custom catalog.
+
+### Still to verify against live Shopify
+
+`shopify_bulk_export.py` has offline unit tests covering its submit, poll and
+failure paths through an injected transport, but it has not yet run against the
+live Admin API. The single manual `workflow_dispatch` run in step 2 is what
+validates it. Do not enable the schedule before that run is green.

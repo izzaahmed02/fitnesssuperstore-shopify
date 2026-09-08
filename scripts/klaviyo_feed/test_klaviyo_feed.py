@@ -15,6 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import build_klaviyo_feed as builder  # noqa: E402
 import klaviyo_backup as backup  # noqa: E402
+import shopify_bulk_export as exporter  # noqa: E402
 
 
 def product(pid, sku, price, **overrides):
@@ -253,6 +254,86 @@ class BackupTests(unittest.TestCase):
         methods = dir(backup.KlaviyoReadOnlyClient)
         for forbidden in ("post", "patch", "put", "delete", "_post", "_patch", "_delete"):
             self.assertNotIn(forbidden, methods)
+
+
+class BulkExportTests(unittest.TestCase):
+    """The polling state machine, exercised offline through a fake transport."""
+
+    def make(self, script):
+        """script: list of GraphQL responses returned in order."""
+        calls = []
+
+        def transport(query, variables):
+            calls.append((query, variables))
+            return script[len(calls) - 1]
+
+        client = exporter.ShopifyBulkExporter(
+            shop="example.myshopify.com", token="unused", transport=transport
+        )
+        return client, calls
+
+    def test_submit_returns_the_operation_id(self):
+        client, calls = self.make(
+            [{"data": {"bulkOperationRunQuery": {
+                "bulkOperation": {"id": "gid://shopify/BulkOperation/1", "status": "CREATED"},
+                "userErrors": []}}}]
+        )
+        self.assertEqual(client.submit("{ products { edges { node { id } } } }"),
+                         "gid://shopify/BulkOperation/1")
+        # the bulk query is passed as a variable, not interpolated into the mutation
+        self.assertIn("q", calls[0][1])
+
+    def test_submit_raises_on_user_errors(self):
+        client, _ = self.make(
+            [{"data": {"bulkOperationRunQuery": {
+                "bulkOperation": None,
+                "userErrors": [{"field": ["query"], "message": "bad query"}]}}}]
+        )
+        with self.assertRaises(SystemExit):
+            client.submit("{}")
+
+    def test_wait_polls_until_completed(self):
+        client, calls = self.make([
+            {"data": {"node": {"status": "RUNNING"}}},
+            {"data": {"node": {"status": "RUNNING"}}},
+            {"data": {"node": {"status": "COMPLETED", "url": "https://example/r.jsonl",
+                               "objectCount": "7702", "fileSize": "9047543"}}},
+        ])
+        node = client.wait("gid://x", timeout_seconds=999, sleep=lambda _s: None)
+        self.assertEqual(node["objectCount"], "7702")
+        self.assertEqual(len(calls), 3)
+
+    def test_wait_raises_when_operation_fails(self):
+        client, _ = self.make(
+            [{"data": {"node": {"status": "FAILED", "errorCode": "INTERNAL_SERVER_ERROR"}}}]
+        )
+        with self.assertRaises(SystemExit):
+            client.wait("gid://x", timeout_seconds=999, sleep=lambda _s: None)
+
+    def test_wait_raises_when_completed_without_url(self):
+        client, _ = self.make([{"data": {"node": {"status": "COMPLETED", "url": None}}}])
+        with self.assertRaises(SystemExit):
+            client.wait("gid://x", timeout_seconds=999, sleep=lambda _s: None)
+
+    def test_wait_times_out_rather_than_looping_forever(self):
+        client, _ = self.make([{"data": {"node": {"status": "RUNNING"}}}] * 5)
+        with self.assertRaises(SystemExit):
+            client.wait("gid://x", timeout_seconds=0, sleep=lambda _s: None)
+
+    def test_graphql_errors_surface(self):
+        client, _ = self.make([{"errors": [{"message": "Throttled"}]}])
+        with self.assertRaises(SystemExit):
+            client.submit("{}")
+
+    def test_missing_credentials_fail_loudly(self):
+        saved = {k: os.environ.pop(k, None) for k in ("SHOPIFY_SHOP", "SHOPIFY_ADMIN_TOKEN")}
+        try:
+            with self.assertRaises(SystemExit):
+                exporter.ShopifyBulkExporter()
+        finally:
+            for key, value in saved.items():
+                if value is not None:
+                    os.environ[key] = value
 
 
 if __name__ == "__main__":
