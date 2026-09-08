@@ -71,6 +71,76 @@ reaches a feed today and neither blocks the correction. But keying on SKU means
 fixed**, under a SKU instead of a numeric ID. Before publishing an OOB product,
 check that its SKU is not already live on another product.
 
+## Root cause — a stalled rollout, not 114 separate defects
+
+The `id` field in both feeds is not a plain mapping. It is a gated expression
+(Multifeeds > feed > Basic > Item identification > Item ID):
+
+```
+if  Product metafield (gmc_id_rollout_status) == "approved"
+and Product metafield (legacy_gmc_id) != ''
+then Product metafield (legacy_gmc_id)
+else Product ID
+```
+
+A product emits its proper id only after `legacy_gmc_id` is populated **and**
+`gmc_id_rollout_status` is set to `approved`. Everything else falls through to
+the numeric product ID.
+
+So the 114 are not 114 defects. They are the products never taken through that
+gate. This is why the correct test for a defective row is **`id == Product ID`**,
+not "id looks numeric" — the three Precor rows (`931`, `933`, `935`) emit their
+SKU via the `then` branch and are already rolled out correctly.
+
+### The rollout mechanism cannot fix the collisions
+
+`legacy_gmc_id` is a **product** metafield. The 14 collision rows are multiple
+variants of three products, so one product-level value gives every variant the
+same id. Populating metafields resolves 97 rows and leaves all 14 collisions
+intact. The mechanism as designed can never roll out a multi-variant product.
+
+### The fix
+
+Change only the `else` branch, in both feeds:
+
+```
+else  default( SKU, Product ID )
+```
+
+SKU is variant-level, so this fixes all 111 real changes including the 14
+collisions. The `then` branch is untouched, so the already-rolled-out majority
+and the three Precors do not move. `default(...)` keeps Product ID as a last
+resort so a blank-SKU product can never emit an empty id. The same idiom is
+already used by the `old_id` custom field, `default( SKU, Variant ID )`.
+
+Before saving, Preview must show exactly **101** changed ids in
+`googleshoppingfs` and **13** in `googleshoppingfrenchfitness`. Any additional
+row is a fall-through product outside Tim's audit and an unplanned identity
+flip — stop and re-scope if that appears.
+
+## Live feed confirmation and verification baseline
+
+Merchant Center (account 9453531) > Data sources > Product sources carries
+exactly two File (URL) primary sources, fed by the Multifeeds groups
+"New Feeds Other - Larianne test" and "New Feeds FF - Larianne test". Despite
+the group names, these are production. No other feed in Multifeeds shares
+either name.
+
+The processed counts confirm the collision loss from Google's own side:
+
+| Feed | Items emitted | Processed in GMC | Dropped | Expected after fix |
+| --- | --- | --- | --- | --- |
+| `googleshoppingfs` | 1,537 | 1,535 | 2 | 1,537 |
+| `googleshoppingfrenchfitness` | 966 | 957 | 9 | 966 |
+
+The 2 dropped are one variant each from the two 2-variant Star Trac products.
+The 9 are the surplus variants of the French Fitness Monster Universal Storage
+System. Total 11, matching the offer gain calculated above from Shopify alone.
+
+**Acceptance for step 5:** `googleshoppingfs` reaches 1,537 processed products,
+`googleshoppingfrenchfitness` reaches 966, no duplicate-id errors, and
+`ST-8TR-20-ATSC-OOB` resolves as its own offer.
+
 ## Verification after the change
 
 In Merchant Center, confirm:
