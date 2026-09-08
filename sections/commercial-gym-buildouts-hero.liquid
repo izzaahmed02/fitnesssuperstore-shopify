@@ -1,0 +1,460 @@
+{{ 'section-image-banner.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    padding-top: {{ section.settings.padding_top_desktop }}px;
+    padding-bottom: {{ section.settings.padding_bottom_desktop }}px;
+  }
+
+  .banner__buttons {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    width: max-content;
+    justify-content: center;
+    word-break: break-word;
+    justify-self: center;
+    max-width: unset;
+  }
+
+  .cgb-hero-bullets {
+    list-style: none;
+    margin: 1.5rem 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .cgb-hero-bullets__item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-weight: 600;
+  }
+
+  .cgb-hero-bullets__icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cgb-hero-bullets__icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Hero bullet icons render over a dark image — force white regardless of the snippet's own fill */
+  .cgb-hero-bullets__icon svg path {
+    fill: #ffffff;
+  }
+
+  .cgb-hero-phone-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: #d83d0e;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .cgb-hero-phone-link svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .cgb-hero-phone-link:hover {
+    text-decoration: underline;
+  }
+
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} {
+      padding-top: {{ section.settings.padding_top_mobile }}px;
+      padding-bottom: {{ section.settings.padding_bottom_mobile }}px;
+    }
+
+    .banner__buttons {
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+    }
+  }
+
+  {%- if section.settings.image_height == 'adapt' and section.settings.image != blank -%}
+    @media screen and (max-width: 749px) {
+      #Banner-{{ section.id }}::before,
+      #Banner-{{ section.id }} .banner__media::before,
+      #Banner-{{ section.id }}:not(.banner--mobile-bottom) .banner__content::before {
+        padding-bottom: {{ 1 | divided_by: section.settings.image.aspect_ratio | times: 100 }}%;
+        content: '';
+        display: block;
+      }
+    }
+
+    @media screen and (min-width: 750px) {
+      #Banner-{{ section.id }}::before,
+      #Banner-{{ section.id }} .banner__media::before {
+        padding-bottom: {{ 1 | divided_by: section.settings.image.aspect_ratio | times: 100 }}%;
+        content: '';
+        display: block;
+      }
+    }
+  {%- endif -%}
+{%- endstyle -%}
+
+{%- liquid
+  assign full_width = '100vw'
+  assign widths = '375, 550, 750, 1100, 1500, 1780, 2000, 3000, 3840'
+
+  if section.settings.image_behavior == 'ambient'
+    assign full_width = '120vw'
+    assign widths = '450, 660, 900, 1320, 1800, 2136, 2400, 3600, 7680'
+  elsif section.settings.image_behavior == 'fixed' or section.settings.image_behavior == 'zoom-in'
+    assign full_width = '100vw'
+  endif
+
+  assign fetch_priority = 'auto'
+  if section.index == 1
+    assign fetch_priority = 'high'
+  endif
+-%}
+
+<div
+  id="Banner-{{ section.id }}"
+  class="banner banner--content-align-{{ section.settings.desktop_content_alignment }} banner--content-align-mobile-{{ section.settings.mobile_content_alignment }} banner--{{ section.settings.image_height }}{% if section.settings.image_height == 'adapt' and section.settings.image != blank %} banner--adapt{% endif %}{% if section.settings.show_text_below %} banner--mobile-bottom{% endif %}{% if section.settings.show_text_box == false %} banner--desktop-transparent{% endif %} page-width"
+>
+  {%- if section.settings.image != blank -%}
+    <div class="banner__media media">
+      {{
+        section.settings.image
+        | image_url: width: 3840
+        | image_tag:
+          sizes: full_width,
+          widths: widths,
+          fetchpriority: fetch_priority,
+          loading: 'eager'
+      }}
+    </div>
+  {%- else -%}
+    <div class="banner__media media placeholder">
+      {{ 'hero-apparel-1' | placeholder_svg_tag }}
+    </div>
+  {%- endif -%}
+
+  <div class="banner__content banner__content--{{ section.settings.desktop_content_position }} page-width">
+    <div
+      class="banner__box content-container content-container--full-width-mobile color-{{ section.settings.color_scheme }} gradient"
+      style="background-color: rgba(255,255,255,{{ section.settings.image_overlay_opacity | divided_by: 100.0 }});"
+    >
+      {%- for block in section.blocks -%}
+        {%- case block.type -%}
+
+          {%- when 'heading' -%}
+            <h1 class="banner__heading {{ block.settings.heading_size }}" {{ block.shopify_attributes }}>
+              {{ block.settings.heading }}
+            </h1>
+
+          {%- when 'text' -%}
+            <div class="banner__text rte {{ block.settings.text_style }}" {{ block.shopify_attributes }}>
+              {{ block.settings.text }}
+            </div>
+
+          {%- when 'buttons' -%}
+            {%- assign button_count = 0 -%}
+            {%- if block.settings.button_label_1 != blank -%}{%- assign button_count = button_count | plus: 1 -%}{%- endif -%}
+            {%- if block.settings.button_label_2 != blank -%}{%- assign button_count = button_count | plus: 1 -%}{%- endif -%}
+
+            <div class="banner__buttons{% if button_count > 1 %} banner__buttons--multiple{% endif %}" {{ block.shopify_attributes }}>
+              {%- if block.settings.button_label_1 != blank -%}
+                <a href="{{ block.settings.button_link_1 }}" class="button{% if block.settings.button_style_secondary_1 %} button--secondary{% else %} button--primary{% endif %}">
+                  {{ block.settings.button_label_1 | escape }}
+                </a>
+              {%- endif -%}
+
+              {%- if block.settings.phone_text != blank -%}
+                <a href="tel:{{ block.settings.phone_link | escape }}" class="cgb-hero-phone-link">
+                  {% render 'icon-phone' %}
+                  {{ block.settings.phone_text | escape }}
+                </a>
+              {%- endif -%}
+            </div>
+
+        {%- endcase -%}
+      {%- endfor -%}
+
+      {%- assign bullet_blocks = section.blocks | where: 'type', 'bullet_item' -%}
+      {%- if bullet_blocks.size > 0 -%}
+        <ul class="cgb-hero-bullets">
+          {%- for block in bullet_blocks -%}
+            <li class="cgb-hero-bullets__item" {{ block.shopify_attributes }}>
+              <span class="cgb-hero-bullets__icon">
+                {%- case block.settings.icon -%}
+                  {%- when 'pin' -%}{% render 'icon-pin' %}
+                  {%- when 'box' -%}{% render 'icon-box' %}
+                  {%- when 'clipboard' -%}{% render 'icon-clipboard' %}
+                {%- endcase -%}
+              </span>
+              <span>{{ block.settings.text }}</span>
+            </li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Commercial Gym Buildouts Hero",
+  "tag": "section",
+  "class": "section",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "Section padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_desktop",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding top (desktop)",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_desktop",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding bottom (desktop)",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding top (mobile)",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding bottom (mobile)",
+      "default": 0
+    },
+    { "type": "image_picker", "id": "image", "label": "Background image" },
+    {
+      "type": "range",
+      "id": "image_overlay_opacity",
+      "min": 0,
+      "max": 100,
+      "step": 10,
+      "unit": "%",
+      "label": "Image overlay opacity",
+      "default": 0
+    },
+    {
+      "type": "select",
+      "id": "image_height",
+      "default": "large",
+      "label": "Image height",
+      "options": [
+        { "value": "adapt", "label": "Adapt to image" },
+        { "value": "small", "label": "Small" },
+        { "value": "medium", "label": "Medium" },
+        { "value": "large", "label": "Large" }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "desktop_content_position",
+      "default": "middle-left",
+      "label": "Desktop content position",
+      "options": [
+        { "value": "top-left", "label": "Top left" },
+        { "value": "top-center", "label": "Top center" },
+        { "value": "top-right", "label": "Top right" },
+        { "value": "middle-left", "label": "Middle left" },
+        { "value": "middle-center", "label": "Middle center" },
+        { "value": "middle-right", "label": "Middle right" },
+        { "value": "bottom-left", "label": "Bottom left" },
+        { "value": "bottom-center", "label": "Bottom center" },
+        { "value": "bottom-right", "label": "Bottom right" }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "show_text_box",
+      "default": true,
+      "label": "Show text box"
+    },
+    {
+      "type": "select",
+      "id": "desktop_content_alignment",
+      "default": "left",
+      "label": "Desktop content alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ]
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "select",
+      "id": "image_behavior",
+      "default": "none",
+      "label": "Image animation",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "ambient", "label": "Ambient" },
+        { "value": "fixed", "label": "Fixed" },
+        { "value": "zoom-in", "label": "Zoom in" }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "mobile_content_alignment",
+      "default": "left",
+      "label": "Mobile content alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "show_text_below",
+      "default": false,
+      "label": "Show text below image on mobile"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "heading",
+      "name": "Heading",
+      "limit": 1,
+      "settings": [
+        { "type": "inline_richtext", "id": "heading", "default": "Commercial Gym Buildouts, Planned Around Your Room, Traffic and Budget", "label": "Heading" },
+        {
+          "type": "select",
+          "id": "heading_size",
+          "default": "hxl",
+          "label": "Heading size",
+          "options": [
+            { "value": "h2", "label": "Small" },
+            { "value": "h1", "label": "Medium" },
+            { "value": "h0", "label": "Large" },
+            { "value": "hxl", "label": "Extra large" },
+            { "value": "hxxl", "label": "Huge" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "Text",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p>Send us your room dimensions and we will come back with a conceptual layout, an equipment mix sized to your traffic, and a quote.</p><p>Whether you are outfitting a single training studio or planning fitness rooms across a property, Fitness Superstore helps you move from an empty floor to a working plan. We carry commercial cardio and strength lines including our own French Fitness brand, so a full facility can be planned from one place.</p>"
+        },
+        {
+          "type": "select",
+          "id": "text_style",
+          "default": "body",
+          "label": "Text style",
+          "options": [
+            { "value": "body", "label": "Body" },
+            { "value": "subtitle", "label": "Subtitle" },
+            { "value": "caption-with-letter-spacing", "label": "Caption" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "bullet_item",
+      "name": "Bullet item",
+      "settings": [
+        {
+          "type": "select",
+          "id": "icon",
+          "label": "Icon",
+          "default": "pin",
+          "options": [
+            { "value": "pin", "label": "Pin" },
+            { "value": "box", "label": "Box" },
+            { "value": "clipboard", "label": "Clipboard" }
+          ]
+        },
+        { "type": "text", "id": "text", "label": "Text" }
+      ]
+    },
+    {
+      "type": "buttons",
+      "name": "Buttons",
+      "limit": 1,
+      "settings": [
+        { "type": "text", "id": "button_label_1", "label": "Primary button label", "default": "Get My Gym Layout & Quote" },
+        { "type": "url", "id": "button_link_1", "label": "Primary button link" },
+        { "type": "checkbox", "id": "button_style_secondary_1", "default": false, "label": "Primary button secondary style" },
+        {
+          "type": "header",
+          "content": "Phone link (renders next to the primary button)"
+        },
+        { "type": "text", "id": "phone_text", "label": "Phone link text", "default": "Prefer to talk it through? Call +1-925-215-2927" },
+        { "type": "text", "id": "phone_link", "label": "Phone number (digits only, e.g. +19252152927)", "default": "+19252152927" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Commercial Gym Buildouts Hero",
+      "blocks": [
+        { "type": "heading" },
+        { "type": "text" },
+        {
+          "type": "bullet_item",
+          "settings": { "icon": "pin", "text": "Public showroom and warehouse in Benicia, California" }
+        },
+        {
+          "type": "bullet_item",
+          "settings": { "icon": "box", "text": "New and remanufactured commercial equipment" }
+        },
+        {
+          "type": "bullet_item",
+          "settings": { "icon": "clipboard", "text": "Layout and equipment plan prepared before you commit to anything" }
+        },
+        { "type": "buttons" }
+      ]
+    }
+  ]
+}
+{% endschema %}

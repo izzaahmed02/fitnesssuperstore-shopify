@@ -1,0 +1,350 @@
+{{ 'section-multicolumn.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+    .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+    }
+
+    #shopify-section-{{ section.id }} {
+    background-color: {{ section.settings.bg }};
+    }
+
+    #shopify-section-{{ section.id }} .equipment-zones__subheading {
+    text-align: center;
+    max-width: 800px;
+    margin: 1.2rem auto 0;
+    }
+
+    #shopify-section-{{ section.id }} .equipment-zones__group {
+    display: flex;
+    align-items: flex-start;
+    gap: 3rem;
+    margin-top: 3rem;
+    }
+
+    #shopify-section-{{ section.id }} .equipment-zones__group--reverse {
+    flex-direction: row-reverse;
+    }
+
+    #shopify-section-{{ section.id }} .equipment-zones__image-wrapper {
+    flex: 1 1 0;
+    border-radius: var(--media-radius, 12px);
+    overflow: hidden;
+    aspect-ratio: 626 / 486;
+    }
+
+    #shopify-section-{{ section.id }} .equipment-zones__image-wrapper img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    }
+
+    #shopify-section-{{ section.id }} .equipment-zones__image-wrapper--empty {
+    background-color: rgba(var(--color-foreground), 0.05);
+    }
+
+    #shopify-section-{{ section.id }} .equipment-zones__list {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+    }
+
+    #shopify-section-{{ section.id }} .equipment-zones__card {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.6rem;
+    padding: 2rem;
+    border: 1px solid rgba(var(--color-foreground), 0.1);
+    border-radius: 1.2rem;
+    background: rgb(var(--color-background));
+    }
+
+    #shopify-section-{{ section.id }} .equipment-zones__icon {
+    flex: none;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background-color: #fce6de;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    }
+
+    #shopify-section-{{ section.id }} .equipment-zones__icon img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    }
+
+    #shopify-section-{{ section.id }} .equipment-zones__card-title {
+    margin: 0 0 0.6rem;
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+    line-height: 1.3;
+    }
+
+    #shopify-section-{{ section.id }} .equipment-zones__card-text {
+    margin: 0;
+    font-family: 'Lato', sans-serif;
+    font-size: 1.4rem;
+    line-height: 1.5;
+    color: rgba(var(--color-foreground), 0.75);
+    }
+
+    @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+    }
+
+    @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .equipment-zones__group,
+    #shopify-section-{{ section.id }} .equipment-zones__group--reverse {
+    flex-direction: column;
+    gap: 2rem;
+    }
+    }
+{%- endstyle -%}
+
+{%- liquid
+    assign zones = section.blocks
+    assign group_1_zones = zones | slice: 0, 3
+    assign group_2_zones = zones | slice: 3, 2
+-%}
+
+<div class="multicolumn{% if section.settings.title == blank %} no-heading{% endif %}">
+    <div class="page-width multicolumn-padding section-{{ section.id }}-padding isolate{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+    {% if settings.animations_reveal_on_scroll %}
+        data-cascade
+            {% endif %}>
+        {%- unless section.settings.title == blank -%}
+            <div class="title-wrapper-with-link title-wrapper--self-padded-mobile title-wrapper--no-top-margin multicolumn__title">
+                <h2 class="title inline-richtext {{ section.settings.heading_size }}">
+                    {{ section.settings.title }}
+                </h2>
+                {%- unless section.settings.subheading == blank -%}
+                    <div class="equipment-zones__subheading rte">{{ section.settings.subheading }}</div>
+                {%- endunless -%}
+            </div>
+        {%- endunless -%}
+
+        {%- for zone_group in (1..2) -%}
+            {%- if zone_group == 1 -%}
+                {%- assign group_zones = group_1_zones -%}
+                {%- assign group_image = section.settings.image_group_1 -%}
+            {%- else -%}
+                {%- assign group_zones = group_2_zones -%}
+                {%- assign group_image = section.settings.image_group_2 -%}
+            {%- endif -%}
+            {%- if group_zones.size > 0 -%}
+                <div class="equipment-zones__group{% if zone_group == 2 %} equipment-zones__group--reverse{% endif %}">
+                    <div class="equipment-zones__image-wrapper{% if group_image == blank %} equipment-zones__image-wrapper--empty{% endif %}">
+                        {%- if group_image != blank -%}
+                            {{ group_image | image_url: width: 1200 | image_tag: loading: 'lazy', widths: '400, 600, 800, 1000, 1200' }}
+                        {%- endif -%}
+                    </div>
+                    <div class="equipment-zones__list">
+                        {%- for block in group_zones -%}
+                            <div class="equipment-zones__card" {{ block.shopify_attributes }}>
+                                <span class="equipment-zones__icon">
+                                    {%- if block.settings.icon != blank -%}
+                                        <img
+                                                src="{{ block.settings.icon | image_url: width: 56 }}"
+                                                alt="{{ block.settings.icon.alt | default: block.settings.title | strip_html | escape }}"
+                                                width="28"
+                                                height="28"
+                                                loading="lazy"
+                                        >
+                                    {%- endif -%}
+                                </span>
+                                <div>
+                                    {%- if block.settings.title != blank -%}
+                                        <p class="equipment-zones__card-title">{{ block.settings.title }}</p>
+                                    {%- endif -%}
+                                    {%- if block.settings.text != blank -%}
+                                        <p class="equipment-zones__card-text">{{ block.settings.text }}</p>
+                                    {%- endif -%}
+                                </div>
+                            </div>
+                        {%- endfor -%}
+                    </div>
+                </div>
+            {%- endif -%}
+        {%- endfor -%}
+    </div>
+</div>
+
+{% schema %}
+{
+  "name": "Commercial Gym Buildouts Equipment Zones",
+  "class": "section",
+  "tag": "section",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg",
+      "label": "Background color",
+      "default": "#fff"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "title",
+      "default": "Equipment Zones",
+      "label": "Heading"
+    },
+    {
+      "type": "richtext",
+      "id": "subheading",
+      "default": "<p>Most complete gyms are planned around a few core zones. Your specialist recommends specific options within each zone based on your space, users and budget. Tell us which zones you need and we will size them to your room.</p>",
+      "label": "Subheading"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "options": [
+        {
+          "value": "h2",
+          "label": "t:sections.all.heading_size.options__1.label"
+        },
+        {
+          "value": "h1",
+          "label": "t:sections.all.heading_size.options__2.label"
+        },
+        {
+          "value": "h0",
+          "label": "t:sections.all.heading_size.options__3.label"
+        },
+        {
+          "value": "hxl",
+          "label": "t:sections.all.heading_size.options__4.label"
+        },
+        {
+          "value": "hxxl",
+          "label": "t:sections.all.heading_size.options__5.label"
+        }
+      ],
+      "default": "h1",
+      "label": "t:sections.all.heading_size.label"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_group_1",
+      "label": "First group image",
+      "info": "Shown beside the first 3 zone cards (Cardio, Strength, Functional Trainers)."
+    },
+    {
+      "type": "image_picker",
+      "id": "image_group_2",
+      "label": "Second group image",
+      "info": "Shown beside the remaining zone cards (Free Weights, Flooring/Storage)."
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 56
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 56
+    }
+  ],
+  "blocks": [
+    {
+      "type": "zone",
+      "name": "Equipment zone",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "icon",
+          "label": "Icon"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Commercial Gym Buildouts Equipment Zones",
+      "blocks": [
+        {
+          "type": "zone",
+          "settings": {
+            "title": "Cardio",
+            "text": "<p>Treadmills, ellipticals, bikes, rowers, steppers and climbers, sized to expected peak-hour use.</p>"
+          }
+        },
+        {
+          "type": "zone",
+          "settings": {
+            "title": "Selectorized & Plate-Loaded Strength",
+            "text": "<p>Pin-loaded circuits for guided use, plate-loaded machines for stronger, more experienced users, and multi-stack or jungle gym systems that let several people train strength at once in a shared footprint.</p>"
+          }
+        },
+        {
+          "type": "zone",
+          "settings": {
+            "title": "Functional Trainers, Racks & Rigs",
+            "text": "<p>Cable trainers, squat racks, half racks and rigs for barbell work and small group training.</p>"
+          }
+        },
+        {
+          "type": "zone",
+          "settings": {
+            "title": "Free Weights & Benches",
+            "text": "<p>Dumbbells, barbells, plates and adjustable or fixed benches with the racking to keep them in order.</p>"
+          }
+        },
+        {
+          "type": "zone",
+          "settings": {
+            "title": "Flooring, Storage & Accessories",
+            "text": "<p>Rubber flooring, turf, weight storage, mirrors and the accessories that keep a floor usable.</p>"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

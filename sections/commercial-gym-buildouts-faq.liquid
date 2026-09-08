@@ -1,0 +1,258 @@
+{{ 'section-faq.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+    .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+    }
+
+    #shopify-section-{{ section.id }} {
+    background-color: {{ section.settings.bg }};
+    }
+
+    #shopify-section-{{ section.id }} .commercial-gym-buildouts-faq__subheading {
+    text-align: center;
+    max-width: 800px;
+    margin: 1.2rem auto 0;
+    }
+
+    #shopify-section-{{ section.id }} .commercial-gym-buildouts-faq__items {
+    max-width: 800px;
+    margin: 3rem auto 0;
+    }
+
+    #shopify-section-{{ section.id }} .faq__item.opened {
+    border: 1px solid #D83D0E;
+    border-radius: 8px;
+    }
+
+    @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+    }
+{%- endstyle -%}
+
+{%- liquid
+    assign first_entity = true
+-%}
+{%- capture faq_json -%}
+    {%- for block in section.blocks -%}
+        {%- if block.settings.title != blank and block.settings.text != blank -%}
+            {%- unless first_entity -%},{%- endunless -%}
+            {
+                "@type": "Question",
+                "name": {{ block.settings.title | strip_html | json }},
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": {{ block.settings.text | strip_html | json }}
+                }
+            }
+            {%- assign first_entity = false -%}
+        {%- endif -%}
+    {%- endfor -%}
+{%- endcapture -%}
+{%- unless faq_json == blank -%}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [{{ faq_json }}]
+    }
+    </script>
+{%- endunless -%}
+
+<div class="commercial-gym-buildouts-faq{% if section.settings.title == blank %} no-heading{% endif %}">
+    <div class="page-width section-{{ section.id }}-padding isolate{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+    {% if settings.animations_reveal_on_scroll %}
+        data-cascade
+            {% endif %}>
+        {%- unless section.settings.title == blank -%}
+            <div class="title-wrapper-with-link title-wrapper--self-padded-mobile title-wrapper--no-top-margin">
+                <h2 class="title inline-richtext {{ section.settings.heading_size }}">
+                    {{ section.settings.title }}
+                </h2>
+                {%- unless section.settings.subheading == blank -%}
+                    <div class="commercial-gym-buildouts-faq__subheading rte">{{ section.settings.subheading }}</div>
+                {%- endunless -%}
+            </div>
+        {%- endunless -%}
+
+        <div class="faq commercial-gym-buildouts-faq__items">
+            <div class="faq__items">
+                {%- for block in section.blocks -%}
+                    {%- if block.settings.title != blank or request.design_mode -%}
+                        <div class="faq__item{% if forloop.first %} opened{% endif %}" {{ block.shopify_attributes }}>
+                            <div class="faq__item-wrapper">
+                                <button class="faq__item-btn{% if forloop.first %} opened{% endif %}">
+                                    {{ block.settings.title }}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path
+                                                fill-rule="evenodd"
+                                                clip-rule="evenodd"
+                                                d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z"
+                                                fill="black"
+                                        />
+                                    </svg>
+                                </button>
+                                <div class="faq__item-content">
+                                    {{ block.settings.text }}
+                                </div>
+                            </div>
+                        </div>
+                    {%- endif -%}
+                {%- endfor -%}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var section = document.getElementById('shopify-section-{{ section.id }}');
+    if (!section) return;
+    var firstBtn = section.querySelector('.faq__item-btn');
+    var firstItem = section.querySelector('.faq__item');
+    if (!firstBtn || !firstItem) return;
+    var content = firstItem.querySelector('.faq__item-content');
+    firstBtn.classList.add('opened');
+    firstItem.classList.add('opened');
+    if (content) {
+      content.style.overflow = 'hidden';
+      content.style.transition = 'max-height 0.3s ease';
+      content.style.maxHeight = content.scrollHeight + 'px';
+    }
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Commercial Gym Buildouts FAQ",
+  "class": "section",
+  "tag": "section",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg",
+      "label": "Background color",
+      "default": "#fff"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "title",
+      "default": "Frequently Asked Questions",
+      "label": "Heading"
+    },
+    {
+      "type": "richtext",
+      "id": "subheading",
+      "label": "Subheading"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "options": [
+        {
+          "value": "h2",
+          "label": "t:sections.all.heading_size.options__1.label"
+        },
+        {
+          "value": "h1",
+          "label": "t:sections.all.heading_size.options__2.label"
+        },
+        {
+          "value": "h0",
+          "label": "t:sections.all.heading_size.options__3.label"
+        },
+        {
+          "value": "hxl",
+          "label": "t:sections.all.heading_size.options__4.label"
+        },
+        {
+          "value": "hxxl",
+          "label": "t:sections.all.heading_size.options__5.label"
+        }
+      ],
+      "default": "h1",
+      "label": "t:sections.all.heading_size.label"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 56
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 56
+    }
+  ],
+  "blocks": [
+    {
+      "type": "question",
+      "name": "Question",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Question"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Answer"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Commercial Gym Buildouts FAQ",
+      "blocks": [
+        {
+          "type": "question",
+          "settings": {
+            "title": "How much does a commercial gym cost?",
+            "text": "<p>There's no single price, because cost depends on your room size, the equipment zones you need, whether you choose new, remanufactured or mixed equipment, and any delivery or installation coordination. Rather than quote a generic figure, we prepare a tailored quote built around your facility, space and budget. Share your details and a specialist will put together numbers specific to your project.</p>"
+          }
+        },
+        { "type": "question" },
+        { "type": "question" },
+        { "type": "question" },
+        { "type": "question" },
+        { "type": "question" },
+        { "type": "question" },
+        { "type": "question" },
+        { "type": "question" }
+      ]
+    }
+  ]
+}
+{% endschema %}
