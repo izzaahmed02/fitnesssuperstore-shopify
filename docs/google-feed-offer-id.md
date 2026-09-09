@@ -151,3 +151,79 @@ In Merchant Center, confirm:
   that already existed.
 - Regenerate `snippets/local-inventory-offer-allowlist.liquid` from fresh
   exports afterward; the primary `id` column is its source.
+
+## Metafield state, verified against live Shopify 2026-09-09
+
+Both gate metafields are **product-level**. Confirmed from the definitions:
+
+| Key | Namespace | Owner | Type |
+| --- | --- | --- | --- |
+| `legacy_gmc_id` | `custom` | **PRODUCT** | single_line_text_field |
+| `gmc_id_rollout_status` | `custom` | **PRODUCT** | single_line_text_field |
+
+There is no variant-level equivalent. The only variant-scoped metafield in this
+area is `custom.old_legacy_product_code`, which serves the Local Inventory Ads
+feed and is unrelated.
+
+### The rollout vocabulary
+
+`gmc_id_rollout_status` is not a boolean. Sampled values:
+
+| Value | Example | Effect |
+| --- | --- | --- |
+| `approved` | Precor 9.31 `9878495265084`, legacy `931` | `then` branch — emits legacy id |
+| `pending_approval_star_trac` | `9878869737788`, `10012639789372` | falls through |
+| `hold_variant` | `9878900179260`, `9878898540860` (2 variants each) | falls through |
+| `hold_ff_variant` | `10269254254908` (10 var), `10247596147004` (45 var) | falls through |
+| `hold_cross_feed` | `10019813589308` | falls through |
+| *(unset)* | `10124211355964`, `9878464627004` | falls through |
+
+The `hold_variant` / `hold_ff_variant` values are on exactly the multi-variant
+products. Whoever built the rollout knew a product-level id cannot key variants
+and parked those products deliberately. They are not an oversight.
+
+### Live landmine on FF-MSS
+
+Product `10269254254908` (French Fitness Monster Universal Storage System, **10
+variants**) already carries `legacy_gmc_id = "FF-MSS-151-2T"` — one variant's
+SKU stored on a ten-variant product. It is inert only because
+`gmc_id_rollout_status` is `hold_ff_variant` rather than `approved`.
+
+**Setting that product to `approved` would make all ten variants emit
+`FF-MSS-151-2T`** — a ten-way collision on a SKU that is wrong for nine of
+them, and a duplicate of a real variant's offer. Populating the gate metafields
+for the collision products is therefore not merely insufficient, it is
+destructive. Clearing that stale value is worth doing on its own merits, but it
+is outside the 114 and needs its own GO.
+
+## The two feeds do not share one expression
+
+`googleshoppingfs` uses the gated expression documented above, whose branches
+can only ever emit `legacy_gmc_id` or a bare `Product ID`. **Neither can produce
+a composite `<product ID>-<variant ID>` string.**
+
+Yet composite ids demonstrably exist in the live primary feeds: all 45 in
+`snippets/local-inventory-offer-allowlist.liquid` belong to product
+`10247596147004` (French Fitness Rubber Coated Hex Dumbbells, 45 variants),
+which sits in `French Fitness - Meta Feeds` and therefore in
+`googleshoppingfrenchfitness`.
+
+The Merchant Center counts agree. `googleshoppingfrenchfitness` emits 966 items
+from 913 products; the 53 surplus items are the hex dumbbells (+44) and FF-MSS
+(+9). Only **9** are dropped. If the hex dumbbells shared the `googleshoppingfs`
+expression they would collide 45-way and 44 more would drop, leaving 913
+processed. Google reports 957.
+
+**So `googleshoppingfrenchfitness` carries a different, variant-aware Item ID
+expression, and it has not been read yet.** Applying the `else` change designed
+for `googleshoppingfs` to that feed could flip all 45 composite offers to SKU —
+precisely the outcome Tim ruled out, and it would break the local inventory
+feed keyed to those composites. Read that feed's expression before proposing
+any change to it.
+
+## Correction to the acceptance criterion
+
+A correct run changes **111 rows, not 114**. Rows `931`, `933` and `935` are
+already `approved` with their SKU in `legacy_gmc_id` and will not move. A diff
+showing 114 changed rows means the three Precors were rewritten and their
+performance history reset for nothing — that is a failed run, not a passed one.
