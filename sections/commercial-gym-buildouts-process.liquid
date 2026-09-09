@@ -8,13 +8,25 @@
     background-color: {{ section.settings.bg }};
     }
 
-    /* Full-width page requirement — override the theme's default contained .page-width
-       for this section only (does not affect .page-width elsewhere on the site) */
+    /* The section background bleeds full-width via #shopify-section-{{ section.id }}
+       above (outside .page-width), so .page-width doesn't need max-width:100% — that
+       was overriding the theme's default centering and pinning the fixed-width step
+       row to the left edge instead of centering it (same bug already fixed in
+       commercial-gym-buildouts-space-traffic.liquid and
+       commercial-gym-buildouts-condition-options.liquid). Figma node 4606:84143
+       "benefits" is exactly 1280px wide, not the site's generic 1380px --page-width. */
     #shopify-section-{{ section.id }} .page-width {
-    max-width: 100%;
-    margin: 0;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding-left: 16px;
+    padding-right: 16px;
+    }
+
+    @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .page-width {
     padding-left: 40px;
     padding-right: 40px;
+    }
     }
 
     #shopify-section-{{ section.id }} .process-steps__subheading {
@@ -37,20 +49,28 @@
     }
     }
 
+    /* Figma node 4606:84143 "benefits" — 12px gap between the 4 step cards
+       (4 x 311px card + 3 x 12px gap = 1280px, exact), not the previous 3rem (48px).
+       28px gap from the heading above (matches the same heading→cards gap already
+       established in space-traffic/condition-options), not 4rem (64px). */
     #shopify-section-{{ section.id }} .process-steps__row {
     position: relative;
     display: flex;
     align-items: flex-start;
-    gap: 3rem;
-    margin-top: 4rem;
+    gap: 12px;
+    margin-top: 28px;
     }
 
+    /* Line passes through each circle's center. With 4 equal flex-basis columns and a
+       12px gap, each column is calc(25% - 9px) wide; the circle center sits 57px from
+       its own column's left edge (32px card inset + 25px, half the 50px circle) — a
+       fixed px offset that holds regardless of viewport width. */
     #shopify-section-{{ section.id }} .process-steps__row::before {
     content: '';
     position: absolute;
     top: 25px;
-    left: calc(12.5% + 25px);
-    right: calc(12.5% + 25px);
+    left: 57px;
+    right: calc(25% - 66px);
     height: 4px;
     background-color: #fce6de;
     z-index: 0;
@@ -67,11 +87,14 @@
     gap: 1.6rem;
     }
 
-    /* Figma "Benefit cards" (desktop) — icon above title/text */
+    /* Figma "Benefit cards" (desktop) — icon above title/text, inset 32px from the
+       card's (invisible — this card has no fill/border, unlike the other CGB card
+       sections) left/right edges, matching the same 32px unit used elsewhere. */
     @media screen and (min-width: 750px) {
     #shopify-section-{{ section.id }} .process-steps__step {
     flex-direction: column;
     gap: 0;
+    padding: 0 32px;
     }
     }
 
@@ -91,15 +114,20 @@
     justify-content: center;
     }
 
+    /* Figma node 4606:84144 "Benefit cards" — 20px gap between the icon and the text
+       below it (icon bottom at local y=82, text top at y=102), not 1.6rem (25.6px). */
     @media screen and (min-width: 750px) {
     #shopify-section-{{ section.id }} .process-steps__number {
-    margin-bottom: 1.6rem;
+    margin-bottom: 20px;
     }
     }
 
-    /* Figma "Benefit cards" text — Lato Bold 20/26 #000000 title, Lato Regular 16/24 #393940 body */
+    /* Figma "Benefit cards" text — Lato Bold 20/26 #000000 title, Lato Regular 16/24
+       #393940 body; 8px gap between title and paragraph (matches the same title→text
+       gap already established in the space-traffic and condition-options sections),
+       not 0.6rem (9.6px). */
     #shopify-section-{{ section.id }} .process-steps__title {
-    margin: 0 0 0.6rem;
+    margin: 0 0 8px;
     font-family: 'Lato', sans-serif;
     font-weight: 700;
     font-size: 20px;
@@ -166,7 +194,7 @@
         </div>
 
         {%- unless section.settings.disclaimer == blank -%}
-            <p class="process-steps__subheading rte" style="margin-top: 2rem; font-style: italic; font-size: 1.3rem;">{{ section.settings.disclaimer }}</p>
+            <p class="process-steps__subheading rte" style="margin-top: 28px; font-style: italic; font-size: 1.3rem;">{{ section.settings.disclaimer }}</p>
         {%- endunless -%}
     </div>
 </div>
