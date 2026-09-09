@@ -130,11 +130,27 @@
   if campaign_kind != '' and in_window
     assign labor_card_showing = true
   endif
-  unless labor_card_showing
-    if in_overstock and settings.overstock_promo != blank and os_in_window
+
+  assign os_eligible = false
+  if in_overstock and settings.overstock_promo != blank and os_in_window
+    assign os_eligible = true
+  endif
+
+  comment
+    overstock_force_preview must outrank a live Labor Day card, or the switch cannot do
+    what its label promises. Most Overstock products are also Labor Day eligible, so
+    while both campaigns overlap the Labor Day branch wins and QA has no way to see the
+    Overstock card at all - it would only appear once Labor Day expired, which is far
+    too late to test it. The explicit QA switch therefore takes precedence; normal
+    date-driven precedence is unchanged when it is off.
+  endcomment
+  if os_eligible
+    if settings.overstock_force_preview
+      assign campaign_kind = 'overstock'
+    elsif labor_card_showing == false
       assign campaign_kind = 'overstock'
     endif
-  endunless
+  endif
 -%}
 {%- liquid
   comment
