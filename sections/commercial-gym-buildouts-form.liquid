@@ -202,6 +202,8 @@
   #shopify-section-{{ section.id }} .cgb-field__input {
     display: block;
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
     height: 48px;
     padding: 0 16px;
     border: 1px solid #e5e5e5;
@@ -215,10 +217,20 @@
   }
 
   #shopify-section-{{ section.id }} .cgb-field__select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
     appearance: none;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding-right: 40px;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8' fill='none'%3E%3Cpath d='M1 1L7 7L13 1' stroke='%23393940' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 16px center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
   }
 
   #shopify-section-{{ section.id }} .cgb-field__hint {
@@ -461,7 +473,18 @@
     </div>
 
     <div class="cgb-form__card">
-      <form id="CommercialGymBuildoutsForm-{{ section.id }}" class="cgb-form__form" novalidate>
+      {%- form 'contact', id: 'CommercialGymBuildoutsForm-' | append: section.id, class: 'cgb-form__form' -%}
+        {%- comment -%}
+          Accepted-submission hook: reflects the real, server-confirmed
+          form.posted_successfully? state on every render of this page,
+          including the redirect Shopify performs back to this page after
+          a POST to /contact. The AJAX handler below parses the response
+          HTML for this exact marker to decide loading -> success vs error;
+          it never treats a resolved fetch or absence of a thrown JS error
+          as acceptance on its own.
+        {%- endcomment -%}
+        <input type="hidden" data-cgb-form-posted value="{{ form.posted_successfully? }}">
+
         <div class="cgb-form__progress-row">
           <p class="cgb-form__step-label" data-cgb-step-label>Step 1/2</p>
           <div class="cgb-form__progress-track">
@@ -476,7 +499,7 @@
 
           <div class="cgb-field" data-cgb-field>
             <label class="cgb-field__label" for="CGBFacilityType-{{ section.id }}">Facility type <span class="cgb-field__required">*</span></label>
-            <select id="CGBFacilityType-{{ section.id }}" name="facility_type" class="cgb-field__input cgb-field__select" data-cgb-required>
+            <select id="CGBFacilityType-{{ section.id }}" name="contact[facility_type]" class="cgb-field__input cgb-field__select" data-cgb-required>
               <option value="">Select your facility type</option>
               <option>Commercial Gyms &amp; Training Studios</option>
               <option>Apartments, HOAs &amp; Multifamily</option>
@@ -490,20 +513,20 @@
 
           <div class="cgb-field" data-cgb-field>
             <label class="cgb-field__label" for="CGBRoomSize-{{ section.id }}">Approximate room size <span class="cgb-field__required">*</span></label>
-            <input type="text" id="CGBRoomSize-{{ section.id }}" name="room_size" class="cgb-field__input" placeholder="Enter your approximate room size" data-cgb-required>
+            <input type="text" id="CGBRoomSize-{{ section.id }}" name="contact[room_size]" class="cgb-field__input" placeholder="Enter your approximate room size" data-cgb-required>
             <p class="cgb-field__hint">Square footage or room dimensions, for example 1,200 sq ft or 40 x 30</p>
             <p class="cgb-field__error" data-cgb-error>Enter your approximate room size</p>
           </div>
 
           <div class="cgb-field" data-cgb-field>
             <label class="cgb-field__label" for="CGBDeliveryZip-{{ section.id }}">Delivery ZIP <span class="cgb-field__required">*</span></label>
-            <input type="text" id="CGBDeliveryZip-{{ section.id }}" name="delivery_zip" class="cgb-field__input" placeholder="Enter your delivery ZIP" inputmode="numeric" maxlength="5" data-cgb-required data-cgb-pattern="^\d{5}$">
+            <input type="text" id="CGBDeliveryZip-{{ section.id }}" name="contact[delivery_zip]" class="cgb-field__input" placeholder="Enter your delivery ZIP" inputmode="numeric" maxlength="5" data-cgb-required data-cgb-pattern="^\d{5}$">
             <p class="cgb-field__error" data-cgb-error>Enter a valid 5-digit ZIP code</p>
           </div>
 
           <div class="cgb-field" data-cgb-field>
             <label class="cgb-field__label" for="CGBTargetWindow-{{ section.id }}">Target opening or completion <span class="cgb-field__required">*</span></label>
-            <select id="CGBTargetWindow-{{ section.id }}" name="target_window" class="cgb-field__input cgb-field__select" data-cgb-required>
+            <select id="CGBTargetWindow-{{ section.id }}" name="contact[target_window]" class="cgb-field__input cgb-field__select" data-cgb-required>
               <option value="">Select a target window</option>
               <option>As soon as possible</option>
               <option>1-3 months</option>
@@ -523,7 +546,7 @@
           <div class="cgb-form__field-row">
             <div class="cgb-field" data-cgb-field>
               <label class="cgb-field__label" for="CGBCeilingHeight-{{ section.id }}">Ceiling height <span class="cgb-field__required">*</span></label>
-              <select id="CGBCeilingHeight-{{ section.id }}" name="ceiling_height" class="cgb-field__input cgb-field__select" data-cgb-required>
+              <select id="CGBCeilingHeight-{{ section.id }}" name="contact[ceiling_height]" class="cgb-field__input cgb-field__select" data-cgb-required>
                 <option value="">Select a ceiling height</option>
                 <option>Under 9 ft</option>
                 <option>9-11 ft</option>
@@ -536,7 +559,7 @@
 
             <div class="cgb-field" data-cgb-field>
               <label class="cgb-field__label" for="CGBBudgetRange-{{ section.id }}">Budget range <span class="cgb-field__required">*</span></label>
-              <select id="CGBBudgetRange-{{ section.id }}" name="budget_range" class="cgb-field__input cgb-field__select" data-cgb-required>
+              <select id="CGBBudgetRange-{{ section.id }}" name="contact[budget_range]" class="cgb-field__input cgb-field__select" data-cgb-required>
                 <option value="">Select a budget range</option>
                 <option>Under $25,000</option>
                 <option>$25,000-$50,000</option>
@@ -550,7 +573,7 @@
 
           <div class="cgb-field" data-cgb-field>
             <label class="cgb-field__label" for="CGBConditionPreference-{{ section.id }}">Equipment condition preference <span class="cgb-field__required">*</span></label>
-            <select id="CGBConditionPreference-{{ section.id }}" name="condition_preference" class="cgb-field__input cgb-field__select" data-cgb-required>
+            <select id="CGBConditionPreference-{{ section.id }}" name="contact[condition_preference]" class="cgb-field__input cgb-field__select" data-cgb-required>
               <option value="">Select a condition preference</option>
               <option>New</option>
               <option>Remanufactured</option>
@@ -563,6 +586,7 @@
           <div class="cgb-field" data-cgb-field>
             <p class="cgb-field__label">Equipment zones needed <span class="cgb-field__required">*</span></p>
             <div class="cgb-tags" data-cgb-tag-group data-cgb-required>
+              <input type="hidden" name="contact[equipment_zones]" data-cgb-tag-value value="">
               <button type="button" class="cgb-tag" aria-pressed="false" data-value="Cardio">Cardio</button>
               <button type="button" class="cgb-tag" aria-pressed="false" data-value="Selectorized and plate-loaded strength">Selectorized and plate-loaded strength</button>
               <button type="button" class="cgb-tag" aria-pressed="false" data-value="Functional trainers, racks and rigs">Functional trainers, racks and rigs</button>
@@ -575,7 +599,7 @@
 
           <div class="cgb-field" data-cgb-field>
             <label class="cgb-field__label" for="CGBDeliveryInstall-{{ section.id }}">Delivery, assembly or installation <span class="cgb-field__required">*</span></label>
-            <select id="CGBDeliveryInstall-{{ section.id }}" name="delivery_install" class="cgb-field__input cgb-field__select" data-cgb-required>
+            <select id="CGBDeliveryInstall-{{ section.id }}" name="contact[delivery_install]" class="cgb-field__input cgb-field__select" data-cgb-required>
               <option value="">Select an option</option>
               <option>Delivery only</option>
               <option>Delivery and assembly</option>
@@ -587,12 +611,12 @@
 
           <div class="cgb-field">
             <label class="cgb-field__label" for="CGBFloorPlan-{{ section.id }}">Floor plan or photos <span class="cgb-field__optional">(optional)</span></label>
-            <input type="text" id="CGBFloorPlan-{{ section.id }}" name="floor_plan_link" class="cgb-field__input" placeholder="Paste a link to your floor plan or photos">
+            <input type="text" id="CGBFloorPlan-{{ section.id }}" name="contact[floor_plan_link]" class="cgb-field__input" placeholder="Paste a link to your floor plan or photos">
           </div>
 
           <div class="cgb-field">
             <label class="cgb-field__label" for="CGBNotes-{{ section.id }}">Notes <span class="cgb-field__optional">(optional)</span></label>
-            <textarea id="CGBNotes-{{ section.id }}" name="notes" class="cgb-field__input cgb-field__textarea" placeholder="Add a notes" maxlength="1200"></textarea>
+            <textarea id="CGBNotes-{{ section.id }}" name="contact[notes]" class="cgb-field__input cgb-field__textarea" placeholder="Add a notes" maxlength="1200"></textarea>
             <p class="cgb-field__hint">Anything else that would help us plan the room</p>
           </div>
 
@@ -600,26 +624,26 @@
 
           <div class="cgb-field" data-cgb-field>
             <label class="cgb-field__label" for="CGBFullName-{{ section.id }}">Full name <span class="cgb-field__required">*</span></label>
-            <input type="text" id="CGBFullName-{{ section.id }}" name="full_name" class="cgb-field__input" placeholder="Enter your full name" data-cgb-required>
+            <input type="text" id="CGBFullName-{{ section.id }}" name="contact[name]" class="cgb-field__input" placeholder="Enter your full name" data-cgb-required>
             <p class="cgb-field__error" data-cgb-error>Enter your full name</p>
           </div>
 
           <div class="cgb-field" data-cgb-field>
             <label class="cgb-field__label" for="CGBOrganization-{{ section.id }}">Organization <span class="cgb-field__required">*</span></label>
-            <input type="text" id="CGBOrganization-{{ section.id }}" name="organization" class="cgb-field__input" placeholder="Enter your organization" data-cgb-required>
+            <input type="text" id="CGBOrganization-{{ section.id }}" name="contact[organization]" class="cgb-field__input" placeholder="Enter your organization" data-cgb-required>
             <p class="cgb-field__error" data-cgb-error>Enter your organization</p>
           </div>
 
           <div class="cgb-form__field-row">
             <div class="cgb-field" data-cgb-field>
               <label class="cgb-field__label" for="CGBPhone-{{ section.id }}">Phone <span class="cgb-field__required">*</span></label>
-              <input type="tel" id="CGBPhone-{{ section.id }}" name="phone" class="cgb-field__input" placeholder="(925) 555-0100" data-cgb-required data-cgb-pattern="^[0-9()\-\s+]{7,}$">
+              <input type="tel" id="CGBPhone-{{ section.id }}" name="contact[phone]" class="cgb-field__input" placeholder="(925) 555-0100" data-cgb-required data-cgb-pattern="^[0-9()\-\s+]{7,}$">
               <p class="cgb-field__error" data-cgb-error>Enter a valid phone number</p>
             </div>
 
             <div class="cgb-field" data-cgb-field>
               <label class="cgb-field__label" for="CGBEmail-{{ section.id }}">Email <span class="cgb-field__required">*</span></label>
-              <input type="email" id="CGBEmail-{{ section.id }}" name="email" class="cgb-field__input" placeholder="your@gmail.com" data-cgb-required data-cgb-pattern="^[^\s@]+@[^\s@]+\.[^\s@]{2,}$">
+              <input type="email" id="CGBEmail-{{ section.id }}" name="contact[email]" class="cgb-field__input" placeholder="your@gmail.com" data-cgb-required data-cgb-pattern="^[^\s@]+@[^\s@]+\.[^\s@]{2,}$">
               <p class="cgb-field__error" data-cgb-error>Enter a valid email address</p>
             </div>
           </div>
@@ -627,6 +651,7 @@
           <div class="cgb-field" data-cgb-field>
             <p class="cgb-field__label">Preferred contact method <span class="cgb-field__required">*</span></p>
             <div class="cgb-tags" data-cgb-tag-group data-cgb-tag-mode="single" data-cgb-required>
+              <input type="hidden" name="contact[preferred_contact_method]" data-cgb-tag-value value="">
               <button type="button" class="cgb-tag" aria-pressed="false" data-value="Phone">Phone</button>
               <button type="button" class="cgb-tag" aria-pressed="false" data-value="Email">Email</button>
             </div>
@@ -644,7 +669,7 @@
 
           <div class="cgb-form__buttons-row">
             <button type="button" class="button cgb-form__back" data-cgb-back>Back</button>
-            <button type="button" class="button button--primary" data-cgb-submit>Request My Layout &amp; Quote</button>
+            <button type="button" class="button button--primary" data-cgb-submit disabled title="Submission is disabled until wiring is fully reviewed and approved">Request My Layout &amp; Quote</button>
           </div>
         </div>
 
@@ -693,7 +718,7 @@
             <button type="button" data-cgb-preview="success">Preview: Success</button>
           </div>
         {%- endif -%}
-      </form>
+      {%- endform -%}
     </div>
   </div>
 </div>
@@ -763,6 +788,18 @@
       return allValid;
     }
 
+    function syncTagValue(group) {
+      var valueInput = group.querySelector('[data-cgb-tag-value]');
+      if (!valueInput) return;
+
+      var selected = [];
+      group.querySelectorAll('.cgb-tag[aria-pressed="true"]').forEach(function (t) {
+        selected.push(t.getAttribute('data-value'));
+      });
+
+      valueInput.value = selected.join(', ');
+    }
+
     root.querySelectorAll('.cgb-tag').forEach(function (tag) {
       tag.addEventListener('click', function () {
         var group = tag.closest('[data-cgb-tag-group]');
@@ -777,6 +814,8 @@
           var pressed = tag.getAttribute('aria-pressed') === 'true';
           tag.setAttribute('aria-pressed', pressed ? 'false' : 'true');
         }
+
+        syncTagValue(group);
       });
     });
 
@@ -794,13 +833,86 @@
       progressFill.style.width = '50%';
     });
 
+    var CGB_FORM_ID = 'commercial_gym_buildouts_form';
+
+    function getAttributionParams() {
+      var params = new URLSearchParams(window.location.search);
+      var keys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'oppref'];
+      var out = {};
+
+      keys.forEach(function (key) {
+        var value = params.get(key);
+        if (value) out[key] = value;
+      });
+
+      return out;
+    }
+
+    function makeEventId() {
+      if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+      return 'cgb-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+    }
+
+    // Fires only once acceptance has already been confirmed by the
+    // provider-confirmed hook below — never on click, animation, timeout,
+    // or a failed/rejected response. No form field values are included,
+    // per the locked no-PII measurement contract.
+    function fireLeadEvents(eventId) {
+      var dedupeKey = 'cgbLeadFired:' + eventId;
+
+      try {
+        if (window.sessionStorage && window.sessionStorage.getItem(dedupeKey)) return;
+      } catch (e) {}
+
+      var basePayload = Object.assign({
+        provider_submission_id: eventId,
+        form_id: CGB_FORM_ID,
+        page_path: window.location.pathname,
+        event_timestamp: new Date().toISOString(),
+        consent_state: 'unavailable'
+      }, getAttributionParams());
+
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push(Object.assign({ event: 'lead_created' }, basePayload));
+      window.dataLayer.push(Object.assign({ event: 'fss_commercial_buildout_lead_success' }, basePayload));
+
+      try {
+        if (window.sessionStorage) window.sessionStorage.setItem(dedupeKey, '1');
+      } catch (e) {}
+    }
+
     submitBtn.addEventListener('click', function () {
+      if (submitBtn.disabled) return;
       if (!validateStep(step2)) return;
 
-      // Real submission (and the lead_created / fss_commercial_buildout_lead_success
-      // event wiring) is a separate follow-up pass — for now, Request My Layout & Quote
-      // always lands on the loading panel as the next visual state.
       showPanel('loading');
+
+      var eventId = makeEventId();
+      var formData = new FormData(form);
+
+      fetch(form.getAttribute('action') || window.location.pathname, {
+        method: 'POST',
+        credentials: 'same-origin',
+        body: formData
+      })
+        .then(function (response) {
+          return response.text();
+        })
+        .then(function (html) {
+          var parsed = new DOMParser().parseFromString(html, 'text/html');
+          var marker = parsed.querySelector('[data-cgb-form-posted]');
+          var accepted = !!marker && marker.getAttribute('value') === 'true';
+
+          if (accepted) {
+            fireLeadEvents(eventId);
+            showPanel('success');
+          } else {
+            showPanel('error');
+          }
+        })
+        .catch(function () {
+          showPanel('error');
+        });
     });
 
     if (tryAgainBtn) {
