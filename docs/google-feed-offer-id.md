@@ -351,10 +351,10 @@ else default( SKU, Product ID )
 In both cases only the last line changes. The `approved` branch and the
 hardcoded composite branch are untouched.
 
-The `default( SKU, Product ID )` fallback also makes the hardcoded branch
-redundant for any *future* multi-variant product — each variant would key on
-its own SKU. The existing branch stays regardless, because removing it would
-re-key the 45 live composites.
+The `default( SKU, Product ID )` fallback covers any *future* multi-variant
+product, since each variant keys on its own SKU. **It does not make the
+hardcoded branch redundant, and that branch must never be removed** — see
+below.
 
 ### Final expected diff
 
@@ -417,3 +417,49 @@ than the 114 backlog it clears.
 with "Include unpublished products" off. UNLISTED is a distinct Shopify status
 from DRAFT. That an unlisted product is being advertised on Google is worth a
 separate look; it does not affect this change.
+
+
+## The hardcoded composite branch is load-bearing — do not remove it
+
+Five SKUs in `googleshoppingfrenchfitness` exist on **two products each**: once
+as a standalone "Set" product, and again as a variant of the hex dumbbell parent
+`10247596147004`.
+
+| SKU | Standalone Set product | Also a variant of |
+| --- | --- | --- |
+| `FF-RCHD2-5-22-5` | `10347758715196` | `10247596147004` |
+| `FF-RCHD2-5-25` | `10347757601084` | `10247596147004` |
+| `FF-RCHD5-50` | `10347758256444` | `10247596147004` |
+| `FF-RCHD5-75` | `10347758485820` | `10247596147004` |
+| `FF-RCHD5-100` | `10347757797692` | `10247596147004` |
+
+They do not collide today only because the hardcoded branch keeps the hex
+variants on composite ids while the standalone products key on SKU. Delete or
+generalise that branch — including any future tidy-up that assumes
+`default( SKU, Product ID )` supersedes it — and those five hex variants would
+emit SKUs already in use, creating five duplicate-id collisions on top of the
+45-offer history reset.
+
+The branch reads like a one-off patch. It is doing real work. Leave it.
+
+This does not affect the change proposed here, which touches only the final
+`else` and cannot reach the composite branch.
+
+## Checking the duplicate feed
+
+`scripts/feed_offer_id_diff.py` takes the live export and the duplicate export
+and asserts the acceptance criteria: rows aligned on `(item_group_id, old_id)`,
+every non-`id` column identical, ids moving only from the fallback and only to
+that row's SKU, composites unmoved, and no duplicate ids in the output. It
+prints the row and offer counts.
+
+```
+python3 scripts/feed_offer_id_diff.py before.tsv after.tsv
+```
+
+Note the join key. `old_id` alone is not unique in
+`googleshoppingfrenchfitness`, for the reason above.
+
+Run against a simulation of the change on the live exports it reports 98 rows
+changed and +2 offers for `googleshoppingfs`, and 15 rows changed and +9 offers
+for `googleshoppingfrenchfitness`, with zero duplicate ids in both.
