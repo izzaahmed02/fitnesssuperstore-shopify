@@ -63,6 +63,31 @@ executed until Ayyaz posts the unpublished desktop/mobile preview + runtime evid
 availability-schema, Notify Me, Processing Time, and the Judge.me exposure above) and Masum's feed acceptance
 lands. As the Sep 4 checkpoint has passed, Ayyaz's preview status is the current blocker.
 
+## 7. Reconciliation against the shared records (read 09 Sep)
+
+- **38-record evidence matrix (1G861…):** agrees with live Shopify on every status field — all 38
+  Unlisted/Hidden, −99, not orderable, sell-when-OOS OFF; 80 lb $229 / 85 lb $239; processing_time
+  2-3 Weeks / long "…2-3 Weeks + Transit Time" / filter "2-5 weeks"; warranty ACCEPTED (French Fitness
+  Warranty page, Accessories & Free Weights, 1-year limited parts). Owner **Ayyaz**, Status **Ongoing /
+  publication HOLD**. Gate order: consolidated preview → Masum feed acceptance → Iqra/Saliha independent
+  QA → READY FOR TIM REVIEW → Tim written GO. Matrix records PlaceholderComparisonChart as "removed."
+  Matrix container ETA was 2026-09-06 (now passed) — but per Tim, invoice/ETA ≠ physical receipt, so
+  Out of Stock / HOLD stands.
+  - **Gap:** the matrix has **no Judge.me column**, so the stale `ImageComingSoon` / `PlaceholderComparisonChart`
+    cache found in live Shopify (§5.1) is **not recorded** there. Recommend adding it as an open QA row.
+  - The matrix parent row still lists "Izza Combined-Listing QA + Larianne warranty PASS-HOLD" as pending —
+    stale, since Larianne's review role moved to Iqra/Saliha on Sep 2.
+- **Controlled combined-listing plan (1wGd6…):** is the **Rubber Coated Hex Dumbbell** family plan, not this
+  Urethane Blank family. Useful only as the reference method/standard — selector-to-offer chain, self-canonical
+  per child, parent excluded from GMC feed, child-leakage suppression in search/predictive/Boost/collections,
+  exactly one Product JSON-LD + one AggregateRating per page with Judge.me Rich Snippets OFF (no code change).
+  The independent shopper QA should mirror these checks for the Urethane family.
+- **Remediation Brief (122Vl…):** sets the Iqra/Saliha independent-QA scope — logged-out U.S. desktop/mobile
+  evidence covering query, predictive/full search, family card, selector, URL, price, media, SKU, cart, Back,
+  canonical, and child leakage — within 1 business day of the preview. Release gate: PRE-STAGE / PRODUCTION HOLD.
+- **Could not verify:** FS Product Listings **Row 1079** (not present in the sheet export obtained — only
+  bumper-plate "Blank" rows were), and the **Monday item** (no Monday read tool available this session).
+
 ## Result
 
 Product Listings data-layer review: **PASS on record fields** (corrections done, processing-time matches the
