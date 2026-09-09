@@ -37,6 +37,13 @@
     .section-{{ section.id }}-padding .image-with-text__media.color-scheme-2,
     .section-{{ section.id }}-padding .image-with-text__content.color-scheme-2{
     background-color: #edeff3;
+    border-radius: 24px;
+    }
+    /* Figma node 5258:82081 "banner" (mobile) — image floats inset 16px inside the card,
+       not flush with its edges; bottom is left open since the gap to the text below is
+       provided by the grid's own row gap. */
+    .section-{{ section.id }}-padding .image-with-text__media.color-scheme-2{
+    padding: 16px 16px 0 16px;
     }
     @media screen and (min-width: 750px) {
     .padding-{{ section.id }} {
@@ -62,6 +69,12 @@
     /* Figma node 5256:81987 (desktop) — 12px image radius */
     .section-{{ section.id }}-padding .image-with-text__media-item img{
     border-radius: 12px;
+    }
+    /* Figma node 5256:81987 (desktop) — image floats inset 32px inside the card on
+       left/top/bottom; no right inset since the 32px gap to the text is the grid's
+       own column gap (config/settings_data.json spacing_grid_horizontal: 32). */
+    .section-{{ section.id }}-padding .image-with-text__media.color-scheme-2{
+    padding: 32px 0 32px 32px;
     }
     }
     .section-{{ section.id }}-padding{
@@ -339,8 +352,10 @@
                                         {% if icon.settings.svg != blank %}
                                             {{ icon.settings.svg }}
                                         {% else %}
-                                            <img src="{{ icon.settings.icon | img_url: 'master' }}"
-                                                 alt="{{ icon.settings.icon.alt }}">
+                                            <img src="{{ icon.settings.icon | image_url: width: 100 }}"
+                                                 alt="{{ icon.settings.icon.alt }}"
+                                                 width="24"
+                                                 height="24">
                                         {% endif %}
                                     </div>
                                 {% endfor %}
