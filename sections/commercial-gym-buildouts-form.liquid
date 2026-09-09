@@ -216,21 +216,86 @@
     box-sizing: border-box;
   }
 
-  #shopify-section-{{ section.id }} .cgb-field__select {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
+  /* Custom dropdown (replaces native <select>) — a native select's open-state
+     options list is rendered by the OS/browser, not page CSS, so it can't be
+     made reliably responsive across mobile devices. Building it ourselves
+     (button trigger + an absolutely-positioned, self-sized list) guarantees
+     it always stays within the field's own width and the viewport. */
+  #shopify-section-{{ section.id }} .cgb-select {
+    position: relative;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-select__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     width: 100%;
     max-width: 100%;
-    min-width: 0;
     box-sizing: border-box;
-    padding-right: 40px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8' fill='none'%3E%3Cpath d='M1 1L7 7L13 1' stroke='%23393940' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 16px center;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-select__value {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    overflow: hidden;
+    color: #393940;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-select__value--placeholder {
+    color: #b3b3b3;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-select__chevron {
+    flex: none;
+    width: 14px;
+    height: 8px;
+    transition: transform 0.15s ease;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-select--open .cgb-select__chevron {
+    transform: rotate(180deg);
+  }
+
+  #shopify-section-{{ section.id }} .cgb-select__list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 20;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    max-width: 100%;
+    max-height: 240px;
+    overflow-y: auto;
+    background-color: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    box-sizing: border-box;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-select__option {
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    color: #393940;
+    cursor: pointer;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-select__option:hover {
+    background-color: #f7f7f7;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-field--error .cgb-select__trigger {
+    border-color: #d83d0e;
   }
 
   #shopify-section-{{ section.id }} .cgb-field__hint {
@@ -499,16 +564,23 @@
           <p class="cgb-form__step-heading">Tell us about your space</p>
 
           <div class="cgb-field" data-cgb-field>
-            <label class="cgb-field__label" for="CGBFacilityType-{{ section.id }}">Facility type <span class="cgb-field__required">*</span></label>
-            <select id="CGBFacilityType-{{ section.id }}" name="contact[facility_type]" class="cgb-field__input cgb-field__select" data-cgb-required>
-              <option value="">Select your facility type</option>
-              <option>Commercial Gyms &amp; Training Studios</option>
-              <option>Apartments, HOAs &amp; Multifamily</option>
-              <option>Hotels &amp; Hospitality</option>
-              <option>Schools &amp; Universities</option>
-              <option>Fire, Police &amp; Municipal</option>
-              <option>Corporate, Medical &amp; Senior Living</option>
-            </select>
+            <label class="cgb-field__label" id="CGBFacilityTypeLabel-{{ section.id }}">Facility type <span class="cgb-field__required">*</span></label>
+            <div class="cgb-select" data-cgb-select>
+              <button type="button" class="cgb-field__input cgb-select__trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="CGBFacilityTypeLabel-{{ section.id }}" data-cgb-select-trigger>
+                <span class="cgb-select__value cgb-select__value--placeholder" data-cgb-select-value data-placeholder="Select your facility type">Select your facility type</span>
+                <svg class="cgb-select__chevron" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M1 1L7 7L13 1" stroke="#393940" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <ul class="cgb-select__list" role="listbox" hidden data-cgb-select-list>
+                <li class="cgb-select__option" role="option" data-value="">Select your facility type</li>
+                <li class="cgb-select__option" role="option" data-value="Commercial Gyms &amp; Training Studios">Commercial Gyms &amp; Training Studios</li>
+                <li class="cgb-select__option" role="option" data-value="Apartments, HOAs &amp; Multifamily">Apartments, HOAs &amp; Multifamily</li>
+                <li class="cgb-select__option" role="option" data-value="Hotels &amp; Hospitality">Hotels &amp; Hospitality</li>
+                <li class="cgb-select__option" role="option" data-value="Schools &amp; Universities">Schools &amp; Universities</li>
+                <li class="cgb-select__option" role="option" data-value="Fire, Police &amp; Municipal">Fire, Police &amp; Municipal</li>
+                <li class="cgb-select__option" role="option" data-value="Corporate, Medical &amp; Senior Living">Corporate, Medical &amp; Senior Living</li>
+              </ul>
+              <input type="hidden" name="contact[facility_type]" data-cgb-required value="">
+            </div>
             <p class="cgb-field__error" data-cgb-error>Select your facility type</p>
           </div>
 
@@ -526,15 +598,22 @@
           </div>
 
           <div class="cgb-field" data-cgb-field>
-            <label class="cgb-field__label" for="CGBTargetWindow-{{ section.id }}">Target opening or completion <span class="cgb-field__required">*</span></label>
-            <select id="CGBTargetWindow-{{ section.id }}" name="contact[target_window]" class="cgb-field__input cgb-field__select" data-cgb-required>
-              <option value="">Select a target window</option>
-              <option>As soon as possible</option>
-              <option>1-3 months</option>
-              <option>3-6 months</option>
-              <option>6-12 months</option>
-              <option>12+ months / just exploring</option>
-            </select>
+            <label class="cgb-field__label" id="CGBTargetWindowLabel-{{ section.id }}">Target opening or completion <span class="cgb-field__required">*</span></label>
+            <div class="cgb-select" data-cgb-select>
+              <button type="button" class="cgb-field__input cgb-select__trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="CGBTargetWindowLabel-{{ section.id }}" data-cgb-select-trigger>
+                <span class="cgb-select__value cgb-select__value--placeholder" data-cgb-select-value data-placeholder="Select a target window">Select a target window</span>
+                <svg class="cgb-select__chevron" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M1 1L7 7L13 1" stroke="#393940" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <ul class="cgb-select__list" role="listbox" hidden data-cgb-select-list>
+                <li class="cgb-select__option" role="option" data-value="">Select a target window</li>
+                <li class="cgb-select__option" role="option" data-value="As soon as possible">As soon as possible</li>
+                <li class="cgb-select__option" role="option" data-value="1-3 months">1-3 months</li>
+                <li class="cgb-select__option" role="option" data-value="3-6 months">3-6 months</li>
+                <li class="cgb-select__option" role="option" data-value="6-12 months">6-12 months</li>
+                <li class="cgb-select__option" role="option" data-value="12+ months / just exploring">12+ months / just exploring</li>
+              </ul>
+              <input type="hidden" name="contact[target_window]" data-cgb-required value="">
+            </div>
             <p class="cgb-field__error" data-cgb-error>Select a target window</p>
           </div>
 
@@ -546,41 +625,62 @@
 
           <div class="cgb-form__field-row">
             <div class="cgb-field" data-cgb-field>
-              <label class="cgb-field__label" for="CGBCeilingHeight-{{ section.id }}">Ceiling height <span class="cgb-field__required">*</span></label>
-              <select id="CGBCeilingHeight-{{ section.id }}" name="contact[ceiling_height]" class="cgb-field__input cgb-field__select" data-cgb-required>
-                <option value="">Select a ceiling height</option>
-                <option>Under 9 ft</option>
-                <option>9-11 ft</option>
-                <option>12-14 ft</option>
-                <option>15-20 ft</option>
-                <option>Over 20 ft</option>
-              </select>
+              <label class="cgb-field__label" id="CGBCeilingHeightLabel-{{ section.id }}">Ceiling height <span class="cgb-field__required">*</span></label>
+              <div class="cgb-select" data-cgb-select>
+                <button type="button" class="cgb-field__input cgb-select__trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="CGBCeilingHeightLabel-{{ section.id }}" data-cgb-select-trigger>
+                  <span class="cgb-select__value cgb-select__value--placeholder" data-cgb-select-value data-placeholder="Select a ceiling height">Select a ceiling height</span>
+                  <svg class="cgb-select__chevron" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M1 1L7 7L13 1" stroke="#393940" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <ul class="cgb-select__list" role="listbox" hidden data-cgb-select-list>
+                  <li class="cgb-select__option" role="option" data-value="">Select a ceiling height</li>
+                  <li class="cgb-select__option" role="option" data-value="Under 9 ft">Under 9 ft</li>
+                  <li class="cgb-select__option" role="option" data-value="9-11 ft">9-11 ft</li>
+                  <li class="cgb-select__option" role="option" data-value="12-14 ft">12-14 ft</li>
+                  <li class="cgb-select__option" role="option" data-value="15-20 ft">15-20 ft</li>
+                  <li class="cgb-select__option" role="option" data-value="Over 20 ft">Over 20 ft</li>
+                </ul>
+                <input type="hidden" name="contact[ceiling_height]" data-cgb-required value="">
+              </div>
               <p class="cgb-field__error" data-cgb-error>Select a ceiling height</p>
             </div>
 
             <div class="cgb-field" data-cgb-field>
-              <label class="cgb-field__label" for="CGBBudgetRange-{{ section.id }}">Budget range <span class="cgb-field__required">*</span></label>
-              <select id="CGBBudgetRange-{{ section.id }}" name="contact[budget_range]" class="cgb-field__input cgb-field__select" data-cgb-required>
-                <option value="">Select a budget range</option>
-                <option>Under $25,000</option>
-                <option>$25,000-$50,000</option>
-                <option>$50,000-$100,000</option>
-                <option>$100,000-$250,000</option>
-                <option>$250,000+</option>
-              </select>
+              <label class="cgb-field__label" id="CGBBudgetRangeLabel-{{ section.id }}">Budget range <span class="cgb-field__required">*</span></label>
+              <div class="cgb-select" data-cgb-select>
+                <button type="button" class="cgb-field__input cgb-select__trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="CGBBudgetRangeLabel-{{ section.id }}" data-cgb-select-trigger>
+                  <span class="cgb-select__value cgb-select__value--placeholder" data-cgb-select-value data-placeholder="Select a budget range">Select a budget range</span>
+                  <svg class="cgb-select__chevron" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M1 1L7 7L13 1" stroke="#393940" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <ul class="cgb-select__list" role="listbox" hidden data-cgb-select-list>
+                  <li class="cgb-select__option" role="option" data-value="">Select a budget range</li>
+                  <li class="cgb-select__option" role="option" data-value="Under $25,000">Under $25,000</li>
+                  <li class="cgb-select__option" role="option" data-value="$25,000-$50,000">$25,000-$50,000</li>
+                  <li class="cgb-select__option" role="option" data-value="$50,000-$100,000">$50,000-$100,000</li>
+                  <li class="cgb-select__option" role="option" data-value="$100,000-$250,000">$100,000-$250,000</li>
+                  <li class="cgb-select__option" role="option" data-value="$250,000+">$250,000+</li>
+                </ul>
+                <input type="hidden" name="contact[budget_range]" data-cgb-required value="">
+              </div>
               <p class="cgb-field__error" data-cgb-error>Select a budget range</p>
             </div>
           </div>
 
           <div class="cgb-field" data-cgb-field>
-            <label class="cgb-field__label" for="CGBConditionPreference-{{ section.id }}">Equipment condition preference <span class="cgb-field__required">*</span></label>
-            <select id="CGBConditionPreference-{{ section.id }}" name="contact[condition_preference]" class="cgb-field__input cgb-field__select" data-cgb-required>
-              <option value="">Select a condition preference</option>
-              <option>New</option>
-              <option>Remanufactured</option>
-              <option>Mixed</option>
-              <option>Not sure yet</option>
-            </select>
+            <label class="cgb-field__label" id="CGBConditionPreferenceLabel-{{ section.id }}">Equipment condition preference <span class="cgb-field__required">*</span></label>
+            <div class="cgb-select" data-cgb-select>
+              <button type="button" class="cgb-field__input cgb-select__trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="CGBConditionPreferenceLabel-{{ section.id }}" data-cgb-select-trigger>
+                <span class="cgb-select__value cgb-select__value--placeholder" data-cgb-select-value data-placeholder="Select a condition preference">Select a condition preference</span>
+                <svg class="cgb-select__chevron" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M1 1L7 7L13 1" stroke="#393940" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <ul class="cgb-select__list" role="listbox" hidden data-cgb-select-list>
+                <li class="cgb-select__option" role="option" data-value="">Select a condition preference</li>
+                <li class="cgb-select__option" role="option" data-value="New">New</li>
+                <li class="cgb-select__option" role="option" data-value="Remanufactured">Remanufactured</li>
+                <li class="cgb-select__option" role="option" data-value="Mixed">Mixed</li>
+                <li class="cgb-select__option" role="option" data-value="Not sure yet">Not sure yet</li>
+              </ul>
+              <input type="hidden" name="contact[condition_preference]" data-cgb-required value="">
+            </div>
             <p class="cgb-field__error" data-cgb-error>Select a condition preference</p>
           </div>
 
@@ -599,14 +699,21 @@
           </div>
 
           <div class="cgb-field" data-cgb-field>
-            <label class="cgb-field__label" for="CGBDeliveryInstall-{{ section.id }}">Delivery, assembly or installation <span class="cgb-field__required">*</span></label>
-            <select id="CGBDeliveryInstall-{{ section.id }}" name="contact[delivery_install]" class="cgb-field__input cgb-field__select" data-cgb-required>
-              <option value="">Select an option</option>
-              <option>Delivery only</option>
-              <option>Delivery and assembly</option>
-              <option>Delivery, assembly and installation</option>
-              <option>Not needed</option>
-            </select>
+            <label class="cgb-field__label" id="CGBDeliveryInstallLabel-{{ section.id }}">Delivery, assembly or installation <span class="cgb-field__required">*</span></label>
+            <div class="cgb-select" data-cgb-select>
+              <button type="button" class="cgb-field__input cgb-select__trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="CGBDeliveryInstallLabel-{{ section.id }}" data-cgb-select-trigger>
+                <span class="cgb-select__value cgb-select__value--placeholder" data-cgb-select-value data-placeholder="Select an option">Select an option</span>
+                <svg class="cgb-select__chevron" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M1 1L7 7L13 1" stroke="#393940" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <ul class="cgb-select__list" role="listbox" hidden data-cgb-select-list>
+                <li class="cgb-select__option" role="option" data-value="">Select an option</li>
+                <li class="cgb-select__option" role="option" data-value="Delivery only">Delivery only</li>
+                <li class="cgb-select__option" role="option" data-value="Delivery and assembly">Delivery and assembly</li>
+                <li class="cgb-select__option" role="option" data-value="Delivery, assembly and installation">Delivery, assembly and installation</li>
+                <li class="cgb-select__option" role="option" data-value="Not needed">Not needed</li>
+              </ul>
+              <input type="hidden" name="contact[delivery_install]" data-cgb-required value="">
+            </div>
             <p class="cgb-field__error" data-cgb-error>Select an option</p>
           </div>
 
@@ -800,6 +907,55 @@
 
       valueInput.value = selected.join(', ');
     }
+
+    function setSelectOpen(select, isOpen) {
+      var list = select.querySelector('[data-cgb-select-list]');
+      var trigger = select.querySelector('[data-cgb-select-trigger]');
+      list.hidden = !isOpen;
+      trigger.setAttribute('aria-expanded', String(isOpen));
+      select.classList.toggle('cgb-select--open', isOpen);
+    }
+
+    function closeAllSelects(except) {
+      root.querySelectorAll('[data-cgb-select]').forEach(function (sel) {
+        if (sel !== except) setSelectOpen(sel, false);
+      });
+    }
+
+    root.querySelectorAll('[data-cgb-select]').forEach(function (select) {
+      var trigger = select.querySelector('[data-cgb-select-trigger]');
+      var list = select.querySelector('[data-cgb-select-list]');
+      var valueEl = select.querySelector('[data-cgb-select-value]');
+      var hiddenInput = select.querySelector('[data-cgb-required]');
+      var field = select.closest('[data-cgb-field]');
+
+      trigger.addEventListener('click', function () {
+        var willOpen = list.hidden;
+        closeAllSelects(select);
+        setSelectOpen(select, willOpen);
+      });
+
+      list.querySelectorAll('[data-value]').forEach(function (option) {
+        option.addEventListener('click', function () {
+          var value = option.getAttribute('data-value');
+          hiddenInput.value = value;
+          valueEl.textContent = value || valueEl.getAttribute('data-placeholder');
+          valueEl.classList.toggle('cgb-select__value--placeholder', value === '');
+          setSelectOpen(select, false);
+          if (field) field.classList.remove('cgb-field--error');
+        });
+      });
+    });
+
+    document.addEventListener('click', function (e) {
+      root.querySelectorAll('[data-cgb-select]').forEach(function (sel) {
+        if (!sel.contains(e.target)) setSelectOpen(sel, false);
+      });
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeAllSelects(null);
+    });
 
     root.querySelectorAll('.cgb-tag').forEach(function (tag) {
       tag.addEventListener('click', function () {
