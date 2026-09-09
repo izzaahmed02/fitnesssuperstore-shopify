@@ -60,13 +60,20 @@
 
   /* page-images/zoom-cta-banner.png confirms the design has no light box behind the
      text at all — just the heading/button sitting directly over the (already tinted)
-     image. The .color-{{ section.settings.color_scheme }} class on .banner__box paints
-     a solid background from the theme's color scheme, separate from the "gradient"
-     class already removed from the markup; the theme's own
-     ".banner--desktop-transparent .banner__box{background:transparent!important}" rule
-     evidently isn't winning here, so force it off directly. */
+     image. The color-scheme class previously on .banner__box painted a solid white
+     background from the theme's color scheme (config/settings_data.json
+     scheme-1.background: #ffffff) and has been removed from the markup entirely so its
+     rule can't apply at any breakpoint. Also neutralize .content-container's own
+     border/shadow and its ::after pseudo-element (which draws an independent
+     box-shadow layer behind the element, unaffected by `background`) so nothing
+     box-like can render here regardless of source. */
   #shopify-section-{{ section.id }} .banner__box {
     background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  #shopify-section-{{ section.id }} .banner__box::after {
+    display: none !important;
   }
 
   /* Figma "Why Choose Us" frame fill — the overlay is a solid black tint baked into the
@@ -262,7 +269,7 @@
 
   <div class="banner__content banner__content--{{ section.settings.desktop_content_position }} page-width">
     <div
-      class="banner__box content-container content-container--full-width-mobile color-{{ section.settings.color_scheme }}"
+      class="banner__box content-container content-container--full-width-mobile"
     >
       {%- for block in section.blocks -%}
         {%- case block.type -%}
