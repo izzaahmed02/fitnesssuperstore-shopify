@@ -301,3 +301,67 @@ exclude one of them. It needs its own GO, or the count is 112, not 111.
 | `googleshoppingfrenchfitness` | **13**, or 14 with FF-X12 | pending that feed's expression |
 
 A `googleshoppingfs` diff showing 101 or 114 changed rows is a **failed** run.
+
+## The googleshoppingfrenchfitness expression — read 2026-09-09
+
+```
+if   Product metafield (gmc_id_rollout_status) == "approved"
+and  Product metafield (legacy_gmc_id) != ''
+then Product metafield (legacy_gmc_id)
+else if Product ID == "10247596147004"
+then Product ID + "-" + Variant ID
+else Product ID
+```
+
+The composite branch is a **hardcoded special case for one product ID** — the
+hex dumbbells. That single line is the entire reason those 45 offers are
+variant-keyed, and it confirms the behaviour the data predicted.
+
+Two consequences.
+
+**The composites are structurally safe.** The hardcoded branch sits *before*
+the final `else`, so changing the final `else` cannot reach it. The 45
+composite ids stay exactly as they are, with no special handling and no risk.
+The earlier concern that a blanket change would flip them does not apply to
+this shape of expression.
+
+**The patch does not generalise, and FF-MSS is the proof.** It fixes one
+product by name and leaves every other multi-variant product in the feed on the
+bare product ID. FF-MSS, also multi-variant, also in this feed, collides
+ten-way today for exactly that reason. Whoever hit this problem solved it for
+the product in front of them.
+
+### The change, both feeds — final `else` only
+
+`googleshoppingfs`:
+
+```
+if   ... approved and legacy != '' then legacy
+else default( SKU, Product ID )
+```
+
+`googleshoppingfrenchfitness`:
+
+```
+if   ... approved and legacy != '' then legacy
+else if Product ID == "10247596147004" then Product ID + "-" + Variant ID
+else default( SKU, Product ID )
+```
+
+In both cases only the last line changes. The `approved` branch and the
+hardcoded composite branch are untouched.
+
+The `default( SKU, Product ID )` fallback also makes the hardcoded branch
+redundant for any *future* multi-variant product — each variant would key on
+its own SKU. The existing branch stays regardless, because removing it would
+re-key the 45 live composites.
+
+### Final expected diff
+
+| Feed | Rows changed | Composition |
+| --- | --- | --- |
+| `googleshoppingfs` | **98** | Tim's 98 real fs rows, set-identical |
+| `googleshoppingfrenchfitness` | **14** | FF-MSS 10, three singles, plus FF-X12 |
+| | **112** | = Tim's 111 real changes + FF-X12 |
+
+The 45 hex-dumbbell composites and the 1,439 + 906 approved rows do not move.
