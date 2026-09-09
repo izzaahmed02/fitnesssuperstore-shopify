@@ -76,7 +76,9 @@
     z-index: 0;
     }
 
-    /* Figma node 4612:88594 (mobile) — each step is icon-left/text-right row, not stacked */
+    /* Figma node 4612:88594 (mobile) — each step is icon-left/text-right row, not stacked,
+       with a 20px gap between the icon and the text (only takes effect on mobile — the
+       750px+ rule below overrides both flex-direction and gap for desktop). */
     #shopify-section-{{ section.id }} .process-steps__step {
     position: relative;
     z-index: 1;
@@ -84,7 +86,7 @@
     display: flex;
     flex-direction: row;
     align-items: flex-start;
-    gap: 1.6rem;
+    gap: 20px;
     }
 
     /* Figma "Benefit cards" (desktop) — icon above title/text, inset 32px from the
@@ -152,13 +154,40 @@
     }
 
     @media screen and (max-width: 749px) {
+    /* Figma "Benefit cards" (mobile) — 16px gap between the 4 stacked step rows,
+       not the previous 2.4rem (38.4px). */
     #shopify-section-{{ section.id }} .process-steps__row {
     flex-direction: column;
-    gap: 2.4rem;
+    gap: 16px;
     }
 
+    /* The desktop horizontal connector line doesn't apply to the stacked mobile
+       layout — replaced by the vertical per-step connector below. */
     #shopify-section-{{ section.id }} .process-steps__row::before {
     display: none;
+    }
+
+    /* Figma node 4612:88630 "line" — a 4px vertical connector runs behind each
+       numbered circle, continuing down to the center of the next step's circle
+       (25px = half the 50px circle; 16px = the row gap above). Each step's own
+       height is driven by its (variable-length) title/text, so this is anchored
+       with a percentage height rather than a fixed px value: for an absolutely
+       positioned element, percentage height resolves against its positioned
+       ancestor's actual rendered height even when that ancestor's height is
+       auto/content-driven, so this reaches the next circle's center exactly
+       regardless of how the copy wraps. z-index: -1 keeps it behind this step's
+       own circle and text; the next step's circle (painted later in DOM order)
+       still renders on top of the segment where it overlaps. */
+    #shopify-section-{{ section.id }} .process-steps__step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    top: 25px;
+    left: 25px;
+    transform: translateX(-50%);
+    width: 4px;
+    height: calc(100% + 16px);
+    background-color: #fce6de;
     }
     }
 {%- endstyle -%}
