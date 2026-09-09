@@ -64,6 +64,23 @@
   endif
 
   comment
+    September Overstock Sale. Unlike the two campaigns above, that automatic discount
+    targets an EXPLICIT LIST OF 16 PRODUCT IDS, not a collection, so there is no
+    vendor/type/tag rule to mirror - membership is the id list in
+    settings.overstock_product_ids. Delimit both sides with commas before matching so
+    one id cannot match inside a longer one.
+  endcomment
+  assign in_overstock = false
+  assign os_ids = settings.overstock_product_ids | newline_to_br | replace: '<br />', ',' | replace: '<br/>', ',' | replace: '<br>', ',' | replace: ' ', '' | replace: ',,', ','
+  if os_ids != blank
+    assign os_haystack = ',' | append: os_ids | append: ','
+    assign os_needle = ',' | append: product.id | append: ','
+    if os_haystack contains os_needle
+      assign in_overstock = true
+    endif
+  endif
+
+  comment
     campaign_kind drives which payoff line renders below. The settings.sale_promo_ff /
     settings.sale_promo_reman text fields are no longer displayed verbatim - the payoff
     line is computed from product.price - but a blank field still acts as a per-branch
@@ -76,6 +93,19 @@
     assign campaign_kind = 'reman'
   endif
 -%}
+{%- comment -%}
+  Overstock window (store timezone), evaluated separately from the Labor Day window
+  because the two campaigns run on different dates.
+{%- endcomment -%}
+{%- assign os_now_s = 'now' | date: '%s' | plus: 0 -%}
+{%- assign os_start_s = settings.overstock_start | date: '%s' | plus: 0 -%}
+{%- assign os_end_s = settings.overstock_end | date: '%s' | plus: 0 -%}
+{%- assign os_in_window = false -%}
+{%- if settings.overstock_force_preview or request.design_mode -%}
+  {%- assign os_in_window = true -%}
+{%- elsif os_start_s > 0 and os_end_s > 0 and os_now_s >= os_start_s and os_now_s < os_end_s -%}
+  {%- assign os_in_window = true -%}
+{%- endif -%}
 {%- comment -%} Date window (store timezone). Theme editor and force_preview both bypass it. {%- endcomment -%}
 {%- assign now_s = 'now' | date: '%s' | plus: 0 -%}
 {%- assign start_s = settings.laborday_start | date: '%s' | plus: 0 -%}
@@ -86,6 +116,26 @@
 {%- elsif start_s > 0 and end_s > 0 and now_s >= start_s and now_s < end_s -%}
   {%- assign in_window = true -%}
 {%- endif -%}
+{%- liquid
+  comment
+    Only one automatic discount applies at checkout, so only one card may render.
+    Precedence must be decided AFTER in_window exists: campaign_kind is set from
+    eligibility alone, so a French Fitness product still reads as 'ff' once Labor Day
+    has ended. Overstock therefore takes over whenever the Labor Day / Remanufactured
+    card is not actually going to render - either no branch matched, or its window has
+    closed. During the overlap both are 10% off for French Fitness, so the figure is
+    identical either way and the shopper never sees the precedence change.
+  endcomment
+  assign labor_card_showing = false
+  if campaign_kind != '' and in_window
+    assign labor_card_showing = true
+  endif
+  unless labor_card_showing
+    if in_overstock and settings.overstock_promo != blank and os_in_window
+      assign campaign_kind = 'overstock'
+    endif
+  endunless
+-%}
 {%- liquid
   comment
     Suppress the offer when the selected variant cannot be purchased. Mirror the
@@ -103,7 +153,14 @@
     endif
   endif
   assign show_campaign = false
-  if campaign_kind != '' and in_window and campaign_available
+  if campaign_kind == 'overstock'
+    comment
+      Overstock already passed its own window check above; in_window belongs to Labor Day.
+    endcomment
+    if campaign_available
+      assign show_campaign = true
+    endif
+  elsif campaign_kind != '' and in_window and campaign_available
     assign show_campaign = true
   endif
 -%}
@@ -114,9 +171,14 @@
       the family MINIMUM and would strike through a figure the shopper never sees.
     endcomment
     assign card_price = campaign_variant.price
+    assign card_badge = 'Labor day sale'
     if campaign_kind == 'reman'
       assign card_discount = '5% off'
       assign card_sale_price = card_price | times: 0.95
+    elsif campaign_kind == 'overstock'
+      assign card_badge = 'September overstock sale'
+      assign card_discount = '10% off'
+      assign card_sale_price = card_price | times: 0.9
     else
       assign card_discount = '10% off'
       assign card_sale_price = card_price | times: 0.9
@@ -125,7 +187,11 @@
       laborday_end is exclusive - back off one second so the copy names the last day the
       sale is actually live (an end of Sep 8 00:00 reads as "Ends Sep. 7").
     endcomment
-    assign last_day_s = end_s | minus: 1
+    assign card_end_s = end_s
+    if campaign_kind == 'overstock'
+      assign card_end_s = os_end_s
+    endif
+    assign last_day_s = card_end_s | minus: 1
   -%}
 {%- endif -%}
 {%- comment -%}
@@ -140,7 +206,7 @@
     {%- if show_campaign -%}
     <div class="labor-day-sale-card">
       <div class="labor-day-sale-card__row">
-        <span class="labor-day-sale-card__badge">Labor day sale</span>
+        <span class="labor-day-sale-card__badge">{{ card_badge }}</span>
         <span class="labor-day-sale-card__was"
           ><span class="visually-hidden">Regular price </span>{{ card_price | money }}</span
         >
@@ -149,7 +215,7 @@
         >
       </div>
       <p class="labor-day-sale-card__meta">
-        {{ card_discount }} applied automatically at checkout{% if end_s > 0 %} · Ends {{ last_day_s | date: "%b. %-d" }}{% endif %}
+        {{ card_discount }} applied automatically at checkout{% if card_end_s > 0 %} · Ends {{ last_day_s | date: "%b. %-d" }}{% endif %}
       </p>
     </div>
     {%- endif -%}
