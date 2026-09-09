@@ -310,10 +310,14 @@
     cursor: pointer;
   }
 
+  /* Figma node 4585:82176 "General forms / tag" selected state — solid fill,
+     white border/text, confirmed via the filled-state example (Cardio,
+     Selectorized and plate-loaded strength, Free weights and benches,
+     and the Email contact-method tag all shown selected) */
   #shopify-section-{{ section.id }} .cgb-tag[aria-pressed="true"] {
-    border-color: #d83d0e;
-    background-color: #fdece7;
-    color: #d83d0e;
+    border-color: #ffffff;
+    background-color: #d83d0e;
+    color: #ffffff;
   }
 
   #shopify-section-{{ section.id }} .cgb-field--error .cgb-tags {
@@ -345,6 +349,91 @@
 
   #shopify-section-{{ section.id }} .cgb-form__back {
     flex: none;
+  }
+
+  /* Figma nodes 4585:81213 (loading), 4598:83423 (error), 4598:83503 (success) —
+     full-card replacements, no step indicator/progress bar in any of them */
+  #shopify-section-{{ section.id }} .cgb-form__status {
+    text-align: center;
+    padding: 48px 0 8px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__status-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__status-icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__status-spinner {
+    animation: cgb-form-spin 0.9s linear infinite;
+  }
+
+  @keyframes cgb-form-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__status-heading {
+    margin: 0 0 8px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    line-height: 36px;
+    color: #393940;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__status-text {
+    margin: 0 auto;
+    max-width: 480px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 26px;
+    color: #808080;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__status[data-cgb-status="error"] .cgb-form__status-text,
+  #shopify-section-{{ section.id }} .cgb-form__status[data-cgb-status="success"] .cgb-form__status-text {
+    max-width: 560px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__status-action {
+    display: block;
+    width: 100%;
+    margin-top: 32px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__status-action[disabled] {
+    opacity: 0.7;
+    cursor: default;
+  }
+
+  /* Theme-editor-only QA aid so Success/Error can be reviewed before real
+     submission wiring exists; not rendered on the live storefront. */
+  #shopify-section-{{ section.id }} .cgb-form__status-preview {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px dashed #e5e5e5;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__status-preview button {
+    font-family: 'Lato', sans-serif;
+    font-size: 12px;
+    padding: 6px 10px;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #393940;
+    cursor: pointer;
   }
 {%- endstyle -%}
 
@@ -558,6 +647,52 @@
             <button type="button" class="button button--primary" data-cgb-submit>Request My Layout &amp; Quote</button>
           </div>
         </div>
+
+        <div class="cgb-form__status" data-cgb-status="loading" hidden>
+          <div class="cgb-form__status-icon">
+            <svg class="cgb-form__status-spinner" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" stroke="#fce6de" stroke-width="3"/>
+              <path d="M22 12a10 10 0 0 0-10-10" stroke="#f1592a" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <p class="cgb-form__status-heading">Sending your request</p>
+          <p class="cgb-form__status-text">You receive a tailored quote to review by your preferred contact method.</p>
+          <button type="button" class="button button--primary cgb-form__status-action" disabled>Request My Layout &amp; Quote</button>
+        </div>
+
+        <div class="cgb-form__status" data-cgb-status="error" hidden>
+          <div class="cgb-form__status-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" fill="#e9380d"/>
+              <rect x="11" y="6" width="2" height="8" rx="1" fill="#ffffff"/>
+              <circle cx="12" cy="16.5" r="1.25" fill="#ffffff"/>
+            </svg>
+          </div>
+          <p class="cgb-form__status-heading">That did not send</p>
+          <p class="cgb-form__status-text">Something went wrong on our end. Try again, or call +1-925-215-2927 and we will take the details over the phone.</p>
+          <button type="button" class="button button--primary cgb-form__status-action" data-cgb-try-again>Try again</button>
+        </div>
+
+        <div class="cgb-form__status" data-cgb-status="success" hidden>
+          <div class="cgb-form__status-icon">
+            <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="26" cy="26" r="24" fill="none" stroke="#28a745" stroke-width="3"/>
+              <path fill="none" stroke="#28a745" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14 27l7 7 16-16"/>
+            </svg>
+          </div>
+          <p class="cgb-form__status-heading">Your request is in</p>
+          <p class="cgb-form__status-text">A Fitness Superstore gym specialist will review your room details and follow up to discuss your equipment mix, conceptual placement and a tailored quote. If you would like to talk sooner, call +1-925-215-2927.</p>
+        </div>
+
+        {%- if request.design_mode -%}
+          <div class="cgb-form__status-preview">
+            <button type="button" data-cgb-preview="1">Preview: Step 1</button>
+            <button type="button" data-cgb-preview="2">Preview: Step 2</button>
+            <button type="button" data-cgb-preview="loading">Preview: Loading</button>
+            <button type="button" data-cgb-preview="error">Preview: Error</button>
+            <button type="button" data-cgb-preview="success">Preview: Success</button>
+          </div>
+        {%- endif -%}
       </form>
     </div>
   </div>
@@ -577,6 +712,20 @@
     var continueBtn = root.querySelector('[data-cgb-continue]');
     var backBtn = root.querySelector('[data-cgb-back]');
     var submitBtn = root.querySelector('[data-cgb-submit]');
+    var progressRow = root.querySelector('.cgb-form__progress-row');
+    var statusPanels = root.querySelectorAll('[data-cgb-status]');
+    var tryAgainBtn = root.querySelector('[data-cgb-try-again]');
+
+    function showPanel(name) {
+      step1.hidden = name !== '1';
+      step2.hidden = name !== '2';
+      progressRow.hidden = name === 'loading' || name === 'error' || name === 'success';
+      banner.hidden = true;
+
+      statusPanels.forEach(function (panel) {
+        panel.hidden = panel.getAttribute('data-cgb-status') !== name;
+      });
+    }
 
     function validateField(field) {
       var input = field.querySelector('[data-cgb-required]');
@@ -634,16 +783,13 @@
     continueBtn.addEventListener('click', function () {
       if (!validateStep(step1)) return;
 
-      step1.hidden = true;
-      step2.hidden = false;
+      showPanel('2');
       stepLabel.textContent = 'Step 2/2';
       progressFill.style.width = '100%';
     });
 
     backBtn.addEventListener('click', function () {
-      step2.hidden = true;
-      step1.hidden = false;
-      banner.hidden = true;
+      showPanel('1');
       stepLabel.textContent = 'Step 1/2';
       progressFill.style.width = '50%';
     });
@@ -651,8 +797,29 @@
     submitBtn.addEventListener('click', function () {
       if (!validateStep(step2)) return;
 
-      // Submission and lead-tracking event wiring (lead_created /
-      // fss_commercial_buildout_lead_success) are a separate follow-up pass.
+      // Real submission (and the lead_created / fss_commercial_buildout_lead_success
+      // event wiring) is a separate follow-up pass — for now, Request My Layout & Quote
+      // always lands on the loading panel as the next visual state.
+      showPanel('loading');
+    });
+
+    if (tryAgainBtn) {
+      tryAgainBtn.addEventListener('click', function () {
+        showPanel('2');
+        stepLabel.textContent = 'Step 2/2';
+        progressFill.style.width = '100%';
+      });
+    }
+
+    root.querySelectorAll('[data-cgb-preview]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var target = btn.getAttribute('data-cgb-preview');
+        showPanel(target);
+        if (target === '1' || target === '2') {
+          stepLabel.textContent = target === '1' ? 'Step 1/2' : 'Step 2/2';
+          progressFill.style.width = target === '1' ? '50%' : '100%';
+        }
+      });
     });
   });
 </script>
