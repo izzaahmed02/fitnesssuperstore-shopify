@@ -34,7 +34,9 @@
     margin: 1.2rem auto 0;
   }
 
-  /* Figma node 4585:80582 "steps" — Lato Bold 20px/26px, chevron connector between phases */
+  /* Figma node 4585:80582 "steps" (mobile) — no mobile frame given for this node,
+     so it stacks per the single mobile/desktop breakpoint convention used elsewhere
+     in this section/file, with the connector chevrons hidden. */
   #shopify-section-{{ section.id }} .cgb-form__phases {
     display: flex;
     flex-direction: column;
@@ -45,12 +47,42 @@
     text-align: center;
   }
 
+  #shopify-section-{{ section.id }} .cgb-form__phase-chevron {
+    display: none;
+    flex: none;
+    width: 24px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+    color: #4f4f55;
+  }
+
+  /* Figma node 4585:80582 "steps" (desktop) — single row, Lato Bold 20px/26px,
+     chevron connector (24x24, #4f4f55) between phases, 20px gap each side */
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .cgb-form__phases {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 20px;
+      text-align: left;
+    }
+
+    #shopify-section-{{ section.id }} .cgb-form__phase-chevron {
+      display: flex;
+    }
+  }
+
   #shopify-section-{{ section.id }} .cgb-form__phase {
     font-family: 'Lato', sans-serif;
     font-weight: 700;
     font-size: 20px;
     line-height: 26px;
     color: #4f4f55;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__phase-chevron svg {
+    width: 8px;
+    height: 14px;
   }
 
   /* Figma node 4585:80472 "inputs" — 624px white card, radius 12, 32px padding */
@@ -203,7 +235,13 @@
 
     <div class="cgb-form__phases">
       <span class="cgb-form__phase">{{ section.settings.phase_1_text }}</span>
+      <span class="cgb-form__phase-chevron" aria-hidden="true">
+        <svg viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L7 7L1 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
       <span class="cgb-form__phase">{{ section.settings.phase_2_text }}</span>
+      <span class="cgb-form__phase-chevron" aria-hidden="true">
+        <svg viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L7 7L1 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
       <span class="cgb-form__phase">{{ section.settings.phase_3_text }}</span>
     </div>
 
