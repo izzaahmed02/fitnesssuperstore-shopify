@@ -48,13 +48,20 @@ rack-option applicability live in linked metaobjects and are staged for the shop
 
 ## 5. Open items (carry to Ayyaz / Izza runtime pass)
 
-1. **Judge.me cached image data still references placeholders.** `judgeme.review_widget_data.image_url`
-   still points to **ImageComingSoon.webp** on all 7 sets and the 70 lb + 90 lb singles, and to the old
-   **PlaceholderComparisonChart** on the parent (cache dates June–July 2026; the products' own media are
-   correct). The 55 lb and 80 lb singles now cache correct product webp images. **Needs runtime confirmation
-   that this cached data does not surface to shoppers via the hosted Judge.me widget or rich snippet** — this
-   is the item Larianne/Izza flagged and it is still open.
+1. **Judge.me cached image data references placeholders on 32 of 38 records** (full 38-record recheck 09 Sep).
+   `judgeme.review_widget_data.image_url`:
+   - Parent → **PlaceholderComparisonChart** (removed from the product's own media, but still cached here).
+   - **24 singles + all 7 sets** → **ImageComingSoon.webp** (singles: 15,20,25,30,35,40,45,60,70,75,85,90,95,
+     100,105,110,115,120,125,130,135,140,145,150).
+   - Only 4 singles cache the correct product webp (50,55,65,80); 5 and 10 cache none.
+   The products' own featured media are correct; this is stale Judge.me cache. **Needs runtime confirmation that
+   it does not surface to shoppers via the hosted Judge.me widget or rich snippet** — Tim's checklist bars any
+   "Image Coming Soon"/placeholder on a customer path. This is broader than previously noted and is the open
+   item Larianne/Izza flagged.
 2. **70 lb single** is missing length/width/height dimension metafields (minor Tech Specs gap).
+
+_Full-38 recheck also confirmed: all 38 records are UNLISTED and all carry `inventoryPolicy: DENY`
+(continue-selling OFF) — no exceptions._
 
 ## 6. Independent shopper-view QA — staged, gated
 
