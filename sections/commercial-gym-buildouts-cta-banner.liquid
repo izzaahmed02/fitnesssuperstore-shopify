@@ -125,14 +125,20 @@
     font-weight: 700;
   }
 
+  /* Same bug already found and fixed in commercial-gym-buildouts-hero.liquid:
+     display:flex (block-level) + justify-self:center doesn't reliably center a block
+     box outside a grid context — the base theme's .banner__buttons is display:inline-flex
+     specifically so it respects .banner__box's own text-align:center (the default in
+     assets/base.css.liquid for this "center" content alignment). Restoring inline-flex
+     is what actually centers the button under the heading, matching Figma nodes
+     4583:81433 (mid) / 4608:84411 (closing). */
   #shopify-section-{{ section.id }} .banner__buttons {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 12px;
     width: max-content;
     justify-content: center;
     word-break: break-word;
-    justify-self: center;
     max-width: unset;
   }
 
