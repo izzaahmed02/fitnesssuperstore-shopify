@@ -19,6 +19,18 @@
     padding-right: 40px;
     }
 
+    /* Figma node 4685:81253 "Title" — heading (4685:81254) and subheading (4685:81255)
+       stack vertically, both centered. The shared `.title-wrapper-with-link` class this
+       markup also carries is a flex row (space-between) meant for a heading+link layout,
+       which was putting the heading and subheading side by side instead — override it
+       for this section only. */
+    #shopify-section-{{ section.id }} .multicolumn__title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    }
+
     #shopify-section-{{ section.id }} .equipment-zones__subheading {
     text-align: center;
     max-width: 800px;
@@ -50,10 +62,12 @@
     }
     }
 
+    /* Figma node 4598:83959 "What to Expect Container" — image and card column are each
+       626px of a 1280px container with a 28px gap between them (1280 - 626 - 626 = 28). */
     #shopify-section-{{ section.id }} .equipment-zones__group {
     display: flex;
-    align-items: flex-start;
-    gap: 3rem;
+    align-items: stretch;
+    gap: 28px;
     margin-top: 3rem;
     }
 
@@ -61,23 +75,34 @@
     flex-direction: row-reverse;
     }
 
-    /* Figma node 4612:88424 (mobile) — 6.77px radius, ~343/253 aspect */
+    /* Figma node 4612:88424 (mobile) — 6.77px radius, ~343/253 aspect. Mobile stacks the
+       image and card column (see the max-width: 749px override below), so the image has
+       no sibling to match height against and still needs its own aspect ratio. */
     #shopify-section-{{ section.id }} .equipment-zones__image-wrapper {
+    position: relative;
     flex: 1 1 0;
     border-radius: 7px;
     overflow: hidden;
     aspect-ratio: 343 / 253;
     }
 
-    /* Figma node 4685:81257 (desktop) — 12px radius, 626/486 aspect */
+    /* Figma node 4685:81257 (desktop) — 12px radius. No fixed aspect-ratio here: the card
+       column's height is driven by its (variable-length) copy, so the image is stretched
+       (via .equipment-zones__group's align-items: stretch above) to match it exactly,
+       rather than the two being sized independently and drifting apart. */
     @media screen and (min-width: 750px) {
     #shopify-section-{{ section.id }} .equipment-zones__image-wrapper {
     border-radius: 12px;
-    aspect-ratio: 626 / 486;
     }
     }
 
+    /* Absolutely positioned so the <img> itself never factors into
+       .equipment-zones__image-wrapper's own auto height — otherwise the wrapper's
+       percentage height: 100% would fall back to the image's intrinsic aspect ratio
+       during layout and fight the stretch above. */
     #shopify-section-{{ section.id }} .equipment-zones__image-wrapper img {
+    position: absolute;
+    inset: 0;
     display: block;
     width: 100%;
     height: 100%;
@@ -88,17 +113,19 @@
     background-color: rgba(var(--color-foreground), 0.05);
     }
 
+    /* Figma "Benefit cards" — 12px gap between stacked cards */
     #shopify-section-{{ section.id }} .equipment-zones__list {
     flex: 1 1 0;
     display: flex;
     flex-direction: column;
-    gap: 1.6rem;
+    gap: 12px;
     }
 
+    /* Figma "Benefit cards" — 32px padding, 20px gap between icon and text */
     #shopify-section-{{ section.id }} .equipment-zones__card {
     display: flex;
     align-items: flex-start;
-    gap: 1.6rem;
+    gap: 20px;
     padding: 2rem;
     border: 1px solid rgba(var(--color-foreground), 0.1);
     border-radius: 1.2rem;
