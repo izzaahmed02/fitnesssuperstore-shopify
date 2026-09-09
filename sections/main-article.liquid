@@ -284,7 +284,7 @@
                 {% endif %}
                 placeholder="{{ 'blogs.article.message' | t }}"
               >{{ form.body }}</textarea>
-              <label class="form__label field__label" for="CommentForm-body">
+              <label class="form__label" for="CommentForm-body">
                 {{- 'blogs.article.message' | t }}
                 <span aria-hidden="true">*</span></label
               >
@@ -326,8 +326,8 @@
     native article.author only when the metafield is empty.
   - Organization names ("Fitness Superstore", "French Fitness") are typed as the
     canonical Organization (#organization). Any other name is a Person.
-  - Publisher always references the canonical #organization entity emitted by
-    snippets/schema-organization.liquid, rather than a standalone object.
+  - Organization author and publisher retain the canonical #organization ID
+    and include type/name/url here: the full site entity is homepage-only.
   - Context normalized to https://schema.org.
   - One Article entity. FAQPage schema is emitted elsewhere and untouched.
 {%- endcomment -%}
@@ -359,7 +359,10 @@
   "dateModified": {{ article.updated_at | date: '%Y-%m-%dT%H:%M:%S%z' | json }},
   "author":
   {%- if is_org %} {
-    "@id": {{ shop.url | append: '/#organization' | json }}
+    "@id": {{ shop.url | append: '/#organization' | json }},
+    "@type": "Organization",
+    "name": "Fitness Superstore",
+    "url": {{ shop.url | json }}
   }
   {%- else %} {
     "@type": "Person",
@@ -368,7 +371,10 @@
   }
   {%- endif %},
   "publisher": {
-    "@id": {{ shop.url | append: '/#organization' | json }}
+    "@id": {{ shop.url | append: '/#organization' | json }},
+    "@type": "Organization",
+    "name": "Fitness Superstore",
+    "url": {{ shop.url | json }}
   }
 }
 </script>
