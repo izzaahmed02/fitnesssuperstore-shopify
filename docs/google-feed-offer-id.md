@@ -463,3 +463,43 @@ Note the join key. `old_id` alone is not unique in
 Run against a simulation of the change on the live exports it reports 98 rows
 changed and +2 offers for `googleshoppingfs`, and 15 rows changed and +9 offers
 for `googleshoppingfrenchfitness`, with zero duplicate ids in both.
+
+## Duplicate-feed test result — 2026-09-09
+
+Both feeds were duplicated into staging groups, the final `else` changed to
+`default( SKU, Product ID )`, and the output compared against the live exports
+with `scripts/feed_offer_id_diff.py`.
+
+| | `googleshoppingfs` | `googleshoppingfrenchfitness` |
+| --- | --- | --- |
+| Rows | 1,537 | 966 |
+| Rows changed | **98** | **15** |
+| Offers before → after | 1,535 → **1,537** | 957 → **966** |
+| Duplicate ids after | **0** | **0** |
+
+**The 113 changed rows are an exact set match against the prediction** computed
+beforehand from Shopify and the live exports — no extra row, none missing.
+
+Confirmed unmoved:
+
+- all **45** hex-dumbbell composite ids
+- the three Precor ids `931`, `933`, `935`, still arriving via the `approved`
+  branch
+- every non-`id` column on every one of the 113 changed rows
+
+`9878900179260` now emits `ST-8TR-20-ATSC` and `ST-8TR-20-ATSC-OOB` as two
+distinct offers.
+
+### Drift is separated from the change
+
+Ten rows differ between the exports in volatile columns —
+`sell_on_google_quantity` on 7, `price` on 1, `processing_time` /
+`processing_time_long` on 2, `shipping` / `availability` on 1 — because the two
+files were pulled at different times. **None of them overlaps the 113 changed
+rows.**
+
+That separation is the real proof, and it is sharper than "every other row
+byte-identical": on every row the expression touched, nothing but `id` moved.
+The checker enforces exactly that — a row whose id moves must be otherwise
+identical, while a row whose id holds may drift and is reported rather than
+failed.

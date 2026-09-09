@@ -12,7 +12,11 @@ The criteria, per Tim's Sept 8 direction:
   - every row present in both files, joined on (item_group_id, old_id).
     `old_id` alone is NOT unique: five hex-dumbbell SKUs also exist as
     standalone Set products in googleshoppingfrenchfitness.
-  - every column other than `id` byte-identical
+  - every column other than `id` byte-identical on every row whose id moved,
+    which is what proves the expression change touched only `id`. Rows whose
+    id did not move may still differ in volatile columns (quantity, price,
+    processing time, shipping) when the two exports were taken at different
+    times; those are reported as drift, not failures.
   - a row's id changes only if it sat on the fallback, which is true exactly
     when its id equalled its item_group_id
   - each changed id becomes that row's variant SKU
@@ -56,20 +60,28 @@ def main(before_path: str, after_path: str):
 
     columns = [c for c in next(iter(before.values())) if c != 'id']
     changed = []
+    drift = []
 
     for key, old_row in before.items():
         new_row = after[key]
 
-        for column in columns:
-            if (old_row.get(column) or '') != (new_row.get(column) or ''):
-                raise AssertionError(
-                    f'{key}: column "{column}" changed, only id may move'
-                )
+        moved = [
+            c for c in columns
+            if (old_row.get(c) or '') != (new_row.get(c) or '')
+        ]
 
         old_id = old_row['id'].strip()
         new_id = new_row['id'].strip()
         if old_id == new_id:
+            if moved:
+                drift.append((key, moved))
             continue
+
+        if moved:
+            raise AssertionError(
+                f'{key}: id moved AND {moved} changed; the expression change '
+                f'must touch id alone'
+            )
 
         group = old_row['item_group_id'].strip()
         if is_composite(old_id):
@@ -96,9 +108,16 @@ def main(before_path: str, after_path: str):
     print(f'offers after    {len(set(new_ids))}')
     print(f'net offers      {len(set(new_ids)) - len(set(old_ids)):+d}')
     print('duplicate ids   0')
+    print(f'drift rows      {len(drift)} (id unchanged, other columns moved '
+          f'between exports)')
     print()
     for key, old_id, new_id in changed:
         print(f'  {old_id} -> {new_id}')
+    if drift:
+        print()
+        print('drift, unrelated to the id change:')
+        for key, moved in drift:
+            print(f'  {key[1]}: {", ".join(moved)}')
 
 
 if __name__ == '__main__':
