@@ -15,6 +15,34 @@
     padding-right: 40px;
   }
 
+  /* Figma nodes 4583:81433 (mid, 384px) / 4608:84411 (closing, 460px) — heights differ
+     per instance, so a per-section custom height setting is used instead of the
+     built-in small/medium/large presets, which don't give exact px control. */
+  #shopify-section-{{ section.id }} .banner--medium:not(.banner--adapt) {
+    min-height: {{ section.settings.banner_height_desktop }}px;
+  }
+  #shopify-section-{{ section.id }} .banner--medium:not(.banner--mobile-bottom):not(.banner--adapt) .banner__content {
+    min-height: {{ section.settings.banner_height_desktop }}px;
+  }
+
+  /* Figma "Why Choose Us" frame fill — the overlay is a solid black tint baked into the
+     image layer itself (0% for the mid banner, 83% for the closing banner), not a
+     background behind the text box. The old rgba(255,255,255,...) inline style on
+     .banner__box was both the wrong color (white, not black) and the wrong element —
+     .banner__box gets forced transparent on desktop by .banner--desktop-transparent
+     (triggered by "Show text box" being off), so the overlay never rendered on desktop
+     at all. Apply it directly to .banner__media instead so it works consistently. */
+  #shopify-section-{{ section.id }} .banner__media {
+    position: relative;
+  }
+  #shopify-section-{{ section.id }} .banner__media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, {{ section.settings.image_overlay_opacity | divided_by: 100.0 }});
+    pointer-events: none;
+  }
+
   /* Figma nodes 4612:86495/4608:84414-mobile-equiv (mobile) — Oswald SemiBold 28px/34px, white */
   #shopify-section-{{ section.id }} .banner__heading {
     font-family: 'Oswald', sans-serif;
@@ -151,7 +179,6 @@
   <div class="banner__content banner__content--{{ section.settings.desktop_content_position }} page-width">
     <div
       class="banner__box content-container content-container--full-width-mobile color-{{ section.settings.color_scheme }} gradient"
-      style="background-color: rgba(255,255,255,{{ section.settings.image_overlay_opacity | divided_by: 100.0 }});"
     >
       {%- for block in section.blocks -%}
         {%- case block.type -%}
@@ -255,6 +282,17 @@
       "unit": "%",
       "label": "Image overlay opacity",
       "default": 0
+    },
+    {
+      "type": "range",
+      "id": "banner_height_desktop",
+      "min": 200,
+      "max": 700,
+      "step": 4,
+      "unit": "px",
+      "label": "Banner height (desktop)",
+      "info": "Only applies when Image height is set to Medium.",
+      "default": 384
     },
     {
       "type": "select",
