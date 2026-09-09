@@ -11,13 +11,16 @@
     background-color: {{ section.settings.bg }};
     }
 
-    /* Full-width page requirement — override the theme's default contained .page-width
-       for this section only (does not affect .page-width elsewhere on the site).
-       Figma node 4585:81433 (mobile equivalent) shows a 16px side inset, not 40px — see
-       the same fix already applied to commercial-gym-buildouts-facility-types.liquid. */
+    /* The section background bleeds full-width via #shopify-section-{{ section.id }}
+       above (outside .page-width), so .page-width itself doesn't need max-width:100% —
+       that was overriding the theme's default centering (max-width: var(--page-width);
+       margin: 0 auto; in assets/base.css.liquid) and pinning the fixed-width card grid
+       to the left edge instead of centering it like Figma node 4585:81433 shows. Keep
+       the deliberate custom side padding (16px mobile / 40px desktop, matching that
+       node's mobile equivalent) but restore the cap + auto-centering. */
     #shopify-section-{{ section.id }} .page-width {
-    max-width: 100%;
-    margin: 0;
+    max-width: var(--page-width);
+    margin: 0 auto;
     padding-left: 16px;
     padding-right: 16px;
     }
