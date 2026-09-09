@@ -8,7 +8,8 @@ recorded on 2026-09-07. Pass a generated feed to validate the real output:
     python3 scripts/check_feed_prices.py build/feeds/googleshoppingfrenchfitness.csv
 
 Rules enforced:
-  1. Neither tax column may appear. A feed-level tax attribute overrides the
+  1. None of the three tax columns may appear (`tax`, the long `tax(...)` form,
+     `tax_category`). A feed-level tax attribute overrides the
      Merchant Center account tax settings, and the live rows carry a hardcoded
      `US:CA:8.375:n` that predates the 23-state nexus change.
   2. `price` is Google's REGULAR price and `sale_price` is what the customer pays
@@ -30,6 +31,9 @@ MONEY = re.compile(r"^\d+\.\d{2} USD$")
 TAX_COLUMNS = {
     "tax",
     "tax(country:location_group_name:location_id:postal_code:region:rate:tax_ship)",
+    # Three, not two. Izza's 2026-09-07 pass on the live rows found tax_category
+    # alongside the bare and long-form tax columns.
+    "tax_category",
 }
 
 
