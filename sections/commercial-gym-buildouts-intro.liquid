@@ -33,17 +33,21 @@
     color: #4f4f55;
     text-align: center;
     }
-    /* Figma node 5256:81987 "banner" fill — exact card background */
-    .section-{{ section.id }}-padding .image-with-text__media.color-scheme-2,
-    .section-{{ section.id }}-padding .image-with-text__content.color-scheme-2{
+    /* Figma node 5256:81987 "banner" — ONE frame with ONE fill + ONE 24px radius that
+       wraps both the image and the text (confirmed via get_node_info: image + text are
+       plain children of this single frame, not two separately-colored boxes). Painting
+       the grid itself (rather than the media/content cells individually) keeps the
+       background continuous across the gap between image and text, matching
+       page-images/zoom-intro.png exactly. Padding here doubles as the image's inset
+       (16px on mobile per node 5258:82081) since the text needs no separate inset. */
+    .section-{{ section.id }}-padding .image-with-text__grid{
     background-color: #edeff3;
     border-radius: 24px;
+    padding: 16px;
     }
-    /* Figma node 5258:82081 "banner" (mobile) — image floats inset 16px inside the card,
-       not flush with its edges; bottom is left open since the gap to the text below is
-       provided by the grid's own row gap. */
-    .section-{{ section.id }}-padding .image-with-text__media.color-scheme-2{
-    padding: 16px 16px 0 16px;
+    .section-{{ section.id }}-padding .image-with-text__media.color-scheme-2,
+    .section-{{ section.id }}-padding .image-with-text__content.color-scheme-2{
+    background-color: transparent;
     }
     @media screen and (min-width: 750px) {
     .padding-{{ section.id }} {
@@ -70,11 +74,12 @@
     .section-{{ section.id }}-padding .image-with-text__media-item img{
     border-radius: 12px;
     }
-    /* Figma node 5256:81987 (desktop) — image floats inset 32px inside the card on
-       left/top/bottom; no right inset since the 32px gap to the text is the grid's
-       own column gap (config/settings_data.json spacing_grid_horizontal: 32). */
-    .section-{{ section.id }}-padding .image-with-text__media.color-scheme-2{
-    padding: 32px 0 32px 32px;
+    /* Figma node 5256:81987 (desktop) — 32px padding on the single card (see the
+       .image-with-text__grid rule above): doubles as the image's inset on 3 sides,
+       while the gap to the text is the grid's own column gap (config/settings_data.json
+       spacing_grid_horizontal: 32) rather than extra padding. */
+    .section-{{ section.id }}-padding .image-with-text__grid{
+    padding: 32px;
     }
     }
     .section-{{ section.id }}-padding{
