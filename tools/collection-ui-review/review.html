@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Collection UI review — local fixture, not Shopify</title>
+<style>
+/* REVIEW COMPONENT CONTRACT. Not a Boost adapter and not loaded by the theme. */
+:root{font-family:Arial,Helvetica,sans-serif;color:#202630;background:#fff;--header-offset:0px;--accent:#df410b;--line:#d9dde1}
+*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit;max-width:100%;min-width:0}button,select{min-height:44px;border:1px solid #aab1b8;border-radius:6px;background:white;color:inherit;padding:10px 12px}button{cursor:pointer}button:hover{background:#f2f4f6}button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #255fa8;outline-offset:3px}button:disabled{opacity:.5;cursor:default}[hidden]{display:none!important}a{color:inherit}.sr-only{position:absolute;clip-path:inset(50%);width:1px;height:1px;overflow:hidden;white-space:nowrap}.site-header{position:sticky;top:0;z-index:20;padding:16px 24px;background:#252933;color:white;display:flex;gap:16px;align-items:center;justify-content:space-between}.site-header strong{letter-spacing:.04em;font-size:18px}.site-header span{font-size:12px}.review-notice{background:#fff2d8;padding:10px 20px;font-size:13px;line-height:1.45;border-bottom:1px solid #e0c593}.shell{max-width:1488px;margin:auto;padding:24px}h1{font-size:clamp(24px,4vw,36px);line-height:1.15;margin:0 0 12px}.intro{max-width:760px;line-height:1.6;margin:0 0 16px}.intro details{margin-top:8px}.layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;align-items:start}.sidebar{border:1px solid var(--line);border-radius:8px;padding:16px;position:sticky;top:calc(var(--header-offset) + 16px);max-height:calc(100dvh - var(--header-offset) - 32px);overflow:auto}.sidebar p{font-size:14px;line-height:1.5}.results{min-width:0;container-type:inline-size;container-name:results}.search{display:flex;gap:8px;margin-bottom:12px}.search input{flex:1;width:0;min-height:44px;border:1px solid #aab1b8;border-radius:6px;padding:10px 12px;font-size:16px}.toolbar{position:sticky;top:var(--header-offset);z-index:10;display:grid;grid-template-columns:1fr 1fr minmax(0,1.2fr);gap:8px;background:white;padding:10px 0;border-bottom:1px solid var(--line)}.sort{min-width:0;display:flex;flex-direction:column}.sort select{width:100%;height:100%;font-size:14px}.meta{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 16px;font-size:14px}.size-label{display:flex;align-items:center;gap:6px}.size-label select{min-width:68px}.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}.chip{font-size:13px;min-height:44px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px;row-gap:8px}.card{min-width:0;display:grid;grid-template-rows:subgrid;grid-row:span 5;row-gap:8px;padding-bottom:24px;}.stage{aspect-ratio:1;position:relative;background:#f3f4f5;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden}.stage svg{width:90%;height:90%;display:block}.condition{position:absolute;top:8px;left:8px;border:1px solid #9aa5af;background:white;padding:5px 8px;border-radius:20px;font-size:12px}.status{font-size:13px;line-height:1.4;color:#176434;margin:0;overflow-wrap:anywhere}.status[data-status="restock"]{color:#79521b}.title{font-size:16px;line-height:1.4;margin:0;overflow-wrap:anywhere;font-weight:600}.price{font-size:clamp(18px,3vw,26px);line-height:1.2;font-weight:700;color:var(--accent);margin:0;white-space:nowrap;font-variant-numeric:tabular-nums}.reviews{font-size:12px;line-height:1.5;min-height:18px;color:#505a64;margin:0;overflow-wrap:anywhere}.empty{padding:30px 0;line-height:1.6}.pagination{display:flex;justify-content:center;align-items:center;gap:12px;padding:24px 0 16px}.pagination span{text-align:center;font-size:14px}.footer{margin-top:36px;border-top:1px solid var(--line);padding:24px;line-height:1.6;color:#505a64}.primary{background:#252933;color:white}.primary:hover{background:#3a404d}dialog{border:0;border-radius:12px;padding:0;width:min(440px,calc(100% - 24px));max-height:calc(100dvh - 24px);color:inherit;box-shadow:0 12px 50px #0004}dialog::backdrop{background:#0008}.dialog-inner{padding:20px}dialog h2{margin:0;font-size:22px}.dialog-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}.field{display:flex;flex-direction:column;gap:8px;margin:18px 0}.dialog-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}.category-link{display:block;min-height:44px;padding:12px;margin:8px 0;border:1px solid var(--line);border-radius:6px}summary{cursor:pointer;min-height:44px;padding:10px 0}.small-note{font-size:12px;line-height:1.5;color:#505a64}
+@container results (min-width:704px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@container results (min-width:976px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:1023px){.layout{grid-template-columns:minmax(0,1fr)}.sidebar{display:none}}
+@media(max-width:639px){.shell{padding:16px 12px}.site-header{padding:14px 12px}.site-header strong{font-size:16px}.site-header span{display:none}.grid{column-gap:12px}.toolbar{gap:6px;grid-template-columns:1fr 1fr 1.2fr}.toolbar button,.sort select{font-size:12px;padding:10px 6px}.meta{font-size:12px}.condition{top:6px;left:6px;font-size:11px}.title{font-size:14px}.review-notice{padding:8px 12px}}
+@supports not(grid-template-rows:subgrid){.card{display:flex;flex-direction:column;gap:8px}.price{margin-top:auto}.title{min-height:4.2em}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<header class="site-header" id="site-header"><strong>FITNESS SUPERSTORE</strong><span>Collection layout reference</span></header>
+<div class="review-notice"><strong>LOCAL REVIEW FIXTURE — NOT LIVE.</strong> Fictional sample products, prices and availability. This is not a Shopify preview or a replacement search engine.</div>
+<main class="shell">
+<h1>Collection layout reference</h1>
+<div class="intro">A compact introduction keeps the equipment and shopping controls easy to find.<details><summary>Read more</summary><p>Production integration must retain the existing approved collection copy, links and search indexing. This text only demonstrates the collapsed layout.</p></details></div>
+<div class="layout">
+<aside class="sidebar"><strong>Filter this collection</strong><p>The production facet order stays: Equipment Type, Price, Brand, Condition, Availability, Processing Time, Grade.</p><button id="desktop-filter" type="button">Open sample filters</button><p class="small-note">Use Boost's existing desktop facets. Do not mount a second live filter engine or duplicate the current navigation sidebar.</p></aside>
+<section class="results" aria-label="Collection results">
+<form class="search" id="search-form" role="search"><label class="sr-only" for="query">Search this collection</label><input id="query" type="search" placeholder="Search this collection" autocomplete="off"><button type="submit">Search</button></form>
+<div class="toolbar" id="toolbar">
+<button type="button" id="filter-open" aria-haspopup="dialog" aria-controls="filters">Filters<span id="filter-count"></span></button>
+<button type="button" id="category-open" aria-haspopup="dialog" aria-controls="categories">Categories</button>
+<label class="sort"><span class="sr-only">Sort products</span><select id="sort"><option value="manual">Featured</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option></select></label>
+</div>
+<div class="meta"><span id="count" role="status" aria-live="polite" aria-atomic="true"></span><label class="size-label" id="size-label">Show <select id="page-size" aria-label="Products per page"></select></label></div>
+<div class="chips" id="chips"></div>
+<div class="grid" id="grid"></div>
+<div class="empty" id="empty" hidden>No sample products match. <button type="button" id="reset-empty">Clear search and filters</button></div>
+<nav class="pagination" id="pagination" aria-label="Product result pages"><button type="button" id="prev" aria-label="Previous result page">Previous</button><span id="page-label"></span><button type="button" id="next" aria-label="Next result page">Next</button></nav>
+</section></div>
+</main>
+<footer class="footer">Review only. Existing global footer, chat, customer policies and merchandising remain outside this component. No analytics or network calls are made.</footer>
+<dialog id="filters" aria-labelledby="filter-title"><div class="dialog-inner"><form id="filter-form"><div class="dialog-head"><h2 id="filter-title">Sample filters</h2><button type="button" data-close="filters" aria-label="Close filters">Close</button></div><label class="field">Equipment type<select id="type"><option value="">All sample types</option><option value="strength">Strength</option><option value="cardio">Cardio</option></select></label><label class="field">Sample availability<select id="availability"><option value="">All sample states</option><option value="ready">Sample ready</option><option value="restock">Sample restock</option></select></label><div class="dialog-actions"><button type="submit" class="primary">Apply filters</button><button type="button" id="reset-filters">Clear filters</button></div></form></div></dialog>
+<dialog id="categories" aria-labelledby="category-title"><div class="dialog-inner"><div class="dialog-head"><h2 id="category-title">Sample categories</h2><button type="button" data-close="categories">Close</button></div><button class="category-link" data-type="strength">Strength sample</button><button class="category-link" data-type="cardio">Cardio sample</button><p class="small-note">Production categories must use existing collection links. These controls only filter the local fixture.</p></div></dialog>
+<noscript><p>This local interactive fixture needs JavaScript. The real storefront must retain its existing server-rendered product links and pagination.</p></noscript>
+<script>
+'use strict';
+/* Pure rules: reusable after the actual Boost API/DOM integration is verified. */
+const CollectionRules = Object.freeze({
+  pageSizes(mobile,selected){const sizes=mobile?[24,48,96]:[24,48,72,96];return selected===72&&mobile?[24,48,72,96]:sizes;},
+  canHideControls(total,loaded,hasNext){return Number.isInteger(total)&&total>=0&&total<=48&&loaded===total&&hasNext===false;},
+  write(url,state){const next=new URL(url);for(const [key,value] of Object.entries(state)){if(value===''||(key==='page'&&value===1)||(key==='sort'&&value==='manual'))next.searchParams.delete(key);else next.searchParams.set(key,String(value));}return next;},
+  read(url,mobile){const p=new URL(url).searchParams;const allowed=[24,48,72,96];const n=Number(p.get('limit'));return {q:p.get('q')||'',sort:['manual','price-asc','price-desc'].includes(p.get('sort'))?p.get('sort'):'manual',type:['strength','cardio'].includes(p.get('type'))?p.get('type'):'',availability:['ready','restock'].includes(p.get('availability'))?p.get('availability'):'',limit:allowed.includes(n)?n:(mobile?24:48),page:Math.max(1,Math.floor(Number(p.get('page')))||1)};}
+});
+window.CollectionRules=CollectionRules;
+const $=id=>document.getElementById(id), mobile=()=>matchMedia('(max-width: 989px)').matches;
+const catalogSize=Math.min(72,Math.max(0,Number(new URL(location.href).searchParams.get('fixtureTotal')??72)||0));
+const names=['Sample adjustable training bench','Sample selectorized leg curl and leg extension combination','Sample multi-station cable training system with two adjustable columns','Sample cross trainer with console'];
+const prices=[54900,279900,1139900,399900];
+const catalog=Array.from({length:catalogSize},(_,i)=>({id:i+1,name:names[i%4]+' '+(i+1),price:prices[i%4],type:i%4===3?'cardio':'strength',availability:i%5===1?'restock':'ready',review:i%3===0?'Sample rating: 4.8 (12)':i%3===1?'Sample rating: 5.0 (2)':''}));
+let state=CollectionRules.read(location.href,mobile());
+const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function illustration(index){return `<svg viewBox="0 0 240 240" aria-hidden="true"><g fill="none" stroke="#77838e" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M55 207V36H180V207M40 207H80M160 207H202M65 85H168M82 193L157 101M117 160H187"/><path d="M72 49V112M164 49V112" stroke="#bcc4cb"/></g><text x="120" y="227" text-anchor="middle" font-size="11" fill="#64707c">SAMPLE EQUIPMENT ${index}</text></svg>`;}
+function matching(){let a=catalog.filter(p=>(!state.type||p.type===state.type)&&(!state.availability||p.availability===state.availability)&&p.name.toLowerCase().includes(state.q.toLowerCase()));if(state.sort!=='manual')a.sort((x,y)=>(state.sort==='price-asc'?1:-1)*(x.price-y.price)||x.id-y.id);return a;}
+function save(patch){state={...state,...patch};history.pushState(null,'',CollectionRules.write(location.href,state));render();}
+function render(){
+ const matches=matching(),total=matches.length;
+ // All fixture data is local. Live integration must query/render ALL matches first.
+ const allLoaded=CollectionRules.canHideControls(total,total,false);
+ const pages=allLoaded?1:Math.max(1,Math.ceil(total/state.limit));state.page=Math.min(state.page,pages);
+ const start=allLoaded?0:(state.page-1)*state.limit,visible=allLoaded?matches:matches.slice(start,start+state.limit);
+ $('grid').innerHTML=visible.map(p=>`<article class="card" data-id="${p.id}"><div class="stage"><span class="condition">Sample condition</span>${illustration(p.id)}</div><p class="status" data-status="${p.availability}">${p.availability==='restock'?'Sample restock: timing to confirm':'Sample ready: dispatch timing'}</p><h2 class="title">${escapeHTML(p.name)}</h2><p class="price">${new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(p.price/100)}</p><p class="reviews">${p.review}</p></article>`).join('');
+ $('count').textContent=total?`${start+1}–${start+visible.length} of ${total} sample products`:'0 sample products';
+ $('empty').hidden=total!==0;$('size-label').hidden=allLoaded;$('pagination').hidden=pages<=1;
+ $('page-label').textContent=`Page ${state.page} of ${pages}`;$('prev').disabled=state.page<=1;$('next').disabled=state.page>=pages;
+ $('query').value=state.q;$('sort').value=state.sort;
+ $('page-size').innerHTML=CollectionRules.pageSizes(mobile(),state.limit).map(n=>`<option value="${n}">${n}</option>`).join('');$('page-size').value=String(state.limit);
+ const active=[state.type,state.availability].filter(Boolean);$('filter-count').textContent=active.length?` (${active.length})`:'';
+ $('chips').innerHTML=[state.q&&['q',`Search: ${state.q}`],state.type&&['type',state.type],state.availability&&['availability',state.availability]].filter(Boolean).map(([key,value])=>`<button class="chip" type="button" data-clear="${key}">Remove ${escapeHTML(value)}</button>`).join('');
+}
+$('search-form').addEventListener('submit',e=>{e.preventDefault();save({q:$('query').value.trim(),page:1});});
+$('sort').addEventListener('change',()=>save({sort:$('sort').value,page:1}));
+$('page-size').addEventListener('change',()=>save({limit:Number($('page-size').value),page:1}));
+function pageStep(n){save({page:state.page+n});$('toolbar').scrollIntoView({block:'start',behavior:'instant'});}
+$('prev').addEventListener('click',()=>pageStep(-1));$('next').addEventListener('click',()=>pageStep(1));
+let returnFocus=null;
+function openDialog(id,opener){returnFocus=opener;if(id==='filters'){$('type').value=state.type;$('availability').value=state.availability;}$(id).showModal();document.body.style.overflow='hidden';}
+for(const id of ['filter-open','desktop-filter'])$(id).addEventListener('click',()=>openDialog('filters',$(id)));
+$('category-open').addEventListener('click',()=>openDialog('categories',$('category-open')));
+for(const dialog of document.querySelectorAll('dialog')){
+ dialog.addEventListener('close',()=>{document.body.style.overflow='';returnFocus?.focus({preventScroll:true});});
+ dialog.addEventListener('keydown',e=>{if(e.key!=='Tab')return;const nodes=[...dialog.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),a[href]')].filter(n=>n.getClientRects().length);const first=nodes[0],last=nodes.at(-1);if(!first)return;if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}});
+}
+document.addEventListener('click',e=>{const close=e.target.closest('[data-close]');if(close)$(close.dataset.close).close();const clear=e.target.closest('[data-clear]');if(clear)save({[clear.dataset.clear]:'',page:1});const category=e.target.closest('[data-type]');if(category){save({type:category.dataset.type,page:1});$('categories').close();}});
+$('filter-form').addEventListener('submit',e=>{e.preventDefault();save({type:$('type').value,availability:$('availability').value,page:1});$('filters').close();});
+$('reset-filters').addEventListener('click',()=>{save({type:'',availability:'',page:1});$('filters').close();});
+$('reset-empty').addEventListener('click',()=>save({q:'',type:'',availability:'',page:1}));
+window.addEventListener('popstate',()=>{state=CollectionRules.read(location.href,mobile());render();});
+const updateHeader=()=>{const h=$('site-header').getBoundingClientRect().height;document.documentElement.style.setProperty('--header-offset',`${h}px`);$('toolbar').style.scrollMarginTop=`${h}px`;};
+new ResizeObserver(updateHeader).observe($('site-header'));
+matchMedia('(max-width: 989px)').addEventListener('change',render);updateHeader();render();
+</script>
+</body></html>
