@@ -11,23 +11,37 @@
     background-color: {{ section.settings.bg }};
     }
 
-    /* Full-width page requirement — override the theme's default contained .page-width
-       for this section only (does not affect .page-width elsewhere on the site) */
+    /* The section background bleeds full-width via #shopify-section-{{ section.id }}
+       above (outside .page-width), so .page-width doesn't need max-width:100% — that
+       was overriding the theme's default centering (max-width: var(--page-width);
+       margin: 0 auto; in assets/base.css.liquid) and pinning the fixed-width card row
+       to the left edge instead of centering it. Figma node 5280:81925 (mobile
+       equivalent) shows a 16px side inset, not 40px — same fix as the other CGB
+       multicolumn sections. */
     #shopify-section-{{ section.id }} .page-width {
-    max-width: 100%;
-    margin: 0;
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding-left: 16px;
+    padding-right: 16px;
+    }
+
+    @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .page-width {
     padding-left: 40px;
     padding-right: 40px;
+    }
     }
 
     #shopify-section-{{ section.id }} .multicolumn-card {
     text-align: {{ section.settings.text_align }};
     }
 
+    /* Figma node 5280:81962 "Title" — 12px gap between heading and subheading
+       (heading 50px + gap 12px + subheading 48px = 110px frame height, exact). */
     #shopify-section-{{ section.id }} .multicolumn__subheading {
     text-align: center;
     max-width: 800px;
-    margin: 1.2rem auto 0;
+    margin: 12px auto 0;
     }
 
     /* Figma node 5280:81996/5280:81997 (mobile) — Oswald SemiBold 20px/26px; Lato Regular 14px/20px #4f4f55 */
@@ -47,6 +61,38 @@
     color: #000000;
     }
 
+    /* Figma node 5280:81929 "info card" ("New") — the card image is 370.67x219px, a
+       landscape ~59% ratio, but the section's image_ratio setting is "portrait", whose
+       .media--portrait class forces a 125% (tall) box — that mismatch is what was
+       cropping/distorting the room photos into a vertical strip. There's no "landscape"
+       option in this schema's dropdown (only adapt/portrait/square/circle, matching
+       Dawn's stock multicolumn options), so rather than add a new schema option,
+       override .media--portrait's own ratio with the exact Figma value directly. Also
+       add the image's own 12px corner radius (was unset/square) and the 24px gap to the
+       text below (image/content are inset 24px on all sides inside the 24px-padded
+       card, so no extra side padding is needed — the card's own padding already
+       provides it). */
+    #shopify-section-{{ section.id }} .media--portrait {
+    padding-bottom: 59.1%;
+    }
+    #shopify-section-{{ section.id }} .multicolumn-card__image {
+    border-radius: 12px;
+    }
+    #shopify-section-{{ section.id }} .multicolumn-card__image-wrapper + .multicolumn-card__info {
+    margin-top: 24px;
+    }
+
+    /* Figma node 5280:81929 "Content" — 8px gap between the card title and paragraph,
+       not the theme's default 15px title margin + 16px sibling margin (collapsed to
+       16px). Zero the title's own margin so the sibling's margin-top is the only
+       source of the gap. */
+    #shopify-section-{{ section.id }} .multicolumn-card__info-title {
+    margin-bottom: 0;
+    }
+    #shopify-section-{{ section.id }} .multicolumn-card__info > :nth-child(2) {
+    margin-top: 8px;
+    }
+
     /* Figma node 5280:81963/5280:81964 (desktop) — Oswald SemiBold 38px/50px; Lato Regular 16px/24px */
     @media screen and (min-width: 750px) {
     #shopify-section-{{ section.id }} .title.h1 {
@@ -57,6 +103,20 @@
     font-size: 16px;
     line-height: 24px;
     }
+
+    /* Figma node 5280:81925 — 28px gap between the heading block and the cards row. */
+    #shopify-section-{{ section.id }} .multicolumn__title {
+    margin-bottom: 0;
+    }
+    #shopify-section-{{ section.id }} .multicolumn__title + * {
+    margin-top: 28px;
+    }
+
+    /* Figma node 5280:81927 "caR" — 12px gap between the 3 cards (3 x 418.67px card +
+       2 x 12px gap = 1280px, confirmed exactly), not the theme's default 32px. */
+    #shopify-section-{{ section.id }} .multicolumn-list.grid {
+    gap: 12px;
+    }
     }
 
     #shopify-section-{{ section.id }} .multicolumn-card__info .rte {
@@ -66,11 +126,12 @@
     color: #393940;
     }
 
-    /* Figma node 5280:81965 — Lato Italic 14px/20px, #808080 */
+    /* Figma node 5280:81965 — Lato Italic 14px/20px, #808080; 28px gap from the cards
+       row above (was 2rem/32px). */
     #shopify-section-{{ section.id }} .space-traffic__disclaimer {
     text-align: center;
     max-width: 800px;
-    margin: 2rem auto 0;
+    margin: 28px auto 0;
     font-family: 'Lato', sans-serif;
     font-style: italic;
     font-size: 14px;
