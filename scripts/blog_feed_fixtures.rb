@@ -7,6 +7,16 @@ require 'json'
 require 'digest'
 require 'liquid'
 
+# Shopify/Rails supplies blank?; standalone Ruby does not. Model the primitive
+# fixture values explicitly so nil/empty fields behave like storefront values.
+class Object
+  def blank?; respond_to?(:empty?) ? !!empty? : !self; end
+end
+class String
+  def blank?; strip.empty?; end
+end
+raise 'Fixture blank semantics failed' unless nil.blank? && ''.blank? && !{'id' => 1}.blank?
+
 module AssetStubs
   def asset_url(value); value; end
   def stylesheet_tag(_value); ''; end
@@ -118,6 +128,6 @@ report = { 'kind' => 'offline-real-Liquid-section-fixtures', 'liquid_version' =>
   'fail' => tests.count { |r| r['status'] != 'PASS' },
   'limitations' => ['Not Shopify-hosted rendering or browser/device QA.',
     'Presentation-only style/schema tags and article-card markup are stubbed.',
-    'Per-blog accessible slice is explicitly modeled; incomplete traversal remains HOLD.'] }
+    'Primitive blank? behavior and per-blog accessible slice are explicitly modeled.'] }
 puts JSON.pretty_generate(report)
 exit(report['fail'].zero? ? 0 : 1)
