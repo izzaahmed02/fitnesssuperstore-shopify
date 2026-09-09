@@ -365,3 +365,55 @@ re-key the 45 live composites.
 | | **112** | = Tim's 111 real changes + FF-X12 |
 
 The 45 hex-dumbbell composites and the 1,439 + 906 approved rows do not move.
+
+## Verified against the live feed files — 2026-09-09
+
+Both live TSVs were pulled from Merchant Center's registered sources and the
+change simulated on the real output. `docs/google-feed-verified-diff.csv` is the
+row-level result. A row sits on the final `else` exactly when its `id` equals
+its `item_group_id`, which makes the classification exact rather than inferred.
+
+| | `googleshoppingfs` | `googleshoppingfrenchfitness` |
+| --- | --- | --- |
+| Rows in file | 1,537 | 966 |
+| On the `approved` branch | 1,436 + 3 numeric-SKU | 906 |
+| Composite (hardcoded branch) | — | 45 |
+| On the final `else` | **98** | **15** |
+| Distinct ids before | 1,535 | 957 |
+| Distinct ids after | **1,537** | **966** |
+| Duplicate ids after | **0** | **0** |
+
+**113 rows change in total. Offers go 2,492 → 2,503, +11.** That is the third
+independent route to +11, after the Shopify variant analysis and the Merchant
+Center processed counts.
+
+The three Precor rows resolve the earlier ambiguity: the file carries 101
+numeric-looking ids in `googleshoppingfs`, but only 98 sit on the `else`. The
+other three are `931`, `933` and `935` arriving through the `approved` branch,
+where `id` differs from `item_group_id`. Tim's 101 and this 98 are both correct
+counts of different things.
+
+### Collision resolution, from the file
+
+| Product | Before | After |
+| --- | --- | --- |
+| `9878900179260` | `9878900179260` ×2 | `ST-8TR-20-ATSC`, `ST-8TR-20-ATSC-OOB` |
+| `9878898540860` | `9878898540860` ×2 | `ST-8RDE-16-ATSC`, `ST-8RDE-16-ATSC-OOB` |
+| `10269254254908` | `10269254254908` ×10 | 10 distinct `FF-MSS-*` SKUs |
+
+### Two rows outside the 114
+
+| Product | SKU | Status | Published |
+| --- | --- | --- | --- |
+| `9879098753340` | `FF-X12` | ACTIVE | 2026-09-04 |
+| `10414127087932` | `FF-STW-WB-3` | **UNLISTED** | 2026-09-04 |
+
+Both were published in early September with no rollout status, so both landed
+straight on the numeric fallback. Neither is an audit error — they are the gate
+doing what a stalled gate does, and they are why the fallback fix matters more
+than the 114 backlog it clears.
+
+`FF-STW-WB-3` also shows that **Multifeeds includes `UNLISTED` products** even
+with "Include unpublished products" off. UNLISTED is a distinct Shopify status
+from DRAFT. That an unlisted product is being advertised on Google is worth a
+separate look; it does not affect this change.
