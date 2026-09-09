@@ -35,12 +35,12 @@
   nothing is pinned, but the readback now distinguishes a configuration problem
   from a data problem, because those need different fixes by different owners.
 
-  Case 2, fallback starvation beyond the first 50 candidates after bulk or
-  malformed featured tagging. Previously this surfaced only downstream, once the
-  fill window clamped and raised fill_window_exhausted. The cause is now caught
-  at validation: eligible_count exceeding the configured slot count raises
-  excess_eligible_articles immediately. fill_window_exhausted is retained as the
-  backstop.
+  Case 2, fallback starvation after bulk or malformed featured tagging. Excess
+  eligibility still raises HOLD, but a diagnostic alone does not fill the grid.
+  Exclude exact-featured articles within each accessible blog array BEFORE
+  combining, sorting and limiting the fallback candidates. This lets older
+  non-featured articles survive even when the newest 50 are all featured.
+  Incomplete per-blog traversal remains explicitly HOLD; no pagination claim.
 
   QA
   FEATURED_FEED_READBACK is always emitted in page source. The visible HOLD panel
@@ -160,7 +160,8 @@
             if seen_ranks contains rank_key
               assign row_state = 'duplicate_rank'
             else
-              assign lookup = store_blog.handle | append: '/' | append: article.handle
+              # Liquid article.handle already includes the blog prefix (Admin handle does not).
+              assign lookup = article.handle
 
               if articles[lookup] == blank
                 assign row_state = 'rank_lookup_failed'
@@ -180,7 +181,7 @@
         endunless
 
         assign rank_display = rank_field.value | default: 'none'
-        assign rank_readback = rank_readback | append: store_blog.handle | append: '/' | append: article.handle | append: ' rank=' | append: rank_display | append: ' state=' | append: row_state | append: '~'
+        assign rank_readback = rank_readback | append: article.handle | append: ' rank=' | append: rank_display | append: ' state=' | append: row_state | append: '~'
       endif
     endfor
   endfor
@@ -203,22 +204,16 @@
     endunless
   endif
 
-    # Case 2. More tagged articles than approved ranked slots is the cause of
-    # fallback starvation. Caught here rather than inferred later from fill
-    # arithmetic. fill_window_exhausted below remains the backstop.
+    # Excess tags are invalid rank data. Candidate filtering below separately
+    # prevents those invalid tags from starving the non-featured fallback.
   if eligible_count > configured_featured_slots
     unless hold_reasons contains '|excess_eligible_articles|'
       assign hold_reasons = hold_reasons | append: 'excess_eligible_articles|'
     endunless
   endif
 
-  assign fill_limit = max_cards | plus: eligible_count
-  if fill_limit > 50
-    assign fill_limit = 50
-    unless hold_reasons contains '|fill_window_exhausted|'
-      assign hold_reasons = hold_reasons | append: 'fill_window_exhausted|'
-    endunless
-  endif
+  # Limit only after exact-featured candidates have been removed below.
+  assign fill_limit = max_cards
 
   assign feed_state = 'ok'
   if hold_reasons != '|'
@@ -233,10 +228,16 @@
     assign clean_handle = handle | strip
     assign store_blog = blogs[clean_handle]
     if store_blog != blank
-      assign pool = pool | concat: store_blog.articles
+      assign blog_articles = store_blog.articles
+      for article in blog_articles
+        unless article.tags contains 'featured'
+          assign candidate = blog_articles | slice: forloop.index0, 1
+          assign pool = pool | concat: candidate
+        endunless
+      endfor
     endif
   endfor
-  assign pool_newest = pool | sort: 'published_at' | reverse
+  assign pool_newest = pool | uniq | sort: 'published_at' | reverse
 
   assign rendered = '|'
   assign card_count = 0
@@ -248,6 +249,7 @@
   ranked slots: configured {{ configured_featured_slots }}; effective {{ featured_slots }}
   eligible (exact tag "featured"): {{ eligible_count }}
   max cards (clamped): {{ max_cards }}; fill window: {{ fill_limit }}
+  non-featured fallback candidates: {{ pool_newest.size }}
   hold reasons: {% if reason_list.size > 0 %}{{ reason_list | join: ', ' }}{% else %}none{% endif %}
   eligible readback:
 {% if rank_readback != blank %}{% assign readback_lines = rank_readback | split: '~' %}{% for readback_line in readback_lines %}    {{ readback_line }}
