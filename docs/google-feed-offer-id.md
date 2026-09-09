@@ -227,3 +227,77 @@ A correct run changes **111 rows, not 114**. Rows `931`, `933` and `935` are
 already `approved` with their SKU in `legacy_gmc_id` and will not move. A diff
 showing 114 changed rows means the three Precors were rewritten and their
 performance history reset for nothing — that is a failed run, not a passed one.
+
+## Predicted diff, computed from live Shopify — 2026-09-09
+
+Rather than trust the feed app, the diff was derived independently. A Shopify
+bulk export pulled every product in the three feed collections
+(`Other Brand - Meta Feeds` 294, `Remanufactured - Meta Feeds` 1,241,
+`French Fitness - Meta Feeds` 916 = 2,451, no overlap) with both gate
+metafields and every variant SKU, and the gate expression was evaluated in
+both its current and proposed form. Row-level output:
+`docs/google-feed-predicted-diff.csv`.
+
+### googleshoppingfs — clean, exactly as scoped
+
+| | Rows |
+| --- | --- |
+| Products in feed | 1,535 |
+| Variant rows emitted | **1,537** (matches the app's 1,537/1,535) |
+| On the `approved` branch, untouched | 1,439 |
+| Fall-through, change under `default(SKU, Product ID)` | **98** |
+| Fall-through with a blank SKU (would stay numeric) | 0 |
+
+The 98 predicted rows are **set-identical** to the 98 real `googleshoppingfs`
+rows in Tim's CSV — zero extra, zero missing. The `else` change has no side
+effects in this feed.
+
+The three Precor rows (`931`, `933`, `935`) sit on the `approved` branch and do
+not appear in the diff, as expected.
+
+### googleshoppingfrenchfitness — the else branch does double duty
+
+912 ACTIVE products, 965 variant rows, 906 on the `approved` branch. The 59
+fall-through rows are only 6 products:
+
+| Product | Rows | Rollout status | `legacy_gmc_id` | Emits today |
+| --- | --- | --- | --- | --- |
+| `10247596147004` Hex Dumbbells | 45 | `hold_ff_variant` | — | **composite** `10247596147004-<variant ID>` |
+| `10269254254908` FF-MSS | 10 | `hold_ff_variant` | `FF-MSS-151-2T` | bare numeric, collides 10-way |
+| `10019813589308` | 1 | `hold_cross_feed` | — | bare numeric |
+| `10124211355964` | 1 | *(unset)* | — | bare numeric |
+| `9878464627004` | 1 | *(unset)* | — | bare numeric |
+| `9879098753340` **FF-X12** | 1 | *(unset)* | — | bare numeric |
+
+The composite finding is now proven, not inferred: the 45 variant IDs on
+`10247596147004` are an **exact set match** against the 45 composite offer IDs
+in `snippets/local-inventory-offer-allowlist.liquid`, which was generated from
+the live Merchant Center export. So that feed reaches a variant-aware branch
+that `googleshoppingfs` does not have.
+
+**A blanket `else` change on this feed would flip all 45 composites to SKU** —
+the outcome Tim ruled out, and it would break the local inventory feed keyed to
+them. The change here must be surgical and cannot be specified until that
+feed's expression has been read.
+
+### FF-X12 — a 115th row the audit predates
+
+`9879098753340`, French Fitness X12 4 Station Functional Trainer, SKU `FF-X12`,
+ACTIVE, single variant, published **2026-09-05**. It has no rollout status, so
+it falls straight through and emits its bare numeric product ID today. It is
+not in the 114.
+
+It is not an error in the audit — it is the gate doing what a stalled gate does.
+Every product published without a rollout status lands on the numeric fallback,
+so the backlog grows on its own. It also means a fallback change necessarily
+carries this row too: a rule cannot fix "everything that falls through" and
+exclude one of them. It needs its own GO, or the count is 112, not 111.
+
+### Revised acceptance criteria
+
+| Feed | Rows changed | Notes |
+| --- | --- | --- |
+| `googleshoppingfs` | **98** | not 101 — the 3 Precors are already approved |
+| `googleshoppingfrenchfitness` | **13**, or 14 with FF-X12 | pending that feed's expression |
+
+A `googleshoppingfs` diff showing 101 or 114 changed rows is a **failed** run.
