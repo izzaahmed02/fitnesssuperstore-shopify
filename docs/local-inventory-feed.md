@@ -162,3 +162,62 @@ So:
   that order, in one change.
 - Regenerate the allowlist from fresh Merchant Center exports after the
   correction processes either way, since the primary `id` column is its source.
+
+## Impact of the 114-row offer-ID correction — FF-MSS, 10 new rows
+
+Tim's Sept 8 direction asks for local inventory rows to be re-keyed in the same
+window as the offer-ID change. Checked against the live feed exports and the
+showroom cohort, the work is smaller and different in kind than "re-key".
+
+**Nothing needs re-keying.** None of the 113 changing offer IDs appears in
+`local-inventory-offer-allowlist.liquid` today. The allowlist holds no bare
+numeric IDs at all, so no local row is keyed to one.
+
+**Ten rows need adding.** Exactly one changing product is also in
+`french-fitness-showroom-products`: `10269254254908`, the French Fitness Monster
+Universal Storage System. Its ten variants collapse to a single numeric offer
+today, which is why none of them is in the allowlist. Once the correction lands
+they become ten distinct SKU-keyed offers and are eligible for local rows for
+the first time.
+
+The two Star Trac collision products are not showroom products and need no local
+work.
+
+### The ten, with the availability each would publish
+
+`custom.processing_time_filter` is unset on the product, so the cascade applies
+and resolves on `custom.processing_time_long_variant` for every variant.
+
+| SKU | Stated lead time | Max business days | Availability |
+| --- | --- | --- | --- |
+| `FF-MSS-48-3T` | 2-5 Business Days | 5 | `on_display_to_order` |
+| `FF-MSS-48-2T` | 2-5 Business Days | 5 | `on_display_to_order` |
+| `FF-MSS-77-3T` | 3-7 Business Days | 7 | `on_display_to_order` |
+| `FF-MSS-77-2T` | 3-7 Business Days | 7 | `on_display_to_order` |
+| `FF-MSS-94-3T` | 3-7 Business Days | 7 | `on_display_to_order` |
+| `FF-MSS-94-2T` | 3-7 Business Days | 7 | `on_display_to_order` |
+| `FF-MSS-123-3T` | 4-6 Weeks | 30 | `out_of_stock` |
+| `FF-MSS-123-2T` | 4-6 Weeks | 30 | `out_of_stock` |
+| `FF-MSS-151-3T` | 4-6 Weeks | 30 | `out_of_stock` |
+| `FF-MSS-151-2T` | 4-6 Weeks | 30 | `out_of_stock` |
+
+Six eligible, four not. All ten still emit a row; eligibility sets the
+availability and quantity, not whether the row exists.
+
+### Resulting cohort
+
+| | Today | After |
+| --- | --- | --- |
+| Allowlist offers | 266 | 276 |
+| Published rows | 266 | 276 |
+| `on_display_to_order` | 250 | 256 |
+| `out_of_stock` | 16 | 20 |
+
+### Order of operations
+
+The allowlist is generated from the primary feed exports, so the ten SKUs can
+only be added **after** the offer-ID change has processed in Merchant Center.
+Adding them earlier publishes local rows for offers that do not yet exist, which
+processes as "Offer does not exist" — the exact failure the allowlist exists to
+prevent. Sequence: change the feeds, wait for the fetch, regenerate the
+allowlist from fresh exports, confirm 276.
