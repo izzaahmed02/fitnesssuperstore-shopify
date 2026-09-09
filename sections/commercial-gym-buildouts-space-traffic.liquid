@@ -111,15 +111,36 @@
     }
 
     /* Figma node 4585:81435 "benefits" — 12px gap between the 4 cards (4 × 311px card
-       + 3 × 12px gap = 1280px, confirmed exactly), not the theme's default 32px. */
+       + 3 × 12px gap = 1280px, confirmed exactly), not the theme's default 32px.
+       justify-content: center is a defensive backstop — with the width fix below the
+       4 cards + 3 gaps should already sum to exactly 100%, but this keeps the row
+       centered instead of flex-start (left-packed) if any sub-pixel rounding ever
+       leaves a sliver of leftover space. */
     #shopify-section-{{ section.id }} .multicolumn-list.grid {
     gap: 12px;
+    justify-content: center;
     }
 
     /* Figma node 4585:81436 "Benefit cards" — 32px card padding, not the theme's
        default 24px. */
     #shopify-section-{{ section.id }} .multicolumn-list__item {
     padding: 32px;
+    }
+    }
+
+    /* assets/base.css.liquid's ".grid--4-col-desktop .grid__item" (min-width:990px)
+       sizes each card as calc(25% - var(--grid-desktop-horizontal-spacing) * 3 / 4) —
+       that variable is the theme's GLOBAL grid gap (32px, config/settings_data.json
+       spacing_grid_horizontal), not the 12px gap set above for this section. With the
+       flex row's actual gap at 12px but each card's width still sized as if the gap
+       were 32px, the row falls (32-12)*3 = 60px short of the container's full width.
+       Since the row is flex-start by default, that 60px shortfall lands entirely as
+       extra space on the right instead of splitting evenly — recompute the width here
+       using the real 12px gap so the 4 cards + 3 gaps exactly fill 100% again. */
+    @media screen and (min-width: 990px) {
+    #shopify-section-{{ section.id }} .grid--4-col-desktop .grid__item {
+    width: calc(25% - 12px * 3 / 4);
+    max-width: calc(25% - 12px * 3 / 4);
     }
     }
 
