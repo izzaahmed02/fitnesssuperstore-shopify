@@ -51,9 +51,9 @@ require(script_tags, "function loadGoogleMaps()", 'snippets/script-tags.liquid')
 # is ever rotated or replaced.
 forbid(script_tags, '<script src="https://maps.googleapis.com/maps/api/js', 'snippets/script-tags.liquid')
 
-# 8) Heatmap loader should stay on the lightweight preprocessor implementation.
-require(script_tags, 'preprocessor.min.js?sid=', 'snippets/script-tags.liquid')
-require(script_tags, "['error', 'unhandledrejection'].forEach(function (ty) {", 'snippets/script-tags.liquid')
+# 8) Heatmap is retired from the theme and should not be reintroduced in any form.
+forbid(script_tags, 'preprocessor.min.js?sid=', 'snippets/script-tags.liquid')
+forbid(script_tags, 'dashboard.heatmap.com', 'snippets/script-tags.liquid')
 forbid(script_tags, "function initHeatmap()", 'snippets/script-tags.liquid')
 
 # 9) Google Ads gtag should not be added back as an immediate request in script-tags.
