@@ -1,25 +1,17 @@
 {%- comment -%}
-  PDP shipping-row enhancement.
+  PREVIEW-ONLY OVERLAY — DO NOT MERGE THIS BRANCH.
 
-  Controlled behavior:
-    1. A crate/manual presentation is data-driven. It appears only when:
-       - custom.ships is exactly "New in Crate" (case-insensitive), and
-       - custom.manual_link or custom.manual_file contains a usable manual URL.
-       Visible result after the existing "Ships:" label:
-       New in Crate (Assembly Manual Link). Installation Options Available
+  This file contains the production-candidate data-driven behavior from PR #788,
+  plus a temporary product-handle preview mapping for FFT-ACD and both FF-SC15
+  PDPs. The mapping is required only because Shopify product metafields are global
+  and must not be changed before Tim approves the unpublished-theme preview.
 
-    2. In crate/manual mode, the representative packaging video and packaging
-       disclosure are suppressed. Otherwise the existing Shop by Strength
-       Product Line packaging-video behavior remains unchanged.
+  The production branch has no hardcoded SKU/handle mappings. After approval,
+  product metafields will be updated with compareDigest protection and this
+  preview-only overlay will be discarded.
 
-    3. No SKU or product-handle production exceptions are hardcoded here.
-       Product eligibility is controlled through product metafields.
-
-    4. Compact information-block CSS is loaded globally on every product page
-       from assets/pdp-info-compact.css through layout/theme.liquid.
-
-  Source thread: "Remove Blanket Wrap Packaging on Most Products."
-  Production remains gated by unpublished-theme QA and Tim approval.
+  Compact information-block styling is loaded on every product page from
+  assets/pdp-info-compact.css through layout/theme.liquid.
 {%- endcomment -%}
 
 {%- liquid
@@ -39,6 +31,19 @@
     assign crate_manual_mode = true
   endif
 
+  assign preview_override = false
+  case product.handle
+    when 'french-fitness-tahoe-assisted-chin-dip-new'
+      assign preview_override = true
+      assign manual_url = 'https://fitnesssuperstore.info/pdfs/French%20Fitness%20Shasta%20%26%20Tahoe%20Assisted%20Chin%20Dip%20Assembly%20and%20Exercise%20Manual.pdf'
+    when 'french-fitness-ff-sc15-stretch-cage-black-new'
+      assign preview_override = true
+      assign manual_url = 'https://fitnesssuperstore.info/pdfs/French%20Fitness%20SC15%20Stretch%20Cage%20Assembly%20Manual.pdf'
+    when 'french-fitness-ff-sc15-stretch-cage-silver-new'
+      assign preview_override = true
+      assign manual_url = 'https://fitnesssuperstore.info/pdfs/French%20Fitness%20SC15%20Stretch%20Cage%20Assembly%20Manual.pdf'
+  endcase
+
   assign in_strength_line = false
   for collection in product.collections
     if collection.handle contains 'shop-by-strength-product-line'
@@ -53,7 +58,7 @@
   endif
 
   assign show_packaging_video = false
-  if in_strength_line and is_exception == false and crate_manual_mode == false
+  if in_strength_line and is_exception == false and crate_manual_mode == false and preview_override == false
     assign show_packaging_video = true
   endif
 
@@ -68,7 +73,32 @@
   endif
 -%}
 
-{%- if crate_manual_mode -%}
+{%- if preview_override -%}
+  <script>
+    (() => {
+      const script = document.currentScript;
+      const row = script && script.closest('.item__text');
+      if (!row) return;
+
+      const title = document.createElement('span');
+      title.className = 'title';
+      title.textContent = 'Ships:';
+
+      const text = document.createTextNode(' New in Crate (');
+
+      const link = document.createElement('a');
+      link.className = 'pdp-crate-manual__link';
+      link.href = {{ manual_url | json }};
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = 'Assembly Manual Link';
+
+      const suffix = document.createTextNode('). Installation Options Available');
+
+      row.replaceChildren(title, text, link, suffix);
+    })();
+  </script>
+{%- elsif crate_manual_mode -%}
   <span class="pdp-crate-manual">
     (<a
       class="pdp-crate-manual__link"
