@@ -224,6 +224,29 @@
         endif
 
         comment
+          Tim, Sept 9 ruling ("Re: PDP Design"): render-time filtering, not
+          render-then-hide. A "rest"-pass category earns a place in the DOM
+          only if skipping it would drop real order data - some product
+          option in it is mandatory, or carries a default that posts into
+          price/cart/_functionOperation (this is how Assembly & Room of
+          Choice and the hidden-value Warranty / Processing Time selects
+          stay covered). A category where every option is optional with no
+          default contributes nothing if a shopper never opens it - per the
+          existing PARKED note in pdp-new.css, that is exactly Accessories /
+          Add-Ons and Cable Attachments today - so it is omitted entirely
+          instead of rendered invisible.
+        endcomment
+        assign pdp_category_needed = false
+        for product_option in category.product_options.value
+          if product_option.mandatory or product_option.product_option_sets_default.value.id
+            assign pdp_category_needed = true
+          endif
+        endfor
+        if pdp_pass == 'rest' and pdp_category_needed == false
+          assign pdp_in_pass = false
+        endif
+
+        comment
           "Accessories / Add Ons" reads as a redundant bucket label above the
           option rows and is dropped (Sagi, Aug 25). Matched on a punctuation-
           and space-stripped title so "Accessories/Add-Ons" and
