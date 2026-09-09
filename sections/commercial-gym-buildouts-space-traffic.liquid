@@ -12,22 +12,33 @@
     }
 
     /* Full-width page requirement — override the theme's default contained .page-width
-       for this section only (does not affect .page-width elsewhere on the site) */
+       for this section only (does not affect .page-width elsewhere on the site).
+       Figma node 4585:81433 (mobile equivalent) shows a 16px side inset, not 40px — see
+       the same fix already applied to commercial-gym-buildouts-facility-types.liquid. */
     #shopify-section-{{ section.id }} .page-width {
     max-width: 100%;
     margin: 0;
+    padding-left: 16px;
+    padding-right: 16px;
+    }
+
+    @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .page-width {
     padding-left: 40px;
     padding-right: 40px;
+    }
     }
 
     #shopify-section-{{ section.id }} .multicolumn-card {
     text-align: {{ section.settings.text_align }};
     }
 
+    /* Figma node 4585:81469 "Heading" — 12px gap between heading and subheading (heading
+       50px + gap 12px + subheading 72px = 134px frame height, confirmed exactly). */
     #shopify-section-{{ section.id }} .multicolumn__subheading {
     text-align: center;
     max-width: 800px;
-    margin: 1.2rem auto 0;
+    margin: 12px auto 0;
     }
 
     /* Figma node 4612:86423/4612:86424 (mobile) — Oswald SemiBold 20px/26px; Lato Regular 14px/20px #4f4f55 */
@@ -54,6 +65,26 @@
     color: #393940;
     }
 
+    /* Figma node 4585:81436 "Benefit cards" — title→paragraph gap is 8px, not the
+       theme's default 15px title margin-bottom collapsed with the 1rem (16px) sibling
+       margin. Zero the title's own margin so the sibling's margin-top is the only source
+       of the gap, giving an exact 8px regardless of margin-collapsing. */
+    #shopify-section-{{ section.id }} .multicolumn-card__info-title {
+    margin-bottom: 0;
+    }
+    #shopify-section-{{ section.id }} .multicolumn-card__info > :nth-child(2) {
+    margin-top: 8px;
+    }
+
+    /* Figma node 4585:81436 — 20px gap between the concept-diagram image and the text
+       below it, and an 8px corner radius on the image (currently unset/square). */
+    #shopify-section-{{ section.id }} .multicolumn-card__image-wrapper + .multicolumn-card__info {
+    margin-top: 20px;
+    }
+    #shopify-section-{{ section.id }} .multicolumn-card__image {
+    border-radius: 8px;
+    }
+
     /* Figma node 4585:81470/4585:81471 (desktop) — Oswald SemiBold 38px/50px; Lato Regular 16px/24px #393940 */
     @media screen and (min-width: 750px) {
     #shopify-section-{{ section.id }} .title.h1 {
@@ -65,13 +96,36 @@
     line-height: 24px;
     color: #393940;
     }
+
+    /* Figma node 4585:81433 — 28px gap between the heading block and the cards row.
+       Zero the title-wrapper's own margin so the sibling's margin-top is the only
+       source of the gap, giving an exact 28px regardless of the theme's default. */
+    #shopify-section-{{ section.id }} .multicolumn__title {
+    margin-bottom: 0;
+    }
+    #shopify-section-{{ section.id }} .multicolumn__title + * {
+    margin-top: 28px;
     }
 
-    /* Figma node 4598:83643 — Lato Italic 14px/20px, #808080 */
+    /* Figma node 4585:81435 "benefits" — 12px gap between the 4 cards (4 × 311px card
+       + 3 × 12px gap = 1280px, confirmed exactly), not the theme's default 32px. */
+    #shopify-section-{{ section.id }} .multicolumn-list.grid {
+    gap: 12px;
+    }
+
+    /* Figma node 4585:81436 "Benefit cards" — 32px card padding, not the theme's
+       default 24px. */
+    #shopify-section-{{ section.id }} .multicolumn-list__item {
+    padding: 32px;
+    }
+    }
+
+    /* Figma node 4598:83643 — Lato Italic 14px/20px, #808080; 28px gap from the cards
+       row above (was 2rem/32px). */
     #shopify-section-{{ section.id }} .space-traffic__disclaimer {
     text-align: center;
     max-width: 800px;
-    margin: 2rem auto 0;
+    margin: 28px auto 0;
     font-family: 'Lato', sans-serif;
     font-style: italic;
     font-size: 14px;
