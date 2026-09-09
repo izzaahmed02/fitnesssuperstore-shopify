@@ -82,10 +82,14 @@
      .banner__box was both the wrong color (white, not black) and the wrong element —
      .banner__box gets forced transparent on desktop by .banner--desktop-transparent
      (triggered by "Show text box" being off), so the overlay never rendered on desktop
-     at all. Apply it directly to .banner__media instead so it works consistently. */
-  #shopify-section-{{ section.id }} .banner__media {
-    position: relative;
-  }
+     at all. Apply it directly to .banner__media instead so it works consistently.
+     .banner__media is ALREADY position:absolute (assets/section-image-banner.css) —
+     that's what makes it fill the banner via top/left/width/height:100%, and it's
+     already a valid positioned ancestor for this ::after overlay. A stray
+     "position: relative" override here previously pulled it back into normal flow;
+     since its only child (the <img>) is itself absolutely positioned and contributes
+     no height, .banner__media collapsed to 0px tall and the image vanished. Do not
+     re-add a position override on .banner__media. */
   #shopify-section-{{ section.id }} .banner__media::after {
     content: '';
     position: absolute;
@@ -140,6 +144,17 @@
     justify-content: center;
     word-break: break-word;
     max-width: unset;
+  }
+
+  /* Figma node 4608:84416 "Buttons" (closing only — mid never has a phone link) — the
+     button (255px) and phone link (336px) together exceed the 336px frame width, which
+     only works if they're stacked, not side-by-side; a 16px gap separates them. This
+     was missing on desktop (only the mobile media query below set flex-direction), so
+     the button and phone link were rendering in a row instead of stacked. */
+  #shopify-section-{{ section.id }} .banner__buttons--multiple {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
   }
 
   /* Figma nodes 4583:81434/4608:84413/4612:86961 "heading" — gaps between the
