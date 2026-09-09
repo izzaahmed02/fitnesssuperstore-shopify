@@ -76,24 +76,32 @@
     }
 
     /* Figma node 4612:88424 (mobile) — 6.77px radius, ~343/253 aspect. Mobile stacks the
-       image and card column (see the max-width: 749px override below), so the image has
-       no sibling to match height against and still needs its own aspect ratio. */
+       image and card column (see the max-width: 749px override below) in a COLUMN flex
+       container, so no flex-basis is set here: `flex: 1 1 0` (used on desktop, where the
+       row needs an even 50/50 split) forces an explicit 0 main size, and in a column
+       direction the main axis is height — that zeroed the image out completely on mobile
+       regardless of aspect-ratio, since an explicit flex-basis bypasses aspect-ratio-based
+       auto sizing entirely. Without a flex-basis here, height falls back to being computed
+       from aspect-ratio against the (stretched-to-full-width) cross size instead, which is
+       what actually renders the image on small screens. */
     #shopify-section-{{ section.id }} .equipment-zones__image-wrapper {
     position: relative;
-    flex: 1 1 0;
     border-radius: 7px;
     overflow: hidden;
     aspect-ratio: 343 / 253;
     }
 
-    /* Figma node 4685:81257 (desktop) — 12px radius. aspect-ratio is explicitly reset to
-       auto here: the mobile rule above sets aspect-ratio: 343 / 253, and a media query
-       doesn't clear a property it doesn't redeclare, so without this the mobile ratio was
-       still winning at desktop widths and forcing the image taller than the card column
-       (most visible on the 2-card row) instead of letting align-items: stretch on
-       .equipment-zones__group size it to match the cards exactly. */
+    /* Figma node 4685:81257 (desktop) — 12px radius, even 50/50 split with the card column
+       via flex-basis: 0 (only meaningful here, where the row is horizontal — the main axis
+       is width). aspect-ratio is explicitly reset to auto: the mobile rule above sets
+       aspect-ratio: 343 / 253, and a media query doesn't clear a property it doesn't
+       redeclare, so without this the mobile ratio was still winning at desktop widths and
+       forcing the image taller than the card column (most visible on the 2-card row)
+       instead of letting align-items: stretch on .equipment-zones__group size it to match
+       the cards exactly. */
     @media screen and (min-width: 750px) {
     #shopify-section-{{ section.id }} .equipment-zones__image-wrapper {
+    flex: 1 1 0;
     border-radius: 12px;
     aspect-ratio: auto;
     }
@@ -116,15 +124,25 @@
     background-color: rgba(var(--color-foreground), 0.05);
     }
 
-    /* Figma "Benefit cards" — 12px gap between stacked cards */
+    /* Figma "Benefit cards" — 12px gap between stacked cards. No flex-basis here for the
+       same reason as .equipment-zones__image-wrapper above — flex: 1 1 0 only makes sense
+       for the desktop row's 50/50 split (see the min-width: 750px rule below); on mobile,
+       where .equipment-zones__group is a column, it would zero this out too. */
     #shopify-section-{{ section.id }} .equipment-zones__list {
-    flex: 1 1 0;
     display: flex;
     flex-direction: column;
     gap: 12px;
     }
 
-    /* Figma "Benefit cards" — 32px padding, 20px gap between icon and text */
+    @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .equipment-zones__list {
+    flex: 1 1 0;
+    }
+    }
+
+    /* Figma "Benefit cards" (desktop) — icon left, text right, 32px padding, 20px gap.
+       Mobile overrides both to a stacked icon-above-text layout with 16px padding — see
+       the max-width: 749px rule below. */
     #shopify-section-{{ section.id }} .equipment-zones__card {
     display: flex;
     align-items: flex-start;
@@ -179,10 +197,25 @@
     }
 
     @media screen and (max-width: 749px) {
+    /* Figma node 4612:86426 "What to Expect Container" (mobile) — 20px gap between the
+       image and the stacked card column, not the previous 2rem (32px). */
     #shopify-section-{{ section.id }} .equipment-zones__group,
     #shopify-section-{{ section.id }} .equipment-zones__group--reverse {
     flex-direction: column;
-    gap: 2rem;
+    gap: 20px;
+    }
+
+    /* Figma node 4612:86431 "Benefit cards" (mobile) — icon above text (not
+       side by side), 16px padding on all sides instead of the desktop 32px.
+       align-items: stretch (overriding the shared flex-start) so the text block
+       fills the card's full width instead of shrinking to its own content width —
+       in a column direction, flex-start sizes cross-axis (width) items to their
+       intrinsic content size, which for a long paragraph is far wider than the
+       card and would overflow instead of wrapping. */
+    #shopify-section-{{ section.id }} .equipment-zones__card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
     }
     }
 {%- endstyle -%}
