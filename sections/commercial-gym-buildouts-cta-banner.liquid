@@ -7,22 +7,45 @@
   }
 
   /* Full-width page requirement — override the theme's default contained .page-width
-     for this section only (does not affect .page-width elsewhere on the site) */
+     for this section only (does not affect .page-width elsewhere on the site). Figma
+     node 4612:86492 (mobile) shows a 16px side inset on the "heading" frame (343 =
+     375 - 16 - 16), not 40px — the flat 40px was compressing mobile text/buttons into
+     a narrower column than intended. */
   #shopify-section-{{ section.id }} .page-width {
     max-width: 100%;
     margin: 0;
-    padding-left: 40px;
-    padding-right: 40px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .page-width {
+      padding-left: 40px;
+      padding-right: 40px;
+    }
   }
 
   /* Figma nodes 4583:81433 (mid, 384px) / 4608:84411 (closing, 460px) — heights differ
      per instance, so a per-section custom height setting is used instead of the
      built-in small/medium/large presets, which don't give exact px control. */
-  #shopify-section-{{ section.id }} .banner--medium:not(.banner--adapt) {
-    min-height: {{ section.settings.banner_height_desktop }}px;
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .banner--medium:not(.banner--adapt) {
+      min-height: {{ section.settings.banner_height_desktop }}px;
+    }
+    #shopify-section-{{ section.id }} .banner--medium:not(.banner--mobile-bottom):not(.banner--adapt) .banner__content {
+      min-height: {{ section.settings.banner_height_desktop }}px;
+    }
   }
-  #shopify-section-{{ section.id }} .banner--medium:not(.banner--mobile-bottom):not(.banner--adapt) .banner__content {
-    min-height: {{ section.settings.banner_height_desktop }}px;
+
+  /* Figma node 4612:86492 (mobile) — "Why Choose Us" frame is exactly 192px tall,
+     nowhere near the theme's default mobile "medium" height (34rem/340px). */
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .banner--medium:not(.banner--adapt) {
+      min-height: {{ section.settings.banner_height_mobile }}px;
+    }
+    #shopify-section-{{ section.id }} .banner--medium:not(.banner--mobile-bottom):not(.banner--adapt) .banner__content {
+      min-height: {{ section.settings.banner_height_mobile }}px;
+    }
   }
 
   /* "Show text box" being off triggers .banner--desktop-transparent, and since this
@@ -33,6 +56,17 @@
      long text. Widen it to match. */
   #shopify-section-{{ section.id }} .banner__box {
     max-width: 1280px;
+  }
+
+  /* page-images/zoom-cta-banner.png confirms the design has no light box behind the
+     text at all — just the heading/button sitting directly over the (already tinted)
+     image. The .color-{{ section.settings.color_scheme }} class on .banner__box paints
+     a solid background from the theme's color scheme, separate from the "gradient"
+     class already removed from the markup; the theme's own
+     ".banner--desktop-transparent .banner__box{background:transparent!important}" rule
+     evidently isn't winning here, so force it off directly. */
+  #shopify-section-{{ section.id }} .banner__box {
+    background: none !important;
   }
 
   /* Figma "Why Choose Us" frame fill — the overlay is a solid black tint baked into the
@@ -95,6 +129,21 @@
     max-width: unset;
   }
 
+  /* Figma nodes 4583:81434/4608:84413/4612:86961 "heading" — gaps between the
+     heading/text/buttons stack, confirmed identical on both mobile and desktop:
+     heading→text 12px (closing only, mid has no text block), text→buttons 28px
+     (closing), heading→buttons 28px on desktop (mid) — overridden to 20px on mobile
+     below, since that's the one pair that differs by breakpoint. */
+  #shopify-section-{{ section.id }} .banner__heading + .banner__text {
+    margin-top: 12px;
+  }
+  #shopify-section-{{ section.id }} .banner__text + .banner__buttons {
+    margin-top: 28px;
+  }
+  #shopify-section-{{ section.id }} .banner__heading + .banner__buttons {
+    margin-top: 28px;
+  }
+
   /* Figma node 4608:84688 — Lato Bold 16px/24px, #d83d0e */
   .cgb-cta-phone-link {
     display: inline-flex;
@@ -124,12 +173,37 @@
       padding-bottom: {{ section.settings.padding_bottom_mobile }}px;
     }
 
+    /* Figma node 4612:86497 "Buttons" — the button spans the full 343px content width
+       (375px frame - 16px inset each side), not its own text width. */
     #shopify-section-{{ section.id }} .banner__buttons {
       flex-direction: column;
-      align-items: flex-start;
+      align-items: stretch;
       justify-content: center;
+      width: 100%;
+    }
+
+    /* Figma node 4612:86492 (mid, no text block) — heading→buttons gap is 20px on
+       mobile, not 28px like desktop (see the base rule above). Closing's
+       heading→text→buttons gaps (12px/28px) are unchanged from the base rule since
+       node 4612:86960 confirms they're identical on mobile and desktop. */
+    #shopify-section-{{ section.id }} .banner__heading + .banner__buttons {
+      margin-top: 20px;
     }
   }
+
+  {%- if section.settings.image_overlay_opacity == 0 -%}
+    /* Figma node 4612:86492 "Why Choose Us" (mobile, mid banner only) fill — a
+       black-to-transparent vertical gradient over the image, present even though this
+       banner's desktop overlay is 0% flat. Node 4612:86960 (closing, mobile) confirms
+       the OTHER banner instance keeps its flat black tint at both breakpoints instead
+       (no gradient), so this is gated to the 0%-opacity case rather than applied
+       unconditionally. */
+    @media screen and (max-width: 749px) {
+      #shopify-section-{{ section.id }} .banner__media::after {
+        background: linear-gradient(180deg, #000000 0%, rgba(0, 0, 0, 0) 100%);
+      }
+    }
+  {%- endif -%}
 
   {%- if section.settings.image_height == 'adapt' and section.settings.image != blank -%}
     @media screen and (max-width: 749px) {
@@ -303,6 +377,17 @@
       "label": "Banner height (desktop)",
       "info": "Only applies when Image height is set to Medium.",
       "default": 384
+    },
+    {
+      "type": "range",
+      "id": "banner_height_mobile",
+      "min": 100,
+      "max": 500,
+      "step": 4,
+      "unit": "px",
+      "label": "Banner height (mobile)",
+      "info": "Only applies when Image height is set to Medium.",
+      "default": 192
     },
     {
       "type": "select",
