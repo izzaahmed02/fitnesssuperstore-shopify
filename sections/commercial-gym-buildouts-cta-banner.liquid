@@ -25,6 +25,16 @@
     min-height: {{ section.settings.banner_height_desktop }}px;
   }
 
+  /* "Show text box" being off triggers .banner--desktop-transparent, and since this
+     banner also uses image_height: medium, the theme's
+     ".banner--medium.banner--desktop-transparent .banner__box{max-width:68rem}" rule
+     (assets/section-image-banner.css) was capping the text box at 680px — much
+     narrower than Figma's ~1280px-wide single-line headings — forcing extra wraps on
+     long text. Widen it to match. */
+  #shopify-section-{{ section.id }} .banner__box {
+    max-width: 1280px;
+  }
+
   /* Figma "Why Choose Us" frame fill — the overlay is a solid black tint baked into the
      image layer itself (0% for the mid banner, 83% for the closing banner), not a
      background behind the text box. The old rgba(255,255,255,...) inline style on
@@ -178,7 +188,7 @@
 
   <div class="banner__content banner__content--{{ section.settings.desktop_content_position }} page-width">
     <div
-      class="banner__box content-container content-container--full-width-mobile color-{{ section.settings.color_scheme }} gradient"
+      class="banner__box content-container content-container--full-width-mobile color-{{ section.settings.color_scheme }}"
     >
       {%- for block in section.blocks -%}
         {%- case block.type -%}
