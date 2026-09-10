@@ -1,9 +1,20 @@
 {{ 'component-image-with-text.css' | asset_url | stylesheet_tag }}
 
 {%- style -%}
+    {%- comment -%}
+      section_bg / section_padding_* are deliberately not the theme's usual bg_color /
+      padding_top / padding_bottom. The live preview theme's copy of the page template
+      has stale values saved against those original IDs (an empty background and 48px
+      top AND bottom), and Shopify's GitHub sync treats the theme editor's copy of a
+      JSON template as authoritative, so a corrected value committed here never lands.
+      Renaming orphans those saved values — Shopify ignores setting keys matching no
+      schema entry — letting the schema defaults below apply: Figma node 5256:81986's
+      #faf9f9 background with 80px above the card and 0 below it (the card's bottom
+      edge is flush with the frame at y=11737, where facility-types begins).
+    {%- endcomment -%}
     .padding-{{ section.id }} {
-    padding-top: {{ section.settings.padding_top | times: 0.55 | round: 0 }}px;
-    padding-bottom: {{ section.settings.padding_bottom | times: 0.55 | round: 0 }}px;
+    padding-top: {{ section.settings.section_padding_top | times: 0.55 | round: 0 }}px;
+    padding-bottom: {{ section.settings.section_padding_bottom | times: 0.55 | round: 0 }}px;
     }
 
     .section-{{ section.id }}-padding .image-with-text__heading{
@@ -52,8 +63,8 @@
     }
     @media screen and (min-width: 750px) {
     .padding-{{ section.id }} {
-    padding-top: {{ section.settings.padding_top }}px;
-    padding-bottom: {{ section.settings.padding_bottom }}px;
+    padding-top: {{ section.settings.section_padding_top }}px;
+    padding-bottom: {{ section.settings.section_padding_bottom }}px;
     }
     .image-with-text__grid {
       align-items: center;
@@ -84,7 +95,53 @@
     }
     }
     .section-{{ section.id }}-padding{
-    background:{{ section.settings.bg_color }};
+    background:{{ section.settings.section_bg }};
+    }
+
+    /* Figma node 5256:81986 (1440px frame) — the card is inset 80px each side for a
+       1280px width (banner x=-2278 inside a frame at x=-2358). .imageText ships a
+       24px inset, which left the card 1392px wide. Applied from 990px up, where the
+       two-column desktop layout starts. */
+    @media screen and (min-width: 990px) {
+    .section-{{ section.id }}-padding.imageText {
+    padding-left: 80px;
+    padding-right: 80px;
+    }
+
+    /* Figma node 5256:81987 "banner" — image frame 487x304 and text column 624 wide,
+       separated by the grid's 32px gap (487 + 32 + 624 = 1143 inside the card's
+       1216px content box, so the row is left-packed with ~73px of slack, exactly as
+       in the design). The theme instead split the row into two equal 648px columns.
+       The image's aspect box is already correct — its padding-bottom ratio is 0.624,
+       so 487 wide yields 304 tall on its own; only the column width was wrong. The
+       media item's own 24px right padding is dropped because the 32px grid gap is
+       what separates image from text here. */
+    .section-{{ section.id }}-padding .image-with-text__media-item {
+    flex: 0 0 487px;
+    width: 487px;
+    max-width: 487px;
+    padding-right: 0;
+    }
+
+    .section-{{ section.id }}-padding .image-with-text__text-item {
+    flex: 0 0 624px;
+    width: 624px;
+    max-width: 624px;
+    }
+    }
+
+    /* Figma node 5256:82070 "Text" — 12px between the heading (150px) and the body
+       copy (72px), summing to the 234px text frame. The theme's flex column gaps them
+       by 24px. */
+    .section-{{ section.id }}-padding .image-with-text__content {
+    row-gap: 12px;
+    }
+
+    /* Needs the #shopify-section prefix to outrank the theme's own rule, which rounds
+       only the left corners (12px 0 0 12px) for the no-overlap layout. Figma node
+       5256:82071 rounds all four at 12px. */
+    #shopify-section-{{ section.id }} .image-with-text__media-item img {
+    border-radius: 12px;
     }
     .note{
     display: flex;
@@ -408,8 +465,9 @@
     },
     {
       "type": "color",
-      "id": "bg_color",
-      "label": "Background color"
+      "id": "section_bg",
+      "label": "Background color",
+      "default": "#faf9f9"
     },
     {
       "type": "image_picker",
@@ -643,23 +701,23 @@
     },
     {
       "type": "range",
-      "id": "padding_top",
+      "id": "section_padding_top",
       "min": 0,
       "max": 100,
       "step": 2,
       "unit": "px",
       "label": "t:sections.all.padding.padding_top",
-      "default": 36
+      "default": 80
     },
     {
       "type": "range",
-      "id": "padding_bottom",
+      "id": "section_padding_bottom",
       "min": 0,
       "max": 100,
       "step": 2,
       "unit": "px",
       "label": "t:sections.all.padding.padding_bottom",
-      "default": 36
+      "default": 0
     }
   ],
   "blocks": [
