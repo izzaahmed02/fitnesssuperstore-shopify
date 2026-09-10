@@ -11,9 +11,11 @@
     <!-- LEFT SIDE NAV -->
     <div class="process-steps-nav">
       {% for block in section.blocks %}
-        <div 
-          class="process-nav-item {% if forloop.first %}active{% endif %}" 
+        <div
+          class="process-nav-item {% if forloop.first %}active{% endif %}"
           data-target="step-{{ forloop.index0 }}"
+          role="button"
+          tabindex="0"
           {{ block.shopify_attributes }}
         >
           <div class="process-nav-number">
@@ -1615,7 +1617,6 @@ display: none;
   }
 
   .process-steps-nav {
-    display: none !important;
     position: relative;
     top: 0;
     margin-bottom: 24px;
@@ -1828,44 +1829,79 @@ display: none;
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-  const navItems = document.querySelectorAll(".process-nav-item");
-  const sections = document.querySelectorAll(".process-step-block");
+  // The site header is position:sticky, so it overlays the top of the viewport and a
+  // step scrolled to y=0 lands underneath it - which was clipping the step heading in
+  // half. Measure the header at interaction time rather than assuming a fixed height:
+  // on desktop the sticky unit is the announcement bar + header + nav, which is taller
+  // than on mobile, where the top bar is hidden.
+  const HEADER_HEIGHT_FALLBACK = 120; // used only if the header element isn't found
+  const HEADING_GAP = 16;             // breathing room so the heading isn't flush to the header
 
-  // Click: scroll to section using getBoundingClientRect for accuracy
-  navItems.forEach(item => {
-    item.addEventListener("click", function () {
-      const target = document.getElementById(this.dataset.target);
-      if (!target) return;
-
-      const top = target.getBoundingClientRect().top + window.scrollY - 120;
-      window.scrollTo({ top, behavior: "smooth" });
-    });
-  });
-
-  // Scroll spy: highlight the nav item whose section is closest to the top of the viewport
-  function updateActiveNav() {
-    let closestSection = null;
-    let closestDistance = Infinity;
-
-    sections.forEach(section => {
-      const rect = section.getBoundingClientRect();
-      const distance = Math.abs(rect.top - 130);
-      if (rect.top <= 200 && distance < closestDistance) {
-        closestDistance = distance;
-        closestSection = section;
-      }
-    });
-
-    if (closestSection) {
-      const id = closestSection.getAttribute("id");
-      navItems.forEach(item => {
-        item.classList.toggle("active", item.dataset.target === id);
-      });
-    }
+  function stickyHeaderOffset() {
+    const header = document.querySelector(".section-header");
+    const height = header ? Math.round(header.getBoundingClientRect().height) : 0;
+    return (height > 0 ? height : HEADER_HEIGHT_FALLBACK) + HEADING_GAP;
   }
 
-  window.addEventListener("scroll", updateActiveNav, { passive: true });
-  updateActiveNav(); // run on load to set initial state
+  // Scope every lookup to one section instance. The step ids (step-0, step-1, ...)
+  // are only unique within a section, so a document-wide query would let a second
+  // instance of this section steal the active state and the scroll target.
+  document.querySelectorAll(".process-steps-section").forEach(function (root) {
+    if (root.dataset.processNavInit) return; // this section renders the script once per instance
+    root.dataset.processNavInit = "1";
+
+    const navItems = root.querySelectorAll(".process-nav-item");
+    const sections = root.querySelectorAll(".process-step-block");
+    if (!navItems.length || !sections.length) return;
+
+    // Click/keyboard: scroll to section using getBoundingClientRect for accuracy
+    function scrollToStep(item) {
+      const target = root.querySelector('[id="' + item.dataset.target + '"]');
+      if (!target) return;
+
+      const top = target.getBoundingClientRect().top + window.scrollY - stickyHeaderOffset();
+      window.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
+    }
+
+    navItems.forEach(item => {
+      item.addEventListener("click", function () {
+        scrollToStep(this);
+      });
+      item.addEventListener("keydown", function (e) {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        scrollToStep(this);
+      });
+    });
+
+    // Scroll spy: highlight the nav item whose section is closest to the top of the viewport
+    function updateActiveNav() {
+      let closestSection = null;
+      let closestDistance = Infinity;
+      // Track the same landing line the click scroll uses, so the highlighted step
+      // always matches the heading actually sitting below the header.
+      const landingLine = stickyHeaderOffset();
+
+      sections.forEach(section => {
+        const rect = section.getBoundingClientRect();
+        const distance = Math.abs(rect.top - (landingLine + 10));
+        if (rect.top <= landingLine + 80 && distance < closestDistance) {
+          closestDistance = distance;
+          closestSection = section;
+        }
+      });
+
+      if (closestSection) {
+        const id = closestSection.getAttribute("id");
+        navItems.forEach(item => {
+          item.classList.toggle("active", item.dataset.target === id);
+        });
+      }
+    }
+
+    window.addEventListener("scroll", updateActiveNav, { passive: true });
+    updateActiveNav(); // run on load to set initial state
+  });
 
 });
 </script>
