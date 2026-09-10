@@ -1,0 +1,145 @@
+{%- comment -%} Benicia Showroom — Check a Model form (routes to native contact / Sales CS intake) {%- endcomment -%}
+{{ 'showroom-benicia.css' | asset_url | stylesheet_tag }}
+{%- assign s = section.settings -%}
+<section class="sr-page sr-section sr-form-section{% if s.form_bg_image != blank %} has-bg{% endif %}" id="sr-check-model"
+         {% if s.form_bg_image != blank %}style="--sr-form-bg: url('{{ s.form_bg_image | image_url: width: 2000 }}');"{% endif %}>
+  <div class="sr-form-section__overlay"></div>
+  <div class="sr-container sr-form-grid">
+    <div class="sr-form-intro">
+      <h2 class="sr-section__title">{{ s.form_heading }}</h2>
+      <p class="sr-form-intro__sub">{{ s.form_subtext }}</p>
+      <ul class="sr-form-intro__points">
+        {%- if s.form_point_1 != blank -%}<li><span class="sr-ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>{{ s.form_point_1 }}</li>{%- endif -%}
+        {%- if s.form_point_2 != blank -%}<li><span class="sr-ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>{{ s.form_point_2 }}</li>{%- endif -%}
+      </ul>
+    </div>
+
+    <div class="sr-form-card" data-sr-form-card>
+      {% form 'contact', id: 'ShowroomCheckModel', class: 'sr-form' %}
+        {%- if form.posted_successfully? -%}
+          {%- comment -%} No-JS fallback success state (page was reloaded) {%- endcomment -%}
+          <div class="sr-form-success" data-sr-success role="status">
+            <div class="sr-form-success__top">
+              <div class="sr-form-success__icon" aria-hidden="true">
+                <svg viewBox="0 0 80 80" width="80" height="80"><circle cx="40" cy="40" r="33.33" fill="#00A344"/><path fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M27 41.5l9 9 17-19"/></svg>
+              </div>
+              <div class="sr-form-success__text">
+                <h3><span class="sr-form-success__l1">{{ s.success_line1 }}</span><span class="sr-form-success__l2">{{ s.success_line2 }}</span></h3>
+                <p>{{ s.success_text }}</p>
+              </div>
+            </div>
+            <a class="sr-btn sr-btn--primary sr-btn--block" href="{{ request.path }}#sr-check-model">{{ s.success_button_label }}</a>
+          </div>
+        {%- else -%}
+          <div class="sr-form-errors" data-sr-errors role="alert"{% unless form.errors %} hidden{% endunless %}>{% if form.errors %}{{ form.errors | default_errors }}{% endif %}</div>
+
+          <input type="hidden" name="contact[form_type]" value="Benicia Showroom — Check a Model">
+          <input type="hidden" name="contact[source_page]" value="{{ request.origin }}{{ request.path }}">
+
+          <div class="sr-field">
+            <label for="sr-name">Full name <span class="sr-req">*</span></label>
+            <input type="text" id="sr-name" name="contact[name]" placeholder="John Doe" required>
+          </div>
+
+          <div class="sr-field-row">
+            <div class="sr-field">
+              <label for="sr-method">Preferred contact method <span class="sr-req">*</span></label>
+              <select id="sr-method" name="contact[preferred_contact_method]" required data-sr-method>
+                <option value="" disabled selected>Select option</option>
+                <option value="Phone">Phone</option>
+                <option value="Email">Email</option>
+              </select>
+            </div>
+            <div class="sr-field">
+              <label for="sr-contact">Email address <span class="sr-req">*</span></label>
+              <input type="email" id="sr-contact" name="contact[email]" placeholder="your@email.com" required data-sr-contact-value>
+            </div>
+          </div>
+
+          <div class="sr-field">
+            <label for="sr-phone">Phone number <span class="sr-opt">(optional)</span></label>
+            <input type="tel" id="sr-phone" name="contact[phone]" placeholder="(925) 555-0100" autocomplete="tel">
+          </div>
+
+          <div class="sr-field">
+            <label for="sr-model">Product name, model, or product page link <span class="sr-req">*</span></label>
+            <input type="text" id="sr-model" name="contact[product_model]" placeholder="e.g. French Fitness FSR90" required>
+          </div>
+
+          <div class="sr-field">
+            <label for="sr-visit">Preferred visit date or time <span class="sr-req">*</span></label>
+            <input type="text" id="sr-visit" name="contact[preferred_visit]" placeholder="Select date" required
+                   onfocus="(this.type='datetime-local')" onblur="if(!this.value){this.type='text'}">
+          </div>
+
+          <div class="sr-divider"></div>
+
+          <div class="sr-field-row">
+            <div class="sr-field">
+              <label for="sr-zip">Delivery ZIP <span class="sr-opt">(optional)</span></label>
+              <input type="text" id="sr-zip" name="contact[delivery_zip]" placeholder="94510" inputmode="numeric" pattern="[0-9]*">
+            </div>
+            <div class="sr-field">
+              <label for="sr-use">Home or commercial use <span class="sr-opt">(optional)</span></label>
+              <select id="sr-use" name="contact[use_type]">
+                <option value="" disabled selected>Select option</option>
+                <option value="Home">Home</option>
+                <option value="Commercial">Commercial</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="sr-field">
+            <label for="sr-compare">Anything specific you want to compare <span class="sr-opt">(optional)</span></label>
+            <textarea id="sr-compare" name="contact[compare_notes]" rows="2" placeholder="e.g. comparing to the FSR100"></textarea>
+          </div>
+
+          <button type="submit" class="sr-btn sr-btn--primary sr-btn--block">
+            {{ s.form_button_label }}
+          </button>
+
+          <p class="sr-form-fineprint">{{ s.form_fineprint }}</p>
+        {%- endif -%}
+      {% endform %}
+    </div>
+
+    {%- comment -%} Success markup used by the in-place (AJAX) submit {%- endcomment -%}
+    <template data-sr-success-tpl>
+      <div class="sr-form-success" data-sr-success role="status" tabindex="-1">
+        <div class="sr-form-success__top">
+          <div class="sr-form-success__icon" aria-hidden="true">
+            <svg viewBox="0 0 80 80" width="80" height="80"><circle cx="40" cy="40" r="33.33" fill="#00A344"/><path fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M27 41.5l9 9 17-19"/></svg>
+          </div>
+          <div class="sr-form-success__text">
+            <h3><span class="sr-form-success__l1">{{ s.success_line1 }}</span><span class="sr-form-success__l2">{{ s.success_line2 }}</span></h3>
+            <p>{{ s.success_text }}</p>
+          </div>
+        </div>
+        <button type="button" class="sr-btn sr-btn--primary sr-btn--block" data-sr-new-request>{{ s.success_button_label }}</button>
+      </div>
+    </template>
+  </div>
+</section>
+<script src="{{ 'showroom-benicia.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Showroom Check a Model",
+  "tag": "section",
+  "class": "section section-showroom-check-model",
+  "settings": [
+    { "type": "image_picker", "id": "form_bg_image", "label": "Background image" },
+    { "type": "text", "id": "form_heading", "label": "Form heading", "default": "Check a Model Before Driving Out" },
+    { "type": "textarea", "id": "form_subtext", "label": "Form subtext", "default": "Tell us what you want to see. A team member will confirm it's on the floor before your visit." },
+    { "type": "text", "id": "form_point_1", "label": "Point 1", "default": "Fast reply during phone hours, 7 AM–6 PM Mon–Fri" },
+    { "type": "text", "id": "form_point_2", "label": "Point 2", "default": "We'll suggest a comparable model if yours has sold" },
+    { "type": "text", "id": "form_button_label", "label": "Submit button label", "default": "Submit Request" },
+    { "type": "textarea", "id": "form_fineprint", "label": "Fine print", "default": "A team member will confirm whether the requested model or a comparable option is available to view. Submitting this form does not reserve equipment." },
+    { "type": "text", "id": "success_line1", "label": "Success heading — row 1", "default": "Thank you" },
+    { "type": "text", "id": "success_line2", "label": "Success heading — row 2", "default": "Your request has been received" },
+    { "type": "textarea", "id": "success_text", "label": "Success text", "default": "A team member will contact you using your preferred contact method to confirm the equipment is available before your visit." },
+    { "type": "text", "id": "success_button_label", "label": "Success button label", "default": "New Request" }
+  ],
+  "presets": [{ "name": "Showroom Check a Model" }]
+}
+{% endschema %}

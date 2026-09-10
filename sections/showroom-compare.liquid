@@ -1,0 +1,86 @@
+{%- comment -%} Benicia Showroom — What You Can Compare (block-based, product-linked) {%- endcomment -%}
+{{ 'showroom-benicia.css' | asset_url | stylesheet_tag }}
+{%- assign s = section.settings -%}
+<section class="sr-page sr-section sr-compare">
+  <div class="sr-container">
+    <h2 class="sr-section__title sr-center">{{ s.compare_heading }}</h2>
+    {%- if s.compare_disclosure != blank -%}
+      <p class="sr-compare__disclosure">{{ s.compare_disclosure }}</p>
+    {%- endif -%}
+    <div class="sr-compare__grid">
+      {%- for block in section.blocks -%}
+        {%- liquid
+          assign prod = block.settings.product
+          assign t = block.settings.title
+          if t == blank and prod != blank
+            assign t = prod.title
+          endif
+          assign d = block.settings.text
+          assign im = block.settings.image
+          if im == blank and prod != blank
+            assign im = prod.featured_image
+          endif
+          assign href = block.settings.link
+          if href == blank and prod != blank
+            assign href = prod.url
+          endif
+          assign cta = block.settings.cta_label | default: 'View This Showroom Model'
+        -%}
+        {%- if t != blank -%}
+          <div class="sr-compare__card" {{ block.shopify_attributes }}>
+            {%- if im != blank -%}
+              <div class="sr-compare__media">
+                {%- if href != blank -%}<a href="{{ href }}" tabindex="-1" aria-hidden="true">{%- endif -%}
+                  <img src="{{ im | image_url: width: 500 }}" alt="{{ t | strip_html | escape }}" loading="lazy">
+                {%- if href != blank -%}</a>{%- endif -%}
+              </div>
+            {%- endif -%}
+            <h3>{%- if href != blank -%}<a href="{{ href }}">{{ t }}</a>{%- else -%}{{ t }}{%- endif -%}</h3>
+            <p>{{ d }}</p>
+            {%- if href != blank -%}
+              <a class="sr-btn sr-btn--primary sr-compare__cta" href="{{ href }}">{{ cta }}</a>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Showroom Compare",
+  "tag": "section",
+  "class": "section section-showroom-compare",
+  "settings": [
+    { "type": "text", "id": "compare_heading", "label": "Heading", "default": "What You Can Compare in Person" },
+    { "type": "textarea", "id": "compare_disclosure", "label": "Disclosure", "default": "Representative categories only. Models on display change; call ahead to confirm a specific machine." }
+  ],
+  "blocks": [
+    {
+      "type": "category",
+      "name": "Category",
+      "settings": [
+        { "type": "product", "id": "product", "label": "Linked product (image + link)" },
+        { "type": "url", "id": "link", "label": "Link override (PDP URL)", "info": "Leave blank to use the linked product's URL." },
+        { "type": "image_picker", "id": "image", "label": "Image override", "info": "Leave blank to use the linked product's image." },
+        { "type": "text", "id": "title", "label": "Title", "info": "Leave blank to use the product title." },
+        { "type": "textarea", "id": "text", "label": "Text" },
+        { "type": "text", "id": "cta_label", "label": "CTA label", "default": "View This Showroom Model" }
+      ]
+    }
+  ],
+  "max_blocks": 8,
+  "presets": [
+    {
+      "name": "Showroom Compare",
+      "blocks": [
+        { "type": "category", "settings": { "title": "French Fitness Strength Machines", "text": "Selectorized and plate-loaded strength equipment from our own brand." } },
+        { "type": "category", "settings": { "title": "Functional Trainers, Smith Machines, Racks & Rigs", "text": "Compare frame size, cable paths, and footprint before you buy." } },
+        { "type": "category", "settings": { "title": "Free Weights, Benches, Flooring & Accessories", "text": "Test bench angles, plate feel, and flooring underfoot." } },
+        { "type": "category", "settings": { "title": "Remanufactured Commercial Cardio", "text": "Compare top-brand remanufactured treadmills, climbers, bikes, and ellipticals. Models rotate; call ahead." } }
+      ]
+    }
+  ]
+}
+{% endschema %}
