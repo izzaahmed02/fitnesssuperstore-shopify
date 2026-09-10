@@ -37,11 +37,38 @@
     #shopify-section-{{ section.id }} .multicolumn__subheading {
     text-align: center;
     max-width: 800px;
-    margin: 1.2rem auto 0;
+    margin: 12px auto 0;
+    }
+
+    /* Figma node 4583:81400 — 28px gap from the title block to the first card row
+       (Heading frame 11817-11927, benefits frame starts 11955) */
+    #shopify-section-{{ section.id }} .multicolumn__title.title-wrapper-with-link {
+    margin-bottom: 28px;
+    }
+
+    /* Figma node 4583:81400 — cards are 12px apart both directions (row and column),
+       not the theme's global 32px grid spacing. Matches the fix pattern documented in
+       commercial-gym-buildouts-space-traffic.liquid: the theme's grid sizes each card
+       via calc(33.33% - var(--grid-desktop-horizontal-spacing) * 2/3) for a 3-col grid,
+       so setting an explicit `gap` alone leaves cards sized for the old 32px spacing and
+       the row overflows/underfills — the width formula must be recomputed with the real
+       12px value too. */
+    @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .multicolumn-list.grid {
+    gap: 12px;
+    justify-content: center;
+    }
+    }
+    @media screen and (min-width: 990px) {
+    #shopify-section-{{ section.id }} .grid--3-col-desktop .grid__item {
+    width: calc(33.33% - 12px * 2 / 3);
+    max-width: calc(33.33% - 12px * 2 / 3);
+    }
     }
 
     /* Figma node 4612:86182/4612:86183 (mobile) — Oswald SemiBold 20px/26px; Lato Regular 14px/20px #4f4f55 */
     #shopify-section-{{ section.id }} .title.h1 {
+    font-weight: 600;
     font-size: 20px;
     line-height: 26px;
     }

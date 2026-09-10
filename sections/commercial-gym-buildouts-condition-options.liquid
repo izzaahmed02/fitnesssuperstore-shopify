@@ -49,6 +49,7 @@
 
     /* Figma node 5280:81996/5280:81997 (mobile) — Oswald SemiBold 20px/26px; Lato Regular 14px/20px #4f4f55 */
     #shopify-section-{{ section.id }} .title.h1 {
+    font-weight: 600;
     font-size: 20px;
     line-height: 26px;
     }
@@ -116,9 +117,20 @@
     }
 
     /* Figma node 5280:81927 "caR" — 12px gap between the 3 cards (3 x 418.67px card +
-       2 x 12px gap = 1280px, confirmed exactly), not the theme's default 32px. */
+       2 x 12px gap = 1280px, confirmed exactly), not the theme's default 32px. As
+       documented in commercial-gym-buildouts-space-traffic.liquid, the theme also sizes
+       each card via calc(33.33% - var(--grid-desktop-horizontal-spacing) * 2/3), so the
+       width formula must be recomputed with the real 12px value too, or the row falls
+       short of the container width and the shortfall lands as dead space on the right. */
     #shopify-section-{{ section.id }} .multicolumn-list.grid {
     gap: 12px;
+    justify-content: center;
+    }
+    }
+    @media screen and (min-width: 990px) {
+    #shopify-section-{{ section.id }} .grid--3-col-desktop .grid__item {
+    width: calc(33.33% - 12px * 2 / 3);
+    max-width: calc(33.33% - 12px * 2 / 3);
     }
     }
 

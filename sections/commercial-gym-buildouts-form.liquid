@@ -1004,6 +1004,27 @@
       return 'cgb-' + Date.now() + '-' + Math.random().toString(16).slice(2);
     }
 
+    // Reads Shopify's native Customer Privacy API only. Deliberately does not
+    // integrate with any third-party consent app (e.g. a store's cookie-banner
+    // app) — if this store's consent banner is handled by such an app instead
+    // of Shopify's native privacy settings, this stays 'unavailable' on hold.
+    function getConsentState() {
+      try {
+        if (window.Shopify && window.Shopify.customerPrivacy &&
+            typeof window.Shopify.customerPrivacy.currentVisitorConsent === 'function') {
+          var consent = window.Shopify.customerPrivacy.currentVisitorConsent();
+          return {
+            marketing: !!consent.marketing,
+            analytics: !!consent.analytics,
+            preferences: !!consent.preferences,
+            sale_of_data: !!consent.sale_of_data
+          };
+        }
+      } catch (e) {}
+
+      return 'unavailable';
+    }
+
     // Fires only once acceptance has already been confirmed by the
     // provider-confirmed hook below — never on click, animation, timeout,
     // or a failed/rejected response. No form field values are included,
@@ -1020,7 +1041,7 @@
         form_id: CGB_FORM_ID,
         page_path: window.location.pathname,
         event_timestamp: new Date().toISOString(),
-        consent_state: 'unavailable'
+        consent_state: getConsentState()
       }, getAttributionParams());
 
       window.dataLayer = window.dataLayer || [];
