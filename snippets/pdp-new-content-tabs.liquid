@@ -1,0 +1,283 @@
+{% comment %}
+  pdp-new-content-tabs — lower-content tabs DERIVED from product data.
+
+  Each tab aggregates related product-level sources and renders only when at
+  least one of them is non-empty, so one template serves every product.
+
+  Sources mirror the live PDP (sections/extra-info.liquid and the metafield
+  bindings in templates/product.json): features_specs, description and
+  gym_package_inclusions.
+
+    Overview .... package inclusions, description, all_in_one_overview,
+                  benefits, buying_guide
+    Features .... features (+ Brand line, as live), other_features
+    Specs ....... tech_specs, other_tech_specs, smith_bar_specs,
+                  weight_stacks, shipping_dims_weight_2
+    Accessories . set_includes grid, accessories_included grid,
+                  accessory_feature, list
+    Comparison .. comparison_chart_title, comparison_chart_table,
+                  other_comparison_charts
+    FAQ ......... frequently_asked_questions
+    Warranty .... warranty_info, Prop 65 notice
+
+  After the derived tabs, any non-empty "Content section" blocks from the
+  section (passed as content_blocks) are appended as extra custom tabs.
+
+  Out of scope for FSR90-class v1 (render on live via extra-info; add with
+  the package/rig flows): add_more_sections accordions,
+  attachments_and_add_ons rig grids, recommended_products slider.
+{% endcomment %}
+
+{%- assign fs = product.metafields.custom.features_specs.value -%}
+{%- comment -%} Unique-per-product id prefix for aria-controls. {%- endcomment -%}
+{%- assign section_id = product.id -%}
+
+{%- capture tab_overview -%}
+  {%- if product.metafields.custom.gym_package_inclusions != blank and product.metafields.custom.gym_package_inclusions.value != blank -%}
+    <h2 class="pdp-new__content-heading">Package Inclusions</h2>
+    {%- for package in product.metafields.custom.gym_package_inclusions.value -%}
+      <div class="pdp-new__package-group">
+        <h3>{{ package.display_name }}</h3>
+        {%- if package.inclusions -%}
+          <ul>
+            {%- for inclusion in package.inclusions.value -%}
+              <li>
+                <strong>{{ inclusion.quantity }} -
+                  <a href="{{ inclusion.product.value.url }}">
+                    {%- if inclusion.display_name != blank -%}{{ inclusion.display_name }}{%- else -%}{{ inclusion.product.value.title }}{%- endif -%}
+                  </a></strong>
+              </li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+      </div>
+    {%- endfor -%}
+  {%- endif -%}
+  {%- if product.description != blank -%}
+    <h2 class="pdp-new__content-heading">Description</h2>
+    {% render 'clean-description', description: product.description %}
+  {%- endif -%}
+  {%- if fs.all_in_one_overview != blank -%}
+    <h2 class="pdp-new__content-heading">The Ultimate ALL-IN-ONE Machine:</h2>
+    {{ fs.all_in_one_overview | metafield_tag }}
+  {%- endif -%}
+  {%- if fs.benefits != blank -%}
+    <h2 class="pdp-new__content-heading">Benefits</h2>
+    {{ fs.benefits | metafield_tag }}
+  {%- endif -%}
+  {%- comment -%} buying_guide, FAQ and shipping dims are multi-line text fields
+      holding raw HTML — live (extra-info.liquid) outputs .value raw;
+      metafield_tag would escape them into visible tags. {%- endcomment -%}
+  {%- if fs.buying_guide != blank -%}
+    {{ fs.buying_guide.value }}
+  {%- endif -%}
+{%- endcapture -%}
+
+{%- capture tab_features -%}
+  {%- if fs.features != blank -%}
+    <h2 class="pdp-new__content-heading">Features</h2>
+    <ul><li>Brand: {{ product.vendor }}</li></ul>
+    {{ fs.features | metafield_tag }}
+  {%- endif -%}
+  {%- if fs.other_features.value != blank -%}
+    {{ fs.other_features.value }}
+  {%- endif -%}
+{%- endcapture -%}
+
+{%- capture tab_specs -%}
+  {%- if fs.tech_specs != blank -%}
+    <h2 class="pdp-new__content-heading">Tech specs</h2>
+    {{ fs.tech_specs | metafield_tag }}
+  {%- endif -%}
+  {%- if fs.other_tech_specs.value != blank -%}
+    {{ fs.other_tech_specs.value }}
+  {%- endif -%}
+  {%- if fs.smith_bar_specs != blank -%}
+    <h2 class="pdp-new__content-heading">Smith bar specs</h2>
+    {{ fs.smith_bar_specs | metafield_tag }}
+  {%- endif -%}
+  {%- if fs.weight_stacks != blank -%}
+    <h2 class="pdp-new__content-heading">Weight Stacks</h2>
+    {{ fs.weight_stacks | metafield_tag }}
+  {%- endif -%}
+  {%- if fs.shipping_dims_weight_2 != blank -%}
+    <h2 class="pdp-new__content-heading">Shipping Dimensions &amp; Weight</h2>
+    {{ fs.shipping_dims_weight_2.value }}
+  {%- endif -%}
+{%- endcapture -%}
+
+{%- capture tab_accessories -%}
+  {%- if fs.set_includes.value != blank -%}
+    <h2 class="pdp-new__content-heading">Set Includes</h2>
+    <div class="pdp-new__accessory-grid">
+      {%- for item in fs.set_includes.value -%}
+        <div class="pdp-new__accessory-item">
+          {%- if item.set_image != blank -%}
+            <img src="{{ item.set_image | image_url: width: 150 }}" alt="{{ item.set_name | escape }}" width="150" height="100" loading="lazy">
+          {%- endif -%}
+          <span>{{ item.set_name }}</span>
+        </div>
+      {%- endfor -%}
+    </div>
+  {%- endif -%}
+  {%- if fs.accessories_included.value != blank -%}
+    <h2 class="pdp-new__content-heading">Accessories</h2>
+    <div class="pdp-new__accessory-grid">
+      {%- for item in fs.accessories_included.value -%}
+        <div class="pdp-new__accessory-item">
+          {%- if item.image != blank -%}
+            <img src="{{ item.image | image_url: width: 150 }}" alt="{{ item.title | escape }}" width="150" height="100" loading="lazy">
+          {%- endif -%}
+          <span>{{ item.title }}</span>
+        </div>
+      {%- endfor -%}
+    </div>
+  {%- endif -%}
+  {%- if fs.accessory_feature != blank -%}
+    <h2 class="pdp-new__content-heading">Accessory feature</h2>
+    {{ fs.accessory_feature | metafield_tag }}
+  {%- endif -%}
+  {%- if fs.list != blank -%}
+    {{ fs.list | metafield_tag }}
+  {%- endif -%}
+{%- endcapture -%}
+
+{%- capture tab_comparison -%}
+  {%- if fs.comparison_chart_title.value != blank -%}
+    <h3 class="pdp-new__chart-title">{{ fs.comparison_chart_title.value }}</h3>
+  {%- endif -%}
+  {%- if fs.comparison_chart_table.value != blank -%}
+    <div class="pdp-new__comparison-table">{{ fs.comparison_chart_table.value }}</div>
+  {%- endif -%}
+  {%- if fs.other_comparison_charts.value != blank -%}
+    <h2 class="pdp-new__content-heading">Still Deciding? Compare Similar Models:</h2>
+    <div class="pdp-new__comparison-links">
+      {%- for chart in fs.other_comparison_charts.value -%}
+        <div><a href="{{ chart.url }}">{{ chart.text }}</a></div>
+      {%- endfor -%}
+    </div>
+  {%- endif -%}
+{%- endcapture -%}
+
+{%- capture tab_faq -%}
+  {%- if fs.frequently_asked_questions != blank -%}
+    <h2 class="pdp-new__content-heading">Frequently Asked Questions</h2>
+    {%- comment -%} Raw authored HTML: <p><b>1. Question?</b></p> followed by
+        answer paragraphs, then unrelated copy and the FAQPage JSON-LD.
+        pdp-new.js folds each pair into a <details> accordion. Nothing is hidden
+        by default, so without JS it still renders as plain paragraphs. {%- endcomment -%}
+    <div class="pdp-new__faq" data-pdp-faq>{{ fs.frequently_asked_questions.value }}</div>
+  {%- endif -%}
+{%- endcapture -%}
+
+{%- comment -%} Warranty pairs the warranty_info metafield with the California
+    Prop 65 notice. Downloads are NOT here — they render below the tabs, above
+    the customer photos. {%- endcomment -%}
+{%- capture tab_warranty -%}
+  {%- if fs.warranty_info != blank -%}
+    <h2 class="pdp-new__content-heading">Warranty</h2>
+    {{ fs.warranty_info | metafield_tag }}
+  {%- endif -%}
+  {% render 'prop65' %}
+{%- endcapture -%}
+
+{%- comment -%} Assemble: label + content pairs, skipping empty groups. {%- endcomment -%}
+{%- assign tab_labels = '' -%}
+
+{%- assign check = tab_overview | strip_html | strip -%}
+{%- if check != blank -%}{%- assign tab_labels = tab_labels | append: 'Overview|||' -%}{%- endif -%}
+{%- assign check = tab_features | strip_html | strip -%}
+{%- if check != blank -%}{%- assign tab_labels = tab_labels | append: 'Features|||' -%}{%- endif -%}
+{%- assign check = tab_specs | strip_html | strip -%}
+{%- if check != blank -%}{%- assign tab_labels = tab_labels | append: 'Specs|||' -%}{%- endif -%}
+{%- assign check = tab_accessories | strip_html | strip -%}
+{%- if check != blank -%}{%- assign tab_labels = tab_labels | append: 'Accessories|||' -%}{%- endif -%}
+{%- assign check = tab_comparison | strip_html | strip -%}
+{%- if check != blank -%}{%- assign tab_labels = tab_labels | append: 'Comparison|||' -%}{%- endif -%}
+{%- assign check = tab_faq | strip_html | strip -%}
+{%- if check != blank -%}{%- assign tab_labels = tab_labels | append: 'FAQ|||' -%}{%- endif -%}
+{%- comment -%} strip_html would flatten prop65's icon-only markup to nothing, so the
+    emptiness test here has to look at the raw capture. {%- endcomment -%}
+{%- assign check = tab_warranty | strip -%}
+{%- if check != blank -%}{%- assign tab_labels = tab_labels | append: 'Warranty|||' -%}{%- endif -%}
+
+{%- assign derived_labels = tab_labels | split: '|||' -%}
+{%- assign has_custom = false -%}
+{%- for cb in content_blocks -%}
+  {%- assign cb_check = cb.settings.content | strip_html | strip -%}
+  {%- if cb_check != blank -%}{%- assign has_custom = true -%}{%- endif -%}
+{%- endfor -%}
+
+{%- comment -%} Mobile (<=989px, the PDP's desktop boundary) renders these same
+    panels as an accordion list instead of tabs: the tab row hides, every panel
+    shows, and each gets a header button. One DOM, no duplicated content —
+    desktop just hides the buttons and forces the panels open. {%- endcomment -%}
+{%- capture acc_chevron -%}
+  <svg class="pdp-new__acc-arrow" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z" fill="#23232B"/>
+  </svg>
+{%- endcapture -%}
+
+<div class="pdp-new__content-wrap" data-pdp-accordions>
+{%- if derived_labels.size > 0 or has_custom -%}
+  <div class="pdp-new__content" data-tabs-section>
+    <div class="tabs__buttons pdp-new__content-nav">
+      {%- assign tab_i = 0 -%}
+      {%- for label in derived_labels -%}
+        {%- assign tab_i = tab_i | plus: 1 -%}
+        <button type="button" class="tab-btn pdp-new__content-tab{% if tab_i == 1 %} active{% endif %}" data-index="{{ tab_i }}">{{ label }}</button>
+      {%- endfor -%}
+      {%- for cb in content_blocks -%}
+        {%- assign cb_check = cb.settings.content | strip_html | strip -%}
+        {%- if cb_check != blank -%}
+          {%- assign tab_i = tab_i | plus: 1 -%}
+          <button type="button" class="tab-btn pdp-new__content-tab{% if tab_i == 1 %} active{% endif %}" data-index="{{ tab_i }}">{{ cb.settings.heading | escape }}</button>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+    <div class="tabs__content">
+      {%- assign tab_i = 0 -%}
+      {%- for label in derived_labels -%}
+        {%- assign tab_i = tab_i | plus: 1 -%}
+        <div class="tabs__item pdp-new__content-section{% if tab_i == 1 %} active visible{% endif %}" data-index="{{ tab_i }}">
+          <button type="button" class="pdp-new__acc-btn" aria-expanded="false" aria-controls="pdp-acc-{{ section_id }}-{{ tab_i }}">
+            <span class="pdp-new__acc-label">{{ label }}</span>
+            {{ acc_chevron }}
+          </button>
+          <div class="pdp-new__acc-panel" id="pdp-acc-{{ section_id }}-{{ tab_i }}">
+            <div class="pdp-new__content-body rte">
+              {%- case label -%}
+                {%- when 'Overview' -%}{{ tab_overview }}
+                {%- when 'Features' -%}{{ tab_features }}
+                {%- when 'Specs' -%}{{ tab_specs }}
+                {%- when 'Accessories' -%}{{ tab_accessories }}
+                {%- when 'Comparison' -%}{{ tab_comparison }}
+                {%- when 'FAQ' -%}{{ tab_faq }}
+                {%- when 'Warranty' -%}{{ tab_warranty }}
+              {%- endcase -%}
+            </div>
+          </div>
+        </div>
+      {%- endfor -%}
+      {%- for cb in content_blocks -%}
+        {%- assign cb_check = cb.settings.content | strip_html | strip -%}
+        {%- if cb_check != blank -%}
+          {%- assign tab_i = tab_i | plus: 1 -%}
+          <div class="tabs__item pdp-new__content-section{% if tab_i == 1 %} active visible{% endif %}" data-index="{{ tab_i }}" {{ cb.shopify_attributes }}>
+            <button type="button" class="pdp-new__acc-btn" aria-expanded="false" aria-controls="pdp-acc-{{ section_id }}-{{ tab_i }}">
+              <span class="pdp-new__acc-label">{{ cb.settings.heading | escape }}</span>
+              {{ acc_chevron }}
+            </button>
+            <div class="pdp-new__acc-panel" id="pdp-acc-{{ section_id }}-{{ tab_i }}">
+              {%- comment -%} Heading duplicates the accordion label on mobile. {%- endcomment -%}
+              <h2 class="pdp-new__content-heading pdp-new__acc-dup">{{ cb.settings.heading | escape }}</h2>
+              <div class="pdp-new__content-body rte">{{ cb.settings.content }}</div>
+            </div>
+          </div>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+{%- endif -%}
+
+</div>
