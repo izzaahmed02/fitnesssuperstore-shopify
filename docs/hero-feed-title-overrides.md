@@ -7,6 +7,9 @@ titles, and not PDP H1s. Nothing in Shopify changes.
 Canonical data: [`feeds/hero-title-overrides.csv`](../feeds/hero-title-overrides.csv).
 That file is the single source of truth for both delivery paths below.
 
+Post-upload evidence and the per-SKU verification checklist live in
+[`hero-feed-title-closeout.md`](hero-feed-title-closeout.md).
+
 ## Two delivery paths, one table
 
 | | Path | Owner |
