@@ -113,19 +113,53 @@ the two Google ones.
 
 **The group name, not the feed name, identifies a feed.** Names repeat across
 groups: a `googleshoppingfs` and a `googleshoppingfrenchfitness` also sit in the
-plain `New Feeds` group, both Paused and Disconnected, and editing those changes
-nothing. Worse, the Aug 12 feed inventory records a *second* `bingshoppingnew`,
-in the `Bing main feed` group, as **Enabled with confirmed active sync** on a
-different cohort (2,418 products). If it is still serving it needs the same
-expression, and the 2,505-row count below does not apply to it. Confirm its
-state before treating the Bing side as done.
+plain `New Feeds` group, and the `All products` group holds six more Google
+Shopping feeds. Editing the wrong instance changes nothing.
 
-**Preview before saving.** The Edit primary feed screen carries Preview and Run
-history. Preview must show only `new` and `refurbished` before the change is
-saved. Worth stating because the Aug 12 pilot recorded Preview as unusable on
-the French Fitness feed after 14+ attempts, so a Preview that does not open is a
-known failure of that feed's UI rather than a fault in the expression — fall
-back to checking the regenerated file with `scripts/feed_condition_check.py`.
+The Settings > Feeds screen, read 2026-09-10, shows **14 groups and 17 feeds**,
+last run Success 17 hours ago over 6,483 products. The three groups whose
+product counts match the cohorts derived here:
+
+| Group | Products in Multifeeds | Cohort derived from Shopify |
+| --- | --- | --- |
+| New Feeds Other - Larianne test | 1,535 | 1,535 products, 1,537 rows |
+| New Feeds FF - Larianne test | 918 | 918 in collection, 915 ACTIVE, 968 rows |
+| Bing main feed - Larianne test | 2,453 | 2,453 in collections, 2,450 ACTIVE, 2,505 rows |
+
+An independent cross-check on the same numbers, from the app rather than from
+Shopify. The FF gap is the three DRAFT/ARCHIVED products the feed correctly
+drops.
+
+**The second Bing feed's cohort is not known.** `bingshoppingnew` in the
+`Bing main feed` group is a separate instance the Aug 12 inventory recorded as
+Enabled with confirmed active sync. That inventory put it at 2,418 products, but
+its group is now bounded to **6,483** — the whole catalogue — so the August
+figure is stale and no row count can be stated for it here. If it is still
+serving it needs the same expression, and none of the counts below apply to it.
+Establish its cohort from a Preview or an export before treating the Bing side
+as done.
+
+## Test in the staging groups first
+
+Two staging groups already carry the same cohorts as the live pair:
+
+| Staging group | Products | Live counterpart |
+| --- | --- | --- |
+| `googleshoppingfs - Staging (Ilsa)` | 1,535 | New Feeds Other - Larianne test |
+| `googleshoppingfrenchfitness - Staging (Ilsa)` | 918 | New Feeds FF - Larianne test |
+
+So the expression can be proved before any live feed is touched, which is how
+the offer-ID change was validated — duplicate the feed, change the one field,
+diff the output against the live export. Run
+`scripts/feed_condition_check.py` on the staging output first; it is the same
+acceptance test either way, and a staging run costs nothing if the expression is
+wrong.
+
+The Edit primary feed screen also carries Preview, which must show only `new`
+and `refurbished`. Worth noting that the Aug 12 pilot recorded Preview as
+unusable on the French Fitness feed after 14+ attempts — a Preview that will not
+open is a known failure of that feed's UI, not a fault in the expression. Fall
+back to the checker on the generated file.
 
 ## QA target — the expected output
 
