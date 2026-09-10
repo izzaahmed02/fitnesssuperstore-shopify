@@ -12,7 +12,9 @@ evidence trail for "did all ten land, and did anything else move".
 | Go-live | **2026-09-08** |
 | Freeze ends | **2026-10-06** (go-live + 28 days) |
 | Confirmed with Tim on go-live day | `FFT-SLCLE`, `FFB-45DLLP` |
-| Outstanding | the other eight, verified against the checklist below |
+| Remaining eight verified | 2026-09-10 |
+| Retitle result | **10/10** - every approved title live, both label columns intact |
+| Serving state | 8/10 Approved with Needs attention 0; `FFB-DAP` and `FF-FSR90` at Limited |
 
 ## Expected state, per SKU
 
@@ -60,6 +62,39 @@ The approved strings were also re-transcribed from Tim's 2026-09-05 email and
 diffed against the committed table: all ten byte-identical, en dash intact.
 `scripts/check_hero_titles.py` passes — longest title 102 characters, tightest
 keyword end at character 67 (`FF-FSR90`).
+
+## Result, 2026-09-10
+
+**Retitle: 10 of 10.** Every one of the ten shows the approved string exactly,
+en dash intact, and every one still carries `custom_label_3 = p1_hero` plus its
+`custom_label_4` series value from v2. All ten list `hero_titles_supplemental.csv`
+and `supplemental_priority_labels_v2.csv` side by side in raw data source
+attributes, so the title source is contributing without displacing the labels.
+No id errors, so the bare-SKU scheme was right on all ten.
+
+**Serving state: 8 of 10.** Two items are not clean, and neither is a retitle
+problem:
+
+- `FFB-DAP` and `FF-FSR90` sit at **Limited** ("showing on Google but has
+  limited discoverability") with **Needs attention 1**. A supplemental carrying
+  only `id` and `title` cannot cause a discoverability limit, and the title,
+  both labels and both source attributions are correct on both items. Read the
+  Needs attention tab on each for the named issue before attributing it to this
+  work. Live Shopify shows nothing that separates these two from the eight clean
+  ones: both are ACTIVE, single-variant, in stock, published to Google &
+  YouTube, carry a barcode and resolve to a working product URL.
+
+Two smaller observations, neither blocking and neither in scope for the freeze:
+
+- `FFT-ACD` carries an **Edited** marker on the item. A manual Merchant Center
+  edit takes precedence over feed data, so whatever it covers will not update
+  from any source. The title is currently correct, so if the edit is on the
+  title it is at least the approved string, but it should be identified.
+- `FF-FSR90` also carries **`FSR Final Upload - 7 rows (id, title)`**, a second
+  supplemental that supplies `title` on the same primary. The approved string is
+  what renders today, so `hero_titles_supplemental.csv` is winning, but two
+  sources contending for one attribute on a hero SKU is fragile and should be
+  resolved in the post-sale supplemental cleanup rather than during the freeze.
 
 ## Closeout checklist
 

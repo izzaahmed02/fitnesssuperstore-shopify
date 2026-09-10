@@ -19,7 +19,9 @@ Tim issued on 2026-09-08. The title supplemental carries only id and title, so
 any drift in these two columns means something other than this work touched v2.
 
 Run: python3 scripts/check_hero_title_closeout.py
-Exit 0 = 10/10, safe to send the closeout.
+Exit 0 = 10/10 on both. Exit 1 separates a retitle exception (a title or a
+label is wrong) from a serving exception (the item is not Approved, or carries
+Needs attention), because a title-only supplemental cannot cause the second.
 """
 import csv
 import pathlib
@@ -35,6 +37,7 @@ def main() -> int:
     rows = list(csv.DictReader(CHECKLIST.open(encoding="utf-8")))
 
     exceptions: list[str] = []
+    serving: list[str] = []
     unchecked: list[str] = []
     passed: list[str] = []
 
@@ -54,26 +57,44 @@ def main() -> int:
             unchecked.append(sku)
             continue
 
-        problems = []
+        # The retitle itself and the item's serving state are reported separately.
+        # A title lands or it does not; a Limited item is a different problem that
+        # this work cannot cause, and conflating the two hides which is which.
+        retitle_problems = []
         if row["observed_title_matches"].strip().lower() != "yes":
-            problems.append("title does not match the approved string")
+            retitle_problems.append("title does not match the approved string")
         for col, label in (("custom_label_3", "priority tier"), ("custom_label_4", "series")):
             want, got = row[f"expected_{col}"], row[f"observed_{col}"].strip()
             if got != want:
-                problems.append(f"{label} is {repr(got) if got else 'blank'}, expected {want!r}")
+                retitle_problems.append(f"{label} is {repr(got) if got else 'blank'}, expected {want!r}")
+
+        serving_problems = []
         if row["item_status"].strip() != "Approved":
-            problems.append(f"item status is {row['item_status'].strip() or 'blank'}, expected Approved")
+            serving_problems.append(
+                f"item status is {row['item_status'].strip() or 'blank'}, expected Approved")
         na = row["needs_attention_count"].strip()
         if na != "0":
-            problems.append(f"Needs attention is {na or 'blank'}, expected 0")
+            serving_problems.append(f"Needs attention is {na or 'blank'}, expected 0")
 
-        if problems:
-            exceptions.append(f"{sku}: " + "; ".join(problems))
-        else:
+        if retitle_problems:
+            exceptions.append(f"{sku}: " + "; ".join(retitle_problems))
+        if serving_problems:
+            serving.append(f"{sku}: " + "; ".join(serving_problems))
+        if not retitle_problems and not serving_problems:
             passed.append(sku)
 
+    retitle_failed = {e.split(":")[0] for e in exceptions}
+    serving_failed = {s.split(":")[0] for s in serving}
+
     for sku in [r["sku"] for r in rows]:
-        state = "PASS" if sku in passed else ("NOT CHECKED" if sku in unchecked else "EXCEPTION")
+        if sku in unchecked:
+            state = "NOT CHECKED"
+        elif sku in retitle_failed:
+            state = "RETITLE EXCEPTION"
+        elif sku in serving_failed:
+            state = "retitle ok, serving exception"
+        else:
+            state = "PASS"
         print(f"{sku:<11} {state}")
 
     print()
@@ -81,14 +102,25 @@ def main() -> int:
         print(f"INCOMPLETE - {len(unchecked)} of 10 not yet checked in Merchant Center: "
               + ", ".join(unchecked))
         return 2
+
+    clean_retitles = len(rows) - len(retitle_failed)
     if exceptions:
-        print(f"EXCEPTIONS - {len(passed)}/10 clean:")
+        print(f"RETITLE - {clean_retitles}/10 clean:")
         for e in exceptions:
             print(f"  - {e}")
-        return 1
-    print("10/10 - all ten titles live, both label columns intact, all Approved, "
-          "Needs attention 0 on every one.")
-    return 0
+    else:
+        print(f"RETITLE - {clean_retitles}/10. Every approved title live, "
+              "both label columns intact on all ten.")
+
+    if serving:
+        print()
+        print(f"SERVING STATE - {len(rows) - len(serving_failed)}/10 Approved with "
+              "Needs attention 0. Not caused by a title-only supplemental, so read the "
+              "Needs attention tab on each before attributing it to this work:")
+        for s in serving:
+            print(f"  - {s}")
+
+    return 1 if (exceptions or serving) else 0
 
 
 if __name__ == "__main__":
