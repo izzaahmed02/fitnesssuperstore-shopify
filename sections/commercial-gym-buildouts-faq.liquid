@@ -2,8 +2,8 @@
 
 {%- style -%}
     .section-{{ section.id }}-padding {
-    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
-    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+    padding-top: {{ section.settings.section_padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.section_padding_bottom | times: 0.75 | round: 0 }}px;
     }
 
     #shopify-section-{{ section.id }} {
@@ -26,16 +26,40 @@
     margin: 12px auto 0;
     }
 
-    /* Figma node 4608:84320 — 28px gap from the title block to the questions list
-       (Title frame ends 17239, Questions frame starts 17267), not 3rem (48px) */
+    /* Figma node 4608:84322 centres the heading. .title-wrapper-with-link is the
+       theme's heading+link flex row, which left it aligned to the start, and its 30px
+       bottom margin collapsed against the accordion column's 28px top margin and won. */
+    #shopify-section-{{ section.id }} .title-wrapper-with-link {
+    display: block;
+    text-align: center;
+    margin-bottom: 0;
+    }
+
+    /* Figma nodes 4608:84320 / 4608:84324 — 28px from the title block to the questions
+       list (Title frame ends 17239, Questions starts 17267), and the accordion column
+       is 842px wide and centred (x=-2059 in a 1440 frame), not 800px. */
     #shopify-section-{{ section.id }} .commercial-gym-buildouts-faq__items {
-    max-width: 800px;
+    max-width: 842px;
     margin: 28px auto 0;
     }
 
-    #shopify-section-{{ section.id }} .faq__item.opened {
-    border: 1px solid #D83D0E;
+    /* Figma node 4608:84358 "Accordion" — each closed row is an 842x72 card: 24px
+       padding around a 24px title row, an 8px radius and a #e5e5e5 stroke. The theme's
+       wrapper ships 10px padding, which made the rows 66px. The stroke is drawn as an
+       inset shadow so it takes no layout space — Figma's 72px is 24 + 24 + 24 exactly,
+       where a real border would make it 74px. */
+    #shopify-section-{{ section.id }} .faq__item-wrapper {
+    padding: 24px;
+    border: 0;
+    box-shadow: inset 0 0 0 1px #e5e5e5;
     border-radius: 8px;
+    }
+
+    /* Figma node 4608:84325 — the open accordion swaps the stroke to #d83d0e. Applied
+       to the same wrapper, and as an inset shadow, so opening a row doesn't shift the
+       layout by the 2px a real border would add. */
+    #shopify-section-{{ section.id }} .faq__item.opened .faq__item-wrapper {
+    box-shadow: inset 0 0 0 1px #d83d0e;
     }
 
     /* Figma node 4612:86668 (mobile) — Oswald SemiBold 28px/34px (larger than other
@@ -75,8 +99,8 @@
 
     @media screen and (min-width: 750px) {
     .section-{{ section.id }}-padding {
-    padding-top: {{ section.settings.padding_top }}px;
-    padding-bottom: {{ section.settings.padding_bottom }}px;
+    padding-top: {{ section.settings.section_padding_top }}px;
+    padding-bottom: {{ section.settings.section_padding_bottom }}px;
     }
     }
 {%- endstyle -%}
@@ -224,23 +248,23 @@
     },
     {
       "type": "range",
-      "id": "padding_top",
+      "id": "section_padding_top",
       "min": 0,
       "max": 100,
       "step": 4,
       "unit": "px",
       "label": "t:sections.all.padding.padding_top",
-      "default": 56
+      "default": 80
     },
     {
       "type": "range",
-      "id": "padding_bottom",
+      "id": "section_padding_bottom",
       "min": 0,
       "max": 100,
       "step": 4,
       "unit": "px",
       "label": "t:sections.all.padding.padding_bottom",
-      "default": 56
+      "default": 80
     }
   ],
   "blocks": [
