@@ -13,6 +13,10 @@
   any automatically selected product: when an approved reference is blank the
   corresponding card is simply not rendered.
 
+  Contact and financing links remain available as controlled fallbacks. Optional
+  internal_links_1 entries on the above-the-fold metaobject are rendered only
+  when both link text and URL are present.
+
   No price, Add to Cart, Buy Now, Notify Me or quick-add control is rendered
   here, so the discontinued page keeps no purchase path.
 
@@ -25,6 +29,7 @@
   assign above_the_fold = discontinued_content.above_the_fold_content.value
   assign new_replacement = above_the_fold.best_new_replacement.value
   assign value_replacement = above_the_fold.best_value_option.value
+  assign internal_links = above_the_fold.internal_links_1.value
 -%}
 
 {%- if above_the_fold != blank -%}
@@ -54,5 +59,18 @@
         intro: above_the_fold.best_value_intro
       %}
     {%- endif -%}
+
+    <nav class="discontinued-replacement__actions" aria-label="Discontinued product support options">
+      <a class="discontinued-replacement__action-link" href="/pages/contact">Contact us</a>
+      <a class="discontinued-replacement__action-link" href="/pages/financing">Explore financing</a>
+
+      {%- for internal_link in internal_links -%}
+        {%- if internal_link.text != blank and internal_link.url != blank -%}
+          <a class="discontinued-replacement__action-link" href="{{ internal_link.url }}">
+            {{- internal_link.text | escape -}}
+          </a>
+        {%- endif -%}
+      {%- endfor -%}
+    </nav>
   </div>
 {%- endif -%}
