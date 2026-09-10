@@ -33,6 +33,23 @@
     }
     }
 
+    /* Figma node 4585:81432 (1440px frame) — content is inset 80px each side for a
+       1280px column, which is exactly the width the card-grid comment below assumes
+       ("4 x 311px card + 3 x 12px gap = 1280px"). The theme's --page-width caps this
+       at 1380px, so 40px padding was yielding a 1300px column and 316px cards.
+       Overriding max-width here no longer risks the left-packing the note above
+       describes: the width formula further down makes 4 cards + 3 gaps fill exactly
+       100%, and .multicolumn-list.grid keeps justify-content: center as a backstop.
+       Matches the same 80px treatment used by commercial-gym-buildouts-facility-types. */
+    @media screen and (min-width: 990px) {
+    #shopify-section-{{ section.id }} .page-width {
+    max-width: 100%;
+    margin: 0;
+    padding-left: 80px;
+    padding-right: 80px;
+    }
+    }
+
     #shopify-section-{{ section.id }} .multicolumn-card {
     text-align: {{ section.settings.text_align }};
     }
@@ -43,6 +60,16 @@
     text-align: center;
     max-width: 800px;
     margin: 12px auto 0;
+    }
+
+    /* .title-wrapper-with-link is one of the theme's flex rows (built to sit a title
+       beside a "view all" link). The subheading is a sibling of the <h2> inside it, so
+       it became a second flex item and rendered to the RIGHT of the heading rather than
+       beneath it — the 12px gap above never applied and the two overlapped. Figma node
+       4585:81469 stacks them centred (heading y=13419 h=50, paragraph y=13481). */
+    #shopify-section-{{ section.id }} .multicolumn__title.title-wrapper-with-link {
+    display: block;
+    text-align: center;
     }
 
     /* Figma node 4612:86423/4612:86424 (mobile) — Oswald SemiBold 20px/26px; Lato Regular 14px/20px #4f4f55 */
@@ -130,6 +157,17 @@
     }
     }
 
+    /* Draw the card outline as an inset shadow rather than a border. Figma's 581px card
+       height is 32 + 247 + 20 + 26 + 8 + 216 + 32 exactly — its 1px stroke paints over
+       the frame boundary and takes no layout space, where a CSS border adds 1px top and
+       bottom. An inset shadow is visually identical, costs no layout, and returns the
+       card's inner width to 247px to match the image frame. The card carries no
+       box-shadow of its own, so nothing is overwritten. */
+    #shopify-section-{{ section.id }} .multicolumn-list__item {
+    border: 0;
+    box-shadow: inset 0 0 0 1px #e5e5e5;
+    }
+
     /* assets/base.css.liquid's ".grid--4-col-desktop .grid__item" (min-width:990px)
        sizes each card as calc(25% - var(--grid-desktop-horizontal-spacing) * 3 / 4) —
        that variable is the theme's GLOBAL grid gap (32px, config/settings_data.json
@@ -157,6 +195,12 @@
     font-size: 14px;
     line-height: 20px;
     color: #808080;
+    }
+
+    /* The richtext setting supplies the inner <p>; drop its default margins so the line
+       stays 20px tall with exactly 28px above it. */
+    #shopify-section-{{ section.id }} .space-traffic__disclaimer > p {
+    margin: 0;
     }
 
     @media screen and (min-width: 750px) {
@@ -312,7 +356,14 @@
             {%- endif -%}
         </slider-component>
         {%- unless section.settings.disclaimer == blank -%}
-            <p class="space-traffic__disclaimer">{{ section.settings.disclaimer }}</p>
+            {%- comment -%}
+              A <div>, not a <p>: `disclaimer` is a richtext setting, so it emits its own
+              <p>. Nesting that inside a <p> is invalid, and the browser closes the outer
+              one early — leaving .space-traffic__disclaimer empty and ejecting the real
+              text as an unstyled sibling, which rendered left-aligned at the wrong size
+              instead of the centred italic line in Figma node 4598:83643.
+            {%- endcomment -%}
+            <div class="space-traffic__disclaimer">{{ section.settings.disclaimer }}</div>
         {%- endunless -%}
     </div>
 </div>
