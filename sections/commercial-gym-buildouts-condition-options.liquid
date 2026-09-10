@@ -36,6 +36,20 @@
     }
     }
 
+    /* Figma node 5280:81925 (1440px frame) — content is inset 80px each side for a
+       1280px column, which is what sizes the three cards at 418.67px
+       (3 x 418.67 + 2 x 12 gap = 1280). Capping .page-width at 1280px and then adding
+       40px padding left only 1200px, so the cards came out 392px and their images
+       with them. */
+    @media screen and (min-width: 990px) {
+    #shopify-section-{{ section.id }} .page-width {
+    max-width: 100%;
+    margin: 0;
+    padding-left: 80px;
+    padding-right: 80px;
+    }
+    }
+
     #shopify-section-{{ section.id }} .multicolumn-card {
     text-align: {{ section.settings.text_align }};
     }
@@ -46,6 +60,17 @@
     text-align: center;
     max-width: 800px;
     margin: 12px auto 0;
+    }
+
+    /* Figma node 5280:81962 "Title" — 12px between heading and subheading (50 + 12 +
+       48 = the 110px title frame). The 12px margin above was landing as 22px because
+       the theme's title wrapper adds its own gap and the heading a bottom margin. */
+    #shopify-section-{{ section.id }} .multicolumn__title.title-wrapper-with-link {
+    gap: 0;
+    }
+
+    #shopify-section-{{ section.id }} .multicolumn__title .title {
+    margin-bottom: 0;
     }
 
     /* Figma node 5280:81996/5280:81997 (mobile) — Oswald SemiBold 20px/26px; Lato Regular 14px/20px #4f4f55 */
@@ -146,13 +171,30 @@
        row above (was 2rem/32px). */
     #shopify-section-{{ section.id }} .space-traffic__disclaimer {
     text-align: center;
-    max-width: 800px;
+    /* Figma node 5280:81965 sets this line 1029px wide on a single 20px row. The 800px
+       cap used by the space-traffic disclaimer (whose line is only 766px) would wrap
+       this longer sentence onto a second row. */
+    max-width: none;
     margin: 28px auto 0;
     font-family: 'Lato', sans-serif;
     font-style: italic;
     font-size: 14px;
     line-height: 20px;
     color: #808080;
+    }
+
+    /* The richtext setting supplies the inner <p>; drop its default margins so the line
+       stays 20px tall with exactly 28px above it. */
+    #shopify-section-{{ section.id }} .space-traffic__disclaimer > p {
+    margin: 0;
+    }
+
+    /* Draw the card outline as an inset shadow rather than a border, so it takes no
+       layout space — Figma's 445px card height excludes the stroke, where a real
+       border added 1px top and bottom. */
+    #shopify-section-{{ section.id }} .multicolumn-list__item {
+    border: 0;
+    box-shadow: inset 0 0 0 1px #e5e5e5;
     }
 
     @media screen and (min-width: 750px) {
@@ -308,7 +350,14 @@
             {%- endif -%}
         </slider-component>
         {%- unless section.settings.disclaimer == blank -%}
-            <p class="space-traffic__disclaimer">{{ section.settings.disclaimer }}</p>
+            {%- comment -%}
+              A <div>, not a <p>: `disclaimer` is a richtext setting and emits its own
+              <p>. Nested inside a <p> that is invalid, so the browser closed this
+              element early — leaving it empty and ejecting the real text as an
+              unstyled sibling instead of the centred grey italic line in Figma node
+              5280:81965. Same fix as commercial-gym-buildouts-space-traffic.
+            {%- endcomment -%}
+            <div class="space-traffic__disclaimer">{{ section.settings.disclaimer }}</div>
         {%- endunless -%}
     </div>
 </div>
