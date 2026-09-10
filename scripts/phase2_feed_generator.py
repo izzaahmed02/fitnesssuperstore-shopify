@@ -466,8 +466,82 @@ def feed_for(product, rules):
     return "googleshoppingfs"
 
 
+DISCOUNT_QUERY = """
+query Discounts($cursor: String) {
+  automaticDiscountNodes(first: 50, after: $cursor) {
+    pageInfo { hasNextPage endCursor }
+    nodes {
+      automaticDiscount {
+        __typename
+        ... on DiscountAutomaticBasic {
+          title status startsAt endsAt
+          customerGets {
+            value { ... on DiscountPercentage { percentage } }
+            items {
+              ... on DiscountCollections { collections(first: 50) { nodes { id title } } }
+              ... on DiscountProducts { products(first: 250) { nodes { id } pageInfo { hasNextPage } } }
+              ... on AllDiscountItems { allItems }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+"""
+
+
+def fetch_active_discounts(shop, token):
+    """Active automatic percentage discounts, with the collections/products they hit.
+
+    Automatic discounts apply in the CART. They never touch variant price or
+    compareAtPrice, so the feed cannot see them without asking for them directly.
+    """
+    out, cursor = [], None
+    while True:
+        page = graphql(shop, token, DISCOUNT_QUERY, {"cursor": cursor})["automaticDiscountNodes"]
+        for node in page["nodes"]:
+            d = node.get("automaticDiscount") or {}
+            if d.get("__typename") != "DiscountAutomaticBasic" or d.get("status") != "ACTIVE":
+                continue
+            pct = ((d.get("customerGets") or {}).get("value") or {}).get("percentage")
+            if not pct:
+                continue
+            items = (d.get("customerGets") or {}).get("items") or {}
+            products = (items.get("products") or {})
+            if (products.get("pageInfo") or {}).get("hasNextPage"):
+                # Silently truncating a discount's scope would mis-price the rows
+                # past the cap, which is worse than not applying it at all.
+                raise SystemExit(
+                    f"automatic discount {d.get('title')!r} targets more than 250 products; "
+                    "paginate its product list before using --sale-price-from-automatic-discounts")
+            out.append({
+                "title": d.get("title", ""),
+                "percentage": Decimal(str(pct)),
+                "all_items": bool(items.get("allItems")),
+                "collections": {n["title"] for n in (items.get("collections") or {}).get("nodes", [])},
+                "products": {n["id"] for n in products.get("nodes", [])},
+            })
+        if not page["pageInfo"]["hasNextPage"]:
+            return out
+        cursor = page["pageInfo"]["endCursor"]
+
+
+def automatic_discount_for(product, discounts):
+    """The single deepest active automatic discount that applies to this product."""
+    if not discounts:
+        return None
+    titles = {node["title"] for node in product["collections"]["nodes"]}
+    best = None
+    for d in discounts:
+        if d["all_items"] or (d["collections"] & titles) or product["id"] in d["products"]:
+            if best is None or d["percentage"] > best["percentage"]:
+                best = d
+    return best
+
+
 def variant_rows(product, feed, rules, labels, titles, shipping, ground_estimates, report,
-                 label_report=None, label_sources=None):
+                 label_report=None, label_sources=None, discounts=None):
     """One row per sellable variant, keyed <productID>-<variantID>.
 
     A bare product id can only carry one offer, which is why multi-variant
@@ -526,6 +600,24 @@ def variant_rows(product, feed, rules, labels, titles, shipping, ground_estimate
                 list_price, sale_price = compare_at, money(price)
             elif compare_at > 0:
                 report.append((offer_id, sku, f"compare-at {compare_at} not above price {price}; no sale_price"))
+
+        # Tim, 2026-09-07 ruling 4: automatic-discount sale_price is a config flag,
+        # default OFF. Google requires the submitted sale price to be VISIBLE on the
+        # landing page, and today's promotions are checkout-automatic with no PDP
+        # sale-price display, so feeding a sale_price the PDP does not show creates
+        # the same mismatch in the other direction. The flag goes ON only for
+        # promotions whose discounted price renders on the PDP.
+        # `discounts` is None whenever the flag is off, so this block never runs.
+        if discounts is not None:
+            promo = automatic_discount_for(product, discounts)
+            if promo:
+                discounted = (price * (Decimal(100) - promo["percentage"]) / Decimal(100)
+                              ).quantize(Decimal("0.01"))
+                if discounted < list_price:
+                    sale_price = money(discounted)
+                    report.append((offer_id, sku,
+                                   f"sale_price {discounted} from automatic discount "
+                                   f"{promo['title']!r} ({promo['percentage']}%)"))
 
         if not product["onlineStoreUrl"]:
             # Unlisted in Shopify, so there is no landing page. StudioWall
@@ -623,6 +715,12 @@ def main():
                              "figures. Without it the SOP's $1,000 ground-shipping exclusion "
                              "still applies, read from custom.3rd_party -> "
                              "estimated_shipping_ground.")
+    parser.add_argument("--sale-price-from-automatic-discounts", action="store_true",
+                        help="Apply active automatic (cart-level) discounts to sale_price. "
+                             "DEFAULT OFF per Tim's 2026-09-07 ruling: turn it on ONLY for "
+                             "promotions whose discounted price actually renders on the PDP, "
+                             "because Google requires the submitted sale price to be visible "
+                             "on the landing page.")
     parser.add_argument("--out-dir", default="build/feeds")
     parser.add_argument("--shop", default=os.environ.get("SHOPIFY_SHOP"))
     parser.add_argument("--token", default=os.environ.get("SHOPIFY_ADMIN_TOKEN"))
@@ -636,6 +734,15 @@ def main():
     titles = load_title_overrides()
     shipping = load_shipping(args.shipping_lookup)
     ground_estimates = load_ground_estimates(args.ground_shipping_estimates)
+    discounts = None
+    if args.sale_price_from_automatic_discounts:
+        discounts = fetch_active_discounts(args.shop, args.token)
+        print(f"automatic-discount sale_price is ON, {len(discounts)} active percentage discounts:")
+        for d in discounts:
+            scope = ("all items" if d["all_items"]
+                     else ", ".join(sorted(d["collections"])) or f"{len(d['products'])} products")
+            print(f"  {d['percentage']}%  {d['title']}  -> {scope}")
+        print("  Confirm each of these renders its discounted price on the PDP before uploading.")
 
     out = pathlib.Path(args.out_dir)
     buckets = {"googleshoppingfs": [], "googleshoppingfrenchfitness": []}
@@ -654,7 +761,7 @@ def main():
             continue
         buckets[feed].extend(
             variant_rows(product, feed, rules, labels, titles, shipping, ground_estimates, report,
-                         label_report, label_sources))
+                         label_report, label_sources, discounts))
 
     ff_cols = write_feed(out / "googleshoppingfrenchfitness.csv", FF_COLUMNS, buckets["googleshoppingfrenchfitness"])
     fs_cols = write_feed(out / "googleshoppingfs.csv", FS_COLUMNS, buckets["googleshoppingfs"])

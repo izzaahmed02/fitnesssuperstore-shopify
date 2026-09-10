@@ -225,14 +225,87 @@ warning is respected by construction.
 4. 48h Needs-attention watch in Merchant Center.
 5. Only then Tim gives the GO on the woolytech pause.
 
-## Open items for Tim
+## Tim's rulings, 2026-09-07 and 2026-09-09
 
-1. The v2 supplemental file itself. Merchant Center will not give it back and the
-   generator will not run without it.
-2. The 55-SKU QA list, or a fresh export of both primaries so the diff can produce it.
-3. The $100 price floor versus `FF-RIT24-Middle` at $16.00 being a p1_hero.
-4. Whether `sale_price` should reflect the active automatic discounts as well as
-   compare-at. Today's spec covers only compare-at, and that leaves the feed price
-   above checkout price on most of the French Fitness feed.
-5. Confirmation that Merchant Center account-level tax is configured before the tax
-   columns come out of the feed.
+All of the original open items are now answered. This is the standing ruleset.
+
+| | Ruling |
+| --- | --- |
+| v2 lookup | Tim's attachment is the canonical file, committed at `feeds/supplemental_priority_labels_v2.csv`. He re-issues it on the thread; the generator only ever reads the latest one and never reconstructs it. |
+| 55-SKU list | Superseded. Diff against live data, authorised. Fresh exports are the source. |
+| `FF-RIT24-Middle` | The $100 floor stays. FF-RIT24 comes out of p1_hero in the next re-issue. Composite-id-per-variant approved as built. |
+| sale_price | Compare-at automation stays on as specced, stale rows excluded. Automatic-discount sale_price is a **config flag, default OFF**. |
+| Tax | All three columns come out together, and only after Tim confirms account-level tax in Merchant Center. Not yet confirmed. |
+| StudioWall | Stays in the feed, gets its rate with the other 47. |
+| 198 duplicate SKUs | One row per SKU. While the combined-listing HOLD is in force the serving legacy row wins and the duplicate is dropped. Price is always the live Shopify variant price. No product is retired, archived or unpublished from this lane. |
+| Tier conflicts | SKU-first resolution approved as built; hand-assigned tiers stand. |
+| Dead lookup ids | `FFA-CFDI` corrects to `FFT-CFDI`, `FF-SBR-10` is dropped. Both in Tim's next re-issue, not edited here. |
+
+### The sale_price flag
+
+`--sale-price-from-automatic-discounts`, default OFF. Google requires a submitted
+sale price to be **visible on the landing page**. Our promotions are
+checkout-automatic with no PDP sale-price display, so feeding a sale_price the PDP
+does not show is the same landing-page mismatch in the other direction. The flag
+goes ON only for a promotion whose discounted price actually renders on the PDP.
+
+When it is on the generator prints every discount it is about to apply and its
+scope, so the PDP check is a deliberate step rather than an assumption. It refuses
+to run if a discount targets more than 250 products, because silently truncating a
+discount's scope mis-prices every row past the cap.
+
+Live state on 2026-09-10: both Labor Day discounts are **EXPIRED**. The one active
+percentage discount is **September Overstock Sale, 10% off, 8 Sept to 1 Oct**,
+scoped to a named list of 16 French Fitness products which includes `FF-FSR90` -
+one of the ten approved hero SKUs. That is the promotion the flag question now
+turns on. The long-running "auto discount" at 5% is still ACTIVE with no end date
+but targets an empty product list, so it discounts nothing.
+
+One dependency worth watching: the compare-at path has the same landing-page
+requirement. PR #784 hides permanent MSRP, retail and savings display on French
+Fitness PDPs. If that ships, roughly half of the two dozen real compare-at cases
+are French Fitness, and their strikethrough would stop rendering on the PDP while
+the feed keeps submitting a sale_price for them.
+
+## The cutover gate: a reason code on every row
+
+Per Tim, 2026-09-09: "every add and every drop must appear in the id diff with a
+reason code. No repoint until I have read that diff."
+
+`scripts/feed_id_diff.py` reads CSV or TSV on either side, so the Merchant Center
+exports go in as they arrive, and joins the generator's `excluded_rows.csv` to
+explain drops. Codes:
+
+| Code | Meaning |
+| --- | --- |
+| `added:variant_expansion` | a sibling variant of a product already in the feed, previously unrepresentable on a bare product id |
+| `added:new_offer` | SKU not in the live export at all |
+| `rekeyed:<old>_to_<new>` | same SKU, new id shape. These lose their performance history if repointed blind |
+| `dropped:below_price_floor` | under $100 |
+| `dropped:out_of_stock` | FF feed only |
+| `dropped:ground_shipping_over_1000` | estimated ground shipping at or above $1,000 |
+| `dropped:other_brand_new_floor` | other-brand new at or below $1,300 |
+| `dropped:not_published_online` | no landing page |
+| `dropped:third_party_flag` | `exclude_pp_lt1000` |
+| `dropped:duplicate_sku` | the one-row-per-SKU rule collapsing a catalogue duplicate |
+| `price_changed` | unchanged id, different price. Live Shopify variant price wins |
+| `dropped:unexplained` / `added:unexplained` | **nobody has a reason. Must be zero before the repoint** |
+
+The tool exits non-zero while any unexplained row remains. A coded drop is a
+decision to review; an unexplained one is a blocker.
+
+## The no-tier list
+
+`scripts/no_tier_report.py` emits the list Tim asked for, sorted by price
+descending, with `custom_label_3` left blank for him to fill and a `why_missing`
+column separating "no lookup row for this SKU" from "lookup row exists but its
+tier is blank". Membership is decided by the generated row's own `custom_label_3`,
+because that is what actually ships; the lookup is consulted only to explain why.
+
+## Still open
+
+1. Merchant Center account-level tax confirmation, before the three tax columns come out.
+2. The 50 shipping rates from Qash.
+3. Tim's next lookup re-issue, carrying the FF-RIT24 de-heroing, the FFT-CFDI
+   correction, the FF-SBR-10 drop, the one-row-per-variant hex collapse, and the
+   tiers he assigns off the no-tier list.
