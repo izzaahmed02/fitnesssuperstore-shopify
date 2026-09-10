@@ -440,7 +440,12 @@ generalise that branch — including any future tidy-up that assumes
 emit SKUs already in use, creating five duplicate-id collisions on top of the
 45-offer history reset.
 
-The branch reads like a one-off patch. It is doing real work. Leave it.
+The branch reads like a one-off patch. It is doing real work.
+
+> **Permanent rule, per Tim, 2026-09-10.** The hardcoded `10247596147004`
+> branch is load-bearing and **never gets removed or tidied without a separate
+> GO from Tim.** The five dual-keyed SKUs above are the reason: delete the
+> branch and they become five duplicate-id collisions.
 
 This does not affect the change proposed here, which touches only the final
 `else` and cannot reach the composite branch.
@@ -503,3 +508,59 @@ byte-identical": on every row the expression touched, nothing but `id` moved.
 The checker enforces exactly that — a row whose id moves must be otherwise
 identical, while a row whose id holds may drift and is reported rather than
 failed.
+
+
+## Why an UNLISTED product reaches the feed with "Include unpublished products" off
+
+Asked by Tim on 2026-09-10 about `FF-STW-WB-3` (`10414127087932`).
+
+**Because `UNLISTED` is a published product.** The filter is doing exactly what
+it says; "unpublished" and "not publicly browsable" are different states, and
+`UNLISTED` sits between them.
+
+The evidence on that product:
+
+| | |
+| --- | --- |
+| `status` | `UNLISTED` |
+| `publishedAt` | 2026-09-04T18:51:37Z |
+| Online Store publication | `isPublished: true` |
+| `onlineStoreUrl` | live, reachable by direct link |
+
+Shopify's `UNLISTED` means published to the Online Store but hidden from
+collection listings, search and the sitemap. It carries a publish date and a
+live URL, so a published/unpublished filter has nothing to exclude.
+
+**The filter is not broken.** The same three feed collections also hold one
+`ARCHIVED` and two `DRAFT` products, 23 variants between them, and none of those
+reaches either feed. Counts confirm it: `googleshoppingfrenchfitness` carries
+912 `ACTIVE` products at 965 rows, plus this one `UNLISTED` product at 1 row,
+for the 966 rows in the file. The `DRAFT` and `ARCHIVED` products are correctly
+dropped.
+
+### How it got in
+
+`French Fitness - Meta Feeds` is a **smart collection**, and its nine rules test
+product type, price, weight, vendor, title and tags. **None tests product
+status**, and Shopify smart-collection rules offer no status column. So the
+product matched on merchandising attributes and the app then found it published.
+
+### The close
+
+Rule 8 of that collection is already `TAG != "REMOVE FROM FEEDS"` — someone
+built this escape hatch. Tagging the product `REMOVE FROM FEEDS` drops it from
+the collection, and therefore from the feed, without touching its status or its
+direct link.
+
+Applied 2026-09-10. `googleshoppingfrenchfitness` becomes 965 rows and the
+change's diff target becomes **14** rows, not 15.
+
+### Durable fix
+
+Today this is a population of one — exactly one `UNLISTED` product across all
+2,451 products in the three feed collections — but the gap is structural: any
+future `UNLISTED` product leaks the same way. Since the collection cannot filter
+on status, the durable control is a Shopify Flow rule (Flow is already
+installed): **on product status changed to `UNLISTED`, add the tag
+`REMOVE FROM FEEDS`.** That reuses the existing hatch rather than adding a
+second mechanism.
