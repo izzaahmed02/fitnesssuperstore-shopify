@@ -1,0 +1,31 @@
+{% comment %}
+  A real product card, never a Combined Listing selector/parent variant.
+  Caller supplies one approved child_product. Source data stays unchanged.
+{% endcomment %}
+{% liquid
+  assign v = child_product.selected_or_first_available_variant
+  assign image = child_product.featured_image
+  assign count = child_product.metafields.reviews.rating_count.value | default: 0 | plus: 0
+  assign rating = child_product.metafields.reviews.rating.value.rating
+  assign ship = child_product.metafields.custom.processing_time.value
+  assign product_link = child_product.url | append: '?variant=' | append: v.id
+%}
+{% if child_product != blank and v != blank %}
+  <li class="rh-child-card" data-rh-card data-product-id="{{ child_product.id }}" data-variant-id="{{ v.id }}" data-sku="{{ v.sku | escape }}" data-price="{{ v.price }}" data-title="{{ child_product.title | escape }}">
+    <a class="rh-child-card__image" href="{{ product_link }}" tabindex="-1" aria-hidden="true">
+      {% if image != blank %}
+        {{ image | image_url: width: 600 | image_tag: widths: '240, 360, 480, 600', sizes: '(min-width: 990px) 25vw, 50vw', loading: 'lazy', alt: child_product.title }}
+      {% else %}
+        <span>Image unavailable</span>
+      {% endif %}
+      {% if child_product.metafields.custom.condition_state.value == 'New' or child_product.title contains '(New)' %}<span class="rh-child-card__condition">New</span>{% endif %}
+    </a>
+    {% if ship != blank %}<p class="rh-child-card__ship">{{ ship | escape }}</p>{% endif %}
+    <h2 class="rh-child-card__title"><a href="{{ product_link }}">{{ child_product.title | escape }}</a></h2>
+    <p class="rh-child-card__sku">SKU: <strong>{{ v.sku | escape }}</strong></p>
+    <p class="rh-child-card__price">{{ v.price | money_with_currency }}</p>
+    {% if count > 0 and rating != blank %}<p class="rh-child-card__reviews"><span aria-hidden="true">★</span> {{ rating }} · {{ count }} {% if count == 1 %}review{% else %}reviews{% endif %}</p>{% endif %}
+    {% unless v.available %}<p class="rh-child-card__unavailable">Currently unavailable</p>{% endunless %}
+    <a class="rh-child-card__link" href="{{ product_link }}">View this product<span class="visually-hidden">: {{ child_product.title | escape }}</span></a>
+  </li>
+{% endif %}
