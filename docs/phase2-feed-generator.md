@@ -302,6 +302,17 @@ column separating "no lookup row for this SKU" from "lookup row exists but its
 tier is blank". Membership is decided by the generated row's own `custom_label_3`,
 because that is what actually ships; the lookup is consulted only to explain why.
 
+## Running the cutover packet
+
+`./scripts/run_cutover_diff.sh "<live FF export>" "<live FS export>"` with
+`SHOPIFY_SHOP` and `SHOPIFY_ADMIN_TOKEN` set. It validates the lookup, generates
+both primaries, runs the price and tax gate, writes both reason-coded diffs and the
+no-tier list, and prints the three files to attach.
+
+It exists mainly so `--excluded` is never forgotten. `feed_id_diff.py` without it
+still runs and reports every drop as `unexplained`, which reads like a catastrophe
+and is really a missing argument.
+
 ## Still open
 
 1. Merchant Center account-level tax confirmation, before the three tax columns come out.
