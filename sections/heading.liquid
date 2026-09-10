@@ -39,7 +39,11 @@
 {%- endstyle -%}
 
 <div class="heading section-{{ section.id }} page-width scroll-trigger animate--slide-in">
-  <h1 class="heading__heading heading__heading--{{ section.settings.heading_size }}">{{ section.settings.heading }}</h1>
+  {% if section.settings.use_h1 %}
+    <h1 class="heading__heading heading__heading--{{ section.settings.heading_size }}">{{ section.settings.heading }}</h1>
+  {% else %}
+    <h2 class="heading__heading heading__heading--{{ section.settings.heading_size }}">{{ section.settings.heading }}</h2>
+  {% endif %}
 
   {% if section.settings.caption != empty %}
     <p class="heading__caption">{{ section.settings.caption }}</p>
@@ -113,6 +117,13 @@
       ],
       "label": "Size",
       "default": "large"
+    },
+    {
+      "type": "checkbox",
+      "id": "use_h1",
+      "label": "Use as page H1 heading",
+      "info": "On when this section provides the page's main <h1>. Turn off to render <h2> and avoid a duplicate H1 when another section already supplies the H1.",
+      "default": true
     },
     {
       "type": "header",
