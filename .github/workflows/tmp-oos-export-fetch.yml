@@ -1,0 +1,37 @@
+name: Temporary OOS export fetch
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-export:
+    if: startsWith(github.head_ref, 'tmp/oos-export-ingest-')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Shopify bulk export
+        shell: bash
+        env:
+          ENCODED_URL: ${{ github.event.pull_request.body }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$ENCODED_URL" | base64 --decode > /tmp/export-url.txt
+          URL="$(cat /tmp/export-url.txt)"
+          case "$URL" in
+            https://cdn.shopify.com/*) ;;
+            *) echo "Unexpected source URL" >&2; exit 2 ;;
+          esac
+          curl --fail --location --silent --show-error "$URL" \
+            --output /tmp/FSS_OOS_Shopify_Bulk_7591342670140.jsonl
+          test -s /tmp/FSS_OOS_Shopify_Bulk_7591342670140.jsonl
+          wc -c /tmp/FSS_OOS_Shopify_Bulk_7591342670140.jsonl
+      - name: Upload export artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fss-oos-shopify-bulk-7591342670140
+          path: /tmp/FSS_OOS_Shopify_Bulk_7591342670140.jsonl
+          if-no-files-found: error
+          retention-days: 1
