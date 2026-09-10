@@ -157,6 +157,15 @@
     display: none;
     margin-bottom: 12px;
     cursor: pointer;
+    /* Button reset: this control is a <button> (in-place disclosure toggle, it
+       never navigates), so neutralize the UA button styling to keep the
+       previous anchor appearance exactly. */
+    background: none;
+    border: 0;
+    padding: 0;
+    text-align: left;
+    -webkit-appearance: none;
+    appearance: none;
 }
 
 .homepage-reviews__item-copy-btn.active {
@@ -193,7 +202,14 @@
     font-size: 12px;
     font-weight: 400;
     line-height: 18px;
-    color: #00A344;
+    /* Accessibility (WCAG 2.1 AA, 1.4.3): this is the "Verified buyer" label,
+       12px normal-weight text on the white review card
+       (.swiper-slide.homepage-reviews__item, background #FFFFFF). #00A344
+       measured 3.32:1, below the 4.5:1 minimum for normal-size text, and was
+       the element Lighthouse named in the homepage contrast audit. #00803A is
+       the same green, darkened, at 5.06:1. The verified-buyer icon keeps
+       #00A344 - non-text content only needs 3:1, which it already meets. */
+    color: #00803A;
 }
 
 .homepage-reviews__item-product {
@@ -350,16 +366,57 @@
         display: block;
         position: relative;
         margin-top: 24px;
+        /* Swiper's own API for the gap between bullets; the rule below also
+           sets it, this covers the case where Swiper's class names change. */
+        --swiper-pagination-bullet-horizontal-gap: 0px;
     }
     
+    /* Accessibility (WCAG 2.5.8, Target Size (Minimum)): these pagination
+       bullets are Swiper defaults - 8x8 with a 4px gap each side, a 16px
+       pitch - so each tap target is under the 24x24 minimum and the bullets
+       sit too close for the spacing exception. Lighthouse names them as the
+       homepage touch-target failure. They are library defaults, present on
+       live MAIN, and not a regression from this PR.
+    
+       The bullet element becomes the 24x24 target and the visible dot moves
+       to ::before at its original 8x8 with the same colours, so the dots
+       stay pixel-identical. The horizontal gap goes to 0, making the pitch
+       exactly 24px: targets sit edge to edge and never overlap.
+    
+       The -8px block margins hold the bullet's margin box at 8px - its
+       current height - so the line box, the dots' vertical position, and
+       everything below the carousel stay exactly where they are. No visual
+       movement, no layout shift, no CLS change. Scoped to .homepage-reviews,
+       so no other carousel is affected. */
     .homepage-reviews .swiper-pagination-bullet {
-        width: 8px;
-        height: 8px;
-        background: #D3D9E5;
+        position: relative;
+        width: 24px;
+        height: 24px;
+        background: transparent;
         opacity: 1;
     }
     
-    .homepage-reviews .swiper-pagination-bullet-active {
+    /* Specificity here has to beat Swiper's own
+       `.swiper-pagination-horizontal.swiper-pagination-bullets
+       .swiper-pagination-bullet { margin: 0 var(--...-gap, 4px) }` (0,3,0),
+       which would otherwise reset the block margins back to 0. */
+    .homepage-reviews .swiper-pagination.swiper-pagination-horizontal.swiper-pagination-bullets .swiper-pagination-bullet {
+        margin: -8px 0;
+    }
+    
+    .homepage-reviews .swiper-pagination-bullet::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 8px;
+        height: 8px;
+        margin: -4px 0 0 -4px;
+        border-radius: 50%;
+        background: #D3D9E5;
+    }
+    
+    .homepage-reviews .swiper-pagination-bullet-active::before {
         background: #23232B;
     }
 }
