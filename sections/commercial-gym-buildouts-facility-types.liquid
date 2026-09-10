@@ -2,13 +2,24 @@
 {{ 'component-slider.css' | asset_url | stylesheet_tag }}
 
 {%- style -%}
+    {%- comment -%}
+      The bg_color / section_padding_* setting IDs are deliberately NOT the theme's
+      usual bg / padding_top / padding_bottom. The live preview theme's copy of
+      templates/page.commercial-gym-buildouts.json has older values saved against
+      those original IDs (#ffffff and 56px), and Shopify's GitHub sync treats the
+      theme editor's copy of a JSON template as authoritative, so a corrected value
+      committed here never reaches the theme. Renaming the IDs orphans those saved
+      values (Shopify ignores setting keys that match no schema entry) so the schema
+      defaults below — the real Figma values from node 4583:81400, #faf9f9 and 80px —
+      take effect, while leaving both controls live and editable in the theme editor.
+    {%- endcomment -%}
     .section-{{ section.id }}-padding {
-    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
-    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+    padding-top: {{ section.settings.section_padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.section_padding_bottom | times: 0.75 | round: 0 }}px;
     }
 
     #shopify-section-{{ section.id }} {
-    background-color: {{ section.settings.bg }};
+    background-color: {{ section.settings.bg_color }};
     }
 
     /* Full-width page requirement — override the theme's default contained .page-width
@@ -145,8 +156,8 @@
 
     @media screen and (min-width: 750px) {
     .section-{{ section.id }}-padding {
-    padding-top: {{ section.settings.padding_top }}px;
-    padding-bottom: {{ section.settings.padding_bottom }}px;
+    padding-top: {{ section.settings.section_padding_top }}px;
+    padding-bottom: {{ section.settings.section_padding_bottom }}px;
     }
     }
 
@@ -354,9 +365,9 @@
   "settings": [
     {
       "type": "color",
-      "id": "bg",
+      "id": "bg_color",
       "label": "Background color",
-      "default": "#fff"
+      "default": "#faf9f9"
     },
     {
       "type": "inline_richtext",
@@ -540,23 +551,23 @@
     },
     {
       "type": "range",
-      "id": "padding_top",
+      "id": "section_padding_top",
       "min": 0,
       "max": 100,
       "step": 4,
       "unit": "px",
       "label": "t:sections.all.padding.padding_top",
-      "default": 36
+      "default": 80
     },
     {
       "type": "range",
-      "id": "padding_bottom",
+      "id": "section_padding_bottom",
       "min": 0,
       "max": 100,
       "step": 4,
       "unit": "px",
       "label": "t:sections.all.padding.padding_bottom",
-      "default": 36
+      "default": 80
     }
   ],
   "blocks": [
