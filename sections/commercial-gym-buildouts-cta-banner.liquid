@@ -12,17 +12,38 @@
      375 - 16 - 16), not 40px — the flat 40px was compressing mobile text/buttons into
      a narrower column than intended. */
   #shopify-section-{{ section.id }} .page-width {
+    --cgb-inset: 16px;
     max-width: 100%;
     margin: 0;
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: var(--cgb-inset);
+    padding-right: var(--cgb-inset);
     box-sizing: border-box;
   }
 
   @media screen and (min-width: 750px) {
     #shopify-section-{{ section.id }} .page-width {
-      padding-left: 40px;
-      padding-right: 40px;
+      --cgb-inset: 40px;
+    }
+  }
+
+  /* Horizontal-scroll fix — same cause as the hero section. `.banner` carries
+     `.page-width` and is the containing block for the `absolute; inset: 0`
+     `.banner__media`, so side padding on `.banner` adds its end-side padding to the
+     scrollable overflow region and forces a page-level horizontal scrollbar. Move
+     the inset onto `.banner__content` (also a `.page-width`), doubled, so the
+     content box is unchanged at every breakpoint and the media stays full-bleed.
+     Desktop-only for the same reason as the hero section: below 750px the theme
+     zeroes `.banner__content`'s side padding, so the insets don't stack there and
+     there is no overflow to fix. Do not put horizontal padding back on `.banner`. */
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .banner.page-width {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    #shopify-section-{{ section.id }} .banner__content.page-width {
+      padding-left: calc(var(--cgb-inset) * 2);
+      padding-right: calc(var(--cgb-inset) * 2);
     }
   }
 

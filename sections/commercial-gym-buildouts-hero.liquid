@@ -9,11 +9,38 @@
   /* Full-width page requirement — override the theme's default contained .page-width
      for this section only (does not affect .page-width elsewhere on the site) */
   #shopify-section-{{ section.id }} .page-width {
+    --cgb-inset: 40px;
     max-width: 100%;
     margin: 0;
-    padding-left: 40px;
-    padding-right: 40px;
+    padding-left: var(--cgb-inset);
+    padding-right: var(--cgb-inset);
     box-sizing: border-box;
+  }
+
+  /* Horizontal-scroll fix. `.banner` itself carries `.page-width`, and it is the
+     containing block for `.banner__media`, which section-image-banner.css positions
+     `absolute; inset: 0` — i.e. sized to the PADDING box. Side padding on `.banner`
+     therefore lets the media extend into the padding area, and the browser adds the
+     end-side padding to the scrollable overflow region, so `.banner` reports
+     scrollWidth = clientWidth + 40px and the page gets a horizontal scrollbar. This
+     was masked while <body> was capped at 1290px (the extra 40px stayed inside the
+     viewport); the full-width override exposed it. Keep the media full-bleed by
+     moving the inset off `.banner` and onto `.banner__content` (also a
+     `.page-width`), doubled so the content box lands in exactly the same place at
+     every desktop breakpoint. Desktop-only: below 750px the theme zeroes
+     `.banner__content`'s side padding, so the two insets don't stack there —
+     doubling would visibly widen the inset — and no overflow occurs at that
+     breakpoint anyway. Do not put horizontal padding back on `.banner`. */
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .banner.page-width {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    #shopify-section-{{ section.id }} .banner__content.page-width {
+      padding-left: calc(var(--cgb-inset) * 2);
+      padding-right: calc(var(--cgb-inset) * 2);
+    }
   }
 
   /* Full-width page requirement — the theme also boxes the ENTIRE <body> (header
