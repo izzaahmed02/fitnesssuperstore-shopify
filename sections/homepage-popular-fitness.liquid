@@ -42,6 +42,8 @@
           {% assign card_handle = block.settings.tab_handle | handleize %}
           {% if card_handle == handle %}
             {% assign product = block.settings.product %}
+            {%- comment -%} #775: French Fitness permanent comparison pricing is suppressed. {%- endcomment -%}
+            {%- capture hide_perm_price -%}{%- render 'ff-permanent-compare-hidden', product: product -%}{%- endcapture -%}
             <div class="category-card">
 
               
@@ -86,7 +88,7 @@
       <div class="price-wrapper">
         <span class="price-value">{{ product.price | money }}</span>
       </div>
-      {% if product.metafields.custom.retail_price != blank %}
+      {% if product.metafields.custom.retail_price != blank and hide_perm_price contains 'false' %}
         <div class="old-price-wrapper">
           {{ product.metafields.custom.retail_price | money }}
         </div>

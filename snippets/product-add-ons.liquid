@@ -154,6 +154,12 @@
                               {{ card_block.settings.custom_title | default: add_on_product.title }}
                             </a>
 
+                            {%- comment -%}
+                              #775: on French Fitness add-ons the permanent comparison price is
+                              suppressed, so addon_compare stays 0 and the "As high as" line below
+                              never renders. The selling price is unaffected.
+                            {%- endcomment -%}
+                            {%- capture hide_perm_price -%}{%- render 'ff-permanent-compare-hidden', product: add_on_product -%}{%- endcapture -%}
                             {%- liquid
                               assign addon_price = add_on_variant.price
                               assign addon_compare = 0
@@ -162,12 +168,14 @@
                               # 1) native variant compare-at (a genuine sale price)
                               # 2) product-level max compare-at
                               # 3) custom.retail_price metafield (the "As high as" / MSRP used on the main PDP)
-                              if add_on_variant.compare_at_price > addon_price
-                                assign addon_compare = add_on_variant.compare_at_price
-                              elsif add_on_product.compare_at_price_max > addon_price
-                                assign addon_compare = add_on_product.compare_at_price_max
-                              elsif add_on_product.metafields.custom.retail_price.value > addon_price
-                                assign addon_compare = add_on_product.metafields.custom.retail_price.value
+                              if hide_perm_price contains 'false'
+                                if add_on_variant.compare_at_price > addon_price
+                                  assign addon_compare = add_on_variant.compare_at_price
+                                elsif add_on_product.compare_at_price_max > addon_price
+                                  assign addon_compare = add_on_product.compare_at_price_max
+                                elsif add_on_product.metafields.custom.retail_price.value > addon_price
+                                  assign addon_compare = add_on_product.metafields.custom.retail_price.value
+                                endif
                               endif
                             -%}
 

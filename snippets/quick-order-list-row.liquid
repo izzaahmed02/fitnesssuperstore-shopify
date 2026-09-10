@@ -3,11 +3,17 @@
 
   Accepts:
   - item: {Object} Variant or Product object
+  - product: {Object} Parent Product object (used for the #775 brand rule)
   - sku: {String} Sku of Product or Variant (optional)
   - image: {Object} Product or Variant image (optional)
   Usage:
   {% render 'quick-order-list-row' variant: variant %}
+
+  #775: on French Fitness products the crossed-out permanent reference price is
+  suppressed on these bulk/quick-order rows. The row's own selling price, the
+  volume-pricing breaks and the cart quantity logic are untouched.
 {% endcomment %}
+{%- capture hide_perm_price -%}{%- render 'ff-permanent-compare-hidden', product: product -%}{%- endcapture -%}
 
 {% # theme-check-disable %}
 {% assign cart_qty = cart | item_count_for_variant: variant.id %}
@@ -60,7 +66,7 @@
     </div>
 
     {%- assign item_price = item.price | money -%}
-    {%- if item.compare_at_price -%}
+    {%- if item.compare_at_price and hide_perm_price contains 'false' -%}
       <dl class="variant-item__discounted-prices">
         <dt class="visually-hidden">
           {{ 'products.product.price.regular_price' | t }}
@@ -337,7 +343,7 @@
   </td>
   {%- assign item_price = item.price | money -%}
   <td class="variant-item__price small-hide medium-hide">
-    {%- if item.compare_at_price -%}
+    {%- if item.compare_at_price and hide_perm_price contains 'false' -%}
       <dl class="variant-item__discounted-prices">
         <dt class="visually-hidden">
           {{ 'products.product.price.regular_price' | t }}

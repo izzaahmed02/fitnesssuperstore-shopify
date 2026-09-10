@@ -342,7 +342,9 @@
                       <h3 class="rig-product-name">{{ product_ref.title }}</h3>
                       <div class="rig-lower-details">
                         <div class="rig-product-price">
-                          {% if product_ref.metafields.custom.retail_price != blank %}
+                          {%- comment -%} #775: French Fitness permanent comparison pricing is suppressed. {%- endcomment -%}
+                          {%- capture hide_perm_price -%}{%- render 'ff-permanent-compare-hidden', product: product_ref -%}{%- endcapture -%}
+                          {% if product_ref.metafields.custom.retail_price != blank and hide_perm_price contains 'false' %}
                             <s>MSRP: {{ product_ref.metafields.custom.retail_price | money -}}</s>
                           {% endif %}
                           <p>{{ product_ref.price | money }}</p>

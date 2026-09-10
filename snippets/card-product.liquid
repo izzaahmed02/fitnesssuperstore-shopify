@@ -20,6 +20,13 @@
   Usage:
   {% render 'card-product', show_vendor: section.settings.show_vendor %}
 {% endcomment %}
+{%- comment -%}
+  #775: the generic "Sale" badge is driven purely by a permanent compare-at price. On
+  French Fitness products that reference price is no longer shown, so a bare "Sale" badge
+  would still imply a permanent markdown with nothing to compare against. Suppress it for
+  that brand only; a genuine time-limited promotion is shown by its own labelled component.
+{%- endcomment -%}
+{%- capture hide_perm_price -%}{%- render 'ff-permanent-compare-hidden', product: card_product -%}{%- endcapture -%}
 {%- unless skip_styles -%}
   {{ 'component-rating.css' | asset_url | stylesheet_tag }}
   {{ 'component-volume-pricing.css' | asset_url | stylesheet_tag }}
@@ -135,7 +142,7 @@
               >
                 {{- 'products.product.sold_out' | t -}}
               </span>
-            {%- elsif card_product.compare_at_price > card_product.price and card_product.available -%}
+            {%- elsif card_product.compare_at_price > card_product.price and card_product.available and hide_perm_price contains 'false' -%}
               <span
                 id="NoMediaStandardBadge-{{ section_id }}-{{ card_product.id }}"
                 class="badge badge--bottom-left color-{{ settings.sale_badge_color_scheme }}"
@@ -556,7 +563,7 @@
             >
               {{- 'products.product.sold_out' | t -}}
             </span>
-          {%- elsif card_product.compare_at_price > card_product.price and card_product.available -%}
+          {%- elsif card_product.compare_at_price > card_product.price and card_product.available and hide_perm_price contains 'false' -%}
             <span
               id="Badge-{{ section_id }}-{{ card_product.id }}"
               class="badge badge--bottom-left color-{{ settings.sale_badge_color_scheme }}"

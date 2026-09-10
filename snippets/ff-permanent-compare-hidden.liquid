@@ -1,0 +1,62 @@
+{% comment %}
+  snippets/ff-permanent-compare-hidden.liquid
+
+  SINGLE SOURCE OF TRUTH for the French Fitness permanent-comparison-price rule
+  (issue #775). Decides whether the *permanent* customer-facing comparison
+  pricing must be suppressed for a given product:
+
+    - "Retail Price:" / "MSRP:" / "As high as:" labels
+    - the crossed-out permanent reference price
+    - the permanent "You save <amount>" badge
+
+  It deliberately does NOT touch:
+    - the normal selling price (that stays the primary permanent price);
+    - a valid time-limited promotion (Labor Day etc.), which is rendered by
+      'labor-day-sale-note' / 'super-sale' and is separately labeled;
+    - any underlying data. custom.retail_price, compareAtPrice, pricing
+      history, structured source fields and integration/feed data are all left
+      intact. This is a presentation-layer rule only, and is reversible by
+      unchecking the theme setting below.
+
+  SCOPE: vendor == 'French Fitness'. Verified against the live store: 'French
+  Fitness' is the one and only French Fitness vendor value in the product
+  vendor list (no 'FrenchFitness' / 'French Fitness Inc' variants), covering
+  1,720 products. Non-French-Fitness brands are never affected.
+
+  Unlike 'labor-day-sale-note', this rule is NOT narrowed by product type or
+  by promo-exclusion tags: brand scope is about who makes the product, not
+  about discount eligibility, so hidden/child products of the brand are in
+  scope too.
+
+  If Larianne's brand/vendor confirmation widens the scope (e.g. a second
+  vendor spelling, or a brand metafield), change it HERE ONLY and every
+  storefront surface follows.
+
+  USAGE — Liquid snippets cannot return values, so capture the output and test
+  it. Two lines at the top of the surface, then use the variable inline:
+
+    {%- capture hide_perm_price -%}
+      {%- render 'ff-permanent-compare-hidden', product: product -%}
+    {%- endcapture -%}
+
+    {% if product.metafields.custom.retail_price != blank and hide_perm_price contains 'false' %}
+      ... permanent comparison markup ...
+    {% endif %}
+
+  Accepts:
+    product (Product) required. Pass whichever product object the surface has
+                      (card_product, product_ref, add_on_product, ...).
+
+  Returns the literal string 'true' (suppress) or 'false' (render as before).
+{% endcomment %}
+{%- liquid
+  assign ff_hide = false
+
+  unless settings.ff_hide_permanent_compare_price == false
+    if product.vendor == 'French Fitness'
+      assign ff_hide = true
+    endif
+  endunless
+
+  echo ff_hide
+-%}

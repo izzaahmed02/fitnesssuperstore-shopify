@@ -1,4 +1,6 @@
 {% assign product = product %}
+{%- comment -%} #775: French Fitness permanent comparison pricing is suppressed. {%- endcomment -%}
+{%- capture hide_perm_price -%}{%- render 'ff-permanent-compare-hidden', product: product -%}{%- endcapture -%}
 <div class="product-item card__inner" data-product-id="{{ product.id }}">
   <div class="image-container ss">
     <div class="image-wrap">
@@ -26,7 +28,7 @@
         Remanufactured
       </div>
     {% endif %}
-    {% if product.compare_at_price != blank %}
+    {% if product.compare_at_price != blank and hide_perm_price contains 'false' %}
       <div class="sale-tag">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path fill-rule="evenodd" clip-rule="evenodd"
@@ -65,11 +67,9 @@
         </div>
 
         <div class="product-item__price-container">
-          {% if product.metafields.custom.retail_price != blank %}
-            <div class="old-price-wrapper {% unless product.metafields.custom.retail_price != blank %}retail-price-blank{% endunless %}">
-              {% if product.metafields.custom.retail_price != blank %}
-                <span>As high as:</span> {{ product.metafields.custom.retail_price | money }}
-              {% endif %}
+          {% if product.metafields.custom.retail_price != blank and hide_perm_price contains 'false' %}
+            <div class="old-price-wrapper">
+              <span>As high as:</span> {{ product.metafields.custom.retail_price | money }}
             </div>
           {% endif %}
           <div class="price-wrapper">

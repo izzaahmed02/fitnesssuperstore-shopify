@@ -124,14 +124,23 @@
   }
 </style>
 
-{% assign sale_price_raw = sale_price | replace: ',', '' %}
-{% assign sale_price = sale_price_raw | times: 100.0 %}
+{% assign sale_price_cents = sale_price | replace: ',', '' | times: 100.0 %}
 
-{% if current_price > sale_price %}
+{%- comment -%}
+  Guard against a blank or zero sale_price (#793). This banner renders whenever
+  custom.saleprice_name is set, so without the > 0 check a product carrying a name
+  but no sale value would advertise a $0.00 package price, while "Total with options"
+  - which requires sale_price > 0 - kept using the regular price. That is the same
+  banner/total mismatch this work set out to remove, so both sides must test the sale
+  value identically. The callers gate on the same condition before entering this
+  branch at all, so the banner can no longer decline to render and leave a PDP with
+  no price.
+{%- endcomment -%}
+{% if sale_price_cents > 0 and current_price > sale_price_cents %}
   <div class="price-banner">
     <div class="price-banner__prices">
       <span class="price-banner__price">
-          ${{ sale_price | money_without_currency }}
+        {{ sale_price_cents | money }}
       </span>
       <span class="price-banner__compare">
         {{ current_price | money }}
@@ -139,7 +148,7 @@
     </div>
     <div class="price-banner__label">
       <span>
-        {{ sale_name }}
+        {% if sale_name != blank %}{{ sale_name }}{% else %}On Sale{% endif %}
       </span>
     </div>
   </div>
