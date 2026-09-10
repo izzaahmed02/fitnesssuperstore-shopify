@@ -60,7 +60,7 @@ def main() -> int:
         for col, label in (("custom_label_3", "priority tier"), ("custom_label_4", "series")):
             want, got = row[f"expected_{col}"], row[f"observed_{col}"].strip()
             if got != want:
-                problems.append(f"{label} is {got or 'blank'!r}, expected {want!r}")
+                problems.append(f"{label} is {repr(got) if got else 'blank'}, expected {want!r}")
         if row["item_status"].strip() != "Approved":
             problems.append(f"item status is {row['item_status'].strip() or 'blank'}, expected Approved")
         na = row["needs_attention_count"].strip()
