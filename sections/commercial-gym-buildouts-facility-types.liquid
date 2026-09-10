@@ -31,6 +31,18 @@
     }
     }
 
+    /* Figma node 4583:81400 (1440px frame) — content is inset 80px each side, giving a
+       1280px column: Heading and benefits frames both sit at x=-2278 inside a banner
+       at x=-2358. That 1280px is what makes each of the 3 cards 418px wide with the
+       12px gaps below. Applied from 990px up, where the 3-column desktop grid starts;
+       750-989px keeps the 40px inset so the 2-column tablet grid isn't squeezed. */
+    @media screen and (min-width: 990px) {
+    #shopify-section-{{ section.id }} .page-width {
+    padding-left: 80px;
+    padding-right: 80px;
+    }
+    }
+
     #shopify-section-{{ section.id }} .multicolumn-card {
     text-align: {{ section.settings.text_align }};
     }
@@ -42,8 +54,18 @@
     }
 
     /* Figma node 4583:81400 — 28px gap from the title block to the first card row
-       (Heading frame 11817-11927, benefits frame starts 11955) */
+       (Heading frame 11817-11927, benefits frame starts 11955).
+       .title-wrapper-with-link is one of the theme's flex rows, built to sit a title
+       and a "view all" link side by side. The subheading is a sibling of the <h2>
+       inside it, so it became a second flex item and rendered to the RIGHT of the
+       heading instead of beneath it. It only looked correct while the section was
+       boxed at 1280px, where heading + 800px subheading overflowed and wrapped; the
+       full-width change gave the row enough space to fit both on one line and
+       exposed it. Figma stacks them centred (heading y=11817 h=50, paragraph
+       y=11879), so force block flow. */
     #shopify-section-{{ section.id }} .multicolumn__title.title-wrapper-with-link {
+    display: block;
+    text-align: center;
     margin-bottom: 28px;
     }
 
@@ -83,6 +105,22 @@
 
     #shopify-section-{{ section.id }} .multicolumn-card__info-title {
     color: #000000;
+    }
+
+    /* Figma node 4583:81404 "Benefit cards" — the visible card is the <li>
+       (.multicolumn-list__item), which carries the border/radius/shadow; the inner
+       .multicolumn-card is only a content wrapper. Card is 418x146 with 32px padding
+       (its text frame is 354 wide = 418 - 32 - 32); the theme ships 24px. */
+    @media screen and (min-width: 990px) {
+    #shopify-section-{{ section.id }} .multicolumn-list__item {
+    padding: 32px;
+    }
+    }
+
+    /* Figma: 8px between the card title (26px tall) and its paragraph. The theme's
+       .multicolumn-card__info > :nth-child(2) sets margin-top: 1rem (10px). */
+    #shopify-section-{{ section.id }} .multicolumn-card__info > :nth-child(2) {
+    margin-top: 8px;
     }
 
     #shopify-section-{{ section.id }} .multicolumn-card__info .rte {
