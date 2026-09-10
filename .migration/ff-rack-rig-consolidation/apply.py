@@ -28,7 +28,9 @@ import time
 import urllib.request
 import uuid
 
-API_VERSION = os.environ.get("SHOPIFY_API_VERSION", "2025-07")
+# 2025-07 reached end of support. Checked against publicApiVersions on 2026-09-10:
+# supported = 2025-10, 2026-01, 2026-04, 2026-07 (latest). Re-check before reuse.
+API_VERSION = os.environ.get("SHOPIFY_API_VERSION", "2026-01")
 SHOP = os.environ.get("SHOPIFY_SHOP", "")
 TOKEN = os.environ.get("SHOPIFY_TOKEN", "")
 

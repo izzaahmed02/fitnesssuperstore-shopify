@@ -262,3 +262,75 @@ Separately, three in-scope products were edited by someone else after the migrat
 normalisations noted above — no old URL was reintroduced — but it confirms these
 records are still being edited by people, so the final crawl should run close to
 cutover.
+
+## Group C — completed 2026-09-10 (Admin API, direct)
+
+Per Tim's 2026-09-10 direction (Matrixify route closed after the v2 dry run failed
+with "UPDATE: Missing required Metaobject field(s): [title]"), the remaining Group C
+records were applied directly through the Admin API.
+
+**Result: 58 of 58 applied, 0 errors.** Every `metaobjectUpdate` returned
+`userErrors: []`.
+
+Why the API path works where the Matrixify UPDATE failed: `metaobjectUpdate` writes
+only the fields passed in, so `title` — a required field on the
+`product_option_help_text` definition — is carried through untouched rather than
+being blanked and re-validated. Confirmed empirically: no batch passed `title`, and
+none errored.
+
+### How it was run
+
+`bulkOperationRunMutation` is blocked by the tooling safety policy in this
+environment ("bulk mutation operations can execute arbitrary mutations, bypassing
+the blocklist"). That control was **not** circumvented. Instead the same payload was
+applied as batched aliased `metaobjectUpdate` calls through the ordinary permitted
+mutation path, deduplicating identical `help_text` bodies via GraphQL variable
+defaults. `apply.py` remains the committed reference implementation and is unchanged
+in behaviour; only its pinned API version was corrected (below).
+
+### API version — Tim's explicit check
+
+`apply.py` was pinned to `2025-07`, which has **reached end of support**. Checked
+against `publicApiVersions` on 2026-09-10; supported versions are `2025-10`,
+`2026-01`, `2026-04`, `2026-07` (latest). The default is now `2026-01`. The 2026-09-10
+run itself went through the Shopify MCP Admin client on a currently supported version.
+
+### Scope confirmation (post-apply, independent re-read)
+
+A fresh whole-type bulk export was taken *after* the writes — 1,098 records — and
+compared against the pre-run export:
+
+- **0** records anywhere in `product_option_help_text` still reference any of the
+  five approved source handles (down from 24 records / 50 anchors);
+- all 58 approved records match the approved value byte-for-byte;
+- exactly **24** records changed in this run — the 24 that were still outstanding;
+- every other record in the type is **byte-identical** to its pre-run value;
+- every metaobject `handle` is unchanged; only `help_text` was written.
+
+Nothing outside `help_text` was touched: no products, no collections, no publication
+state, no redirects, no menus.
+
+### Guardrails / HOLD still intact
+
+Re-verified 2026-09-10 after the run:
+
+- all five source collections still **published** to the Online Store;
+- `urlRedirects` matching `/collections/french-fitness` — **0 results**. No redirect
+  was created.
+
+Final source unpublishing and the five one-hop redirects remain HOLD / NOT
+AUTHORIZED pending Tim's separate explicit CUTOVER GO.
+
+### Rollback
+
+- Repo: `payloads/optionhelp_ROLLBACK.bulk.jsonl` (74 records, pre-migration values).
+- Workbook: `FF_RackRig_GroupC_ROLLBACK58_Matrixify_v2_2026-09-03.xlsx`.
+- Pre-run whole-type export retained as evidence for this run.
+
+Rollback via the same batched-mutation path, writing only `help_text`.
+
+### Note on record counts
+
+Group C is **74** records overall; **58** were outstanding at the point Tim assigned
+execution (16 had been applied in the earlier phase). Both numbers are correct and
+refer to different baselines.
