@@ -1,0 +1,68 @@
+{
+  "_source": "Meta, Google, Bing, Tiktok Feeds SOP (Google Drive, Larianne), tabs for googleshoppingfs and googleshoppingfrenchfitness. Transcribed 2026-09-07. This is the MultiFeeds ruleset the two live primaries are built from; the Phase 2 generator reproduces it so cutover does not silently change feed scope.",
+  "_note": "Every field name below resolves against live Shopify: vendor, productType, status, tags, variant price, variant inventory, collection membership, and the custom.condition_state / custom.3rd_party / custom.shipping_weight_lbs metafields. All metafield keys were confirmed to exist on the PRODUCT owner type on 2026-09-07.",
+
+  "shared": {
+    "always_exclude": {
+      "collections": ["Other Machine Attachments", "Aluminum Pulley Upgrade"],
+      "product_types": ["Product (Hidden)", "Custom Field More Info", "Option Category", "Avis-add-charge"],
+      "products_by_title": ["Gym Package"],
+      "estimated_ground_shipping_usd_min": 1000
+    },
+    "include_product_type": "Product Index",
+    "require_status": "ACTIVE"
+  },
+
+  "googleshoppingfrenchfitness": {
+    "filename": "googleshoppingfrenchfitness",
+    "include": {
+      "product_type": "Product Index",
+      "status": "ACTIVE",
+      "vendor": ["French Fitness"],
+      "condition_state": ["New"]
+    },
+    "exclude": {
+      "collections": ["Other Machine Attachments", "Aluminum Pulley Upgrade"],
+      "product_types": ["Product (Hidden)", "Custom Field More Info", "Option Category", "Avis-add-charge"],
+      "estimated_ground_shipping_usd_min": 1000,
+      "products_by_title": ["Gym Package"],
+      "price_usd_below": 100,
+      "out_of_stock": true
+    }
+  },
+
+  "googleshoppingfs": {
+    "filename": "googleshoppingfs",
+    "include": {
+      "product_type": "Product Index",
+      "vendor": "all except the excluded new-only vendors below",
+      "condition_state": ["Remanufactured"]
+    },
+    "exclude": {
+      "collections": ["Other Machine Attachments", "Aluminum Pulley Upgrade"],
+      "product_types": ["Product (Hidden)", "Custom Field More Info", "Option Category", "Avis-add-charge"],
+      "vendors_new_only": [
+        "AbSolo-New", "Body-Solid-New", "BodyCraft-New", "Concept 2-New",
+        "Dynamic Cold Therapy-New", "Dynamic Fitness-New", "Dynamic Fluid Fitness-New",
+        "GoldenDesigns-New", "Marpo Kinetics-New", "MSpa-New", "Muscle D-New",
+        "SuperMats-New", "Throwdown-New", "Versaclimber-New"
+      ],
+      "estimated_ground_shipping_usd_min": 1000,
+      "third_party_flag": "exclude_pp_lt1000 == 1",
+      "products_by_title": ["Gym Package", "Bowflex Revolution Accessory Rack (Remanufactured)", "Total Gym GTS"],
+      "price_usd_below": 100,
+      "price_usd_at_or_below_other_brand_new_only": 1300,
+      "condition_state": ["as is"],
+      "tags": ["REMOVE FROM FEEDS", "discontinued"]
+    }
+  },
+
+  "phase2_deltas": {
+    "_ref": "Tim, 2026-09-06, \"Phase 2 feed build - GMC status after today + spec deltas\".",
+    "labels": "custom_label_3 = priority tier, custom_label_4 = series, series only where price >= 1000. Joined from the supplemental_priority_labels_v2.csv lookup. The generator refuses to run without that file - dropping custom_label_4 takes the Product Lines asset groups dark.",
+    "titles": "SKU-keyed overrides from feeds/hero-title-overrides.csv win over the Shopify title.",
+    "shipping": "Owned by the missing-shipping pass (scripts/feed_missing_shipping_fix.py on claude/missing-shipping-feed-repoint-4yg4rr). 50 rows still need rates from Qash.",
+    "absent_skus": "One row per SELLABLE VARIANT with a composite id, not one row per product. See docs/phase2-feed-generator.md.",
+    "prices": "price / sale_price from Shopify, tax columns dropped entirely. See scripts/check_feed_prices.py."
+  }
+}
