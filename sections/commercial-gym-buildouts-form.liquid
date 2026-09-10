@@ -103,6 +103,12 @@
       flex-wrap: wrap;
       gap: 20px;
       margin-top: 28px;
+      /* Figma node 4585:80582 — the steps frame is 50px tall with its 26px labels
+         centred inside it, i.e. 12px above and below. Without this the row was only
+         as tall as the labels, leaving the heading-to-card distance 26px short of
+         Figma's 106px (28 + 50 + 28). */
+      padding-top: 12px;
+      padding-bottom: 12px;
       text-align: left;
     }
 
@@ -120,7 +126,9 @@
   #shopify-section-{{ section.id }} .cgb-form__card {
     width: 100%;
     max-width: 624px;
-    margin: 2.4rem auto 0;
+    /* Figma node 4585:80472 — 28px below the steps frame (frame ends 12647, card
+       starts 12675), not the theme's 2.4rem/24px. */
+    margin: 28px auto 0;
     background-color: #ffffff;
     border-radius: 12px;
     padding: 32px;
@@ -331,6 +339,14 @@
     display: block;
     width: 100%;
     margin-top: 24px;
+  }
+
+  /* Figma nodes 4585:80749 / 4585:81167 — button labels are Lato Bold 16/24. The
+     theme's .button rule declares no font-family, and a <button> does not inherit
+     one the way the hero's <a class="button"> does, so these fell back to the
+     browser default (Arial). */
+  #shopify-section-{{ section.id }} .button {
+    font-family: 'Lato', sans-serif;
   }
 
   /* Figma node 4585:80755 "inputs" (Step 2) — Ceiling height / Budget range and
@@ -1180,7 +1196,7 @@
       "step": 4,
       "unit": "px",
       "label": "t:sections.all.padding.padding_top",
-      "default": 56
+      "default": 80
     },
     {
       "type": "range",
@@ -1190,7 +1206,7 @@
       "step": 4,
       "unit": "px",
       "label": "t:sections.all.padding.padding_bottom",
-      "default": 56
+      "default": 80
     }
   ],
   "presets": [
