@@ -69,8 +69,18 @@ Same as the offer-ID work — see `docs/google-feed-offer-id.md`.
 
 ## The change, per feed
 
-Multifeeds > feed > Basic > `condition`. Set it to a total expression over the
-one source, with no fall-through that can emit anything else:
+Multifeeds > Settings > the feed > Edit primary feed. The field-mapping tabs are
+Meta, Target, Basic, Media, Identifiers, Detail, Label, Shipping, AI, Others,
+Custom.
+
+**`condition` is not on the Basic tab.** Basic carries only Item
+identification, Product data and Availability — confirmed from that screen on
+`googleshoppingfs`. Google groups `condition` with the detailed product
+attributes, so **Detail** is where to look first; Identifiers holds
+brand/GTIN/MPN, and Others / Custom are the fallbacks.
+
+Set the field to a total expression over the one source, with no fall-through
+that can emit anything else:
 
 ```
 if   lower( trim( Product metafield (condition_state) ) ) == "remanufactured"
@@ -99,9 +109,23 @@ Both live primary Google feeds and the live Bing feed need it:
 | `bingshoppingnew` | Bing main feed - Larianne test | 2,505 |
 
 The Bing feed carries all three feed collections, so its cohort is the union of
-the two Google ones. `bingshoppingnew` in the `Bing main feed` group is a
-separate, older instance (2,418 products); confirm which instances are live
-before editing — the group name, not the feed name, identifies them.
+the two Google ones.
+
+**The group name, not the feed name, identifies a feed.** Names repeat across
+groups: a `googleshoppingfs` and a `googleshoppingfrenchfitness` also sit in the
+plain `New Feeds` group, both Paused and Disconnected, and editing those changes
+nothing. Worse, the Aug 12 feed inventory records a *second* `bingshoppingnew`,
+in the `Bing main feed` group, as **Enabled with confirmed active sync** on a
+different cohort (2,418 products). If it is still serving it needs the same
+expression, and the 2,505-row count below does not apply to it. Confirm its
+state before treating the Bing side as done.
+
+**Preview before saving.** The Edit primary feed screen carries Preview and Run
+history. Preview must show only `new` and `refurbished` before the change is
+saved. Worth stating because the Aug 12 pilot recorded Preview as unusable on
+the French Fitness feed after 14+ attempts, so a Preview that does not open is a
+known failure of that feed's UI rather than a fault in the expression — fall
+back to checking the regenerated file with `scripts/feed_condition_check.py`.
 
 ## QA target — the expected output
 
