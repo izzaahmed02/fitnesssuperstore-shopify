@@ -1,6 +1,26 @@
 {{ 'section-collection-intro.css' | asset_url | stylesheet_tag }}
 
 {% assign section_title = section.settings.title | strip | default: collection.title %}
+{% assign title_tag = section.settings.heading_tag | default: 'h2' %}
+
+{% comment %}
+  Iqra's Aug 6 finding 11: the banner alt duplicated the heading.
+
+  Three states, because a settings field alone cannot express "intentionally
+  empty" — a blank text field is indistinguishable from an unset one:
+  - image_decorative checked  -> alt="" , the correct markup for a banner that
+    carries no information the heading does not already give
+  - image_alt filled          -> that text
+  - neither                   -> falls back to the heading, the previous
+    behaviour, so no other page using this section changes
+{% endcomment %}
+{%- liquid
+  if section.settings.image_decorative
+    assign image_alt = ''
+  else
+    assign image_alt = section.settings.image_alt | default: section_title | escape
+  endif
+-%}
 {% assign section_description = section.settings.description | strip | default: collection.description %}
 {% assign section_image = section.settings.image | default: collection.image %}
 
@@ -16,6 +36,27 @@
        !important;
     }
   }
+
+  /* Iqra's Aug 6 finding 9: at 375px the floating chat launcher sat over this
+     section's intro copy. Reserve a bottom safe area so no copy or control comes
+     to rest underneath it, and pin the launcher into the corner. The launcher
+     key only -- the chat container is left alone so the expanded window still
+     opens full size. Scoped to this section instance, so no other page using
+     this section is affected. */
+  @media (max-width: 749px) {
+    .collection-intro--{{ section.id }} {
+      padding-bottom: 88px !important;
+    }
+
+    body.gym-packages .gym-decision {
+      padding-bottom: 88px;
+    }
+
+    body.gym-packages .gorgias-chat-key {
+      right: 12px;
+      bottom: 12px;
+    }
+  }
 {%- endstyle -%}
 
 <section class="collection-intro collection-intro--{{ section.id }} {% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}" aria-labelledby="collection-intro__title">
@@ -23,9 +64,9 @@
     <div class="collection-intro__wrap">
       <div class="collection-intro__content">
         {% if section_title %}
-          <h2 class="collection-intro__title" id="collection-intro__title">
+          <{{ title_tag }} class="collection-intro__title h2" id="collection-intro__title">
             {{ section_title }}
-          </h2>
+          </{{ title_tag }}>
         {% endif %}
 
         {% if section_description %}
@@ -70,7 +111,7 @@
                 class: 'collection-intro__image',
                 sizes: sizes,
                 widths: '375, 550, 750, 1100, 1500, 1780, 2000, 3000, 3840',
-                alt: section_title | escape
+                alt: image_alt
             }}
         </figure>
       {% endif %}
@@ -162,6 +203,17 @@
         "default": "t:sections.collection-intro.settings.title.default"
       },
       {
+        "type": "select",
+        "id": "heading_tag",
+        "label": "Heading level",
+        "info": "Use h1 only on pages where no other section already renders one.",
+        "options": [
+          { "value": "h1", "label": "h1" },
+          { "value": "h2", "label": "h2" }
+        ],
+        "default": "h2"
+      },
+      {
         "type": "textarea",
         "id": "description",
         "label": "t:sections.collection-intro.settings.description.label",
@@ -170,6 +222,17 @@
         "type": "image_picker",
         "id": "image",
         "label": "t:sections.collection-intro.settings.image.label"
+      }, {
+        "type": "text",
+        "id": "image_alt",
+        "label": "Image alt text",
+        "info": "Describe the image. Leave blank to fall back to the heading, which duplicates it for screen readers."
+      }, {
+        "type": "checkbox",
+        "id": "image_decorative",
+        "label": "Image is decorative",
+        "info": "Outputs an empty alt attribute, which is correct when the banner adds nothing the heading does not already say. Overrides the alt text above.",
+        "default": false
       }
     ],
     "presets": [

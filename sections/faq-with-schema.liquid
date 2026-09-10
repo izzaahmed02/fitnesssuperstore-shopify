@@ -1,0 +1,210 @@
+{% comment %}
+  FAQ section that renders the visible questions and the FAQPage JSON-LD from the
+  same blocks, so the two cannot drift apart.
+
+  A block is skipped in BOTH the visible list and the structured data when its
+  answer is blank or still carries a bracketed placeholder. Per Tim's Aug 9
+  direction, an answer that is not currently supportable is omitted rather than
+  published as a placeholder or as a schema/visible mismatch.
+{% endcomment %}
+
+{%- liquid
+  assign publishable = ''
+  for block in section.blocks
+    assign question = block.settings.question | strip
+    assign answer = block.settings.answer | strip_html | strip
+    if question == blank or answer == blank
+      continue
+    endif
+    # Bracketed placeholders never reach the storefront, in either output.
+    if answer contains '[VERIFY' or question contains '[VERIFY'
+      continue
+    endif
+    assign publishable = publishable | append: block.id | append: ','
+  endfor
+  assign publishable_ids = publishable | split: ','
+-%}
+
+{%- if publishable_ids.size > 0 -%}
+  <section
+    class="faq-with-schema section-{{ section.id }}-padding page-width"
+    {% if section.settings.section_id != blank %}
+      id="{{ section.settings.section_id }}"
+    {% endif %}
+    aria-labelledby="faq-with-schema__title-{{ section.id }}"
+  >
+    {%- if section.settings.title != blank -%}
+      <h2 class="faq-with-schema__title h2" id="faq-with-schema__title-{{ section.id }}">
+        {{ section.settings.title }}
+      </h2>
+    {%- endif -%}
+
+    <div class="faq-with-schema__list">
+      {%- for block in section.blocks -%}
+        {%- unless publishable_ids contains block.id -%}
+          {%- continue -%}
+        {%- endunless -%}
+        <details class="faq-with-schema__item" {{ block.shopify_attributes }}>
+          <summary class="faq-with-schema__question">
+            <h3 class="faq-with-schema__question-text h4">{{ block.settings.question }}</h3>
+            <span class="faq-with-schema__marker" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-with-schema__answer rte">
+            {{ block.settings.answer }}
+          </div>
+        </details>
+      {%- endfor -%}
+    </div>
+  </section>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {%- assign emitted = 0 -%}
+        {%- for block in section.blocks -%}
+          {%- unless publishable_ids contains block.id -%}
+            {%- continue -%}
+          {%- endunless -%}
+          {%- if emitted > 0 %},{% endif -%}
+          {
+            "@type": "Question",
+            "name": {{ block.settings.question | strip_html | strip | json }},
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": {{ block.settings.answer | strip_html | strip | json }}
+            }
+          }
+          {%- assign emitted = emitted | plus: 1 -%}
+        {%- endfor -%}
+      ]
+    }
+  </script>
+{%- endif -%}
+
+{%- style -%}
+  .faq-with-schema__list {
+    border-top: 1px solid rgba(35, 35, 43, 0.12);
+  }
+
+  .faq-with-schema__item {
+    border-bottom: 1px solid rgba(35, 35, 43, 0.12);
+  }
+
+  .faq-with-schema__question {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.6rem;
+    cursor: pointer;
+    padding: 1.8rem 0;
+    list-style: none;
+  }
+
+  .faq-with-schema__question::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-with-schema__question-text {
+    margin: 0;
+  }
+
+  .faq-with-schema__marker {
+    flex: 0 0 auto;
+    width: 10px;
+    height: 10px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+    transform-origin: center;
+    transition: transform 0.15s ease-in-out;
+  }
+
+  .faq-with-schema__item[open] .faq-with-schema__marker {
+    transform: rotate(-135deg);
+  }
+
+  .faq-with-schema__answer {
+    padding-bottom: 1.8rem;
+  }
+
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+{% schema %}
+{
+  "name": "FAQ with schema",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading",
+      "default": "Frequently asked questions"
+    },
+    {
+      "type": "text",
+      "id": "section_id",
+      "label": "Anchor id",
+      "info": "Optional. Used for in-page links."
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding top",
+      "default": 44
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding bottom",
+      "default": 44
+    }
+  ],
+  "blocks": [
+    {
+      "type": "faq",
+      "name": "Question",
+      "settings": [
+        {
+          "type": "text",
+          "id": "question",
+          "label": "Question"
+        },
+        {
+          "type": "richtext",
+          "id": "answer",
+          "label": "Answer",
+          "info": "Leave blank, or leave a bracketed placeholder in place, and this question is omitted from both the page and the FAQ structured data."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "FAQ with schema",
+      "blocks": [{ "type": "faq" }, { "type": "faq" }, { "type": "faq" }]
+    }
+  ]
+}
+{% endschema %}
