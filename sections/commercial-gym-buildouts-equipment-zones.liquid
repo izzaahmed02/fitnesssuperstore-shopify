@@ -2,8 +2,8 @@
 
 {%- style -%}
     .section-{{ section.id }}-padding {
-    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
-    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+    padding-top: {{ section.settings.section_padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.section_padding_bottom | times: 0.75 | round: 0 }}px;
     }
 
     #shopify-section-{{ section.id }} {
@@ -18,6 +18,16 @@
     padding-left: 40px;
     padding-right: 40px;
     box-sizing: border-box;
+    }
+
+    /* Figma node 4598:83957 (1440px frame) — content is inset 80px each side for a
+       1280px column, which is what makes each of the two columns 626px wide
+       (626 + 28 gap + 626 = 1280). At the 40px inset they were coming out 666px. */
+    @media screen and (min-width: 990px) {
+    #shopify-section-{{ section.id }} .page-width {
+    padding-left: 80px;
+    padding-right: 80px;
+    }
     }
 
     /* Figma node 4685:81253 "Title" — heading (4685:81254) and subheading (4685:81255)
@@ -38,6 +48,18 @@
     text-align: center;
     max-width: 800px;
     margin: 12px auto 0;
+    }
+
+    /* Figma node 4685:81253 "Title" — 12px between heading and subheading (50 + 12 +
+       48 = the 110px title frame). The 12px margin above was landing as 22px because
+       the theme's title wrapper contributes its own gap and the heading a bottom
+       margin; zero both so the subheading's margin alone sets the distance. */
+    #shopify-section-{{ section.id }} .multicolumn__title.title-wrapper-with-link {
+    gap: 0;
+    }
+
+    #shopify-section-{{ section.id }} .multicolumn__title .title {
+    margin-bottom: 0;
     }
 
     /* Figma node 4612:88421/4612:88422 (mobile) — Oswald SemiBold 20px/26px; Lato Regular 14px/20px #4f4f55 */
@@ -158,8 +180,13 @@
     display: flex;
     align-items: flex-start;
     gap: 20px;
-    padding: 2rem;
-    border: 1px solid rgba(var(--color-foreground), 0.1);
+    /* Figma node 4598:83984 — 32px padding (icon inset 32 from the card's left and
+       top edges), a #e5e5e5 stroke rather than the theme's translucent foreground,
+       and the stroke drawn as an inset shadow so it takes no layout space: Figma's
+       146px card is 32 + 82 + 32 exactly, where a real border made it 148px. */
+    padding: 32px;
+    border: 0;
+    box-shadow: inset 0 0 0 1px #e5e5e5;
     border-radius: 1.2rem;
     background: rgb(var(--color-background));
     }
@@ -202,8 +229,8 @@
 
     @media screen and (min-width: 750px) {
     .section-{{ section.id }}-padding {
-    padding-top: {{ section.settings.padding_top }}px;
-    padding-bottom: {{ section.settings.padding_bottom }}px;
+    padding-top: {{ section.settings.section_padding_top }}px;
+    padding-bottom: {{ section.settings.section_padding_bottom }}px;
     }
     }
 
@@ -412,23 +439,23 @@
     },
     {
       "type": "range",
-      "id": "padding_top",
+      "id": "section_padding_top",
       "min": 0,
       "max": 100,
       "step": 4,
       "unit": "px",
       "label": "t:sections.all.padding.padding_top",
-      "default": 56
+      "default": 80
     },
     {
       "type": "range",
-      "id": "padding_bottom",
+      "id": "section_padding_bottom",
       "min": 0,
       "max": 100,
       "step": 4,
       "unit": "px",
       "label": "t:sections.all.padding.padding_bottom",
-      "default": 56
+      "default": 80
     }
   ],
   "blocks": [
