@@ -227,6 +227,12 @@
     color: #393940;
     }
 
+    /* The richtext setting supplies the inner <p>; drop its default margins so the
+       card's text block stays 82px (26 title + 8 + 48 body) and the card 146px. */
+    #shopify-section-{{ section.id }} .equipment-zones__card-text > p {
+    margin: 0;
+    }
+
     @media screen and (min-width: 750px) {
     .section-{{ section.id }}-padding {
     padding-top: {{ section.settings.section_padding_top }}px;
@@ -345,7 +351,16 @@
                                         <p class="equipment-zones__card-title">{{ block.settings.title }}</p>
                                     {%- endif -%}
                                     {%- if block.settings.text != blank -%}
-                                        <p class="equipment-zones__card-text">{{ block.settings.text }}</p>
+                                        {%- comment -%}
+                                          A <div>, not a <p>: `text` is a richtext
+                                          setting and emits its own <p>. Nested inside
+                                          a <p> that is invalid, so the browser closed
+                                          this element early — leaving it empty and
+                                          ejecting the copy as an unstyled sibling that
+                                          lost its 16px/24px Lato and made every card
+                                          taller than Figma's 146px.
+                                        {%- endcomment -%}
+                                        <div class="equipment-zones__card-text">{{ block.settings.text }}</div>
                                     {%- endif -%}
                                 </div>
                             </div>
