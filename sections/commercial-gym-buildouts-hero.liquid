@@ -136,6 +136,18 @@
     }
   }
 
+  /* The heading's Figma text box is 844px — deliberately 111px WIDER than the 733px
+     Content frame it sits in — which is what keeps the uppercase headline on two
+     68px lines instead of three. Constraining it to the column wraps it to three.
+     Scoped to >=990px so the 80px inset + 844px can never exceed the viewport
+     (924px worst case), which would reintroduce the horizontal scroll documented
+     above; below that it wraps inside the column instead. */
+  @media screen and (min-width: 990px) {
+    #shopify-section-{{ section.id }} .banner__heading {
+      width: 844px;
+    }
+  }
+
   #shopify-section-{{ section.id }} .banner__box .banner__heading + * {
     margin-top: 16px;
   }
@@ -208,6 +220,9 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 12px;
+    /* The 32px above the buttons is the bullet list's margin-bottom; the theme adds
+       a further 20px of its own margin-top here, which made the gap 52px. */
+    margin-top: 0;
     width: max-content;
     max-width: 100%;
     justify-content: flex-start;
