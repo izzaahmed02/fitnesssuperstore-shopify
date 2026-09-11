@@ -28,42 +28,115 @@
     </div>
   {% endif %}
 
-  <!-- Search bar: native Shopify article search (GET /search?type=article) -->
-  <form
-    action="{{ routes.search_url }}"
-    method="get"
-    role="search"
-    class="blog-search-wrapper blog-search-form"
-    style="margin-bottom: 20px; display: flex; gap: 8px;"
-  >
-    <input type="hidden" name="type" value="article">
-    <input type="hidden" name="options[prefix]" value="last">
+  <!-- Search bar -->
+  <div class="blog-search-wrapper" style="margin-bottom: 20px;">
     <input
-      type="search"
+      type="text"
       id="blog-live-search"
-      name="q"
-      value="{{ search.terms | escape }}"
       placeholder="Search blog posts..."
-      aria-label="Search blog articles"
-      style="flex:1 1 auto; padding:10px; border:1px solid #ddd; border-radius:6px;"
+      style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;"
     >
-    <button
-      type="submit"
-      class="blog-search-submit"
-      style="padding:10px 20px; border:none; border-radius:6px; background:#D83D0E; color:#fff; font-weight:700; cursor:pointer;"
-    >
-      Search
-    </button>
-  </form>
+    <div id="no-results">
+      <p>No articles found.</p>
+    </div>
+  </div>
 
-  {%- comment -%}
-    The full article list is no longer pre-rendered here. Search is handled by
-    Shopify's native article search (the form above), and each article now
-    renders exactly once on the hub inside its category row (the per-blog
-    "Related Blog posts Slider" sections). This removes the duplicate,
-    crawlable-but-hidden master list that previously lived here.
-  {%- endcomment -%}
+  <!-- Search results -->
+  <div class="blog-articles {% if section.settings.layout == 'collage' %}blog-articles--collage{% endif %}">
+  </div>
+
+  <!-- Divider BELOW results -->
+  <div class="blog-search-divider"></div>
+
+  <!-- Hidden articles -->
+  <div style="display:none;" id="all-articles-container">
+    {% assign handles = section.settings.blog_handles | split: "," %}
+    {% for handle in handles %}
+      {% assign clean_handle = handle | strip %}
+      {% assign blog = blogs[clean_handle] %}
+      {% if blog %}
+        {% for article in blog.articles %}
+          <div
+            class="article-data"
+            data-full-content="{{ article.content | strip_html | escape }}"
+          >
+            {% render 'article-card',
+              article: article,
+              media_height: section.settings.image_height,
+              media_aspect_ratio: article.image.aspect_ratio,
+              show_image: section.settings.show_image,
+              show_date: section.settings.show_date,
+              show_author: section.settings.show_author,
+              show_excerpt: true
+            %}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+  </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const searchInput = document.getElementById('blog-live-search');
+  const container = document.querySelector('.blog-articles');
+  const noResults = document.getElementById('no-results');
+  const divider = document.querySelector('.blog-search-divider');
+
+  const allArticles = Array.from(
+    document.querySelectorAll('#all-articles-container .article-data')
+  );
+
+  function renderResults(query) {
+    container.innerHTML = '';
+    let matches = 0;
+
+    if (!query) {
+      noResults.style.display = 'none';
+      divider.style.display = 'none';
+      return;
+    }
+
+    allArticles.forEach(articleDiv => {
+      const searchableText = articleDiv.textContent.toLowerCase();
+      const fullContent = articleDiv.dataset.fullContent.toLowerCase();
+
+      if (
+        searchableText.includes(query) ||
+        fullContent.includes(query)
+      ) {
+        const clone = articleDiv.cloneNode(true);
+        container.appendChild(clone);
+        matches++;
+      }
+    });
+
+    noResults.style.display = matches === 0 ? 'block' : 'none';
+    divider.style.display = matches > 0 ? 'block' : 'none';
+  }
+
+  function updateURL(query) {
+    const url = new URL(window.location);
+    query ? url.searchParams.set('q', query) : url.searchParams.delete('q');
+    window.history.replaceState({}, '', url);
+  }
+
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.trim().toLowerCase();
+    updateURL(query);
+    renderResults(query);
+  });
+
+  // Restore on back / reload
+  const params = new URLSearchParams(window.location.search);
+  const initialQuery = params.get('q');
+
+  if (initialQuery) {
+    searchInput.value = initialQuery;
+    renderResults(initialQuery.toLowerCase());
+  }
+});
+</script>
 
 {% schema %}
 {
