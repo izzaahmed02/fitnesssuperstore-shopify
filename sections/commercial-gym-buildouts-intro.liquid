@@ -155,16 +155,20 @@
     }
 
     /* Figma mobile node 5258:82084 "Text" — 12px between the 20/26 heading and its
-       14/20 body (78 + 12 + 100 = the 190px text frame). The gap was landing as 28px
-       on mobile, so state it explicitly here with the section-id prefix to outrank
-       whatever the theme contributes at this breakpoint. */
+       14/20 body (78 + 12 + 100 = the 190px text frame). The content column's 12px
+       row-gap is already correct; the extra 16px came from the heading itself, which
+       the theme gives `margin-bottom: 16px !important`. On mobile the heading sits in
+       a .heading-block flex row, so that margin adds to the row's height (78 + 16 = 94)
+       and pushed the gap to 28px. !important is required to beat !important —
+       specificity alone loses, which is why three earlier attempts at this had no
+       effect. Confirmed via CSS.getMatchedStylesForNode rather than guessed. */
     @media screen and (max-width: 749px) {
     #shopify-section-{{ section.id }} .image-with-text__content {
     row-gap: 12px;
     }
 
-    #shopify-section-{{ section.id }} .image-with-text__heading {
-    margin-bottom: 0;
+    #shopify-section-{{ section.id }} .heading-block .image-with-text__heading {
+    margin-bottom: 0 !important;
     }
 
     #shopify-section-{{ section.id }} .image-with-text__text {
