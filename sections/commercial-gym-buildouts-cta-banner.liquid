@@ -275,6 +275,18 @@
     #shopify-section-{{ section.id }} .cgb-cta-phone-link svg {
       display: none;
     }
+
+    /* Figma node 4612:86967 renders this exact string as ONE 24px line in a 336px frame,
+       at the same Lato Bold 16px/24px we use. The browser's Lato measures the same
+       characters at 343.9px against a 343px column — 0.9px short, so it wrapped to two
+       lines and left the section 24px over its frame. The 8px spread is a font-metrics
+       difference between Figma's Lato and the webfont, not a spec value, so nowrap keeps
+       Figma's one-line layout rather than inventing a smaller size or letter-spacing.
+       The sub-pixel remainder lands in the page gutter's 16px padding, so it adds no
+       document overflow (verified at 375px). */
+    #shopify-section-{{ section.id }} .cgb-cta-phone-link {
+      white-space: nowrap;
+    }
   }
 
   .cgb-cta-phone-link svg {
