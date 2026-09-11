@@ -573,8 +573,8 @@ source of that name is connected.
 
 **That answer is about a different object.** `French Fitness - Meta Feeds` is a
 Shopify smart collection, not a Meta catalog source, and all three collections
-carrying the "- Meta Feeds" suffix are the **sole input to the two live Google
-Merchant Center feeds**:
+carrying the "- Meta Feeds" suffix decide **which products the two live Google
+Merchant Center feeds carry**:
 
 | Collection | Products | Feeds |
 | --- | --- | --- |
@@ -585,9 +585,15 @@ Merchant Center feeds**:
 1,241 + 294 = 1,535, exactly the `googleshoppingfs` product count. The French
 Fitness collection is the whole of `googleshoppingfrenchfitness`.
 
-**Deleting or emptying any of the three takes the corresponding Google feed
-dark.** For `French Fitness - Meta Feeds` that is 966 rows and 957 processed
-offers.
+To be precise about the chain, because "input to Merchant Center" is too loose:
+the collections set **product membership** for a Multifeeds product group;
+Multifeeds applies its own field expressions, filters and exclusions and writes
+a TSV to `feedfiles.woolytech.com`; Merchant Center fetches that URL as a
+primary File source. The collections are one input among several, and they are
+the one that decides which products exist in the file at all.
+
+**So emptying any of the three still takes the corresponding Google feed dark.**
+For `French Fitness - Meta Feeds` that is 966 rows and 957 processed offers.
 
 The name is the trap: it reads as Meta, it serves Google. Both answers in that
 exchange were true and the wrong conclusion was still one step away. Rename
@@ -599,7 +605,10 @@ approved covers the feed groups; these collections need the same treatment.
 Offered against the standing ask to confirm whether external feeds and tags are
 still in use before touching them.
 
-**Google Merchant Center**, account 9453531, Data sources → Product sources:
+**Google Merchant Center**, account 9453531, Data sources → **Product sources**
+tab only. The Supplemental sources tab was not checked, and at least one manual
+label supplemental is known to exist from the Phase 2 thread, so this is not the
+complete list of what feeds that account:
 
 | Source | Type | Products |
 | --- | --- | --- |
@@ -620,3 +629,69 @@ processes clean, deliberately, so there is never a gap with no local source.
 The open question worth owning: **15 feeds generated, 2 confirmed live on
 Google.** That gap is the inventory, and it needs a named owner per destination
 rather than an assumption either way.
+
+
+## Context this workstream was missing: woolytech is scheduled for replacement
+
+Read on 2026-09-11 from the "Phase 2 feed build" thread. It changes the frame
+for everything above.
+
+A **Phase 2 generator** is being built in this repo (PR #830, superseding #816)
+to generate both primaries natively, replacing the Multifeeds/woolytech output.
+Tim's cutover sequence, unchanged across several messages:
+
+> id diff to me → repoint existing registrations → 48h Needs-attention watch →
+> my GO on the woolytech pause.
+
+So the offer-ID fix documented here lands on a system with a scheduled end. That
+does not make it wasted — the ids it produces are the ids the generator has to
+reproduce, and Yusra's diff baseline is the live woolytech export — but anyone
+reading this doc should know the destination is the generator, not Multifeeds.
+
+Yusra's independent pass over the same feeds corroborates the id analysis here
+exactly: 2,103 SKUs, 45 bare product ids, 45 composites, and three all-digit ids
+that are really Precor SKUs — `931`, `933`, `935`. Two people arrived at the
+same structure from different directions.
+
+### The five dual-keyed SKUs are a subset of a known 198
+
+Izza reported on 2026-09-07 that **198 SKUs exist on two ACTIVE Shopify products
+at the same price** — a combined parent and a legacy standalone product per SKU.
+The five identified here are the subset that surfaces twice in the French
+Fitness feed, at two different prices.
+
+Tim's standing generator rule already covers the class: one row per SKU, the
+currently serving legacy row wins while the combined-listing HOLD is in force,
+the duplicate is dropped, and no row ever publishes a discounted figure as the
+regular price.
+
+Note also that `10247596147004` — the hex dumbbell parent whose hardcoded branch
+is documented above as load-bearing — **is itself slated for archival**, but only
+through the Rubber Hex cutover packet, which remains on HOLD. The branch stays
+until that packet moves.
+
+### Standing rule that overrode a later instruction
+
+Tim, 2026-09-07, same thread:
+
+> **StudioWall: confirmed — it stays in the feed** and gets its shipping rate in
+> the same pass as the other 47, from the live Shopify profiles.
+
+and, repeated 2026-09-09:
+
+> no product retired or unpublished from this lane.
+
+On 2026-09-10, in the offer-ID thread, Tim asked for `FF-STW-WB-3` to be removed
+from the feed as an UNLISTED leak. **That is the same product.** It was tagged
+`REMOVE FROM FEEDS` on 2026-09-10 and the tag was **removed again on 2026-09-11**
+once the Phase 2 thread was read: the explicit "it stays in the feed" ruling is
+the safer state, and an unexplained drop would also have polluted the cutover id
+diff, where unexplained rows must be zero before anyone repoints.
+
+Izza had already diagnosed the same mechanism on 2026-09-07 — "UNLISTED is why
+it read as unpublished, but the feed carries it" — three days before it was
+raised as a new finding here.
+
+**The lesson is the cheap one: read the other threads on the same subsystem
+before acting on an instruction, because a later instruction is not automatically
+the current one.**
