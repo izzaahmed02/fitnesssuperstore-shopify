@@ -103,6 +103,20 @@
 
     #shopify-section-{{ section.id }} .multicolumn-list.grid {
     gap: 12px;
+    /* The theme gives the list a 15px side gutter for its mobile slider (unused here,
+       swipe_on_mobile is off), which left only 313px inside the 343px grid. */
+    padding-left: 0;
+    padding-right: 0;
+    }
+
+    /* With the gutter gone and a 12px gap, each of the two columns is
+       calc(50% - 6px) = 165.5px, matching Figma's 165px cards. The theme's
+       calc(50% - 8px) assumes its own 16px gap and was compounding the gutter to
+       leave cards 148.5px wide — narrow enough to wrap the first row's copy and make
+       those cards 280px tall instead of 208px. */
+    #shopify-section-{{ section.id }} .grid--2-col-tablet-down .grid__item {
+    width: calc(50% - 6px);
+    max-width: calc(50% - 6px);
     }
     }
 
