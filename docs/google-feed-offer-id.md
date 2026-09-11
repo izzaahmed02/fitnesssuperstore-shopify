@@ -695,3 +695,50 @@ raised as a new finding here.
 **The lesson is the cheap one: read the other threads on the same subsystem
 before acting on an instruction, because a later instruction is not automatically
 the current one.**
+
+## BLOCKER: two approved fixes contradict each other on the 14 collision rows
+
+Found 2026-09-11 in the "Missing-shipping fix — 47 blocked products" thread.
+**Do not run the live offer-ID change until Tim reconciles this.**
+
+Tim approved a different fix for the same 14 rows on Sept 5, reaffirmed Sept 7
+("the staging on the repoint branch stands"), and it is already committed on
+`claude/missing-shipping-feed-repoint-4yg4rr` (d89ba980a) as
+`scripts/feed_missing_shipping_fix.py`:
+
+| Rows | Missing-shipping fix (approved, staged) | Offer-ID fix (approved here) |
+| --- | --- | --- |
+| FF-MSS `10269254254908` ×10 | re-key to `10269254254908-<variantID>`, composite | re-key to the ten `FF-MSS-*` SKUs |
+| Star Trac `9878900179260`, `9878898540860` ×4 | `--dedupe-mode drop-oob`: keep the standard row, **drop the open-box row** | re-key both → four distinct SKU offers |
+
+The Star Trac pair is a flat contradiction. The missing-shipping fix **removes**
+the open-box offers; the offer-ID directive requires `ST-8TR-20-ATSC-OOB` to
+exist **as its own offer**. Both were approved by Tim, in different threads, four
+days apart.
+
+FF-MSS is the same clash in softer form: composite versus SKU. Whichever wins,
+the other re-keys the same ten rows a second time — a second history reset on
+offers that have not yet recovered from the first.
+
+Note the staged script already anticipated this: its doc flags `drop-oob` as "a
+merchandising call rather than a data cleanup" and offers `--dedupe-mode
+rekey-oob` as the alternative. That alternative is compatible with the offer-ID
+directive; the default is not.
+
+### Related state, same thread
+
+- **StudioWall `10414127087932` is meant to be PUBLISHED**, not removed. Tim,
+  Sept 7: "Either way the ruling is the same: PUBLISH it. Larianne — publish
+  StudioWall to the Online Store." Still `UNLISTED` as of 2026-09-11, so that
+  instruction is outstanding, and it is blocking Iqra's rate capture for that
+  row.
+- The 47 blocked products — 45 hex variants + Monster + StudioWall — are blocked
+  on **missing shipping**, not on ids. Zero Google impressions all year.
+- The rate-column gate is **not cleared**: Qash owes the freight-increase state
+  and four anchor ZIPs before any quote is captured.
+- Sequence Tim set there: rate column → fold into the repoint branch → id diff
+  to Tim → repoint → 48h Needs-attention watch.
+
+**The question for Tim:** the repoint and the offer-ID change are two approved
+routes to re-keying the same rows, running in parallel threads. One of them has
+to yield, and the 14 collision rows need a single ruling before either moves.
