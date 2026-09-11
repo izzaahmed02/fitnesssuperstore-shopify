@@ -1,0 +1,156 @@
+/* ==========================================================================
+   PDP information block — compact treatment (all product templates)
+
+   Per Tim French, canonical Gmail thread "Re: Remove Blanket Wrap Packaging
+   on Most Products." (2026-09-09 layout direction):
+
+     - keep each icon BESIDE the first line of its text, never on its own row
+       above it;
+     - compact rows, bold inline labels, normal wrapped-line spacing and
+       subtle separators;
+     - remove the wide fixed gap between labels and values;
+     - keep every existing row, icon, link, warranty, processing time,
+       product code and showroom wording. Nothing is shortened, hidden,
+       truncated, reordered or overflow-clipped.
+
+   Cosmetic only: spacing, alignment, separators, typography, icon sizing and
+   responsive wrapping. Loaded after custom-main-product-page.css (and after
+   custom-main-product-hgs-page.css on the home-gym-packages template) so it
+   is the last word on these rules and can be rolled back by removing this
+   one file plus its four stylesheet tags.
+   ========================================================================== */
+
+.metainfo-wrapper {
+  margin-bottom: 16px;
+  max-width: 100%;
+}
+
+/* Compact rows with subtle hairline separators instead of large vertical gaps. */
+.metainfo-wrapper .item {
+  display: flex;
+  align-items: flex-start;
+  column-gap: 8px;
+  margin-bottom: 0;
+  padding: 7px 0;
+  border-top: 1px solid rgba(35, 35, 43, 0.09);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.metainfo-wrapper .item:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.metainfo-wrapper .item:last-of-type {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* Icon sits in a box the height of the first text line, so it is centred on
+   that line and never pushed onto a row of its own. */
+.metainfo-wrapper .item__icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 18px;
+  max-width: 18px;
+  height: 1.45em;
+  margin-top: 0;
+  color: #666;
+}
+
+.metainfo-wrapper .item__icon-wrap svg {
+  width: 100%;
+  max-height: 18px;
+}
+
+/* min-width/overflow-wrap let long values wrap inside the column instead of
+   running past the right viewport edge on narrow screens (320/390/430 px).
+   Nothing is hidden or truncated — the text simply wraps. */
+.metainfo-wrapper .item__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-left: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #393940;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Bold inline label, tight against its value. */
+.metainfo-wrapper .item__text .title {
+  margin-right: 4px;
+  font-weight: 700;
+  color: #000;
+}
+
+.metainfo-wrapper .item__text .more-info {
+  margin-left: 4px;
+  color: #000;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+/* "Ships" row extras: assembly-manual link (crate products) and the legacy
+   packaging-video CTA / "Packaging details" disclosure (unchanged products). */
+.metainfo-wrapper .item__text .ships-manual__link,
+.metainfo-wrapper .item__text .packaging-video__link,
+.metainfo-wrapper .item__text .packaging-video__summary {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  color: inherit;
+}
+
+.metainfo-wrapper .item__text .packaging-video__details {
+  margin-top: 2px;
+}
+
+.metainfo-wrapper .item__text .packaging-video__summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.metainfo-wrapper .item__text .packaging-video__disclaimer {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 400;
+  color: #4f4f55;
+  overflow-wrap: anywhere;
+}
+
+/* Showroom line: same compact rhythm, icon beside the text. */
+.showroom {
+  align-items: flex-start;
+  column-gap: 8px;
+  margin-top: 16px;
+  line-height: 1.45;
+}
+
+.showroom-text {
+  min-width: 0;
+  padding-left: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The free-shipping badge sits directly above the information block; trim its
+   trailing gap so the two read as one compact group. */
+.free-shipping-badge {
+  margin-bottom: 20px;
+}
+
+@media (max-width: 989px) {
+  .metainfo-wrapper .item {
+    padding: 6px 0;
+  }
+
+  .free-shipping-badge {
+    margin-bottom: 16px;
+  }
+}
