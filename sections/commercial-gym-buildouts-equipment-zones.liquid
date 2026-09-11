@@ -1,9 +1,15 @@
 {{ 'section-multicolumn.css' | asset_url | stylesheet_tag }}
 
 {%- style -%}
+    /* Figma's mobile frames inset every section 24px top and bottom, regardless of the
+       desktop value — confirmed across nodes 4612:86181 (facility-types), 4612:86422
+       (space-traffic), 4612:88420 (equipment-zones), 5280:81995 (condition-options),
+       4612:86205 (form) and 4612:86666 (faq). Deriving it from the desktop setting
+       (x0.75) gave 60px and made every section ~72px too tall on mobile. The desktop
+       setting still governs from 750px up. */
     .section-{{ section.id }}-padding {
-    padding-top: {{ section.settings.section_padding_top | times: 0.75 | round: 0 }}px;
-    padding-bottom: {{ section.settings.section_padding_bottom | times: 0.75 | round: 0 }}px;
+    padding-top: 24px;
+    padding-bottom: 24px;
     }
 
     #shopify-section-{{ section.id }} {
