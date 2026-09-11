@@ -244,6 +244,31 @@
     padding-bottom: 12px;
       }
     }
+
+    /* The .imageTextInner rule directly above comes from the forked image-with-text base
+       and is the only rule on this section that fires below 768px, so it was quietly
+       beating the .padding-{{ section.id }} declaration at the top of this file (both are
+       a single class, so source order decided) and adding a border Figma doesn't have:
+
+         - its .1rem border-bottom is 1px, and Figma node 5258:82080 has no stroke on the
+           section at any width — the section is a flat #faf9f9 band holding one #edeff3
+           rounded banner. That 1px was the section's entire unexplained overshoot
+           (12 + 428.13 + 12 + 1 = 453.13 against Figma's 452).
+         - its symmetric 12px/12px replaced the intended 24px/0. Figma puts the banner
+           24px below the section's top edge (banner y 11314, section y 11290) and flush
+           with its bottom (both end at 11742), so the 12px below the banner is dead space
+           and the banner sat 12px too high.
+
+       Scoped to the same max-width: 767px as the rule it corrects rather than the page's
+       usual 749px breakpoint, so the 750-767px band doesn't keep the border on its own.
+       The #shopify-section prefix wins on specificity regardless of order. */
+    @media screen and (max-width: 767px) {
+    #shopify-section-{{ section.id }} .imageTextInner {
+    border-bottom: 0;
+    padding-top: 24px;
+    padding-bottom: 0;
+    }
+    }
 {%- endstyle -%}
 
 {%- liquid
