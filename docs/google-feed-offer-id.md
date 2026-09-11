@@ -564,3 +564,59 @@ on status, the durable control is a Shopify Flow rule (Flow is already
 installed): **on product status changed to `UNLISTED`, add the tag
 `REMOVE FROM FEEDS`.** That reuses the existing hatch rather than adding a
 second mechanism.
+
+## The "- Meta Feeds" collections feed Google, not Meta
+
+Raised 2026-09-10, when the question "is *French Fitness - Meta Feeds* still
+being used?" was answered — correctly — from the Meta side: no Meta catalog
+source of that name is connected.
+
+**That answer is about a different object.** `French Fitness - Meta Feeds` is a
+Shopify smart collection, not a Meta catalog source, and all three collections
+carrying the "- Meta Feeds" suffix are the **sole input to the two live Google
+Merchant Center feeds**:
+
+| Collection | Products | Feeds |
+| --- | --- | --- |
+| `Remanufactured - Meta Feeds` | 1,241 | `googleshoppingfs` |
+| `Other Brand - Meta Feeds` | 294 | `googleshoppingfs` |
+| `French Fitness - Meta Feeds` | 918 | `googleshoppingfrenchfitness` |
+
+1,241 + 294 = 1,535, exactly the `googleshoppingfs` product count. The French
+Fitness collection is the whole of `googleshoppingfrenchfitness`.
+
+**Deleting or emptying any of the three takes the corresponding Google feed
+dark.** For `French Fitness - Meta Feeds` that is 966 rows and 957 processed
+offers.
+
+The name is the trap: it reads as Meta, it serves Google. Both answers in that
+exchange were true and the wrong conclusion was still one step away. Rename
+these to say what they drive — the Production / Staging convention already
+approved covers the feed groups; these collections need the same treatment.
+
+## What is actually live, as far as this workstream can verify
+
+Offered against the standing ask to confirm whether external feeds and tags are
+still in use before touching them.
+
+**Google Merchant Center**, account 9453531, Data sources → Product sources:
+
+| Source | Type | Products |
+| --- | --- | --- |
+| `googleshoppingfs` | File (URL) | 1,535 |
+| `googleshoppingfrenchfitness` | File (URL) | 957 |
+| `Local Feed Partnership` | Local Feed Partnership | **0** |
+
+**Multifeeds** generates **15 feeds across 12 product groups**. Only the two
+above are registered in Merchant Center. The rest terminate at Bing, Meta,
+Shopper Approved and `googlemanufacturer`, and this workstream cannot see those
+destinations — each needs its own owner to confirm live or dormant.
+
+**Retired but not yet removed**, per `docs/local-inventory-feed.md`:
+`googlelocalproductfs` (Kw8IzXtZ0M), `googlelocalproduct` (6wUGHTNaQV) and
+`binglocalproductfs` (jcbvWljOP_) are held until the replacement local feed
+processes clean, deliberately, so there is never a gap with no local source.
+
+The open question worth owning: **15 feeds generated, 2 confirmed live on
+Google.** That gap is the inventory, and it needs a named owner per destination
+rather than an assumption either way.
