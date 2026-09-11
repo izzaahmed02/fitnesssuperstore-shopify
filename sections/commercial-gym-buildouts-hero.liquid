@@ -1,0 +1,727 @@
+{{ 'section-image-banner.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    padding-top: {{ section.settings.padding_top_desktop }}px;
+    padding-bottom: {{ section.settings.padding_bottom_desktop }}px;
+  }
+
+  /* Full-width page requirement — override the theme's default contained .page-width
+     for this section only (does not affect .page-width elsewhere on the site) */
+  #shopify-section-{{ section.id }} .page-width {
+    --cgb-inset: 40px;
+    max-width: 100%;
+    margin: 0;
+    padding-left: var(--cgb-inset);
+    padding-right: var(--cgb-inset);
+    box-sizing: border-box;
+  }
+
+  /* Horizontal-scroll fix. `.banner` itself carries `.page-width`, and it is the
+     containing block for `.banner__media`, which section-image-banner.css positions
+     `absolute; inset: 0` — i.e. sized to the PADDING box. Side padding on `.banner`
+     therefore lets the media extend into the padding area, and the browser adds the
+     end-side padding to the scrollable overflow region, so `.banner` reports
+     scrollWidth = clientWidth + 40px and the page gets a horizontal scrollbar. This
+     was masked while <body> was capped at 1290px (the extra 40px stayed inside the
+     viewport); the full-width override exposed it. Keep the media full-bleed by
+     moving the inset off `.banner` and onto `.banner__content` (also a
+     `.page-width`), doubled so the content box lands in exactly the same place at
+     every desktop breakpoint. Desktop-only: below 750px the theme zeroes
+     `.banner__content`'s side padding, so the two insets don't stack there —
+     doubling would visibly widen the inset — and no overflow occurs at that
+     breakpoint anyway. Do not put horizontal padding back on `.banner`. */
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .banner.page-width {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    #shopify-section-{{ section.id }} .banner__content.page-width {
+      padding-left: calc(var(--cgb-inset) * 2);
+      padding-right: calc(var(--cgb-inset) * 2);
+      /* The theme gives .banner__content 50px top/bottom padding, which stacked with
+         .banner__box's own 80px to put content 130px below the banner top instead of
+         Figma's 80px. The box carries the whole vertical inset; this carries none. */
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+  }
+
+  /* Full-width page requirement — the theme also boxes the ENTIRE <body> (header
+     included) to 1290px via `.page-width-desktop.page-width-index` in
+     assets/base.css.liquid (a site-wide "framed" design, !important, desktop only).
+     `commercial-gym-buildouts` is auto-added to <body> by layout/theme.liquid via
+     page.template_suffix, so scope the counter-override to that class only —
+     this must NOT change the framed look on any other page. */
+  @media screen and (min-width: 990px) {
+    body.commercial-gym-buildouts.page-width-desktop.page-width-index {
+      max-width: none !important;
+      padding: 0 !important;
+      border-left: none !important;
+      border-right: none !important;
+      box-shadow: none !important;
+    }
+  }
+
+  /* Figma node 4583:81338 "banner" — third fill is a linear gradient scrim over the
+     photo, giving the left-hand copy its contrast. Derived from the Figma fill:
+     handles run (1, 0.5) -> (0.2837, 0.5), i.e. right edge to 28.37% from the left;
+     stops are transparent at 0.4883 and #1c1c23 at 1.0. Mapping stop positions back
+     to x: opaque #1c1c23 from the left edge to 28.37%, fading out by 65.04%, clear
+     from there to the right edge. The theme already ships .banner__media::after as a
+     full-size z-index:1 overlay at opacity 0 for its own overlay-opacity setting, so
+     reuse it rather than adding an element. rgba(28,28,35,0) rather than
+     `transparent` keeps the fade from washing through grey mid-interpolation. */
+  /* Figma node 4612:85831 (mobile) — the scrim runs VERTICALLY here, not left-to-right:
+     handles (0.5, 1) -> (0.5, 0) with transparent at position 0 (the bottom) and
+     #1c1c23 at position 1 (the top), i.e. dark at the top fading downward. The desktop
+     rule below is scoped to 750px and up so it no longer leaks onto mobile. */
+  #shopify-section-{{ section.id }} .banner__media::after {
+    background: linear-gradient(to top, rgba(28, 28, 35, 0) 0%, #1c1c23 100%);
+    opacity: 1;
+  }
+
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .banner__media::after {
+      background: linear-gradient(
+        to right,
+        #1c1c23 0%,
+        #1c1c23 28.37%,
+        rgba(28, 28, 35, 0) 65.04%
+      );
+    }
+  }
+
+  /* Figma node 4612:85830 "Hero block" (mobile) — 558px tall, content top-anchored:
+     28px top / 16px sides / 20px bottom (not symmetric — verified against Content
+     frame vs. banner bounding boxes, 14018,10760,343x510 inside 14002,10732,375x558) */
+  #shopify-section-{{ section.id }} .banner--large:not(.banner--adapt) {
+    min-height: 558px;
+  }
+  #shopify-section-{{ section.id }} .banner--large:not(.banner--mobile-bottom):not(.banner--adapt) .banner__content {
+    min-height: 558px;
+  }
+  #shopify-section-{{ section.id }} .banner__box {
+    padding: 28px 16px 20px;
+  }
+
+  /* Figma node 4612:85832 "Content" — 343px wide, inset 16px from the 375px frame.
+     The .page-width rule above gives .banner__content a 40px inset, which stacked with
+     the box's own 16px and left the column only 263px. That narrower column reflowed
+     everything: the headline wrapped to 4 lines instead of 3, the first paragraph to 4
+     instead of 3, and the third bullet to 3 lines instead of 2. The box's 16px is the
+     only horizontal inset on mobile. */
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .banner__content.page-width {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    /* Figma's mobile hero (node 4612:85832) carries only the first, bold paragraph —
+       its Content frame is 510px, which accounts for the headline, that one paragraph,
+       the bullets and the buttons and leaves no room for the second. The long
+       supporting paragraph is desktop-only, so it is hidden here rather than dropped
+       from the block, which keeps it in the markup and on desktop. */
+    #shopify-section-{{ section.id }} .banner__text.rte p + p {
+      display: none;
+    }
+  }
+
+  /* Figma node 4583:81337 "Hero block" (desktop) — 608px tall, content top-anchored:
+     80px top / 80px sides / 60px bottom (not symmetric — verified against Content
+     frame vs. banner bounding boxes, -2278,10761,733x468 inside -2358,10681,1440x608) */
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .banner--large:not(.banner--adapt) {
+      min-height: 608px;
+    }
+    #shopify-section-{{ section.id }} .banner--large:not(.banner--mobile-bottom):not(.banner--adapt) .banner__content {
+      min-height: 608px;
+    }
+    #shopify-section-{{ section.id }} .banner__box {
+      /* Horizontal inset lives on .banner__content (see the scroll-fix note above), so
+         the box adds none — 80px total, not 160px. Width is Figma's Content frame
+         (733px) rather than the theme's 90rem/900px, so text wraps as designed. */
+      padding: 80px 0 60px;
+      max-width: 733px;
+    }
+  }
+
+  /* Figma node 4612:85835 (mobile) — Oswald Regular 28px/34px, white */
+  #shopify-section-{{ section.id }} .banner__heading {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 400;
+    color: #ffffff;
+    font-size: 28px;
+    line-height: 34px;
+    /* Figma applies textCase UPPER on the heading at both breakpoints (nodes
+       4583:81342 desktop and 4612:85835 mobile) while storing mixed-case characters,
+       so the casing has to come from CSS, not the block's text setting. */
+    text-transform: uppercase;
+  }
+
+  /* Figma node 4583:81342 "Main Heading" (desktop) — Oswald Regular 48px/68px, white */
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .banner__heading {
+      font-size: 48px;
+      line-height: 68px;
+    }
+  }
+
+  /* The heading's Figma text box is 844px — deliberately 111px WIDER than the 733px
+     Content frame it sits in — which is what keeps the uppercase headline on two
+     68px lines instead of three. Constraining it to the column wraps it to three.
+     Scoped to >=990px so the 80px inset + 844px can never exceed the viewport
+     (924px worst case), which would reintroduce the horizontal scroll documented
+     above; below that it wraps inside the column instead. */
+  @media screen and (min-width: 990px) {
+    #shopify-section-{{ section.id }} .banner__heading {
+      width: 844px;
+    }
+  }
+
+  #shopify-section-{{ section.id }} .banner__box .banner__heading + * {
+    margin-top: 16px;
+  }
+
+  /* Figma node 4584:83328 "text" — two paragraphs, first bold, both Lato 16px/24px #cccccc */
+  #shopify-section-{{ section.id }} .banner__text.rte p {
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    color: #cccccc;
+    font-weight: 400;
+    margin: 0;
+  }
+
+  #shopify-section-{{ section.id }} .banner__text.rte p:first-child {
+    font-weight: 700;
+  }
+
+  #shopify-section-{{ section.id }} .banner__text.rte p + p {
+    margin-top: 8px;
+  }
+
+  /* Figma node 4583:81345 "Address and Hours Container" — bullet list.
+     These selectors need the #shopify-section prefix: unprefixed, the theme's own
+     ID-specificity rules on .banner__box children beat them and the 20px top margin
+     collapsed to 10px. */
+  #shopify-section-{{ section.id }} .cgb-hero-bullets {
+    list-style: none;
+    margin: 20px 0 32px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-hero-bullets__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 700;
+    color: #f2f2f2;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-hero-bullets__icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-hero-bullets__icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Hero bullet icons render over a dark image — force white regardless of the snippet's own fill */
+  #shopify-section-{{ section.id }} .cgb-hero-bullets__icon svg path {
+    fill: #ffffff;
+  }
+
+  /* Figma's equipment glyph is drawn with strokes, not fills, so the blanket white
+     fill above would flood its enclosed shapes solid. Keep the paths unfilled and let
+     them take their colour from the stroke via currentColor. */
+  #shopify-section-{{ section.id }} .cgb-hero-bullets__icon svg.cgb-hero-bullets__icon-svg--stroke {
+    color: #ffffff;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-hero-bullets__icon svg.cgb-hero-bullets__icon-svg--stroke path {
+    fill: none;
+  }
+
+  /* Figma node 4583:81352 "buttons" — primary button (255x48, #d83d0e, radius 8) already
+     matches the theme's base .button/.button--primary exactly, so it's left unstyled here. */
+  #shopify-section-{{ section.id }} .banner__buttons {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    /* The 32px above the buttons is the bullet list's margin-bottom; the theme adds
+       a further 20px of its own margin-top here, which made the gap 52px. */
+    margin-top: 0;
+    width: max-content;
+    max-width: 100%;
+    justify-content: flex-start;
+    word-break: break-word;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-hero-phone-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    white-space: normal;
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 700;
+    color: #d83d0e;
+    text-decoration: none;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-hero-phone-link svg {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-hero-phone-link:hover {
+    text-decoration: underline;
+  }
+
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} {
+      padding-top: {{ section.settings.padding_top_mobile }}px;
+      padding-bottom: {{ section.settings.padding_bottom_mobile }}px;
+    }
+
+    /* Figma node 4612:85853 "buttons" (mobile) — the primary button spans the full
+       343px column (align-items: flex-start left it at its natural 255px), and the
+       phone link below it is centred rather than left-aligned. */
+    #shopify-section-{{ section.id }} .banner__buttons {
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: center;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    #shopify-section-{{ section.id }} .cgb-hero-phone-link {
+      width: 100%;
+      justify-content: center;
+      text-align: center;
+    }
+  }
+
+  {%- if section.settings.image_height == 'adapt' and section.settings.image != blank -%}
+    @media screen and (max-width: 749px) {
+      #Banner-{{ section.id }}::before,
+      #Banner-{{ section.id }} .banner__media::before,
+      #Banner-{{ section.id }}:not(.banner--mobile-bottom) .banner__content::before {
+        padding-bottom: {{ 1 | divided_by: section.settings.image.aspect_ratio | times: 100 }}%;
+        content: '';
+        display: block;
+      }
+    }
+
+    @media screen and (min-width: 750px) {
+      #Banner-{{ section.id }}::before,
+      #Banner-{{ section.id }} .banner__media::before {
+        padding-bottom: {{ 1 | divided_by: section.settings.image.aspect_ratio | times: 100 }}%;
+        content: '';
+        display: block;
+      }
+    }
+  {%- endif -%}
+{%- endstyle -%}
+
+{%- liquid
+  assign full_width = '100vw'
+  assign widths = '375, 550, 750, 1100, 1500, 1780, 2000, 3000, 3840'
+
+  if section.settings.image_behavior == 'ambient'
+    assign full_width = '120vw'
+    assign widths = '450, 660, 900, 1320, 1800, 2136, 2400, 3600, 7680'
+  elsif section.settings.image_behavior == 'fixed' or section.settings.image_behavior == 'zoom-in'
+    assign full_width = '100vw'
+  endif
+
+  assign fetch_priority = 'auto'
+  if section.index == 1
+    assign fetch_priority = 'high'
+  endif
+-%}
+
+<div
+  id="Banner-{{ section.id }}"
+  class="banner banner--content-align-{{ section.settings.desktop_content_alignment }} banner--content-align-mobile-{{ section.settings.mobile_content_alignment }} banner--{{ section.settings.image_height }}{% if section.settings.image_height == 'adapt' and section.settings.image != blank %} banner--adapt{% endif %}{% if section.settings.show_text_below %} banner--mobile-bottom{% endif %}{% if section.settings.show_text_box == false %} banner--desktop-transparent{% endif %} page-width"
+>
+  {%- if section.settings.image != blank -%}
+    <div class="banner__media media">
+      {{
+        section.settings.image
+        | image_url: width: 3840
+        | image_tag:
+          sizes: full_width,
+          widths: widths,
+          fetchpriority: fetch_priority,
+          loading: 'eager'
+      }}
+    </div>
+  {%- else -%}
+    <div class="banner__media media placeholder">
+      {{ 'hero-apparel-1' | placeholder_svg_tag }}
+    </div>
+  {%- endif -%}
+
+  <div class="banner__content banner__content--{{ section.settings.desktop_content_position }} page-width">
+    <div
+      class="banner__box content-container content-container--full-width-mobile color-{{ section.settings.color_scheme }} gradient"
+      style="background-color: rgba(255,255,255,{{ section.settings.image_overlay_opacity | divided_by: 100.0 }});"
+    >
+      {%- comment -%}
+        Figma node 4583:81339 "Content" stacks heading -> paragraphs -> bullet list ->
+        buttons (bullet container at y=11061, buttons at y=11181). The bullet list
+        therefore has to render BEFORE the buttons, so the button/phone row is emitted
+        in a second pass rather than inside the main block loop.
+      {%- endcomment -%}
+      {%- for block in section.blocks -%}
+        {%- case block.type -%}
+
+          {%- when 'heading' -%}
+            <h1 class="banner__heading {{ block.settings.heading_size }}" {{ block.shopify_attributes }}>
+              {{ block.settings.heading }}
+            </h1>
+
+          {%- when 'text' -%}
+            <div class="banner__text rte {{ block.settings.text_style }}" {{ block.shopify_attributes }}>
+              {{ block.settings.text }}
+            </div>
+
+        {%- endcase -%}
+      {%- endfor -%}
+
+      {%- assign bullet_blocks = section.blocks | where: 'type', 'bullet_item' -%}
+      {%- if bullet_blocks.size > 0 -%}
+        <ul class="cgb-hero-bullets">
+          {%- for block in bullet_blocks -%}
+            <li class="cgb-hero-bullets__item" {{ block.shopify_attributes }}>
+              <span class="cgb-hero-bullets__icon">
+                {%- comment -%}
+                  The equipment glyph is Figma's own "Functional Trainers Icon"
+                  (node 4584:83319), inlined rather than added to snippets/ — the same
+                  self-contained approach equipment-zones uses for its five zone icons.
+                  It replaces icon-box, which was only ever a stand-in because no
+                  gym-equipment icon existed in the theme.
+
+                  'box' is kept alongside 'equipment' because the live page template
+                  still stores that value for this bullet, and template values cannot
+                  be updated from git. Both render the same glyph, so the icon is
+                  correct now and stays correct if the template is ever re-saved.
+                {%- endcomment -%}
+                {%- if block.settings.icon == 'equipment' or block.settings.icon == 'box' -%}
+                  <svg class="cgb-hero-bullets__icon-svg--stroke" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                    <path d="M13.9107 8.36842C14.212 8.60058 14.2745 8.98921 14.3995 9.76646L14.8575 12.6146C15.0197 13.623 15.1008 14.1271 14.7812 14.4545C14.0248 15.2293 9.88108 15.1328 9.21883 14.4545C8.89925 14.1271 8.98033 13.6229 9.14248 12.6146L9.60049 9.76647C9.72548 8.98921 9.78798 8.60058 10.0893 8.36842C10.7104 7.88989 13.2569 7.86466 13.9107 8.36842Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M7.5 19C7.54219 18.8734 7.56329 18.8101 7.58586 18.754C7.87405 18.0371 8.54939 17.5504 9.32061 17.5037C9.38101 17.5 9.44772 17.5 9.58114 17.5H14.4189C14.5523 17.5 14.619 17.5 14.6794 17.5037C15.4506 17.5504 16.126 18.0371 16.4141 18.754C16.4367 18.8101 16.4578 18.8734 16.5 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 17.5V22M12 22H19M12 22H5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M21 14V10.4031C21 9.70834 21 9.36095 20.8873 9.03955C20.7745 8.71814 20.5575 8.44688 20.1235 7.90434L18.201 5.50122C17.6109 4.7636 17.3158 4.39479 16.9051 4.19739C16.4944 4 16.0221 4 15.0775 4H8.9225C7.97788 4 7.50557 4 7.09487 4.19739C6.68417 4.39479 6.38912 4.7636 5.79902 5.50122L3.87653 7.90434C3.4425 8.44688 3.22549 8.71814 3.11274 9.03955C3 9.36095 3 9.70834 3 10.4031V14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M3 12H6M21 12H18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 8V2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                {%- elsif block.settings.icon == 'clipboard' -%}
+                  {% render 'icon-clipboard' %}
+                {%- else -%}
+                  {% render 'icon-pin' %}
+                {%- endif -%}
+              </span>
+              <span>{{ block.settings.text }}</span>
+            </li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+
+      {%- for block in section.blocks -%}
+        {%- if block.type == 'buttons' -%}
+          {%- assign button_count = 0 -%}
+          {%- if block.settings.button_label_1 != blank -%}{%- assign button_count = button_count | plus: 1 -%}{%- endif -%}
+          {%- if block.settings.button_label_2 != blank -%}{%- assign button_count = button_count | plus: 1 -%}{%- endif -%}
+
+          <div class="banner__buttons{% if button_count > 1 %} banner__buttons--multiple{% endif %}" {{ block.shopify_attributes }}>
+            {%- if block.settings.button_label_1 != blank -%}
+              <a href="{{ block.settings.button_link_1 }}" class="button{% if block.settings.button_style_secondary_1 %} button--secondary{% else %} button--primary{% endif %}">
+                {{ block.settings.button_label_1 | escape }}
+              </a>
+            {%- endif -%}
+
+            {%- if block.settings.phone_text != blank -%}
+              <a href="tel:{{ block.settings.phone_link | escape }}" class="cgb-hero-phone-link">
+                {% render 'icon-phone' %}
+                {{ block.settings.phone_text | escape }}
+              </a>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "CGB Hero",
+  "tag": "section",
+  "class": "section",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "Section padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_desktop",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding top (desktop)",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_desktop",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding bottom (desktop)",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding top (mobile)",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding bottom (mobile)",
+      "default": 0
+    },
+    { "type": "image_picker", "id": "image", "label": "Background image" },
+    {
+      "type": "range",
+      "id": "image_overlay_opacity",
+      "min": 0,
+      "max": 100,
+      "step": 10,
+      "unit": "%",
+      "label": "Image overlay opacity",
+      "default": 0
+    },
+    {
+      "type": "select",
+      "id": "image_height",
+      "default": "large",
+      "label": "Image height",
+      "options": [
+        { "value": "adapt", "label": "Adapt to image" },
+        { "value": "small", "label": "Small" },
+        { "value": "medium", "label": "Medium" },
+        { "value": "large", "label": "Large" }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "desktop_content_position",
+      "default": "middle-left",
+      "label": "Desktop content position",
+      "options": [
+        { "value": "top-left", "label": "Top left" },
+        { "value": "top-center", "label": "Top center" },
+        { "value": "top-right", "label": "Top right" },
+        { "value": "middle-left", "label": "Middle left" },
+        { "value": "middle-center", "label": "Middle center" },
+        { "value": "middle-right", "label": "Middle right" },
+        { "value": "bottom-left", "label": "Bottom left" },
+        { "value": "bottom-center", "label": "Bottom center" },
+        { "value": "bottom-right", "label": "Bottom right" }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "show_text_box",
+      "default": true,
+      "label": "Show text box"
+    },
+    {
+      "type": "select",
+      "id": "desktop_content_alignment",
+      "default": "left",
+      "label": "Desktop content alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ]
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "select",
+      "id": "image_behavior",
+      "default": "none",
+      "label": "Image animation",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "ambient", "label": "Ambient" },
+        { "value": "fixed", "label": "Fixed" },
+        { "value": "zoom-in", "label": "Zoom in" }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "mobile_content_alignment",
+      "default": "left",
+      "label": "Mobile content alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "show_text_below",
+      "default": false,
+      "label": "Show text below image on mobile"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "heading",
+      "name": "Heading",
+      "limit": 1,
+      "settings": [
+        { "type": "inline_richtext", "id": "heading", "default": "Commercial Gym Buildouts, Planned Around Your Room, Traffic and Budget", "label": "Heading" },
+        {
+          "type": "select",
+          "id": "heading_size",
+          "default": "hxl",
+          "label": "Heading size",
+          "options": [
+            { "value": "h2", "label": "Small" },
+            { "value": "h1", "label": "Medium" },
+            { "value": "h0", "label": "Large" },
+            { "value": "hxl", "label": "Extra large" },
+            { "value": "hxxl", "label": "Huge" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "Text",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p>Send us your room dimensions and we will come back with a conceptual layout, an equipment mix sized to your traffic, and a quote.</p><p>Whether you are outfitting a single training studio or planning fitness rooms across a property, Fitness Superstore helps you move from an empty floor to a working plan. We carry commercial cardio and strength lines including our own French Fitness brand, so a full facility can be planned from one place.</p>"
+        },
+        {
+          "type": "select",
+          "id": "text_style",
+          "default": "body",
+          "label": "Text style",
+          "options": [
+            { "value": "body", "label": "Body" },
+            { "value": "subtitle", "label": "Subtitle" },
+            { "value": "caption-with-letter-spacing", "label": "Caption" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "bullet_item",
+      "name": "Bullet item",
+      "settings": [
+        {
+          "type": "select",
+          "id": "icon",
+          "label": "Icon",
+          "default": "pin",
+          "options": [
+            { "value": "pin", "label": "Pin" },
+            { "value": "equipment", "label": "Equipment" },
+            { "value": "box", "label": "Equipment (legacy value)" },
+            { "value": "clipboard", "label": "Clipboard" }
+          ]
+        },
+        { "type": "text", "id": "text", "label": "Text" }
+      ]
+    },
+    {
+      "type": "buttons",
+      "name": "Buttons",
+      "limit": 1,
+      "settings": [
+        { "type": "text", "id": "button_label_1", "label": "Primary button label", "default": "Get My Gym Layout & Quote" },
+        { "type": "url", "id": "button_link_1", "label": "Primary button link" },
+        { "type": "checkbox", "id": "button_style_secondary_1", "default": false, "label": "Primary button secondary style" },
+        {
+          "type": "header",
+          "content": "Phone link (renders next to the primary button)"
+        },
+        { "type": "text", "id": "phone_text", "label": "Phone link text", "default": "Prefer to talk it through? Call +1-925-215-2927" },
+        { "type": "text", "id": "phone_link", "label": "Phone number (digits only, e.g. +19252152927)", "default": "+19252152927" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "CGB Hero",
+      "blocks": [
+        { "type": "heading" },
+        { "type": "text" },
+        {
+          "type": "bullet_item",
+          "settings": { "icon": "pin", "text": "Public showroom and warehouse in Benicia, California" }
+        },
+        {
+          "type": "bullet_item",
+          "settings": { "icon": "box", "text": "New and remanufactured commercial equipment" }
+        },
+        {
+          "type": "bullet_item",
+          "settings": { "icon": "clipboard", "text": "Layout and equipment plan prepared before you commit to anything" }
+        },
+        { "type": "buttons" }
+      ]
+    }
+  ]
+}
+{% endschema %}

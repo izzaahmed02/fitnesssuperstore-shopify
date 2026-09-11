@@ -1,0 +1,688 @@
+{{ 'section-image-banner.css' | asset_url | stylesheet_tag }}
+
+{%- comment -%}
+  The scrim strength comes from each instance's own image_overlay_opacity setting.
+
+  Note for anyone comparing against Figma: node 4608:84411's fill list reads
+  IMAGE + SOLID #000000 at opacity 0.83, but applying 83% black crushes the photo to
+  near-black and does not reproduce the design. Figma's own render of that banner
+  (page-images/zoom-cta-1.png) shows the gym floor clearly — windows, treadmills,
+  branded equipment — under a much lighter tint, which the configured value matches.
+  Treat the render as authoritative here, not that fill datum.
+{%- endcomment -%}
+{%- assign cgb_overlay_opacity = section.settings.image_overlay_opacity -%}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    padding-top: {{ section.settings.padding_top_desktop }}px;
+    padding-bottom: {{ section.settings.padding_bottom_desktop }}px;
+  }
+
+  /* Full-width page requirement — override the theme's default contained .page-width
+     for this section only (does not affect .page-width elsewhere on the site). Figma
+     node 4612:86492 (mobile) shows a 16px side inset on the "heading" frame (343 =
+     375 - 16 - 16), not 40px — the flat 40px was compressing mobile text/buttons into
+     a narrower column than intended. */
+  #shopify-section-{{ section.id }} .page-width {
+    --cgb-inset: 16px;
+    max-width: 100%;
+    margin: 0;
+    padding-left: var(--cgb-inset);
+    padding-right: var(--cgb-inset);
+    box-sizing: border-box;
+  }
+
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .page-width {
+      --cgb-inset: 40px;
+    }
+  }
+
+  /* Horizontal-scroll fix — same cause as the hero section. `.banner` carries
+     `.page-width` and is the containing block for the `absolute; inset: 0`
+     `.banner__media`, so side padding on `.banner` adds its end-side padding to the
+     scrollable overflow region and forces a page-level horizontal scrollbar. Move
+     the inset onto `.banner__content` (also a `.page-width`), doubled, so the
+     content box is unchanged at every breakpoint and the media stays full-bleed.
+     Desktop-only for the same reason as the hero section: below 750px the theme
+     zeroes `.banner__content`'s side padding, so the insets don't stack there and
+     there is no overflow to fix. Do not put horizontal padding back on `.banner`. */
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .banner.page-width {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    #shopify-section-{{ section.id }} .banner__content.page-width {
+      padding-left: calc(var(--cgb-inset) * 2);
+      padding-right: calc(var(--cgb-inset) * 2);
+    }
+  }
+
+  /* Figma nodes 4583:81433 (mid, 384px) / 4608:84411 (closing, 460px) — heights differ
+     per instance, so a per-section custom height setting is used instead of the
+     built-in small/medium/large presets, which don't give exact px control. */
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .banner--medium:not(.banner--adapt) {
+      min-height: {{ section.settings.banner_height_desktop }}px;
+    }
+    #shopify-section-{{ section.id }} .banner--medium:not(.banner--mobile-bottom):not(.banner--adapt) .banner__content {
+      min-height: {{ section.settings.banner_height_desktop }}px;
+    }
+  }
+
+  /* Figma node 4612:86492 (mobile) — "Why Choose Us" frame is exactly 192px tall,
+     nowhere near the theme's default mobile "medium" height (34rem/340px). */
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .banner--medium:not(.banner--adapt) {
+      min-height: {{ section.settings.banner_height_mobile }}px;
+    }
+    #shopify-section-{{ section.id }} .banner--medium:not(.banner--mobile-bottom):not(.banner--adapt) .banner__content {
+      min-height: {{ section.settings.banner_height_mobile }}px;
+    }
+  }
+
+  /* "Show text box" being off triggers .banner--desktop-transparent, and since this
+     banner also uses image_height: medium, the theme's
+     ".banner--medium.banner--desktop-transparent .banner__box{max-width:68rem}" rule
+     (assets/section-image-banner.css) was capping the text box at 680px — much
+     narrower than Figma's ~1280px-wide single-line headings — forcing extra wraps on
+     long text. Widen it to match. */
+  #shopify-section-{{ section.id }} .banner__box {
+    max-width: 1280px;
+  }
+
+  /* Figma sizes both banners from their content with 120px above and below it, rather
+     than from a fixed frame height:
+       between process and FAQ (4583:81433) — 120 + 144 + 120 = 384
+         content = heading 68 + 28 + button 48
+       after FAQ (4608:84411)              — 120 + 220 + 120 = 460
+         content = heading 68 + 12 + text 24 + 28 + button 48 + 16 + phone 24
+     Deriving the height this way lets one section file serve both instances at their
+     correct Figma heights. That matters because the two instances live in the page
+     template, whose live copy the GitHub sync will not let git update — the after-FAQ
+     banner was stuck at 400px. banner_height_desktop still applies underneath as a
+     min-height floor, so the setting keeps working; the content simply exceeds it. */
+  /* Figma mobile nodes 4612:86492 (between process/FAQ, 192px) and 4612:86960 (after
+     FAQ, 290px) — content is 343px wide inside 28px of vertical padding. The theme's
+     box ships 40px vertical and 15px horizontal, and that 15px stacked on the content
+     wrapper's 16px to leave the column 313px: the between banner's headline wrapped to
+     3 lines instead of 2, and the after banner's body copy to 3 instead of 2. At 343px
+     with 28px padding both frames land exactly (28 + 136 + 28 = 192, and
+     28 + 234 + 28 = 290), so the heights follow from the content as on desktop. */
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .banner__box {
+      padding: 28px 0;
+    }
+  }
+
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .banner__box {
+      padding-top: 120px;
+      padding-bottom: 120px;
+    }
+
+    /* The theme also gives .banner__content 50px top and bottom padding, which stacks
+       outside the box and pushed the banners 100px past their Figma heights. The box
+       carries the whole vertical inset; this carries none — the same correction the
+       hero section needed. */
+    #shopify-section-{{ section.id }} .banner__content {
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+  }
+
+  /* page-images/zoom-cta-banner.png confirms the design has no light box behind the
+     text at all — just the heading/button sitting directly over the (already tinted)
+     image. The color-scheme class previously on .banner__box painted a solid white
+     background from the theme's color scheme (config/settings_data.json
+     scheme-1.background: #ffffff) and has been removed from the markup entirely so its
+     rule can't apply at any breakpoint. Also neutralize .content-container's own
+     border/shadow and its ::after pseudo-element (which draws an independent
+     box-shadow layer behind the element, unaffected by `background`) so nothing
+     box-like can render here regardless of source. */
+  #shopify-section-{{ section.id }} .banner__box {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  #shopify-section-{{ section.id }} .banner__box::after {
+    display: none !important;
+  }
+
+  /* Figma "Why Choose Us" frame fill — the overlay is a solid black tint baked into the
+     image layer itself (0% for the mid banner, 83% for the closing banner), not a
+     background behind the text box. The old rgba(255,255,255,...) inline style on
+     .banner__box was both the wrong color (white, not black) and the wrong element —
+     .banner__box gets forced transparent on desktop by .banner--desktop-transparent
+     (triggered by "Show text box" being off), so the overlay never rendered on desktop
+     at all. Apply it directly to .banner__media instead so it works consistently.
+     .banner__media is ALREADY position:absolute (assets/section-image-banner.css) —
+     that's what makes it fill the banner via top/left/width/height:100%, and it's
+     already a valid positioned ancestor for this ::after overlay. A stray
+     "position: relative" override here previously pulled it back into normal flow;
+     since its only child (the <img>) is itself absolutely positioned and contributes
+     no height, .banner__media collapsed to 0px tall and the image vanished. Do not
+     re-add a position override on .banner__media. */
+  #shopify-section-{{ section.id }} .banner__media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, {{ cgb_overlay_opacity | divided_by: 100.0 }});
+    /* The theme's own .banner::after/.banner__media::after rule sets opacity: 0 (it
+       drives its overlay through that property, not through the colour). Without
+       restating it here the scrim never painted on either banner no matter what
+       background-color was set — the tint has to come from the colour's own alpha. */
+    opacity: 1;
+    pointer-events: none;
+  }
+
+  /* Figma nodes 4612:86495/4608:84414-mobile-equiv (mobile) — Oswald SemiBold 28px/34px, white */
+  #shopify-section-{{ section.id }} .banner__heading {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    color: #ffffff;
+    font-size: 28px;
+    line-height: 34px;
+  }
+
+  /* Figma nodes 4583:81436/4608:84414 (desktop) — Oswald SemiBold 48px/68px */
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .banner__heading {
+      font-size: 48px;
+      line-height: 68px;
+    }
+  }
+
+  /* Figma "Confirmation Text" — Lato 16px/24px, #cccccc. Weight varies per banner
+     instance (mid-page = Regular, closing = Bold) via the block's text_style field. */
+  #shopify-section-{{ section.id }} .banner__text.rte {
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    color: #cccccc;
+    font-weight: 400;
+  }
+
+  #shopify-section-{{ section.id }} .banner__text.rte.subtitle {
+    font-weight: 700;
+  }
+
+  /* Same bug already found and fixed in commercial-gym-buildouts-hero.liquid:
+     display:flex (block-level) + justify-self:center doesn't reliably center a block
+     box outside a grid context — the base theme's .banner__buttons is display:inline-flex
+     specifically so it respects .banner__box's own text-align:center (the default in
+     assets/base.css.liquid for this "center" content alignment). Restoring inline-flex
+     is what actually centers the button under the heading, matching Figma nodes
+     4583:81433 (mid) / 4608:84411 (closing). */
+  #shopify-section-{{ section.id }} .banner__buttons {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    width: max-content;
+    justify-content: center;
+    word-break: break-word;
+    max-width: unset;
+  }
+
+  /* Figma node 4608:84416 "Buttons" (closing only — mid never has a phone link) — the
+     button (255px) and phone link (336px) together exceed the 336px frame width, which
+     only works if they're stacked, not side-by-side; a 16px gap separates them. This
+     was missing on desktop (only the mobile media query below set flex-direction), so
+     the button and phone link were rendering in a row instead of stacked. */
+  #shopify-section-{{ section.id }} .banner__buttons--multiple {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* Figma nodes 4583:81434/4608:84413/4612:86961 "heading" — gaps between the
+     heading/text/buttons stack, confirmed identical on both mobile and desktop:
+     heading→text 12px (closing only, mid has no text block), text→buttons 28px
+     (closing), heading→buttons 28px on desktop (mid) — overridden to 20px on mobile
+     below, since that's the one pair that differs by breakpoint. */
+  #shopify-section-{{ section.id }} .banner__heading + .banner__text {
+    margin-top: 12px;
+  }
+  #shopify-section-{{ section.id }} .banner__text + .banner__buttons {
+    margin-top: 28px;
+  }
+  #shopify-section-{{ section.id }} .banner__heading + .banner__buttons {
+    margin-top: 28px;
+  }
+
+  /* Figma node 4608:84688 — Lato Bold 16px/24px, #d83d0e */
+  .cgb-cta-phone-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 700;
+    color: #d83d0e;
+    text-decoration: none;
+  }
+
+  /* Figma mobile node 4612:86967 — this banner's phone link is text only on mobile:
+     the node has a single Text child, 336px wide on one 24px line, with no icon
+     container. With the icon rendered, its 24px plus the 4px gap left only ~315px for
+     a string that needs ~357, so the label wrapped to two lines and put the section
+     24px over its 290px frame. The hero keeps its icon on mobile (node 4612:85856 does
+     have one, and is two lines there) — this is a deliberate per-section difference,
+     not an oversight. */
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .cgb-cta-phone-link svg {
+      display: none;
+    }
+
+    /* Figma node 4612:86967 renders this exact string as ONE 24px line in a 336px frame,
+       at the same Lato Bold 16px/24px we use. The browser's Lato measures the same
+       characters at 343.9px against a 343px column — 0.9px short, so it wrapped to two
+       lines and left the section 24px over its frame. The 8px spread is a font-metrics
+       difference between Figma's Lato and the webfont, not a spec value, so nowrap keeps
+       Figma's one-line layout rather than inventing a smaller size or letter-spacing.
+       The sub-pixel remainder lands in the page gutter's 16px padding, so it adds no
+       document overflow (verified at 375px). */
+    #shopify-section-{{ section.id }} .cgb-cta-phone-link {
+      white-space: nowrap;
+    }
+  }
+
+  .cgb-cta-phone-link svg {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+
+  .cgb-cta-phone-link:hover {
+    text-decoration: underline;
+  }
+
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} {
+      padding-top: {{ section.settings.padding_top_mobile }}px;
+      padding-bottom: {{ section.settings.padding_bottom_mobile }}px;
+    }
+
+    /* Figma node 4612:86497 "Buttons" — the button spans the full 343px content width
+       (375px frame - 16px inset each side), not its own text width. */
+    #shopify-section-{{ section.id }} .banner__buttons {
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: center;
+      width: 100%;
+    }
+
+    /* Figma node 4612:86492 (mid, no text block) — heading→buttons gap is 20px on
+       mobile, not 28px like desktop (see the base rule above). Closing's
+       heading→text→buttons gaps (12px/28px) are unchanged from the base rule since
+       node 4612:86960 confirms they're identical on mobile and desktop. */
+    #shopify-section-{{ section.id }} .banner__heading + .banner__buttons {
+      margin-top: 20px;
+    }
+  }
+
+  {%- if cgb_overlay_opacity == 0 -%}
+    /* Figma node 4612:86492 "Why Choose Us" (mobile, mid banner only) fill — a
+       black-to-transparent vertical gradient over the image, present even though this
+       banner's desktop overlay is 0% flat. Node 4612:86960 (closing, mobile) confirms
+       the OTHER banner instance keeps its flat black tint at both breakpoints instead
+       (no gradient), so this is gated to the 0%-opacity case rather than applied
+       unconditionally. */
+    @media screen and (max-width: 749px) {
+      #shopify-section-{{ section.id }} .banner__media::after {
+        background: linear-gradient(180deg, #000000 0%, rgba(0, 0, 0, 0) 100%);
+      }
+    }
+  {%- endif -%}
+
+  {%- if section.settings.image_height == 'adapt' and section.settings.image != blank -%}
+    @media screen and (max-width: 749px) {
+      #Banner-{{ section.id }}::before,
+      #Banner-{{ section.id }} .banner__media::before,
+      #Banner-{{ section.id }}:not(.banner--mobile-bottom) .banner__content::before {
+        padding-bottom: {{ 1 | divided_by: section.settings.image.aspect_ratio | times: 100 }}%;
+        content: '';
+        display: block;
+      }
+    }
+
+    @media screen and (min-width: 750px) {
+      #Banner-{{ section.id }}::before,
+      #Banner-{{ section.id }} .banner__media::before {
+        padding-bottom: {{ 1 | divided_by: section.settings.image.aspect_ratio | times: 100 }}%;
+        content: '';
+        display: block;
+      }
+    }
+  {%- endif -%}
+{%- endstyle -%}
+
+{%- liquid
+  assign full_width = '100vw'
+  assign widths = '375, 550, 750, 1100, 1500, 1780, 2000, 3000, 3840'
+
+  if section.settings.image_behavior == 'ambient'
+    assign full_width = '120vw'
+    assign widths = '450, 660, 900, 1320, 1800, 2136, 2400, 3600, 7680'
+  elsif section.settings.image_behavior == 'fixed' or section.settings.image_behavior == 'zoom-in'
+    assign full_width = '100vw'
+  endif
+-%}
+
+<div
+  id="Banner-{{ section.id }}"
+  class="banner banner--content-align-{{ section.settings.desktop_content_alignment }} banner--content-align-mobile-{{ section.settings.mobile_content_alignment }} banner--{{ section.settings.image_height }}{% if section.settings.image_height == 'adapt' and section.settings.image != blank %} banner--adapt{% endif %}{% if section.settings.show_text_below %} banner--mobile-bottom{% endif %}{% if section.settings.show_text_box == false %} banner--desktop-transparent{% endif %} page-width"
+>
+  {%- if section.settings.image != blank -%}
+    <div class="banner__media media">
+      {{
+        section.settings.image
+        | image_url: width: 3840
+        | image_tag:
+          sizes: full_width,
+          widths: widths,
+          loading: 'lazy'
+      }}
+    </div>
+  {%- else -%}
+    <div class="banner__media media placeholder">
+      {{ 'hero-apparel-1' | placeholder_svg_tag }}
+    </div>
+  {%- endif -%}
+
+  <div class="banner__content banner__content--{{ section.settings.desktop_content_position }} page-width">
+    <div
+      class="banner__box content-container content-container--full-width-mobile"
+    >
+      {%- for block in section.blocks -%}
+        {%- case block.type -%}
+
+          {%- when 'heading' -%}
+            <h2 class="banner__heading {{ block.settings.heading_size }}" {{ block.shopify_attributes }}>
+              {{ block.settings.heading }}
+            </h2>
+
+          {%- when 'text' -%}
+            <div class="banner__text rte {{ block.settings.text_style }}" {{ block.shopify_attributes }}>
+              {{ block.settings.text }}
+            </div>
+
+          {%- when 'buttons' -%}
+            {%- assign button_count = 0 -%}
+            {%- if block.settings.button_label_1 != blank -%}{%- assign button_count = button_count | plus: 1 -%}{%- endif -%}
+            {%- if block.settings.phone_text != blank -%}{%- assign button_count = button_count | plus: 1 -%}{%- endif -%}
+
+            <div class="banner__buttons{% if button_count > 1 %} banner__buttons--multiple{% endif %}" {{ block.shopify_attributes }}>
+              {%- if block.settings.button_label_1 != blank -%}
+                <a href="{{ block.settings.button_link_1 }}" class="button{% if block.settings.button_style_secondary_1 %} button--secondary{% else %} button--primary{% endif %}">
+                  {{ block.settings.button_label_1 | escape }}
+                </a>
+              {%- endif -%}
+
+              {%- if block.settings.phone_text != blank -%}
+                <a href="tel:{{ block.settings.phone_link | escape }}" class="cgb-cta-phone-link">
+                  {% render 'icon-phone' %}
+                  {{ block.settings.phone_text | escape }}
+                </a>
+              {%- endif -%}
+            </div>
+
+        {%- endcase -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "CGB CTA Banner",
+  "tag": "section",
+  "class": "section",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "Section padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_desktop",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding top (desktop)",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_desktop",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding bottom (desktop)",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding top (mobile)",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding bottom (mobile)",
+      "default": 0
+    },
+    { "type": "image_picker", "id": "image", "label": "Background image" },
+    {
+      "type": "range",
+      "id": "image_overlay_opacity",
+      "min": 0,
+      "max": 100,
+      "step": 10,
+      "unit": "%",
+      "label": "Image overlay opacity",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "banner_height_desktop",
+      "min": 200,
+      "max": 600,
+      "step": 4,
+      "unit": "px",
+      "label": "Banner height (desktop)",
+      "info": "Only applies when Image height is set to Medium.",
+      "default": 384
+    },
+    {
+      "type": "range",
+      "id": "banner_height_mobile",
+      "min": 100,
+      "max": 500,
+      "step": 4,
+      "unit": "px",
+      "label": "Banner height (mobile)",
+      "info": "Only applies when Image height is set to Medium.",
+      "default": 192
+    },
+    {
+      "type": "select",
+      "id": "image_height",
+      "default": "medium",
+      "label": "Image height",
+      "options": [
+        { "value": "adapt", "label": "Adapt to image" },
+        { "value": "small", "label": "Small" },
+        { "value": "medium", "label": "Medium" },
+        { "value": "large", "label": "Large" }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "desktop_content_position",
+      "default": "middle-center",
+      "label": "Desktop content position",
+      "options": [
+        { "value": "top-left", "label": "Top left" },
+        { "value": "top-center", "label": "Top center" },
+        { "value": "top-right", "label": "Top right" },
+        { "value": "middle-left", "label": "Middle left" },
+        { "value": "middle-center", "label": "Middle center" },
+        { "value": "middle-right", "label": "Middle right" },
+        { "value": "bottom-left", "label": "Bottom left" },
+        { "value": "bottom-center", "label": "Bottom center" },
+        { "value": "bottom-right", "label": "Bottom right" }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "show_text_box",
+      "default": false,
+      "label": "Show text box"
+    },
+    {
+      "type": "select",
+      "id": "desktop_content_alignment",
+      "default": "center",
+      "label": "Desktop content alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ]
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "select",
+      "id": "image_behavior",
+      "default": "none",
+      "label": "Image animation",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "ambient", "label": "Ambient" },
+        { "value": "fixed", "label": "Fixed" },
+        { "value": "zoom-in", "label": "Zoom in" }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "mobile_content_alignment",
+      "default": "center",
+      "label": "Mobile content alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "show_text_below",
+      "default": false,
+      "label": "Show text below image on mobile"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "heading",
+      "name": "Heading",
+      "limit": 1,
+      "settings": [
+        { "type": "inline_richtext", "id": "heading", "label": "Heading" },
+        {
+          "type": "select",
+          "id": "heading_size",
+          "default": "hxl",
+          "label": "Heading size",
+          "options": [
+            { "value": "h2", "label": "Small" },
+            { "value": "h1", "label": "Medium" },
+            { "value": "h0", "label": "Large" },
+            { "value": "hxl", "label": "Extra large" },
+            { "value": "hxxl", "label": "Huge" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "Text",
+      "limit": 1,
+      "settings": [
+        { "type": "richtext", "id": "text", "label": "Text" },
+        {
+          "type": "select",
+          "id": "text_style",
+          "default": "body",
+          "label": "Text style",
+          "options": [
+            { "value": "body", "label": "Body" },
+            { "value": "subtitle", "label": "Subtitle" },
+            { "value": "caption-with-letter-spacing", "label": "Caption" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "buttons",
+      "name": "Buttons",
+      "limit": 1,
+      "settings": [
+        { "type": "text", "id": "button_label_1", "label": "Primary button label", "default": "Get My Gym Layout & Quote" },
+        { "type": "url", "id": "button_link_1", "label": "Primary button link" },
+        { "type": "checkbox", "id": "button_style_secondary_1", "default": false, "label": "Primary button secondary style" },
+        {
+          "type": "header",
+          "content": "Phone link (optional, next to button)"
+        },
+        { "type": "text", "id": "phone_text", "label": "Phone link text" },
+        { "type": "text", "id": "phone_link", "label": "Phone number (digits only, e.g. +19252152927)" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "CGB CTA Banner",
+      "blocks": [
+        {
+          "type": "heading",
+          "settings": { "heading": "Let Us Plan Your Room" }
+        },
+        {
+          "type": "text",
+          "settings": { "text": "<p>Share your space, budget and timing and we will come back with an equipment mix, a conceptual layout and a quote.</p>" }
+        },
+        {
+          "type": "buttons",
+          "settings": {
+            "button_label_1": "Get My Gym Layout & Quote",
+            "phone_text": "Call +1-925-215-2927 to talk to a gym specialist",
+            "phone_link": "+19252152927"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

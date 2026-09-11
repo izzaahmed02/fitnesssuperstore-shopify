@@ -1,0 +1,380 @@
+{{ 'section-faq.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+    /* Figma's mobile frames inset every section 24px top and bottom, regardless of the
+       desktop value — confirmed across nodes 4612:86181 (facility-types), 4612:86422
+       (space-traffic), 4612:88420 (equipment-zones), 5280:81995 (condition-options),
+       4612:86205 (form) and 4612:86666 (faq). Deriving it from the desktop setting
+       (x0.75) gave 60px and made every section ~72px too tall on mobile. The desktop
+       setting still governs from 750px up. */
+    .section-{{ section.id }}-padding {
+    padding-top: 24px;
+    padding-bottom: 24px;
+    }
+
+    #shopify-section-{{ section.id }} {
+    background-color: {{ section.settings.bg }};
+    }
+
+    /* Full-width page requirement — override the theme's default contained .page-width
+       for this section only (does not affect .page-width elsewhere on the site).
+       Figma node 4612:86666 (mobile, 375px frame) insets content 16px for a 343px
+       accordion column; the 40px here was leaving it 295px and wrapping question text
+       onto extra lines. 40px is restored from 750px up. */
+    #shopify-section-{{ section.id }} .page-width {
+    max-width: 100%;
+    margin: 0;
+    padding-left: 16px;
+    padding-right: 16px;
+    box-sizing: border-box;
+    }
+
+    @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .page-width {
+    padding-left: 40px;
+    padding-right: 40px;
+    }
+    }
+
+    #shopify-section-{{ section.id }} .commercial-gym-buildouts-faq__subheading {
+    text-align: center;
+    max-width: 800px;
+    margin: 12px auto 0;
+    }
+
+    /* Figma node 4608:84322 centres the heading. .title-wrapper-with-link is the
+       theme's heading+link flex row, which left it aligned to the start, and its 30px
+       bottom margin collapsed against the accordion column's 28px top margin and won. */
+    #shopify-section-{{ section.id }} .title-wrapper-with-link {
+    display: block;
+    text-align: center;
+    margin-bottom: 0;
+    }
+
+    /* Figma nodes 4608:84320 / 4608:84324 — 28px from the title block to the questions
+       list (Title frame ends 17239, Questions starts 17267), and the accordion column
+       is 842px wide and centred (x=-2059 in a 1440 frame), not 800px. */
+    #shopify-section-{{ section.id }} .commercial-gym-buildouts-faq__items {
+    max-width: 842px;
+    margin: 28px auto 0;
+    }
+
+    /* Figma node 4608:84358 "Accordion" — each closed row is an 842x72 card: 24px
+       padding around a 24px title row, an 8px radius and a #e5e5e5 stroke. The theme's
+       wrapper ships 10px padding, which made the rows 66px. The stroke is drawn as an
+       inset shadow so it takes no layout space — Figma's 72px is 24 + 24 + 24 exactly,
+       where a real border would make it 74px. */
+    #shopify-section-{{ section.id }} .faq__item-wrapper {
+    padding: 24px;
+    border: 0;
+    box-shadow: inset 0 0 0 1px #e5e5e5;
+    border-radius: 8px;
+    }
+
+    /* Figma node 4608:84325 — the open accordion swaps the stroke to #d83d0e. Applied
+       to the same wrapper, and as an inset shadow, so opening a row doesn't shift the
+       layout by the 2px a real border would add. */
+    #shopify-section-{{ section.id }} .faq__item.opened .faq__item-wrapper {
+    box-shadow: inset 0 0 0 1px #d83d0e;
+    }
+
+    /* Figma node 4612:86668 (mobile) — Oswald SemiBold 28px/34px (larger than other
+       sections' 20px/26px mobile heading — confirmed, not a copy-paste artifact) */
+    #shopify-section-{{ section.id }} .title.h1 {
+    font-weight: 600;
+    font-size: 28px;
+    line-height: 34px;
+    }
+
+    /* Figma node 4608:84322 (desktop) — Oswald SemiBold 38px/50px */
+    @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .title.h1 {
+    font-size: 38px;
+    line-height: 50px;
+    }
+    }
+
+    /* Figma node 4608:84327 "FAQ Question" — Lato Bold 18px/24px, #000000
+       (overrides the base .faq__item-btn's Oswald 24px default) */
+    #shopify-section-{{ section.id }} .faq__item-btn {
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 24px;
+    color: #000000;
+    /* The theme gives this button a 10px top and bottom margin to space it inside a
+       wrapper that only had 10px padding. With the wrapper now on Figma's 24px, that
+       margin stacked on top and made each row 92px instead of 72px. */
+    margin-top: 0;
+    margin-bottom: 0;
+    }
+
+    /* Figma answer text — Lato Regular 16px/24px, #393940 */
+    #shopify-section-{{ section.id }} .faq__item-content {
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+    color: #393940;
+    }
+
+    @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.section_padding_top }}px;
+    padding-bottom: {{ section.settings.section_padding_bottom }}px;
+    }
+    }
+{%- endstyle -%}
+
+{%- liquid
+    assign first_entity = true
+-%}
+{%- capture faq_json -%}
+    {%- for block in section.blocks -%}
+        {%- if block.settings.title != blank and block.settings.text != blank -%}
+            {%- unless first_entity -%},{%- endunless -%}
+            {
+                "@type": "Question",
+                "name": {{ block.settings.title | strip_html | json }},
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": {{ block.settings.text | strip_html | json }}
+                }
+            }
+            {%- assign first_entity = false -%}
+        {%- endif -%}
+    {%- endfor -%}
+{%- endcapture -%}
+{%- unless faq_json == blank -%}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [{{ faq_json }}]
+    }
+    </script>
+{%- endunless -%}
+
+<div class="commercial-gym-buildouts-faq{% if section.settings.title == blank %} no-heading{% endif %}">
+    <div class="page-width section-{{ section.id }}-padding isolate{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+    {% if settings.animations_reveal_on_scroll %}
+        data-cascade
+            {% endif %}>
+        {%- unless section.settings.title == blank -%}
+            <div class="title-wrapper-with-link title-wrapper--self-padded-mobile title-wrapper--no-top-margin">
+                <h2 class="title inline-richtext {{ section.settings.heading_size }}">
+                    {{ section.settings.title }}
+                </h2>
+                {%- unless section.settings.subheading == blank -%}
+                    <div class="commercial-gym-buildouts-faq__subheading rte">{{ section.settings.subheading }}</div>
+                {%- endunless -%}
+            </div>
+        {%- endunless -%}
+
+        <div class="faq commercial-gym-buildouts-faq__items">
+            <div class="faq__items">
+                {%- for block in section.blocks -%}
+                    {%- if block.settings.title != blank or request.design_mode -%}
+                        <div class="faq__item" {{ block.shopify_attributes }}>
+                            <div class="faq__item-wrapper">
+                                <button class="faq__item-btn">
+                                    {{ block.settings.title }}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path
+                                                fill-rule="evenodd"
+                                                clip-rule="evenodd"
+                                                d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z"
+                                                fill="black"
+                                        />
+                                    </svg>
+                                </button>
+                                <div class="faq__item-content">
+                                    {{ block.settings.text }}
+                                </div>
+                            </div>
+                        </div>
+                    {%- endif -%}
+                {%- endfor -%}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% schema %}
+{
+  "name": "CGB FAQ",
+  "class": "section",
+  "tag": "section",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg",
+      "label": "Background color",
+      "default": "#fff"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "title",
+      "default": "Frequently Asked Questions",
+      "label": "Heading"
+    },
+    {
+      "type": "richtext",
+      "id": "subheading",
+      "label": "Subheading"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "options": [
+        {
+          "value": "h2",
+          "label": "t:sections.all.heading_size.options__1.label"
+        },
+        {
+          "value": "h1",
+          "label": "t:sections.all.heading_size.options__2.label"
+        },
+        {
+          "value": "h0",
+          "label": "t:sections.all.heading_size.options__3.label"
+        },
+        {
+          "value": "hxl",
+          "label": "t:sections.all.heading_size.options__4.label"
+        },
+        {
+          "value": "hxxl",
+          "label": "t:sections.all.heading_size.options__5.label"
+        }
+      ],
+      "default": "h1",
+      "label": "t:sections.all.heading_size.label"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "section_padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "section_padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 80
+    }
+  ],
+  "blocks": [
+    {
+      "type": "question",
+      "name": "Question",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Question"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Answer"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "CGB FAQ",
+      "blocks": [
+        {
+          "type": "question",
+          "settings": {
+            "title": "How much does a commercial gym cost?",
+            "text": "<p>There's no single price, because cost depends on your room size, the equipment zones you need, whether you choose new, remanufactured or mixed equipment, and any delivery or installation coordination. Rather than quote a generic figure, we prepare a tailored quote built around your facility, space and budget. Share your details and a specialist will put together numbers specific to your project.</p>"
+          }
+        },
+        {
+          "type": "question",
+          "settings": {
+            "title": "What information do you need about my room to get started?",
+            "text": "<p>The more you can share, the more useful your first conversation will be. Helpful details include your facility type, approximate square footage or room dimensions, ceiling height, expected number of users and peak traffic, your budget range, and your target opening or completion window. If you have a floor plan or photos of the space, those help too. If you don't have every detail yet, that's fine, we can work from what you have and fill in the rest together.</p>"
+          }
+        },
+        {
+          "type": "question",
+          "settings": {
+            "title": "Do I need a floor plan or drawings to get started?",
+            "text": "<p>No. A rough sketch, a photo or the room dimensions is enough to begin. If you have a floor plan you can share it, and it will make the conceptual layout more accurate.</p>"
+          }
+        },
+        {
+          "type": "question",
+          "settings": {
+            "title": "How do you decide what equipment mix is right for my space?",
+            "text": "<p>Your equipment mix depends on how much room you have, who will use the space, and how busy it will get. A small apartment amenity room and a high-traffic commercial gym of the same size are planned very differently. A specialist reviews your room details and goals, then recommends a balance of cardio, strength, functional and free-weight equipment that fits your floor space, user profile and budget. Any layout we share is conceptual equipment-placement guidance and should be confirmed against your actual site.</p>"
+          }
+        },
+        {
+          "type": "question",
+          "settings": {
+            "title": "What's the difference between new, remanufactured and mixed equipment?",
+            "text": "<p>New equipment is factory-new. Remanufactured equipment has been restored for continued use, with condition and included work confirmed per item. A mixed approach combines new and remanufactured equipment based on the room, equipment zones and project budget. Condition, coverage and availability are confirmed per item before you commit.</p>"
+          }
+        },
+        {
+          "type": "question",
+          "settings": {
+            "title": "Can you help with the room layout?",
+            "text": "<p>Yes. As part of your quote, we can provide conceptual guidance on how equipment might be placed within your room, based on the dimensions and details you share. This is planning guidance to help you visualize the space and equipment flow. It is not an architectural, structural, electrical or code drawing, and it should be verified against your site and by the appropriate professionals where required.</p>"
+          }
+        },
+        {
+          "type": "question",
+          "settings": {
+            "title": "Do you handle delivery, assembly and installation?",
+            "text": "<p>Delivery, assembly and installation can be coordinated for many projects, and we'll discuss what's available for your location and project scope during your quote conversation. Availability and specific arrangements are confirmed for each project rather than promised in advance.</p>"
+          }
+        },
+        {
+          "type": "question",
+          "settings": {
+            "title": "How long will my project take?",
+            "text": "<p>Timing depends on your equipment selections, the condition mix you choose, and the scope of any delivery or installation coordination. Once we understand your equipment mix and target window, we can talk through realistic timing for your specific project. We confirm timing as part of your quote rather than guaranteeing a date up front.</p>"
+          }
+        },
+        {
+          "type": "question",
+          "settings": {
+            "title": "What happens after I submit the form?",
+            "text": "<p>A Fitness Superstore gym specialist reviews the details you provide and follows up to discuss your equipment mix, conceptual room placement and a tailored quote for your facility. The goal of the first conversation is to give you a clear, useful plan for your space.</p>"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
