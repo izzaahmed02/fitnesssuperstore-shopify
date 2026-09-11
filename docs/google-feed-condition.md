@@ -73,32 +73,64 @@ Multifeeds > Settings > the feed > Edit primary feed. The field-mapping tabs are
 Meta, Target, Basic, Media, Identifiers, Detail, Label, Shipping, AI, Others,
 Custom.
 
-**`condition` is not on the Basic tab.** Basic carries only Item
-identification, Product data and Availability — confirmed from that screen on
-`googleshoppingfs`. Google groups `condition` with the detailed product
-attributes, so **Detail** is where to look first; Identifiers holds
-brand/GTIN/MPN, and Others / Custom are the fallbacks.
+The field is **Detail > Condition and packing > Condition**. Not Basic — Basic
+carries only Item identification, Product data and Availability.
 
-Set the field to a total expression over the one source, with no fall-through
-that can emit anything else:
+### The live expression, read 2026-09-11
+
+On `googleshoppingfs`:
 
 ```
-if   lower( trim( Product metafield (condition_state) ) ) == "remanufactured"
+if Product metafield (condition_state) == "New" then New
+else if Product metafield (condition_state) == "Remanufactured" then Refurbished
+else New
+```
+
+Four defects in three lines, and between them they account for every symptom in
+Tim's audit:
+
+1. **`New` and `Refurbished` are unquoted value tokens, not string literals.**
+   Every real literal elsewhere on that screen is quoted — `"New"`, `"0.00"`,
+   `"149"`, `"US:CA:8.375:n"`. These are unquoted and render capitalised. That
+   is the wrong-case output.
+2. **`Product metafield (...)` is the translated accessor.** Every Custom-tab
+   expression on the same feed uses `Untranslated Product metafield (...)`. The
+   plain form resolves a translation for the feed's locale and returns empty
+   where no translation row exists — a blank in the column, and the most likely
+   source of the 12 blank rows. The catalogue value is never blank (see above),
+   so the blank has to be introduced in the read, not the data.
+3. **No `trim()`, and both comparisons are exact and case-sensitive.** A value
+   carrying padding matches neither branch.
+4. **`else New` swallows everything.** Padded, blank, `As is`, `Used` — all emit
+   `New`. The As-is exposure documented below is therefore live behaviour, not a
+   hypothetical.
+
+### The replacement
+
+```
+if   lower( trim( Untranslated Product metafield (condition_state) ) ) == "remanufactured"
 then "refurbished"
 else "new"
 ```
 
-Three properties make this stay fixed, which is what Tim asked for:
+Three changes from what is there now: `Untranslated`, so a missing translation
+cannot empty the value; `lower(trim(...))`, so casing and padding cannot push a
+row to the fallback; and **quoted lowercase literals** instead of the value
+tokens.
 
-- **`trim` before the compare**, so a value that later picks up padding still
-  classifies, instead of falling to the else branch by accident.
-- **Both branches are literals.** No branch reads a metafield through to the
-  output, so no product value can ever reach the column. A blank, a stray
-  `149`, or a new casing cannot appear again regardless of what happens in the
-  catalogue.
-- **No third branch and no default.** A product with no `condition_state` emits
-  `new` rather than a blank. That is deliberate — see the caveat below — and it
-  means the column can never be empty.
+The literals are the point Preview has to settle. If the field accepts free text
+the quoted form gives exact control over the output, which is what Tim asked
+for. If Multifeeds validates `condition` against its own enum and rejects free
+text, the tokens are the only option and the casing is the app's to fix — in
+that case Preview will show it, and the question goes to WoolyTech support
+rather than being worked around.
+
+What makes it stay fixed, which is what Tim asked for: **both branches are
+literals**, so no product value reaches the column and a blank, a stray `149` or
+a new casing cannot appear again whatever happens in the catalogue; and **there
+is no third branch**, so a product with no `condition_state` emits `new` rather
+than a blank. That last one is deliberate and it is also the one thing the
+replacement does *not* fix — see the As-is caveat below.
 
 Both live primary Google feeds and the live Bing feed need it:
 
@@ -240,30 +272,43 @@ that was there.
 
 ## The `149` row
 
-`149` is not a condition value anywhere in Shopify. Across all 2,450 cohort
-products, every tag and every `custom` metafield, exactly three values are
-literally `149`, and all three are dimensions:
+`149` is a shipping rate in this feed's own vocabulary. The Custom tab's
+`shipping` expression on `googleshoppingfs` carries the literal twice, as the
+California overnight fallback:
 
-| Product | SKU | Field | Feed |
-| --- | --- | --- | --- |
-| `9879190503740` Technogym Plurima Multistation Wall (Remanufactured) | `MF30` | `custom.length_in` | `googleshoppingfs` |
-| `9878580789564` French Fitness FFS Silver 8 Stack Multi Jungle Gym (New) | `FFS-8SMJG` | `custom.width_in` | `googleshoppingfrenchfitness` |
-| `9879173464380` French Fitness FFB Black 8 Stack Multi Jungle Gym (New) | `FFB-8SMJG` | `custom.width_in` | `googleshoppingfrenchfitness` |
+```
+",US:CA::" + (if abs(default( Product metaobject reference (estimated_shipping_overnight), "0")) < 1
+ then "149" else default( Product metaobject reference (estimated_shipping_overnight), "149")) + " USD"
+```
 
-Tim counted **one** `149` row. A fall-through reading `custom.width_in` would
-produce two, one for each Jungle Gym; `custom.length_in` produces exactly one,
-`MF30`. So `MF30` / `custom.length_in` is the row and field that fits the count.
+So a `149` in the condition column is a fragment of a shipping expression, not a
+product value — consistent with a stray edit in the same feed rather than
+anything in the catalogue.
 
-**That is a lead, not a conclusion** — it is consistent with a mis-mapped
-fall-through branch reading a dimension metafield, but the only proof is reading
-the feed's current `condition` expression in the app. Whoever opens it should
-read and record the existing expression before replacing it; the offer-ID work
-turned up a hardcoded branch that looked like a stray patch and was
-load-bearing.
+**Superseded.** An earlier pass here proposed `custom.length_in` on `MF30`
+(Technogym Plurima Multistation Wall), on the grounds that it was the only field
+in the cohort holding a literal `149` and that a fall-through reading it would
+produce exactly one row. That was a guess made before the expression had been
+read; the condition expression reads no dimension metafield. Recorded so the
+reasoning is not repeated.
 
-The correction is the same either way: with both branches emitting literals, the
-row emits `refurbished` (its `condition_state` is `Remanufactured`) and no
-product field can reach the column again.
+Either way the row corrects itself: `MF30` carries `condition_state =
+Remanufactured` and the replacement expression emits `refurbished` for it, and
+no product field or stray literal can reach the column once both branches are
+literals.
+
+## `condition_state` also drives shipping — do not "clean up" the metafield
+
+The Custom tab's `shipping` expression branches on
+`Untranslated Product metafield (condition_state) == "New"` before selecting a
+rate table. The metafield therefore feeds both the condition column and the
+shipping column.
+
+That is a second reason the fix belongs in the feed expression and not in the
+catalogue: normalising `condition_state` to lowercase — the obvious-looking way
+to make the condition column lowercase — would silently fail that `== "New"`
+comparison and move every affected row onto the wrong shipping branch. The
+catalogue values stay exactly as they are.
 
 ## Caveat — `As is` and `Used` are outside the two-value rule
 
