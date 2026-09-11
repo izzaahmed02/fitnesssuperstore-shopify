@@ -16,8 +16,11 @@
   are reversed between the live theme and this repo's template, so a name check would
   invert if the template ever syncs.
 
-  An explicit non-zero setting still wins, so a merchant choosing a real value keeps
-  control, and if the template does sync (closing = 83) that value is simply used.
+  image_overlay_opacity is deliberately no longer read. The live theme holds 60 on one
+  instance and 40 on the other; both are wrong against Figma's 0 and 83, and neither
+  can be corrected from git. Deriving the value here is the only way to get the design
+  right. The setting remains in the schema but no longer drives this overlay — worth
+  removing if the template ever becomes writable again.
 {%- endcomment -%}
 {%- liquid
   assign cgb_has_body_copy = false
@@ -27,9 +30,10 @@
     endif
   endfor
 
-  assign cgb_overlay_opacity = section.settings.image_overlay_opacity
-  if cgb_overlay_opacity == 0 and cgb_has_body_copy
+  if cgb_has_body_copy
     assign cgb_overlay_opacity = 83
+  else
+    assign cgb_overlay_opacity = 0
   endif
 -%}
 
@@ -177,6 +181,11 @@
     position: absolute;
     inset: 0;
     background-color: rgba(0, 0, 0, {{ cgb_overlay_opacity | divided_by: 100.0 }});
+    /* The theme's own .banner::after/.banner__media::after rule sets opacity: 0 (it
+       drives its overlay through that property, not through the colour). Without
+       restating it here the scrim never painted on either banner no matter what
+       background-color was set — the tint has to come from the colour's own alpha. */
+    opacity: 1;
     pointer-events: none;
   }
 
