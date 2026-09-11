@@ -80,6 +80,24 @@
     max-width: 1280px;
   }
 
+  /* Figma sizes both banners from their content with 120px above and below it, rather
+     than from a fixed frame height:
+       between process and FAQ (4583:81433) — 120 + 144 + 120 = 384
+         content = heading 68 + 28 + button 48
+       after FAQ (4608:84411)              — 120 + 220 + 120 = 460
+         content = heading 68 + 12 + text 24 + 28 + button 48 + 16 + phone 24
+     Deriving the height this way lets one section file serve both instances at their
+     correct Figma heights. That matters because the two instances live in the page
+     template, whose live copy the GitHub sync will not let git update — the after-FAQ
+     banner was stuck at 400px. banner_height_desktop still applies underneath as a
+     min-height floor, so the setting keeps working; the content simply exceeds it. */
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .banner__box {
+      padding-top: 120px;
+      padding-bottom: 120px;
+    }
+  }
+
   /* page-images/zoom-cta-banner.png confirms the design has no light box behind the
      text at all — just the heading/button sitting directly over the (already tinted)
      image. The color-scheme class previously on .banner__box painted a solid white
