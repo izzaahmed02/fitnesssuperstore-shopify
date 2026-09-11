@@ -73,14 +73,24 @@
      full-size z-index:1 overlay at opacity 0 for its own overlay-opacity setting, so
      reuse it rather than adding an element. rgba(28,28,35,0) rather than
      `transparent` keeps the fade from washing through grey mid-interpolation. */
+  /* Figma node 4612:85831 (mobile) — the scrim runs VERTICALLY here, not left-to-right:
+     handles (0.5, 1) -> (0.5, 0) with transparent at position 0 (the bottom) and
+     #1c1c23 at position 1 (the top), i.e. dark at the top fading downward. The desktop
+     rule below is scoped to 750px and up so it no longer leaks onto mobile. */
   #shopify-section-{{ section.id }} .banner__media::after {
-    background: linear-gradient(
-      to right,
-      #1c1c23 0%,
-      #1c1c23 28.37%,
-      rgba(28, 28, 35, 0) 65.04%
-    );
+    background: linear-gradient(to top, rgba(28, 28, 35, 0) 0%, #1c1c23 100%);
     opacity: 1;
+  }
+
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .banner__media::after {
+      background: linear-gradient(
+        to right,
+        #1c1c23 0%,
+        #1c1c23 28.37%,
+        rgba(28, 28, 35, 0) 65.04%
+      );
+    }
   }
 
   /* Figma node 4612:85830 "Hero block" (mobile) — 558px tall, content top-anchored:
@@ -94,6 +104,19 @@
   }
   #shopify-section-{{ section.id }} .banner__box {
     padding: 28px 16px 20px;
+  }
+
+  /* Figma node 4612:85832 "Content" — 343px wide, inset 16px from the 375px frame.
+     The .page-width rule above gives .banner__content a 40px inset, which stacked with
+     the box's own 16px and left the column only 263px. That narrower column reflowed
+     everything: the headline wrapped to 4 lines instead of 3, the first paragraph to 4
+     instead of 3, and the third bullet to 3 lines instead of 2. The box's 16px is the
+     only horizontal inset on mobile. */
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .banner__content.page-width {
+      padding-left: 0;
+      padding-right: 0;
+    }
   }
 
   /* Figma node 4583:81337 "Hero block" (desktop) — 608px tall, content top-anchored:
@@ -270,9 +293,12 @@
       padding-bottom: {{ section.settings.padding_bottom_mobile }}px;
     }
 
+    /* Figma node 4612:85853 "buttons" (mobile) — the primary button spans the full
+       343px column (align-items: flex-start left it at its natural 255px), and the
+       phone link below it is centred rather than left-aligned. */
     #shopify-section-{{ section.id }} .banner__buttons {
       flex-direction: column;
-      align-items: flex-start;
+      align-items: stretch;
       justify-content: center;
       width: 100%;
       max-width: 100%;
@@ -280,6 +306,8 @@
 
     #shopify-section-{{ section.id }} .cgb-hero-phone-link {
       width: 100%;
+      justify-content: center;
+      text-align: center;
     }
   }
 
