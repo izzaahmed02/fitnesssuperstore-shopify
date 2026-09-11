@@ -54,42 +54,6 @@
   endif
 -%}
 
-{%- comment -%}
-  ------------------------------------------------------------------------
-  PREVIEW-ONLY PILOT OVERLAY — REMOVE BEFORE PRODUCTION MERGE
-  ------------------------------------------------------------------------
-  The three approved pilot products still carry their previous blanket-wrap
-  ships value and have no custom.manual_link / custom.manual_file in live
-  Shopify. This block exists ONLY so the approved treatment can be reviewed
-  in an unpublished preview theme without writing to live product metafields.
-
-  Set `enable_pilot_preview_overlay` to false (or delete this block) once the
-  three protected metafield writes are separately approved and applied. The
-  rule above then drives the treatment from product data alone.
-
-  Manual URLs verified by Tim in the canonical thread on 2026-09-03.
-{%- endcomment -%}
-{%- liquid
-  assign enable_pilot_preview_overlay = true
-
-  if enable_pilot_preview_overlay
-    assign tahoe_manual = 'https://fitnesssuperstore.info/pdfs/French%20Fitness%20Shasta%20%26%20Tahoe%20Assisted%20Chin%20Dip%20Assembly%20and%20Exercise%20Manual.pdf'
-    assign sc15_manual = 'https://fitnesssuperstore.info/pdfs/French%20Fitness%20SC15%20Stretch%20Cage%20Assembly%20Manual.pdf'
-
-    case product.handle
-      when 'french-fitness-tahoe-assisted-chin-dip-new'
-        assign ships_normalized = 'new in crate'
-        assign manual_url = tahoe_manual
-      when 'french-fitness-ff-sc15-stretch-cage-black-new'
-        assign ships_normalized = 'new in crate'
-        assign manual_url = sc15_manual
-      when 'french-fitness-ff-sc15-stretch-cage-silver-new'
-        assign ships_normalized = 'new in crate'
-        assign manual_url = sc15_manual
-    endcase
-  endif
--%}
-
 {%- liquid
   assign ships_is_crate = false
   if ships_normalized == 'new in crate' or ships_normalized == 'new in crate.'
