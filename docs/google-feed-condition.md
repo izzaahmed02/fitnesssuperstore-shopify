@@ -170,28 +170,76 @@ semantically right and only mis-cased, which means that feed's condition mapping
 already has an `As is → used` branch that the Google feeds do not. Microsoft's
 enum value is lowercase `used`, so the row is still invalid as emitted.
 
-### What this rules out
+### Root cause — a second condition field nobody was looking at
 
-The same 2,505 products, reading the same `custom.condition_state`, come out
-**correct in the Google feeds and wrong in the Bing one**. So neither the
-catalogue nor a shared expression explains it.
+The Bing feed's Condition is **not** the Google expression. Read from
+`bingshoppingnew` > Detail > Condition and packing > Condition:
 
-The defects are scattered — 72 rows across 63 distinct products and ten vendors,
-with no shared type, price band or collection. A faulty expression applies
-uniformly; this does not. The one clustering is by defect class, which is what
-hand-entry looks like: all 7 `new ` rows are French Fitness Urethane Round Pro
-Style Dumbbells, 10 of the 12 blanks are the ten variants of one product
-(`10269254254908`, FF-MSS Monster Universal Storage), and the 45 `New` rows are
-45 separate products.
+```
+Untranslated Product metaobject reference (product_condition)
+```
 
-That points at **per-product field overrides** rather than the feed expression —
-Multifeeds > Products is the surface that holds them. Read that before editing
-the Bing feed's `condition` expression: if the overrides are the source, changing
-the expression will not clear them, and the 72 rows will survive the fix.
+A raw passthrough, with no mapping and no fallback. It reads `product_condition`
+on the **`3rd_party` metaobject** — a per-product vendor-data record attached via
+`custom.3rd_party`, 4,654 of them, the same record the shipping expression reads
+`estimated_shipping_*` and `google_custom_label_*` from.
 
-`docs/bing-feed-condition-defects.csv` lists all 249 defective rows across both
-Bing feeds with the product, its `condition_state`, what the feed emitted, what
-it should emit, and the defect class.
+So the two feed families read different fields:
+
+| | Source | Mapped? |
+| --- | --- | --- |
+| `googleshoppingfs`, `googleshoppingfrenchfitness` | `custom.condition_state` | yes, via an if/else |
+| `bingshoppingnew` (both) | `3rd_party.product_condition` | **no — raw passthrough** |
+
+That is the whole defect. Whatever text sits in that field lands in the column
+verbatim, which is why the values are `New`, `Refurbished`, `new `, blank and
+`149` — hand-entered data, never normalised, never validated.
+
+`condition_state` being clean was true and irrelevant: it was never the field
+Bing read.
+
+### The 362 defective records
+
+Across all 4,654 `3rd_party` metaobjects:
+
+| `product_condition` | Records | |
+| --- | --- | --- |
+| `new` | 2,957 | correct |
+| `refurbished` | 1,335 | correct |
+| `New` | 320 | wrong case |
+| *(null)* | 21 | missing |
+| `new ` | 10 | padded |
+| `Refurbished` | 7 | wrong case |
+| `Used` | 1 | wrong case |
+| `refurbished ` | 1 | padded |
+| `New ` | 1 | padded + wrong case |
+| `149` | 1 | a shipping rate |
+
+**362 defective, of which 324 have an unambiguous correction** derived from the
+product's own `condition_state`. The remaining 38 are orphans — 37 referenced by
+no product at all, plus one price-difference record with no `condition_state`.
+Orphans reach no feed and need no fix.
+
+Each feed exposes only the defective records inside its own cohort, which is why
+the same underlying fault surfaces as 72 rows in one Bing feed and 177 in the
+other. `docs/third-party-product-condition-fix.csv` lists all 362 with the
+metaobject id, current value, correct value, the product and its
+`condition_state` — and doubles as the rollback record.
+
+### The `149`, explained
+
+`SPORTSART-G260`'s `3rd_party` record carries `product_condition = "149"` and
+`estimated_shipping_overnight = "0"`. The custom shipping expression substitutes
+`149` for California whenever overnight is under 1. A California shipping rate
+was typed into the condition field of the same record. One keystroke in one
+metaobject, surfacing as an invalid condition on two feeds.
+
+### Changing it is feed-only
+
+The theme reads exactly one field from this metaobject, `google_material`, and
+uses it solely to show the "On Display in Store" badge. The storefront's own
+Condition line reads `custom.condition_state`. So correcting
+`product_condition` cannot change anything a customer sees.
 
 ## The replacement — hardening, not a repair
 
