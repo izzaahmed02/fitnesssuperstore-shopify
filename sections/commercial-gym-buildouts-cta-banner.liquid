@@ -1,41 +1,16 @@
 {{ 'section-image-banner.css' | asset_url | stylesheet_tag }}
 
 {%- comment -%}
-  Figma puts an 83% black scrim over the photo on the after-FAQ banner
-  (node 4608:84411, fills: IMAGE + SOLID #000000 at 0.83) and none on the
-  between-process one (node 4583:81433, IMAGE only). That difference lives in
-  image_overlay_opacity, a per-instance value in the page template — and the live
-  theme's copy of that template holds 0 for BOTH instances, which git cannot correct
-  because the GitHub sync will not overwrite JSON templates.
+  The scrim strength comes from each instance's own image_overlay_opacity setting.
 
-  Both banners are rendered by this one section file, so the two cases are told apart
-  here. The signal is the design's own distinction rather than the instance name: the
-  scrimmed banner is the one carrying supporting copy under its heading, which is
-  exactly the text that needs the extra contrast. The button-only banner has no such
-  copy and Figma gives it no scrim. The instance names cannot be used — mid/closing
-  are reversed between the live theme and this repo's template, so a name check would
-  invert if the template ever syncs.
-
-  image_overlay_opacity is deliberately no longer read. The live theme holds 60 on one
-  instance and 40 on the other; both are wrong against Figma's 0 and 83, and neither
-  can be corrected from git. Deriving the value here is the only way to get the design
-  right. The setting remains in the schema but no longer drives this overlay — worth
-  removing if the template ever becomes writable again.
+  Note for anyone comparing against Figma: node 4608:84411's fill list reads
+  IMAGE + SOLID #000000 at opacity 0.83, but applying 83% black crushes the photo to
+  near-black and does not reproduce the design. Figma's own render of that banner
+  (page-images/zoom-cta-1.png) shows the gym floor clearly — windows, treadmills,
+  branded equipment — under a much lighter tint, which the configured value matches.
+  Treat the render as authoritative here, not that fill datum.
 {%- endcomment -%}
-{%- liquid
-  assign cgb_has_body_copy = false
-  for block in section.blocks
-    if block.type == 'text' and block.settings.text != blank
-      assign cgb_has_body_copy = true
-    endif
-  endfor
-
-  if cgb_has_body_copy
-    assign cgb_overlay_opacity = 83
-  else
-    assign cgb_overlay_opacity = 0
-  endif
--%}
+{%- assign cgb_overlay_opacity = section.settings.image_overlay_opacity -%}
 
 {%- style -%}
   #shopify-section-{{ section.id }} {
