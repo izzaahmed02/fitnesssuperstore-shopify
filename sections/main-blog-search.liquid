@@ -56,32 +56,13 @@
     </button>
   </form>
 
-  <!-- Hidden articles -->
-  <div style="display:none;" id="all-articles-container">
-    {% assign handles = section.settings.blog_handles | split: "," %}
-    {% for handle in handles %}
-      {% assign clean_handle = handle | strip %}
-      {% assign blog = blogs[clean_handle] %}
-      {% if blog %}
-        {% for article in blog.articles %}
-          <div
-            class="article-data"
-            data-full-content="{{ article.content | strip_html | escape }}"
-          >
-            {% render 'article-card',
-              article: article,
-              media_height: section.settings.image_height,
-              media_aspect_ratio: article.image.aspect_ratio,
-              show_image: section.settings.show_image,
-              show_date: section.settings.show_date,
-              show_author: section.settings.show_author,
-              show_excerpt: true
-            %}
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endfor %}
-  </div>
+  {%- comment -%}
+    The full article list is no longer pre-rendered here. Search is handled by
+    Shopify's native article search (the form above), and each article now
+    renders exactly once on the hub inside its category row (the per-blog
+    "Related Blog posts Slider" sections). This removes the duplicate,
+    crawlable-but-hidden master list that previously lived here.
+  {%- endcomment -%}
 </div>
 
 {% schema %}

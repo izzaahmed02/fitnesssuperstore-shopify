@@ -31,6 +31,18 @@ Related Blog Posts — JS driven slider with synced scrollbar
     {%- endcomment -%}
     {% assign current_article_id = article.id %}
 
+    {%- comment -%}
+    Hub context = not on an article page (no current article). The top-N limit
+    only applies on the hub (e.g. /pages/blog); on article pages this section
+    is used as an unlimited "related posts" slider and must keep that behavior,
+    so the limit is intentionally not applied there.
+    {%- endcomment -%}
+    {% assign is_hub = false %}
+    {% if current_article_id == blank %}
+      {% assign is_hub = true %}
+    {% endif %}
+    {% assign articles_limit = section.settings.articles_limit | default: 3 %}
+
     {% if blog and blog.articles_count > 0 %}
 
       {%- comment -%}
@@ -44,6 +56,16 @@ Related Blog Posts — JS driven slider with synced scrollbar
         {% endif %}
       {% endfor %}
 
+      {%- comment -%}
+      On the hub, cap the displayed count at the top-N limit so the scrollbar /
+      arrows and any "N slides" logic reflect what actually renders.
+      {%- endcomment -%}
+      {% assign display_count = slide_count %}
+      {% if is_hub and display_count > articles_limit %}
+        {% assign display_count = articles_limit %}
+      {% endif %}
+      {% assign rendered_count = 0 %}
+
       <div class="related-slider" data-slider>
 
         <div class="related-slider__track" data-track>
@@ -53,6 +75,7 @@ Related Blog Posts — JS driven slider with synced scrollbar
 1️⃣ Featured articles first — skip the current article if on an article page
 {%- endcomment -%}
 {% for article in blog.articles %}
+  {% if is_hub and rendered_count >= articles_limit %}{% break %}{% endif %}
   {% if article.tags contains featured_tag %}
     {% if current_article_id == blank or article.id != current_article_id %}
     <div class="related-slider__slide featured-article">
@@ -107,6 +130,7 @@ Related Blog Posts — JS driven slider with synced scrollbar
         </a>
       </article>
     </div>
+    {% assign rendered_count = rendered_count | plus: 1 %}
     {% endif %}
   {% endif %}
 {% endfor %}
@@ -115,6 +139,7 @@ Related Blog Posts — JS driven slider with synced scrollbar
 2️⃣ Remaining (non-featured) articles — skip the current article if on an article page
 {%- endcomment -%}
 {% for article in blog.articles %}
+  {% if is_hub and rendered_count >= articles_limit %}{% break %}{% endif %}
   {% unless article.tags contains featured_tag %}
     {% if current_article_id == blank or article.id != current_article_id %}
     <div class="related-slider__slide">
@@ -169,13 +194,14 @@ Related Blog Posts — JS driven slider with synced scrollbar
         </a>
       </article>
     </div>
+    {% assign rendered_count = rendered_count | plus: 1 %}
     {% endif %}
   {% endunless %}
 {% endfor %}
 
         </div>
 
-        {% if section.settings.show_scrollbar and slide_count > 3 %}
+        {% if section.settings.show_scrollbar and display_count > 3 %}
           
         {% else %}
           <style>
@@ -529,6 +555,16 @@ Related Blog Posts — JS driven slider with synced scrollbar
       "id": "blog",
       "type": "blog",
       "label": "Select blog"
+    },
+    {
+      "id": "articles_limit",
+      "type": "range",
+      "min": 1,
+      "max": 12,
+      "step": 1,
+      "label": "Max articles to show (hub only)",
+      "info": "Top-N articles shown for this category row on the blog hub. Ignored where this section is used as a related-posts slider on an article page.",
+      "default": 3
     },
     {
       "id": "show_scrollbar",
