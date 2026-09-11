@@ -1,0 +1,292 @@
+{%- comment -%}
+  Commercial Gym Buildouts — floating/sticky CTA.
+
+  Figma desktop: node 5229:82674 ("Simple button"), a direct child of the 1440x1024
+  viewport frame 5229:81503 — a free-floating pill in the bottom-right corner, not a
+  bar. Figma mobile: node 5229:83644 ("ATC sticky panel") inside frame 5229:82683 — a
+  full-width white bar pinned to the bottom with the button stretched inside it. The
+  two breakpoints are deliberately different shapes, and they carry different labels
+  ("Get My Gym Layout & Quote" vs "Get My Quote"), so both are separate settings.
+
+  The "ATC sticky panel" name and the FSR90 / $3,299.00 product layers inside that
+  Figma frame are leftovers from the product-page component it was copied from — they
+  are hidden in the render (page export shows only the white bar and the orange
+  button) and are intentionally not built here.
+
+  Tracking: Issue #727 keeps pixel/event work on HOLD pending preview review, so this
+  section deliberately fires no analytics or dataLayer events. Do not add
+  lead_created / fss_commercial_buildout_lead_success hooks here — those belong to the
+  form's accepted-submission path only.
+{%- endcomment -%}
+
+{%- liquid
+  assign cgb_sticky_target = section.settings.button_link | strip
+-%}
+
+{%- style -%}
+  /* The section wrapper contributes no layout box of its own — its only child is
+     position: fixed — so the CTA can sit anywhere in the template order without
+     moving the page or costing any CLS. */
+  #shopify-section-{{ section.id }} {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Mobile base — Figma node 5229:83644: 375x80 white bar flush to the bottom edge,
+     1px #e5e5e5 top border, 16px inset on all four sides (80 - 48 button = 16 top and
+     bottom; 343 button in a 375 frame = 16 each side). The frame sits 34px off the
+     bottom of the 812px mockup only because of the iPhone home-indicator chrome layer
+     (5229:83695) above it, which is device art, not part of the design — in a browser
+     the bar belongs flush to the bottom, with the safe-area inset handling notched
+     devices. */
+  .cgb-sticky-cta {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2; /* below .shopify-section-group-header-group (3) so the mobile menu
+                   drawer and sticky header always win */
+    box-sizing: border-box;
+    /* 15px, not 16px, on top: Figma draws the frame's 1px stroke *inside* the 80px
+       box (1 + 15 + 48 button + 16 = 80), whereas CSS adds border-top outside the
+       padding. Splitting the pixel out of the top inset is what keeps the bar at
+       Figma's 80px instead of 81px. */
+    padding: 15px 16px 16px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    background-color: #ffffff;
+    border-top: 1px solid #e5e5e5;
+    /* Hidden until the scroll threshold is crossed. visibility (not display) keeps the
+       element out of the accessibility tree while still allowing a transition, and
+       leaves the button's own box measurable for the browser. */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(100%);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+  }
+
+  .cgb-sticky-cta--visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0s;
+  }
+
+  @media screen and (prefers-reduced-motion: reduce) {
+    .cgb-sticky-cta,
+    .cgb-sticky-cta--visible {
+      transition: none;
+      transform: none;
+    }
+  }
+
+  /* Figma node 5229:83699 — the mobile button spans the full 343px content width and
+     centres its label; the desktop pill (below) sizes to its own text instead. */
+  #shopify-section-{{ section.id }} .cgb-sticky-cta__button {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* Only one label renders at a time. Keeping both in the markup (rather than
+     swapping text in JS) means no layout work on resize and no flash of the wrong
+     label before script runs. */
+  .cgb-sticky-cta__label--desktop {
+    display: none;
+  }
+
+  /* Desktop — Figma node 5229:82674 inside frame 5229:81503: a bare 255x48 pill with
+     no bar behind it, 22px from the right edge (1440 - 388 - 255 + frame origin) and
+     24px up from the bottom (1024 - 952 - 48). Width comes from the theme's own
+     .button padding (24px + 207px label + 24px = 255px), so it is not hard-coded. */
+  @media screen and (min-width: 750px) {
+    .cgb-sticky-cta {
+      left: auto;
+      right: 22px;
+      bottom: 24px;
+      width: auto;
+      padding: 0;
+      background: none;
+      border-top: 0;
+    }
+
+    #shopify-section-{{ section.id }} .cgb-sticky-cta__button {
+      display: inline-flex;
+      width: auto;
+    }
+
+    .cgb-sticky-cta__label--desktop {
+      display: inline;
+    }
+
+    .cgb-sticky-cta__label--mobile {
+      display: none;
+    }
+
+    /* Figma's drop shadow on 5229:82674, read from the node's SVG filter: dy 12,
+       stdDeviation 8 (= 16px CSS blur), colour rgba(164, 61, 28, 0.16). The theme's
+       base .button sets box-shadow: none, so this needs the id-scoped selector to
+       outrank it. */
+    #shopify-section-{{ section.id }} .cgb-sticky-cta__button {
+      box-shadow: 0 12px 16px rgba(164, 61, 28, 0.16);
+    }
+  }
+
+  @media print {
+    .cgb-sticky-cta {
+      display: none;
+    }
+  }
+{%- endstyle -%}
+
+<div
+  class="cgb-sticky-cta"
+  id="CGBStickyCta-{{ section.id }}"
+  data-threshold-desktop="{{ section.settings.show_after_desktop }}"
+  data-threshold-mobile="{{ section.settings.show_after_mobile }}"
+  {{ section.shopify_attributes }}
+>
+  <a
+    href="{{ cgb_sticky_target }}"
+    class="button button--primary cgb-sticky-cta__button"
+    data-cgb-sticky-cta-link
+  >
+    <span class="cgb-sticky-cta__label--desktop">{{ section.settings.button_label_desktop | escape }}</span>
+    <span class="cgb-sticky-cta__label--mobile">{{ section.settings.button_label_mobile | escape }}</span>
+  </a>
+</div>
+
+<script>
+  (function () {
+    var root = document.getElementById('CGBStickyCta-{{ section.id }}');
+    if (!root) return;
+
+    var desktopThreshold = parseInt(root.getAttribute('data-threshold-desktop'), 10) || 0;
+    var mobileThreshold = parseInt(root.getAttribute('data-threshold-mobile'), 10) || 0;
+    var desktopQuery = window.matchMedia('(min-width: 750px)');
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var pending = false;
+
+    function update() {
+      pending = false;
+      var offset = window.pageYOffset || document.documentElement.scrollTop || 0;
+      var threshold = desktopQuery.matches ? desktopThreshold : mobileThreshold;
+      root.classList.toggle('cgb-sticky-cta--visible', offset >= threshold);
+    }
+
+    // rAF-throttled so the passive scroll listener never does layout work more than
+    // once per frame — this must not cost anything against the page's CWV baseline.
+    function schedule() {
+      if (pending) return;
+      pending = true;
+      window.requestAnimationFrame(update);
+    }
+
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule, { passive: true });
+    update();
+
+    var link = root.querySelector('[data-cgb-sticky-cta-link]');
+    var href = link ? link.getAttribute('href') : '';
+
+    // Same-page anchors get a smooth scroll that clears the sticky header; anything
+    // else (an absolute URL set in the theme editor) is left to the browser.
+    if (link && href.charAt(0) === '#' && href.length > 1) {
+      link.addEventListener('click', function (event) {
+        var target = document.getElementById(href.slice(1));
+        if (!target) return;
+        event.preventDefault();
+
+        var header = document.querySelector('.shopify-section-header-sticky');
+        var headerHeight = header ? header.getBoundingClientRect().height : 0;
+        var top = target.getBoundingClientRect().top + (window.pageYOffset || 0) - headerHeight - 16;
+
+        window.scrollTo({
+          top: top > 0 ? top : 0,
+          behavior: reduceMotion.matches ? 'auto' : 'smooth'
+        });
+
+        if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+        target.focus({ preventScroll: true });
+      });
+    }
+
+    // Theme editor: reveal the CTA when its section is selected, so it can be
+    // inspected without scrolling past the threshold first.
+    if (window.Shopify && window.Shopify.designMode) {
+      document.addEventListener('shopify:section:select', function (event) {
+        if (event.detail && event.detail.sectionId === '{{ section.id }}') {
+          root.classList.add('cgb-sticky-cta--visible');
+        }
+      });
+      document.addEventListener('shopify:section:deselect', function (event) {
+        if (event.detail && event.detail.sectionId === '{{ section.id }}') update();
+      });
+    }
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "CGB Sticky CTA",
+  "tag": "div",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "text",
+      "id": "button_label_desktop",
+      "label": "Button label (desktop)",
+      "default": "Get My Gym Layout & Quote"
+    },
+    {
+      "type": "text",
+      "id": "button_label_mobile",
+      "label": "Button label (mobile)",
+      "default": "Get My Quote"
+    },
+    {
+      "type": "text",
+      "id": "button_link",
+      "label": "Button link",
+      "info": "Use #commercial-gym-buildouts-form to scroll to the form on this page.",
+      "default": "#commercial-gym-buildouts-form"
+    },
+    {
+      "type": "header",
+      "content": "Appear on scroll"
+    },
+    {
+      "type": "range",
+      "id": "show_after_desktop",
+      "min": 0,
+      "max": 2000,
+      "step": 2,
+      "unit": "px",
+      "label": "Show after (desktop)",
+      "info": "Scroll distance from the top of the page. 952px matches the button's position in the Figma desktop frame.",
+      "default": 952
+    },
+    {
+      "type": "range",
+      "id": "show_after_mobile",
+      "min": 0,
+      "max": 2000,
+      "step": 2,
+      "unit": "px",
+      "label": "Show after (mobile)",
+      "info": "Scroll distance from the top of the page. 698px matches the bar's position in the Figma mobile frame.",
+      "default": 698
+    }
+  ],
+  "presets": [
+    {
+      "name": "CGB Sticky CTA"
+    }
+  ]
+}
+{% endschema %}
