@@ -1,5 +1,38 @@
 {{ 'section-image-banner.css' | asset_url | stylesheet_tag }}
 
+{%- comment -%}
+  Figma puts an 83% black scrim over the photo on the after-FAQ banner
+  (node 4608:84411, fills: IMAGE + SOLID #000000 at 0.83) and none on the
+  between-process one (node 4583:81433, IMAGE only). That difference lives in
+  image_overlay_opacity, a per-instance value in the page template — and the live
+  theme's copy of that template holds 0 for BOTH instances, which git cannot correct
+  because the GitHub sync will not overwrite JSON templates.
+
+  Both banners are rendered by this one section file, so the two cases are told apart
+  here. The signal is the design's own distinction rather than the instance name: the
+  scrimmed banner is the one carrying supporting copy under its heading, which is
+  exactly the text that needs the extra contrast. The button-only banner has no such
+  copy and Figma gives it no scrim. The instance names cannot be used — mid/closing
+  are reversed between the live theme and this repo's template, so a name check would
+  invert if the template ever syncs.
+
+  An explicit non-zero setting still wins, so a merchant choosing a real value keeps
+  control, and if the template does sync (closing = 83) that value is simply used.
+{%- endcomment -%}
+{%- liquid
+  assign cgb_has_body_copy = false
+  for block in section.blocks
+    if block.type == 'text' and block.settings.text != blank
+      assign cgb_has_body_copy = true
+    endif
+  endfor
+
+  assign cgb_overlay_opacity = section.settings.image_overlay_opacity
+  if cgb_overlay_opacity == 0 and cgb_has_body_copy
+    assign cgb_overlay_opacity = 83
+  endif
+-%}
+
 {%- style -%}
   #shopify-section-{{ section.id }} {
     padding-top: {{ section.settings.padding_top_desktop }}px;
@@ -143,7 +176,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background-color: rgba(0, 0, 0, {{ section.settings.image_overlay_opacity | divided_by: 100.0 }});
+    background-color: rgba(0, 0, 0, {{ cgb_overlay_opacity | divided_by: 100.0 }});
     pointer-events: none;
   }
 
@@ -268,7 +301,7 @@
     }
   }
 
-  {%- if section.settings.image_overlay_opacity == 0 -%}
+  {%- if cgb_overlay_opacity == 0 -%}
     /* Figma node 4612:86492 "Why Choose Us" (mobile, mid banner only) fill — a
        black-to-transparent vertical gradient over the image, present even though this
        banner's desktop overlay is 0% flat. Node 4612:86960 (closing, mobile) confirms
