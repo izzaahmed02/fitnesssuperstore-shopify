@@ -59,7 +59,13 @@
        box (1 + 15 + 48 button + 16 = 80), whereas CSS adds border-top outside the
        padding. Splitting the pixel out of the top inset is what keeps the bar at
        Figma's 80px instead of 81px. */
-    padding: 15px 16px 16px;
+    /* Right inset is 102px, not Figma's 16px, to clear the Gorgias chat launcher
+       (#chat-button), which is position:fixed at the same z-index and paints over
+       the bar. On a 375 viewport it occupies x 285-355, i.e. the rightmost 90px,
+       so the button now ends at 273 with a 12px gap and the launcher sits beside
+       it rather than on top of it. Costs the button width Figma gave it (343 ->
+       257); the launcher is a live app the mock does not account for. */
+    padding: 15px 102px 16px 16px;
     padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     background-color: #ffffff;
     border-top: 1px solid #e5e5e5;
@@ -110,8 +116,14 @@
   @media screen and (min-width: 750px) {
     .cgb-sticky-cta {
       left: auto;
-      right: 22px;
-      bottom: 24px;
+      /* Figma puts this pill at right 22 / bottom 24, but the Gorgias chat launcher
+         is fixed at right 20 / bottom 20 and 80x74, so the two overlapped by 78px.
+         Sitting the pill to its left instead: the launcher's outer edge is 100px
+         from the right (20 + 80), so 112px leaves a 12px gap. Bottom is 33px so the
+         two are centred on the same line - the launcher's centre is 57px off the
+         bottom (20 + 74/2) and this pill is 48 tall, so 57 - 24 = 33. */
+      right: 112px;
+      bottom: 33px;
       width: auto;
       padding: 0;
       background: none;
