@@ -139,6 +139,39 @@
     margin-top: 8px;
     }
 
+    /* Figma mobile node 5280:81971 "info card" — 343x425: a single full-width column
+       holding a 311x219 image, 20px to the content, then a 20/26 title and its body.
+       Four things were off against that:
+         - the theme's 15px mobile slider gutter (unused, swipe_on_mobile is off) left
+           the card 313px instead of 343px, and with it the image 281px instead of 311
+         - the row gap was the theme's 16px rather than Figma's 12px
+         - the image kept its desktop 59.1% ratio (219/370.67); at 311px wide the
+           mobile ratio is 219/311 = 70.4%, which is why it came out 166px tall
+           instead of 219px
+         - the title rendered at 18/24 rather than 20/26
+       These together made the section 99px SHORTER than the design, the only place on
+       the page that undershot rather than overshot. */
+    @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .multicolumn-list.grid {
+    gap: 12px;
+    padding-left: 0;
+    padding-right: 0;
+    }
+
+    #shopify-section-{{ section.id }} .media--portrait {
+    padding-bottom: 70.4%;
+    }
+
+    #shopify-section-{{ section.id }} .multicolumn-card__image-wrapper + .multicolumn-card__info {
+    margin-top: 20px;
+    }
+
+    #shopify-section-{{ section.id }} .multicolumn-card__info-title {
+    font-size: 20px;
+    line-height: 26px;
+    }
+    }
+
     /* Figma node 5280:81963/5280:81964 (desktop) — Oswald SemiBold 38px/50px; Lato Regular 16px/24px */
     @media screen and (min-width: 750px) {
     #shopify-section-{{ section.id }} .title.h1 {
