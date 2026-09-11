@@ -62,10 +62,20 @@
     margin: 12px auto 0;
     }
 
-    /* Figma node 5280:81962 "Title" — 12px between heading and subheading (50 + 12 +
-       48 = the 110px title frame). The 12px margin above was landing as 22px because
-       the theme's title wrapper adds its own gap and the heading a bottom margin. */
+    /* Figma node 5280:81962 "Title" — heading and subheading stack, centred, 12px
+       apart (50 + 12 + 48 = the 110px title frame). The 12px margin above was landing
+       as 22px because the theme's title wrapper adds its own gap and the heading a
+       bottom margin.
+
+       display: block is load-bearing, not cosmetic. .title-wrapper-with-link is one of
+       the theme's flex ROWS. Zeroing the gap alone left it a row, and the two only
+       looked stacked up to 1440px because the heading (523px) plus the 800px
+       subheading exceeded the 1280px column and wrapped. From about 1483px up they
+       fit on one line and rendered SIDE BY SIDE — visible on any screen wider than
+       1440. Forcing block flow makes the stack hold at every width. */
     #shopify-section-{{ section.id }} .multicolumn__title.title-wrapper-with-link {
+    display: block;
+    text-align: center;
     gap: 0;
     }
 
