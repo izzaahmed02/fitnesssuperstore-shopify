@@ -225,6 +225,18 @@
     max-width: unset;
   }
 
+  /* The theme's base .button is display:flex with align-items:center but no
+     justify-content, so it packs its label at flex-start. That is invisible on desktop
+     where the button shrinks to its text (24 + 207 + 24 = 255), but on mobile the
+     button stretches to the full 343px column and the label sits hard against the left
+     padding — 24px of slack on the left against 112px on the right. text-align:center
+     cannot fix it; it has no effect on a flex container's item placement.
+     Figma centres the label in both frames: mobile 4612:86498 puts a 207px label at
+     14086 in a 343px button at 14018, i.e. 68px each side. */
+  #shopify-section-{{ section.id }} .banner__buttons .button {
+    justify-content: center;
+  }
+
   /* Figma node 4608:84416 "Buttons" (closing only — mid never has a phone link) — the
      button (255px) and phone link (336px) together exceed the 336px frame width, which
      only works if they're stacked, not side-by-side; a 16px gap separates them. This
