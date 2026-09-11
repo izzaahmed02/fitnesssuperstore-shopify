@@ -105,41 +105,93 @@ latent fault rather than a live one — see the As-is caveat below.
 
 ## Verified against the live feed files — 2026-09-11
 
-Both live Google primaries were pulled from
-`feedfiles.woolytech.com` and every row joined to the Shopify expectation on
-`(item_group_id, old_id)`.
+Four live primaries were pulled and every row joined to the Shopify
+expectation. **The two Google feeds are clean; both Bing feeds are not.**
 
-| | `googleshoppingfs` | `googleshoppingfrenchfitness` |
+| | `googleshoppingfs` | `googleshoppingfrenchfitness` | `bingshoppingnew`<br>Bing main feed | `bingshoppingnew`<br>Bing main feed - Larianne test |
+| --- | --- | --- | --- | --- |
+| Rows | 1,537 | 968 | 2,459 | 2,505 |
+| `new` | 296 | 968 | 1,543 | 1,199 |
+| `refurbished` | 1,241 | 0 | 739 | 1,234 |
+| Anything else | **0** | **0** | **177** | **72** |
+
+Google row counts and per-value counts match the figures predicted from Shopify
+exactly, and every row carries the right value for its own product — 1,537/1,537
+and 968/968.
+
+### Tim's 72 rows are `bingshoppingnew`, Larianne-test instance
+
+The audit reproduces exactly, category for category:
+
+| Feed value | Rows | Tim's audit |
 | --- | --- | --- |
-| Rows | **1,537** | **968** |
-| `new` | 296 | 968 |
-| `refurbished` | 1,241 | 0 |
-| Any other value | **0** | **0** |
-| Rows carrying their expected condition | **1,537 / 1,537** | **968 / 968** |
+| `New` | 45 | 45 `New` |
+| `Refurbished` | 6 | 6 `Refurbished` |
+| `` (blank) | 12 | 12 blank |
+| `new ` 7 + `refurbished ` 1 | **8** | 8 with trailing spaces |
+| `149` | 1 | 1 row reading `149` |
+| | **72** | **72** |
 
-Row counts and per-value counts match the figures predicted from Shopify
-exactly, and every row carries the right value for its own product. Checked
-twice: once through `scripts/feed_condition_check.py`, once by reading the
-`condition` column directly.
+Every one of the 72 is also wrong at row level, not merely malformed: joined to
+its own product, each should have been the trimmed lowercase form of what it
+already almost says. Nothing in the cohort is unaccounted for — 2,505 feed rows
+against 2,505 expectations, no unmatched row in either direction.
 
-**So the 72 defective rows are not in either live Google feed.** All 83 columns
-of the FS file and all 86 of the FF file were also scanned for Tim's signature —
-45 `New`, 6 `Refurbished`, 12 blank, 8 padded, 1 `149` — and no column in either
-file matches it. The padding that does exist is 1-9 rows in `description`,
-`mpn`, `title` and `custom_label_1`, which is not that population.
+### The other Bing feed is worse
 
-Three readings remain open, and only the app or the Bing file can separate them:
+`bingshoppingnew` in the `Bing main feed` group carries **177** defective rows
+of 2,459: 155 `New`, 16 blank, 3 `Refurbished`, 1 `Used`, 1 `149`, and 1
+`refurbished `. It is Enabled and syncing, so it is not a stale copy.
 
-1. The defects are in **`bingshoppingnew`**, which has not been read. Tim's
-   subject says Google *and* Bing.
-2. They are in one of the **other feed instances** — the paused
-   `googleshoppingfs` / `googleshoppingfrenchfitness` in the `New Feeds` group,
-   or the six Google Shopping feeds in `All products`.
-3. The audit predates a fix already applied to these two feeds.
+Three of its rows match no product in Shopify at all and carry a blank
+condition. Worth a separate look; they are not part of this defect.
 
-Reading 3 is testable in one step: Multifeeds keeps **Version history** on the
-product-groups screen and **Run history** per feed. If the condition field was
-changed after Sept 9 it is recorded there.
+### The `149` row, named
+
+`SPORTSART-G260` — **SportsArt G260 Status Eco-Powr Rower (New)**, product
+`10195454165308`, `condition_state = New`, so it should read `new`.
+
+It carries condition `149` in **both** Bing feeds and `new` in
+`googleshoppingfs`. One SKU, one metafield value, correct in Google and wrong in
+Bing — the sharpest single proof that the defect is Bing-side and per-row rather
+than anything in the catalogue or in a shared mapping.
+
+### An As-is unit is already being advertised
+
+`maxicam-2tsdr` — Maxicam 2 Tier Saddle Dumbbell Rack w/5-50 Ivanko Dumbbell
+Set, product `9879184408892`, `condition_state = As is` — is live in the
+`Bing main feed` feed emitting condition `Used`. It is in no other feed: that
+group is bounded to all 6,483 products, while the three Meta Feeds collections
+that bound every other primary exclude it.
+
+Two things follow. The As-is exposure documented below is **not hypothetical**:
+one of the four As-is products is in a serving feed today. And the value is
+semantically right and only mis-cased, which means that feed's condition mapping
+already has an `As is → used` branch that the Google feeds do not. Microsoft's
+enum value is lowercase `used`, so the row is still invalid as emitted.
+
+### What this rules out
+
+The same 2,505 products, reading the same `custom.condition_state`, come out
+**correct in the Google feeds and wrong in the Bing one**. So neither the
+catalogue nor a shared expression explains it.
+
+The defects are scattered — 72 rows across 63 distinct products and ten vendors,
+with no shared type, price band or collection. A faulty expression applies
+uniformly; this does not. The one clustering is by defect class, which is what
+hand-entry looks like: all 7 `new ` rows are French Fitness Urethane Round Pro
+Style Dumbbells, 10 of the 12 blanks are the ten variants of one product
+(`10269254254908`, FF-MSS Monster Universal Storage), and the 45 `New` rows are
+45 separate products.
+
+That points at **per-product field overrides** rather than the feed expression —
+Multifeeds > Products is the surface that holds them. Read that before editing
+the Bing feed's `condition` expression: if the overrides are the source, changing
+the expression will not clear them, and the 72 rows will survive the fix.
+
+`docs/bing-feed-condition-defects.csv` lists all 249 defective rows across both
+Bing feeds with the product, its `condition_state`, what the feed emitted, what
+it should emit, and the defect class.
 
 ## The replacement — hardening, not a repair
 
@@ -305,35 +357,30 @@ include `french-fitness-meta-feeds`, `remanufactured-meta-feeds` or
 are none in the cohort today; the Sept 10 `REMOVE FROM FEEDS` tag closed the one
 that was there.
 
-## The `149` row
+## The `149` row — resolved
 
-`149` is a shipping rate in this feed's own vocabulary. The Custom tab's
-`shipping` expression on `googleshoppingfs` carries the literal twice, as the
-California overnight fallback:
+It is `SPORTSART-G260`, named above. Two earlier hypotheses are superseded and
+are recorded so neither is re-derived:
 
-```
-",US:CA::" + (if abs(default( Product metaobject reference (estimated_shipping_overnight), "0")) < 1
- then "149" else default( Product metaobject reference (estimated_shipping_overnight), "149")) + " USD"
-```
+1. **`custom.length_in` on MF30.** Proposed because it was the only field in the
+   Google cohort holding a literal `149` and a fall-through reading it would
+   produce exactly one row. Wrong: the condition mapping reads no dimension
+   metafield, and MF30 is not the affected row.
+2. **A fragment of the custom `shipping` expression.** That expression does
+   carry the literal `"149"` twice, as the California overnight fallback:
 
-So a `149` in a condition column is a fragment of a shipping expression, not a
-product value — consistent with a stray edit in a feed rather than anything in
-the catalogue.
+   ```
+   ",US:CA::" + (if abs(default( Product metaobject reference (estimated_shipping_overnight), "0")) < 1
+    then "149" else default( Product metaobject reference (estimated_shipping_overnight), "149")) + " USD"
+   ```
 
-No `149` appears in the `condition` column of either live Google feed, nor in
-any other column of either file. Whatever carries it is elsewhere.
+   A better guess, and still not the answer — that expression is on
+   `googleshoppingfs`, whose condition column is clean, and the affected row is
+   in the Bing feeds.
 
-**Superseded.** An earlier pass here proposed `custom.length_in` on `MF30`
-(Technogym Plurima Multistation Wall), on the grounds that it was the only field
-in the cohort holding a literal `149` and that a fall-through reading it would
-produce exactly one row. That was a guess made before the expression had been
-read; the condition expression reads no dimension metafield. Recorded so the
-reasoning is not repeated.
-
-Either way the row corrects itself: `MF30` carries `condition_state =
-Remanufactured` and the replacement expression emits `refurbished` for it, and
-no product field or stray literal can reach the column once both branches are
-literals.
+`149` is a shipping rate in this catalogue's vocabulary, so a `149` sitting in a
+condition field remains most consistent with a stray paste into one product's
+override. The override record is what proves it.
 
 ## `condition_state` also drives shipping — do not "clean up" the metafield
 
@@ -383,12 +430,15 @@ are one-off stock that the feed cannot keep accurate anyway.
 
 ## Not done here
 
-- **`bingshoppingnew` has not been read**, on either instance. Google is
-  verified clean; Bing is the untested half of Tim's subject line and the
-  likeliest home of the 72 rows.
-- The other feed instances — the paused pair in `New Feeds`, the six Google
-  Shopping feeds in `All products` — have not been read either.
-- Whether the condition field on these two feeds was edited after Sept 9.
-  Version history and Run history in the app answer it.
-- Any Multifeeds change. App admin; not reachable from this repo or from the
+- **The Bing condition mapping has not been read.** Both Bing feeds' `condition`
+  field, and the per-product overrides on Multifeeds > Products for the 63
+  affected products. That is the next step and it decides whether the fix is one
+  expression or 63 override deletions.
+- **Any Multifeeds change.** App admin; not reachable from this repo or from the
   Shopify Admin API.
+- The paused `googleshoppingfs` / `googleshoppingfrenchfitness` in `New Feeds`
+  and the six Google Shopping feeds in `All products` have not been read. Tim's
+  72 are accounted for, so these are completeness rather than diagnosis.
+- The three `Bing main feed` rows that match no Shopify product.
+- Re-running the checker after the fix. `docs/bing-feed-condition-defects.csv`
+  is the before state; the acceptance criteria are in the QA-target table.

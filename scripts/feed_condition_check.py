@@ -57,10 +57,33 @@ def read_rows(path):
 
 
 def row_key(row, fieldnames):
-    """The join key for a row, and whether the feed supports the strong key."""
+    """The join key for a row.
+
+    The Google primaries carry `item_group_id` and `old_id`, and the pair is the
+    only unique key: `old_id` alone is not, because five hex-dumbbell SKUs also
+    exist as standalone Set products in googleshoppingfrenchfitness.
+
+    The Bing primaries carry neither (`item_group_id` is present but empty, and
+    there is no `old_id`), so they fall back to `id`, which on those feeds is the
+    variant SKU. See `sku_index` for how that is resolved.
+    """
     if "item_group_id" in fieldnames and "old_id" in fieldnames:
         return (row["item_group_id"].strip(), row["old_id"].strip())
     return (row.get("id", "").strip(),)
+
+
+def sku_index(expected):
+    """sku -> expected condition, for feeds that can only be joined on the SKU.
+
+    A SKU that appears on more than one product is kept only when every
+    expectation for it agrees; where they disagree the SKU is dropped, so an
+    ambiguous row is reported as unexpected rather than silently checked against
+    the wrong product.
+    """
+    by_sku = {}
+    for (_product, sku), want in expected.items():
+        by_sku.setdefault(sku, set()).add(want)
+    return {sku: wants.pop() for sku, wants in by_sku.items() if len(wants) == 1}
 
 
 def classify(value):
@@ -147,12 +170,12 @@ def check_file(path, expected):
         print("  the right rows. Two allowed values is not the same as correct.")
         return failures == 0
 
-    if not strong_key:
+    by_sku = None if strong_key else sku_index(expected)
+    if by_sku is not None:
         print(
-            "\nFAIL  this export has no item_group_id/old_id pair, so it cannot be "
-            "joined to the expectation file"
+            f"\n  no item_group_id/old_id pair in this export - joining on `id` as "
+            f"the SKU ({len(by_sku)} of {len(expected)} expectations unambiguous)"
         )
-        return False
 
     seen = set()
     mismatched = []
@@ -160,14 +183,19 @@ def check_file(path, expected):
     for row in rows:
         key = row_key(row, fieldnames)
         seen.add(key)
-        want = expected.get(key)
+        want = expected.get(key) if strong_key else by_sku.get(key[0])
         if want is None:
             unexpected.append(row)
             continue
         if row["condition"] != want:
             mismatched.append((row, want))
 
-    missing = sorted(set(expected) - seen)
+    if strong_key:
+        missing = sorted(set(expected) - seen)
+    else:
+        found = {k[0] for k in seen}
+        missing = sorted((sku,) for sku in by_sku if sku not in found)
+        expected = {(sku,): want for sku, want in by_sku.items()}
 
     if mismatched:
         failures += 1
