@@ -813,3 +813,24 @@ published without a rollout status and went straight onto the numeric fallback:
 Five in eight days. **13 → 18 is the cost of the delay, not a scope change**, and
 the count keeps climbing until the fallback is fixed and the Flow rule is in
 place.
+
+### googleshoppingfs re-verified 2026-09-12 — still 98
+
+Derived the same way, from a fresh bulk export of the two `googleshoppingfs`
+collections with both gate metafields and every variant SKU.
+
+| | googleshoppingfs |
+| --- | --- |
+| Products (ACTIVE or UNLISTED) | 1,535 |
+| Variant rows | 1,537 |
+| Fall-through products | 96 |
+| **Rows that change** | **98** |
+| Fall-through rows with a blank SKU | 0 |
+| Rows outside the correction file | **0** |
+
+Unchanged from the 9 September figure. The drift landed entirely on French
+Fitness, which is consistent — every product that arrived in the meantime is
+vendor French Fitness.
+
+**Execution totals: 98 rows in `googleshoppingfs`, 18 in
+`googleshoppingfrenchfitness`, 116 in all.**
