@@ -71,43 +71,38 @@
   <!-- Divider BELOW results -->
   <div class="blog-search-divider"></div>
 
-  <!-- Search index. Title, excerpt, tags and publication time only; body text is deliberately excluded. -->
-  <div style="display:none;" id="all-articles-container">
-    {% assign handles = section.settings.blog_handles | split: "," %}
-    {% for handle in handles %}
-      {% assign clean_handle = handle | strip %}
-      {% assign blog = blogs[clean_handle] %}
-      {% if blog %}
-        {% for article in blog.articles %}
-          {%- liquid
-            assign card_excerpt = ''
-            if article.excerpt.size > 0
-              assign card_excerpt = article.excerpt | strip_html | strip
-            endif
-            assign card_tags = article.tags | join: ' '
-            assign published_epoch = article.published_at | date: '%s'
-          -%}
-          <div
-            class="article-data"
-            data-title="{{ article.title | strip_html | escape }}"
-            data-excerpt="{{ card_excerpt | escape }}"
-            data-tags="{{ card_tags | escape }}"
-            data-published-at="{{ published_epoch | escape }}"
-          >
-            {% render 'article-card',
-              article: article,
-              media_height: section.settings.image_height,
-              media_aspect_ratio: article.image.aspect_ratio,
-              show_image: section.settings.show_image,
-              show_date: section.settings.show_date,
-              show_author: section.settings.show_author,
-              show_excerpt: true
-            %}
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endfor %}
-  </div>
+  {%- comment -%}
+    Search index: title, cleaned excerpt, tags, publication time and URL only —
+    article body text is deliberately excluded. Emitted as a JSON data block
+    (not rendered article cards) so each article appears only once in the page's
+    crawlable HTML; results are built from this data client-side. Each string is
+    JSON-encoded with every "<" escaped, so a title, excerpt or tag can never
+    close this script element early.
+  {%- endcomment -%}
+  <script type="application/json" id="blog-search-data">
+    [
+      {%- assign first_item = true -%}
+      {%- assign handles = section.settings.blog_handles | split: "," -%}
+      {%- for handle in handles -%}
+        {%- assign clean_handle = handle | strip -%}
+        {%- assign blog = blogs[clean_handle] -%}
+        {%- if blog -%}
+          {%- for article in blog.articles -%}
+            {%- liquid
+              assign card_excerpt = ''
+              if article.excerpt.size > 0
+                assign card_excerpt = article.excerpt | strip_html | strip
+              endif
+              assign card_tags = article.tags | join: ' '
+              assign published_epoch = article.published_at | date: '%s'
+            -%}
+            {%- unless first_item -%},{%- endunless -%}{%- assign first_item = false -%}
+            {"title":{{ article.title | strip_html | json | replace: '<', '\u003c' }},"excerpt":{{ card_excerpt | json | replace: '<', '\u003c' }},"tags":{{ card_tags | json | replace: '<', '\u003c' }},"published_at":{{ published_epoch | json }},"url":{{ article.url | json | replace: '<', '\u003c' }}}
+          {%- endfor -%}
+        {%- endif -%}
+      {%- endfor -%}
+    ]
+  </script>
 </div>
 
 <script>
@@ -120,21 +115,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const MAX_RESULTS = {{ max_results | json }};
 
-  const allArticles = Array.from(
-    document.querySelectorAll('#all-articles-container .article-data')
-  );
-
   const normalize = value => (value || '').toLowerCase();
 
-  // The index deliberately excludes article body text. Publication time is used
-  // only as the deterministic tie-breaker after relevance is calculated.
-  const index = allArticles.map(el => ({
-    el,
-    title: normalize(el.dataset.title),
-    excerpt: normalize(el.dataset.excerpt),
-    tags: normalize(el.dataset.tags),
-    publishedAt: Number(el.dataset.publishedAt || 0)
+  // Search data comes from a JSON block, not rendered DOM, so each article
+  // appears only once in the page's crawlable HTML. The index deliberately
+  // excludes article body text. Publication time is used only as the
+  // deterministic tie-breaker after relevance is calculated.
+  let searchData = [];
+  try {
+    const dataEl = document.getElementById('blog-search-data');
+    searchData = dataEl ? JSON.parse(dataEl.textContent) : [];
+  } catch (err) {
+    searchData = [];
+  }
+
+  const index = searchData.map(article => ({
+    article,
+    title: normalize(article.title),
+    excerpt: normalize(article.excerpt),
+    tags: normalize(article.tags),
+    publishedAt: Number(article.published_at || 0)
   }));
+
+  // Build a result card from data only (no body text, no pre-rendered DOM).
+  // textContent / href assignment escape all values safely.
+  function buildResultCard(article) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'article-card-wrapper card-wrapper blog-search-result';
+
+    const heading = document.createElement('h3');
+    heading.className = 'card__heading';
+    const link = document.createElement('a');
+    link.className = 'full-unstyled-link';
+    link.href = article.url;
+    link.textContent = article.title;
+    heading.appendChild(link);
+    wrapper.appendChild(heading);
+
+    const epoch = Number(article.published_at || 0);
+    if (epoch) {
+      const date = new Date(epoch * 1000);
+      if (!isNaN(date.getTime())) {
+        const time = document.createElement('span');
+        time.className = 'article-card__info caption-with-letter-spacing';
+        time.textContent = date.toLocaleDateString(undefined, {
+          year: 'numeric', month: 'short', day: 'numeric'
+        });
+        wrapper.appendChild(time);
+      }
+    }
+
+    if (article.excerpt) {
+      const excerpt = document.createElement('p');
+      excerpt.className = 'article-card__excerpt';
+      excerpt.textContent = article.excerpt;
+      wrapper.appendChild(excerpt);
+    }
+
+    return wrapper;
+  }
 
   function scoreMatch(item, query) {
     let score = 0;
@@ -197,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .slice(0, MAX_RESULTS);
 
     matches.forEach(result => {
-      container.appendChild(result.item.el.cloneNode(true));
+      container.appendChild(buildResultCard(result.item.article));
     });
 
     showNoResults(matches.length === 0);
