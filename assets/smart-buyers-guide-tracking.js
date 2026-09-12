@@ -30,6 +30,12 @@
 
   var PENDING_KEY = 'sbg_pending_submit';
 
+  // The section tag loads this asset, so a page carrying the capture block
+  // more than once would otherwise bind the listeners twice and double every
+  // event. Bind once per page.
+  if (window.__sbgTrackingInit) return;
+  window.__sbgTrackingInit = true;
+
   window.dataLayer = window.dataLayer || [];
 
   function session() {
