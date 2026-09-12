@@ -15,12 +15,29 @@
   }
 }
 
+#blog-live-search:focus,
+#blog-live-search:focus-visible {
+  outline: 2px solid rgb(var(--color-foreground, 18 18 18));
+  outline-offset: 2px;
+  border-color: rgb(var(--color-foreground, 18 18 18));
+}
+
 {%- endstyle -%}
 
+{%- liquid
+  assign max_results = section.settings.max_results | default: 9
+  if max_results > 9
+    assign max_results = 9
+  endif
+  if max_results < 1
+    assign max_results = 1
+  endif
+-%}
+
 <div class="main-blog page-width section-{{ section.id }}-padding">
-  <h1 class="title--primary">
+  <h2 class="title--primary">
     {{ section.settings.header_text | default: "Search Blog Articles" }}
-  </h1>
+  </h2>
 
   {% if section.settings.description %}
     <div class="main-blog-description">
@@ -30,89 +47,200 @@
 
   <!-- Search bar -->
   <div class="blog-search-wrapper" style="margin-bottom: 20px;">
+    <label for="blog-live-search" class="visually-hidden">Search blog articles</label>
     <input
       type="text"
       id="blog-live-search"
       placeholder="Search blog posts..."
+      autocomplete="off"
+      aria-controls="blog-search-results"
       style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;"
     >
-    <div id="no-results">
-      <p>No articles found.</p>
-    </div>
   </div>
 
   <!-- Search results -->
-  <div class="blog-articles {% if section.settings.layout == 'collage' %}blog-articles--collage{% endif %}">
+  <div
+    id="blog-search-results"
+    class="blog-articles {% if section.settings.layout == 'collage' %}blog-articles--collage{% endif %}"
+    role="region"
+    aria-live="polite"
+    aria-label="Blog search results"
+  >
   </div>
 
   <!-- Divider BELOW results -->
   <div class="blog-search-divider"></div>
 
-  <!-- Hidden articles -->
-  <div style="display:none;" id="all-articles-container">
-    {% assign handles = section.settings.blog_handles | split: "," %}
-    {% for handle in handles %}
-      {% assign clean_handle = handle | strip %}
-      {% assign blog = blogs[clean_handle] %}
-      {% if blog %}
-        {% for article in blog.articles %}
-          <div
-            class="article-data"
-            data-full-content="{{ article.content | strip_html | escape }}"
-          >
-            {% render 'article-card',
-              article: article,
-              media_height: section.settings.image_height,
-              media_aspect_ratio: article.image.aspect_ratio,
-              show_image: section.settings.show_image,
-              show_date: section.settings.show_date,
-              show_author: section.settings.show_author,
-              show_excerpt: true
-            %}
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endfor %}
-  </div>
+  {%- comment -%}
+    Search index: title, cleaned excerpt, tags, publication time and URL only —
+    article body text is deliberately excluded. Emitted as a JSON data block
+    (not rendered article cards) so each article appears only once in the page's
+    crawlable HTML; results are built from this data client-side. Each string is
+    JSON-encoded with every "<" escaped, so a title, excerpt or tag can never
+    close this script element early.
+  {%- endcomment -%}
+  <script type="application/json" id="blog-search-data">
+    [
+      {%- assign first_item = true -%}
+      {%- assign handles = section.settings.blog_handles | split: "," -%}
+      {%- for handle in handles -%}
+        {%- assign clean_handle = handle | strip -%}
+        {%- assign blog = blogs[clean_handle] -%}
+        {%- if blog -%}
+          {%- for article in blog.articles -%}
+            {%- liquid
+              assign card_excerpt = ''
+              if article.excerpt.size > 0
+                assign card_excerpt = article.excerpt | strip_html | strip
+              endif
+              assign card_tags = article.tags | join: ' '
+              assign published_epoch = article.published_at | date: '%s'
+            -%}
+            {%- unless first_item -%},{%- endunless -%}{%- assign first_item = false -%}
+            {"title":{{ article.title | strip_html | json | replace: '<', '\u003c' }},"excerpt":{{ card_excerpt | json | replace: '<', '\u003c' }},"tags":{{ card_tags | json | replace: '<', '\u003c' }},"published_at":{{ published_epoch | json }},"url":{{ article.url | json | replace: '<', '\u003c' }}}
+          {%- endfor -%}
+        {%- endif -%}
+      {%- endfor -%}
+    ]
+  </script>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('blog-live-search');
-  const container = document.querySelector('.blog-articles');
-  const noResults = document.getElementById('no-results');
+  const container = document.getElementById('blog-search-results');
   const divider = document.querySelector('.blog-search-divider');
 
-  const allArticles = Array.from(
-    document.querySelectorAll('#all-articles-container .article-data')
-  );
+  if (!searchInput || !container) return;
+
+  const MAX_RESULTS = {{ max_results | json }};
+
+  const normalize = value => (value || '').toLowerCase();
+
+  // Search data comes from a JSON block, not rendered DOM, so each article
+  // appears only once in the page's crawlable HTML. The index deliberately
+  // excludes article body text. Publication time is used only as the
+  // deterministic tie-breaker after relevance is calculated.
+  let searchData = [];
+  try {
+    const dataEl = document.getElementById('blog-search-data');
+    searchData = dataEl ? JSON.parse(dataEl.textContent) : [];
+  } catch (err) {
+    searchData = [];
+  }
+
+  const index = searchData.map(article => ({
+    article,
+    title: normalize(article.title),
+    excerpt: normalize(article.excerpt),
+    tags: normalize(article.tags),
+    publishedAt: Number(article.published_at || 0)
+  }));
+
+  // Build a result card from data only (no body text, no pre-rendered DOM).
+  // textContent / href assignment escape all values safely.
+  function buildResultCard(article) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'article-card-wrapper card-wrapper blog-search-result';
+
+    const heading = document.createElement('h3');
+    heading.className = 'card__heading';
+    const link = document.createElement('a');
+    link.className = 'full-unstyled-link';
+    link.href = article.url;
+    link.textContent = article.title;
+    heading.appendChild(link);
+    wrapper.appendChild(heading);
+
+    const epoch = Number(article.published_at || 0);
+    if (epoch) {
+      const date = new Date(epoch * 1000);
+      if (!isNaN(date.getTime())) {
+        const time = document.createElement('span');
+        time.className = 'article-card__info caption-with-letter-spacing';
+        time.textContent = date.toLocaleDateString(undefined, {
+          year: 'numeric', month: 'short', day: 'numeric'
+        });
+        wrapper.appendChild(time);
+      }
+    }
+
+    if (article.excerpt) {
+      const excerpt = document.createElement('p');
+      excerpt.className = 'article-card__excerpt';
+      excerpt.textContent = article.excerpt;
+      wrapper.appendChild(excerpt);
+    }
+
+    return wrapper;
+  }
+
+  function scoreMatch(item, query) {
+    let score = 0;
+
+    if (item.title === query) {
+      score += 1000;
+    } else if (item.title.startsWith(query)) {
+      score += 600;
+    } else if (item.title.includes(query)) {
+      score += 400;
+    }
+
+    if (item.tags.includes(query)) score += 200;
+    if (item.excerpt.includes(query)) score += 100;
+
+    return score;
+  }
+
+  // Empty state is created in JS so no placeholder copy sits in the page source.
+  let noResults = null;
+  function showNoResults(show) {
+    if (show) {
+      if (!noResults) {
+        noResults = document.createElement('div');
+        noResults.id = 'no-results';
+        noResults.innerHTML = '<p>No articles found.</p>';
+      }
+      // Append inside the live region so screen readers announce it.
+      if (noResults.parentNode !== container) {
+        container.appendChild(noResults);
+      }
+      noResults.style.display = 'block';
+    } else if (noResults) {
+      noResults.style.display = 'none';
+    }
+  }
 
   function renderResults(query) {
     container.innerHTML = '';
-    let matches = 0;
 
     if (!query) {
-      noResults.style.display = 'none';
-      divider.style.display = 'none';
+      showNoResults(false);
+      if (divider) divider.style.display = 'none';
       return;
     }
 
-    allArticles.forEach(articleDiv => {
-      const searchableText = articleDiv.textContent.toLowerCase();
-      const fullContent = articleDiv.dataset.fullContent.toLowerCase();
+    // Evaluate every configured Blog article before applying the display cap.
+    // This prevents the administrative blog_handles order from becoming the
+    // search ranking. Relevance wins first; newer publication wins ties.
+    const matches = index
+      .map(item => ({ item, score: scoreMatch(item, query) }))
+      .filter(result => result.score > 0)
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        if (b.item.publishedAt !== a.item.publishedAt) {
+          return b.item.publishedAt - a.item.publishedAt;
+        }
+        return a.item.title.localeCompare(b.item.title);
+      })
+      .slice(0, MAX_RESULTS);
 
-      if (
-        searchableText.includes(query) ||
-        fullContent.includes(query)
-      ) {
-        const clone = articleDiv.cloneNode(true);
-        container.appendChild(clone);
-        matches++;
-      }
+    matches.forEach(result => {
+      container.appendChild(buildResultCard(result.item.article));
     });
 
-    noResults.style.display = matches === 0 ? 'block' : 'none';
-    divider.style.display = matches > 0 ? 'block' : 'none';
+    showNoResults(matches.length === 0);
+    if (divider) divider.style.display = matches.length > 0 ? 'block' : 'none';
   }
 
   function updateURL(query) {
@@ -127,13 +255,13 @@ document.addEventListener('DOMContentLoaded', () => {
     renderResults(query);
   });
 
-  // Restore on back / reload
+  // Restore on back / reload.
   const params = new URLSearchParams(window.location.search);
   const initialQuery = params.get('q');
 
   if (initialQuery) {
     searchInput.value = initialQuery;
-    renderResults(initialQuery.toLowerCase());
+    renderResults(initialQuery.trim().toLowerCase());
   }
 });
 </script>
@@ -156,7 +284,23 @@ document.addEventListener('DOMContentLoaded', () => {
       "default": "grid",
       "label": "Article Layout"
     },
-    { "type": "text", "id": "blog_handles", "label": "Blog Handles (comma separated)" },
+    {
+      "type": "text",
+      "id": "blog_handles",
+      "label": "Blog Handles (comma separated)",
+      "default": "buying-guides, comparisons, maintenance, warranty-shipping, news, case-studies",
+      "info": "Must match live blog handles exactly. Live handles: buying-guides, comparisons, maintenance, warranty-shipping, news, case-studies."
+    },
+    {
+      "type": "range",
+      "id": "max_results",
+      "min": 3,
+      "max": 9,
+      "step": 1,
+      "label": "Maximum search results",
+      "default": 9,
+      "info": "Approved maximum is nine. The value is also clamped to nine in code."
+    },
     { "type": "checkbox", "id": "show_image", "default": true, "label": "Show Image" },
     { "type": "checkbox", "id": "show_date", "default": true, "label": "Show Date" },
     { "type": "checkbox", "id": "show_author", "default": false, "label": "Show Author" },
