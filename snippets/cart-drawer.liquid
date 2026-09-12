@@ -440,7 +440,7 @@
               {{ 'accessibility.loading' | t }}
             </p>
           </div>
-          {% comment %} <div id="CartDrawer-CartErrors" role="alert"></div> {% endcomment %}
+          <div id="CartDrawer-CartErrors" role="alert"></div>
         </form>
       </cart-drawer-items>
       <div class="drawer__footer">
@@ -454,16 +454,24 @@
         </div>
       </div>
     </div>
-    {% if show_product_options %}
-      {% for item in cart.items %}
-        {% for property in item.properties %}
-          {% if property.first == '_functionOperation' %}
-            {% render 'cart-item-product-options', line_item: item %}
-            {% break %}
-          {% endif %}
+    {%- comment -%}
+      Wrapper is rendered unconditionally and is listed as its own render target
+      in CartDrawerItems.getSectionsToRender(). The Modify buttons live inside
+      .drawer__inner and are rebuilt on every AJAX cart update; without this the
+      popups here were not, so the surviving line's button lost its listener.
+    {%- endcomment -%}
+    <div id="CartDrawer-ProductOptions">
+      {% if show_product_options %}
+        {% for item in cart.items %}
+          {% for property in item.properties %}
+            {% if property.first == '_functionOperation' %}
+              {% render 'cart-item-product-options', line_item: item %}
+              {% break %}
+            {% endif %}
+          {% endfor %}
         {% endfor %}
-      {% endfor %}
-    {% endif %}
+      {% endif %}
+    </div>
   </div>
 </cart-drawer>
 
@@ -472,7 +480,7 @@
 <div class="overlay cart-items__overlay"></div>
 <div class="cart-items__popup" style="display: none;">
   <div class="cart-items__popup-wrapper">
-    <a href="#" class="cart-items__popup-close" role="button" aria-label="{{ 'accessibility.close' | t }}">{% render 'cart-item-remove' %}</a>
+    <a href="#" class="cart-items__popup-close" role="button" aria-label="{{ 'accessibility.close' | t }}">{% render 'drawer-close' %}</a>
     <h5 class="cart-items__popup-title">{{ 'general.cart.cart_remove_popup_title' | t }}</h5>
     <p class="cart-items__popup-copy">{{ 'general.cart.cart_remove_popup_copy' | t }}</p>
     <div class="cart-items__popup-buttons">
