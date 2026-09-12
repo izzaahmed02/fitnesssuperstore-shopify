@@ -781,3 +781,35 @@ week — `FF-X12` and `FF-STW-WB-3` on 4 Sept, these three on 10 Sept — all la
 straight on the numeric fallback. Post a same-time pair to Tim rather than
 staging-versus-an-old-baseline, or the number in the report will not match what
 the live run actually changes.
+
+### Same-time verification, 2026-09-12 08:33
+
+Live and staging exports pulled from the same feed run, so the comparison
+carries no catalogue drift at all.
+
+| | googleshoppingfrenchfitness |
+| --- | --- |
+| Rows, both sides | 969 |
+| **Rows changed** | **18** |
+| Offers before → after | 960 → **969** (+9) |
+| Duplicate ids after | **0** |
+| Drift rows | **0** |
+
+The +9 is entirely the FF-MSS recovery: its ten variants collapse to one offer
+today and become ten distinct ones. The other eight changed rows are 1:1
+re-keys.
+
+The 18 rows are the 13 in the correction file, plus five products that were
+published without a rollout status and went straight onto the numeric fallback:
+
+| Product | SKU | Published |
+| --- | --- | --- |
+| `9879098753340` | `FF-X12` | 4 Sept |
+| `10414127087932` | `FF-STW-WB-3` | 4 Sept |
+| `10058504208700` | `FF-RR-JBS-43-NCM` | 10 Sept |
+| `10112722927932` | `FF-RR-JBS-71-NCM` | 10 Sept |
+| `10393251086652` | `FF-RR-BPSP-43` | 10 Sept |
+
+Five in eight days. **13 → 18 is the cost of the delay, not a scope change**, and
+the count keeps climbing until the fallback is fixed and the Flow rule is in
+place.
