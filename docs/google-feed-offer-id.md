@@ -742,3 +742,42 @@ directive; the default is not.
 **The question for Tim:** the repoint and the offer-ID change are two approved
 routes to re-keying the same rows, running in parallel threads. One of them has
 to yield, and the 14 collision rows need a single ruling before either moves.
+
+## Staging re-run, googleshoppingfrenchfitness — 2026-09-12
+
+Run after the `REMOVE FROM FEEDS` tag on StudioWall was reverted, so the feed
+carries it again per Tim's 7 Sept "PUBLISH it" ruling.
+
+| | Staging output |
+| --- | --- |
+| Rows | 969 |
+| Bare numeric ids remaining | **0** |
+| Composite ids preserved | **45** |
+| Distinct ids | 969 |
+| Duplicate ids | **0** |
+| Rows still on the fallback (`id == item_group_id`) | **0** |
+
+Against the 9 Sept live baseline: **15 rows changed** — the 13 in the correction
+file, plus `FF-X12` and `FF-STW-WB-3`. Not 14.
+
+### The count is 18 against a same-day baseline, not 15
+
+Three rows are in the staging file but not in the 9 Sept baseline, because the
+products were published on **10 September**:
+
+| Product | SKU | Rollout status |
+| --- | --- | --- |
+| `10058504208700` | `FF-RR-JBS-43-NCM` | *(unset)* |
+| `10112722927932` | `FF-RR-JBS-71-NCM` | *(unset)* |
+| `10393251086652` | `FF-RR-BPSP-43` | *(unset)* |
+
+All three are ACTIVE with **no rollout status**, so the live feed is emitting
+their bare product IDs today and the fix moves them to SKU as well. Compared
+against a live export pulled at the same time as the staging run, the changed
+count is **18**.
+
+That is the backlog growing while the fix waits: five products published in a
+week — `FF-X12` and `FF-STW-WB-3` on 4 Sept, these three on 10 Sept — all landed
+straight on the numeric fallback. Post a same-time pair to Tim rather than
+staging-versus-an-old-baseline, or the number in the report will not match what
+the live run actually changes.
