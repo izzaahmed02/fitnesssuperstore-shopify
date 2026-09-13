@@ -42,14 +42,8 @@
       if (succ) { try { succ.focus(); } catch (e) {} }
     }
 
-    function showErrors(form, html) {
+    function showErrors(form, msgHTML) {
       var box = form.querySelector('[data-sr-errors]');
-      var msg = '';
-      try {
-        var doc = new DOMParser().parseFromString(html, 'text/html');
-        var node = doc.querySelector('#ShowroomCheckModel [data-sr-errors]') || doc.querySelector('#ShowroomCheckModel .sr-form-errors');
-        if (node) msg = node.innerHTML;
-      } catch (e) {}
       if (!box) {
         box = document.createElement('div');
         box.className = 'sr-form-errors';
@@ -57,11 +51,30 @@
         box.setAttribute('role', 'alert');
         form.insertBefore(box, form.firstChild);
       }
-      box.innerHTML = msg || 'Sorry, something went wrong. Please review the form and try again.';
+      box.innerHTML = msgHTML || 'Sorry, something went wrong. Please review the form and try again.';
       box.hidden = false;
       box.setAttribute('tabindex', '-1');
       try { box.focus(); } catch (e) {}
     }
+
+    // Phone is required only when "Phone" is the preferred contact method.
+    function syncPhoneRequirement(sel) {
+      var form = sel.closest('form');
+      if (!form) return;
+      var phone = form.querySelector('#sr-phone');
+      var marker = form.querySelector('[data-sr-phone-marker]');
+      if (!phone) return;
+      if (sel.value === 'Phone') {
+        phone.required = true;
+        if (marker) { marker.textContent = '*'; marker.className = 'sr-req'; }
+      } else {
+        phone.required = false;
+        if (marker) { marker.textContent = '(optional)'; marker.className = 'sr-opt'; }
+      }
+    }
+    document.addEventListener('change', function (e) {
+      if (e.target && e.target.id === 'sr-method') syncPhoneRequirement(e.target);
+    });
 
     if (window.fetch) {
       document.addEventListener('submit', function (e) {
@@ -71,6 +84,7 @@
         e.preventDefault();
         var card = form.closest('[data-sr-form-card]');
         var btn = form.querySelector('button[type="submit"]');
+        if (btn && btn.disabled) return; // in-flight guard: no duplicate submits
         if (btn) btn.disabled = true;
         var action = form.getAttribute('action') || '/contact';
         fetch(action, {
@@ -81,11 +95,26 @@
         })
           .then(function (res) { return res.text().then(function (t) { return { url: res.url, text: t }; }); })
           .then(function (o) {
-            var ok = /[?&]contact_posted=true/.test(o.url) || /[?&]contact_posted=true/.test(o.text);
-            if (ok && card) { showSuccess(card); }
-            else { showErrors(form, o.text); if (btn) btn.disabled = false; }
+            var doc = null;
+            try { doc = new DOMParser().parseFromString(o.text, 'text/html'); } catch (err) {}
+            // Success: Shopify redirects to ...?contact_posted=true and re-renders the
+            // posted-successfully state (a rendered [data-sr-success] inside the card —
+            // note the <template> copy is inert and not matched by querySelector).
+            var successByUrl = /[?&]contact_posted=true/.test(o.url);
+            var successByDom = doc && doc.querySelector('[data-sr-form-card] [data-sr-success]');
+            if ((successByUrl || successByDom) && card) { showSuccess(card); return; }
+            // Otherwise surface real validation errors returned in the card.
+            var errNode = doc && (doc.querySelector('[data-sr-form-card] [data-sr-errors]') || doc.querySelector('#ShowroomCheckModel .sr-form-errors'));
+            var errHTML = errNode && (errNode.textContent || '').trim() ? errNode.innerHTML : '';
+            showErrors(form, errHTML);
+            if (btn) btn.disabled = false;
           })
-          .catch(function () { if (btn) btn.disabled = false; form.submit(); });
+          .catch(function () {
+            // Network/parse failure: do NOT auto-resubmit (that reloads the page and can
+            // double-post). Let the visitor retry from the same card.
+            showErrors(form, '');
+            if (btn) btn.disabled = false;
+          });
       });
 
       // "New Request" — restore the form in the same card, no page reload.
