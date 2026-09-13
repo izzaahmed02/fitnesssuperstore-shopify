@@ -620,3 +620,28 @@ ruling is not overridden by the mapping meant to protect it.
 
 Ships **after** Iqra's data-stage QA passes, never in the same regeneration —
 Tim's rule, so a bad count is attributable to one change.
+
+### Bearing on the missing-shipping thread
+
+Two questions open there are answered by this same record set.
+
+**Tim's question to Yusra — do the metaobject ground estimates cover the 50
+blocked rows? No. Coverage is 0 of 50.**
+
+The estimates exist and are well populated on standalone products: all seven
+sampled FF-RCHD **Set** products carry `estimated_shipping_ground = 399`. But
+the 50 blocked rows are not standalone products. Forty of them are variants of
+the 45-variant hex parent `FF-RCHD` (`10247596147004`), whose record carries
+`estimated_shipping_ground = null`, and the other ten are FF-MSS variants whose
+product has no record at all.
+
+Same structural cause as everything else on this page: the record is per
+product, so a multi-variant parent gets one row of shipping data or none, and
+both parents happen to have none. Populating the generator from the metaobject
+would therefore leave exactly the blocked rows blank. Manual capture stands.
+
+**Tim's question to Izza — which StudioWall statement is current?** Both were,
+at different times. `FF-STW-WB-3` was tagged `REMOVE FROM FEEDS` on Sept 10 and
+left the feeds; the tag has since been removed and it is back in the Meta Feeds
+collections. "Not in any feed" was true on Sept 10, "in the FF feed" is true
+now.
