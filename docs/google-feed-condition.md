@@ -490,3 +490,133 @@ are one-off stock that the feed cannot keep accurate anyway.
 - The three `Bing main feed` rows that match no Shopify product.
 - Re-running the checker after the fix. `docs/bing-feed-condition-defects.csv`
   is the before state; the acceptance criteria are in the QA-target table.
+
+## Follow-up, 2026-09-13 — Tim's three assignments after the data fix
+
+Larianne imported the 323 corrections on Sept 11 (Matrixify, 323/323), plus 11
+metaobject re-associations of her own. Iqra's Sept 12 QA then failed both Bing
+feeds on residual blanks. Tim's Sept 11 and Sept 13 rulings assigned three items
+here.
+
+### 1. The 11 re-keyed records verify correct
+
+Every one carries `product_condition = "new"`, its display name matches the SKU
+it was re-pointed to, and all three shipping fields are populated:
+
+| SKU | ground / 2nd day / overnight |
+| --- | --- |
+| `FF-MSS-U29`, `FF-RR-DPB-43` | 68 / 54.4 / 40.8 |
+| `FF-RR-DSBA-43`, `FF-RR-U-36` | 44 / 35.2 / 26.4 |
+| `FF-RR-JB-43-V2PU`, `FF-RR-PB-43` | 28 / 22.4 / 16.8 |
+| `FF-RR-BPR-43`, `FF-RR-BR-43`, `FF-RR-DBR-43`, `FF-RR-JBS-20-CM`, `FF-RR-KBR-43` | 19.99 / 15.99 / 11.99 |
+
+Tim's concern was that a re-association fixes one field and silently changes
+another. It did not: every rate follows the house ratio, **2nd day = ground ×
+0.8, overnight = ground × 0.6**, exactly, on all eleven. That ratio holds across
+the wider record set and is worth knowing as a validation rule.
+
+This is verified at the source record. Confirming it in feed output needs the
+next regeneration.
+
+### 2. The 12 blank SKUs — spec in `docs/third-party-missing-records-spec.csv`
+
+All three products have **no `custom.3rd_party` metafield at all**. The record is
+absent, not empty, which is why the import had nothing to correct.
+
+Tim was right that the blank hides a second defect. The ten FF-MSS rows already
+emit `US::: USD,US:AZ:: USD,…` — well-formed region strings with **empty
+prices**, which is the same "Not eligible: Missing shipping information" failure
+`docs/feed-missing-shipping-fix.md` documents. Letting the mapping's `else` cover
+the condition would have masked it.
+
+| | `product_condition` | Shipping |
+| --- | --- | --- |
+| `ST-6UB-LCD-60` | `new` | **0 / 0 / 0** |
+| FF-MSS ×10 | `new` | **blocked, see below** |
+| `FF-STW-WB-3` | — | **do not create** |
+
+`ST-6UB-LCD-60` is evidenced the way Larianne evidenced SportsArt: five Star Trac
+New comparables all carry 0/0/0, including the same 6 Series line
+(`ST-6TR-110-LCD`), the S Series upright, both 4 Series uprights and the 8 Series
+upright.
+
+**FF-MSS shipping cannot be specced, for two independent reasons.** No exact-SKU
+sibling carries a rate — `docs/feed-missing-shipping-fix.md` already put these
+ten on the rate-table worklist for exactly that reason, and Tim's standing rule
+is to pull from siblings and not guess. And more fundamentally, **the `3rd_party`
+record is per product, not per variant**: one record cannot carry ten rates, and
+these ten variants span 25–100 lb and $108–$327. Creating the record with any
+single rate makes at least some of the ten wrong.
+
+The same product-level-cannot-key-variants limit that
+`docs/google-feed-offer-id.md` found on `legacy_gmc_id`. The hex dumbbells are
+the precedent: 45 variants, one record, `product_condition` set and all three
+shipping fields **null** — which is precisely why those 45 rows are in the
+missing-shipping cohort.
+
+So: create the FF-MSS record with `product_condition = new` to clear the
+condition blanks, and treat its shipping as the open rate-table item it already
+is. That fixes what can be fixed without inventing a rate.
+
+### 3. `FF-STW-WB-3` — flagging rather than creating, per Tim's instruction
+
+It is still `UNLISTED` and on launch hold, and its tags are now
+`Cages Racks & Rigs`, `French Fitness`, `French Fitness Racks and Cages`.
+**The `REMOVE FROM FEEDS` tag applied on Sept 10 is gone.**
+
+That tag was rule 8's escape hatch and the entire reason the product left the
+feed. Without it the product has re-entered the Meta Feeds collections, which is
+why Iqra saw it appear after the Sept 10 snapshot. It is therefore live in the
+Larianne-test Bing feed and in `googleshoppingfrenchfitness` — an unlisted
+launch-hold product being advertised on both Google and Bing.
+
+Re-tag it. Creating its `3rd_party` record would give a held product a valid
+condition and keep it advertised.
+
+This is the second time the same product has leaked the same way, so the durable
+control is still the Shopify Flow rule proposed in `docs/google-feed-offer-id.md`:
+on product status changed to `UNLISTED`, add `REMOVE FROM FEEDS`.
+
+### 4. The 3 no-product-match rows — they do have a product
+
+`53039894462780`, `53039894495548`, `53039894528316` are **variant IDs**, not
+orphans. All three are variants of product `10380015927612`, French Fitness Gym
+Turf Roll 82 ft x 6.5 ft (New), ACTIVE, variants `V1 Base` / `V2 Plus` /
+`V3 Premium`.
+
+**All three have `sku: null`.** The Bing feed keys on SKU, so a null SKU falls
+back to the variant ID — which is why they match nothing when joined on SKU.
+Iqra's "no Shopify product behind them" is a join artifact of the missing SKU.
+
+Three defects on one product, all from the same omission:
+
+- no SKU on any of the three variants, so the offer ID is a bare variant ID
+- no `custom.3rd_party` record, so `condition` is blank
+- variant weight is **0 lb** on all three, so shipping cannot compute either
+
+Fixing it at source, as Tim asked, is a product-listing job and not a feed edit:
+assign the three SKUs, set real weights, then create the `3rd_party` record with
+`product_condition = new` (`condition_state` is `New`). The rows leave the feed
+only if the product is excluded; otherwise they stay and become correct.
+
+The product sits in no Meta Feeds collection, so it reaches only the
+`Bing main feed` group and neither Google feed.
+
+### The mapping expression, with Tim's two corrections
+
+```
+if   lower(trim(Untranslated Product metaobject reference (product_condition))) == "used"
+then "used"
+else if lower(trim(Untranslated Product metaobject reference (product_condition))) == "remanufactured"
+  or lower(trim(Untranslated Product metaobject reference (product_condition))) == "refurbished"
+then "refurbished"
+else "new"
+```
+
+Both of Tim's corrections are in: `refurbished` is accepted as well as
+`remanufactured`, so a record already carrying the destination value is not
+declared new; and `used` has its own branch ahead of the fallback, so the Maxicam
+ruling is not overridden by the mapping meant to protect it.
+
+Ships **after** Iqra's data-stage QA passes, never in the same regeneration —
+Tim's rule, so a bad count is attributable to one change.
