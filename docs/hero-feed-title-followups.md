@@ -11,6 +11,32 @@ Both sit at **Limited** discoverability with **Needs attention 1**. The exact
 issue name has to be read off the item's Needs attention tab in Merchant Center;
 it is not derivable from Shopify.
 
+### Re-read 2026-09-13: Needs attention is now 0 on both
+
+Both items now show **Needs attention (0)** with "All looks good with your
+product". Nothing on our side touched either item between the 2026-09-10 read
+and this one, and both are inside the freeze, so this cleared on Google's side.
+
+That resolves the conditional below without reaching it: **there is no missing
+local inventory data issue to act on, so neither SKU enters the next local-file
+revision on these grounds.** FFB-DAP was never eligible regardless, per the
+table. FF-FSR90 remains a candidate for the automated showroom feed on its own
+merits whenever the WASP stock pass happens, but that is separate work and not a
+fix for this.
+
+Not established, and should not be reported as if it were: what cleared it. If
+the original issue was missing local inventory data, the automated showroom feed
+regenerating daily would account for FF-FSR90, which is in that cohort. It would
+not account for FFB-DAP, which is not. So the cause is unknown and the two may
+never have shared one issue.
+
+Still open: whether the **Limited** status chip cleared alongside the issue
+count. Needs attention 0 with a Limited chip still showing would mean the
+Limited state is a discoverability signal rather than an item data issue, which
+is consistent with a title-only supplemental being unable to cause it, and is
+not something the local inventory file addresses either. That lives under Store
+quality, not here.
+
 Tim's conditional: if it turns out to be *missing local inventory data*, as it
 was on FF-T850, then these go into the next local-file revision **only if their
 stock and lead time actually qualify**. His standing rule from the local
