@@ -90,7 +90,6 @@
         fetch(action, {
           method: 'POST',
           body: new FormData(form),
-          headers: { 'X-Requested-With': 'XMLHttpRequest' },
           credentials: 'same-origin'
         })
           .then(function (res) { return res.text().then(function (t) { return { url: res.url, text: t, redirected: res.redirected, ok: res.ok }; }); })
