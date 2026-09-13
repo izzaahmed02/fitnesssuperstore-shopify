@@ -26,7 +26,7 @@ Checked against the cohort gates in [`local-inventory-feed.md`](local-inventory-
 
 | | FFB-DAP | FF-FSR90 |
 | --- | --- | --- |
-| In `french-fitness-showroom-products` | **no** | yes |
+| In `french-fitness-showroom-products` [^1] | **no** | yes |
 | In the primary-offer allowlist | **no** | yes |
 | `custom.processing_time_filter` | Ships in 2 weeks or less | Ships in 2 weeks or less |
 | Lead-time gate | would pass | **passes** |
@@ -42,6 +42,11 @@ but membership fails first, so stock never gets asked. If its Needs-attention
 issue is missing local inventory data, the correct outcome is that it stays
 excluded. Adding it to the showroom collection to clear a Merchant Center
 warning would be forcing eligibility.
+
+[^1]: Checked with `inCollection` against collection id `505894535484`
+    (367 products), not by reading the product's collection list. That list
+    pages at 25 and both products have more than 25 collections, so reading it
+    would have reported a false negative on membership.
 
 **FF-FSR90 is a genuine candidate.** It is in the showroom collection, it is in
 the allowlist, and its processing time clears the gate. The only open question
