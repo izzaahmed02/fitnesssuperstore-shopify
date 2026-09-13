@@ -76,64 +76,57 @@
       if (e.target && e.target.id === 'sr-method') syncPhoneRequirement(e.target);
     });
 
-    if (window.fetch) {
+    // In-place submit via a hidden iframe target: the native contact form posts into the
+    // iframe, so the visible page never reloads. We then read the iframe result (same-origin)
+    // to show success or errors. If JS is off, the form has no target and submits normally
+    // (Shopify renders the posted-successfully fallback), so nothing is lost.
+    var iframe = document.querySelector('[data-sr-form-iframe]');
+    var pending = null;
+
+    if (iframe) {
       document.addEventListener('submit', function (e) {
         var form = e.target;
         if (!form || form.id !== 'ShowroomCheckModel') return;
-        // Let native HTML5 validation handle invalid input (submit won't fire when invalid).
-        e.preventDefault();
-        var card = form.closest('[data-sr-form-card]');
+        // Native HTML5 validation still gates: submit only fires when the form is valid.
         var btn = form.querySelector('button[type="submit"]');
-        if (btn && btn.disabled) return; // in-flight guard: no duplicate submits
+        if (btn && btn.disabled) { e.preventDefault(); return; } // in-flight guard
+        form.setAttribute('target', iframe.getAttribute('name'));
+        pending = { card: form.closest('[data-sr-form-card]'), btn: btn };
         if (btn) btn.disabled = true;
-        var action = form.getAttribute('action') || '/contact';
-        fetch(action, {
-          method: 'POST',
-          body: new FormData(form),
-          credentials: 'same-origin'
-        })
-          .then(function (res) { return res.text().then(function (t) { return { url: res.url, text: t, redirected: res.redirected, ok: res.ok }; }); })
-          .then(function (o) {
-            var doc = null;
-            try { doc = new DOMParser().parseFromString(o.text, 'text/html'); } catch (err) {}
-            // Success: Shopify redirects to ...?contact_posted=true and re-renders the
-            // posted-successfully state (a rendered [data-sr-success] inside the card —
-            // note the <template> copy is inert and not matched by querySelector).
-            // Shopify redirects on a successful contact submission and re-renders inline
-            // on validation error, so `redirected` is the reliable success signal (the
-            // redirect can land on a URL/theme where the query or our markup is absent).
-            var successByRedirect = o.redirected === true;
-            var successByUrl = /[?&]contact_posted=true/.test(o.url);
-            var successByDom = doc && doc.querySelector('[data-sr-form-card] [data-sr-success]');
-            if ((successByRedirect || successByUrl || successByDom) && card) { showSuccess(card); return; }
-            // Otherwise surface real validation errors returned in the card.
-            var errNode = doc && (doc.querySelector('[data-sr-form-card] [data-sr-errors]') || doc.querySelector('#ShowroomCheckModel .sr-form-errors'));
-            var errHTML = errNode && (errNode.textContent || '').trim() ? errNode.innerHTML : '';
-            showErrors(form, errHTML);
-            if (btn) btn.disabled = false;
-          })
-          .catch(function () {
-            // Network/parse failure: do NOT auto-resubmit (that reloads the page and can
-            // double-post). Let the visitor retry from the same card.
-            showErrors(form, '');
-            if (btn) btn.disabled = false;
-          });
+        // Do NOT preventDefault — let the browser POST into the hidden iframe.
       });
 
-      // "New Request" — restore the form in the same card, no page reload.
-      document.addEventListener('click', function (e) {
-        var nr = e.target.closest('[data-sr-new-request]');
-        if (!nr) return;
-        e.preventDefault();
-        var card = nr.closest('[data-sr-form-card]');
-        if (card && window.__srFormHTML) {
-          card.innerHTML = window.__srFormHTML;
-          var f = card.querySelector('#ShowroomCheckModel');
-          var first = f && f.querySelector('input:not([type="hidden"]), select, textarea');
-          if (first) { try { first.focus(); } catch (e) {} }
-        }
+      iframe.addEventListener('load', function () {
+        if (!pending) return; // ignore the initial (empty) load
+        var current = pending;
+        pending = null;
+        var doc = null, href = '';
+        try { doc = iframe.contentDocument; } catch (e) {}
+        try { href = iframe.contentWindow.location.href; } catch (e) {}
+        var success = /[?&]contact_posted=true/.test(href) ||
+          (doc && doc.querySelector('[data-sr-form-card] [data-sr-success]'));
+        if (success && current.card) { showSuccess(current.card); return; }
+        var errNode = doc && (doc.querySelector('[data-sr-form-card] [data-sr-errors]') || doc.querySelector('#ShowroomCheckModel .sr-form-errors'));
+        var errHTML = errNode && (errNode.textContent || '').trim() ? errNode.innerHTML : '';
+        var formNow = current.card && current.card.querySelector('#ShowroomCheckModel');
+        if (formNow) showErrors(formNow, errHTML);
+        if (current.btn) current.btn.disabled = false;
       });
     }
+
+    // "New Request" — restore the form in the same card, no page reload.
+    document.addEventListener('click', function (e) {
+      var nr = e.target.closest('[data-sr-new-request]');
+      if (!nr) return;
+      e.preventDefault();
+      var card = nr.closest('[data-sr-form-card]');
+      if (card && window.__srFormHTML) {
+        card.innerHTML = window.__srFormHTML;
+        var f = card.querySelector('#ShowroomCheckModel');
+        var first = f && f.querySelector('input:not([type="hidden"]), select, textarea');
+        if (first) { try { first.focus(); } catch (e) {} }
+      }
+    });
 
     // Video walkthrough: click-to-play overlay (no autoplay)
     document.querySelectorAll('[data-sr-video]').forEach(function (wrap) {
