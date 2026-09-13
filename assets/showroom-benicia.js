@@ -93,16 +93,20 @@
           headers: { 'X-Requested-With': 'XMLHttpRequest' },
           credentials: 'same-origin'
         })
-          .then(function (res) { return res.text().then(function (t) { return { url: res.url, text: t }; }); })
+          .then(function (res) { return res.text().then(function (t) { return { url: res.url, text: t, redirected: res.redirected, ok: res.ok }; }); })
           .then(function (o) {
             var doc = null;
             try { doc = new DOMParser().parseFromString(o.text, 'text/html'); } catch (err) {}
             // Success: Shopify redirects to ...?contact_posted=true and re-renders the
             // posted-successfully state (a rendered [data-sr-success] inside the card —
             // note the <template> copy is inert and not matched by querySelector).
+            // Shopify redirects on a successful contact submission and re-renders inline
+            // on validation error, so `redirected` is the reliable success signal (the
+            // redirect can land on a URL/theme where the query or our markup is absent).
+            var successByRedirect = o.redirected === true;
             var successByUrl = /[?&]contact_posted=true/.test(o.url);
             var successByDom = doc && doc.querySelector('[data-sr-form-card] [data-sr-success]');
-            if ((successByUrl || successByDom) && card) { showSuccess(card); return; }
+            if ((successByRedirect || successByUrl || successByDom) && card) { showSuccess(card); return; }
             // Otherwise surface real validation errors returned in the card.
             var errNode = doc && (doc.querySelector('[data-sr-form-card] [data-sr-errors]') || doc.querySelector('#ShowroomCheckModel .sr-form-errors'));
             var errHTML = errNode && (errNode.textContent || '').trim() ? errNode.innerHTML : '';
