@@ -76,41 +76,42 @@
       if (e.target && e.target.id === 'sr-method') syncPhoneRequirement(e.target);
     });
 
-    // In-place submit via a hidden iframe target: the native contact form posts into the
-    // iframe, so the visible page never reloads. We then read the iframe result (same-origin)
-    // to show success or errors. If JS is off, the form has no target and submits normally
-    // (Shopify renders the posted-successfully fallback), so nothing is lost.
-    var iframe = document.querySelector('[data-sr-form-iframe]');
-    var pending = null;
-
-    if (iframe) {
+    // In-place submit: POST the native contact form via fetch as URL-ENCODED data.
+    // Shopify's /contact rejects multipart (400) but accepts x-www-form-urlencoded and
+    // then 302-redirects to ?contact_posted=true, so we key success off that redirect.
+    if (window.fetch) {
       document.addEventListener('submit', function (e) {
         var form = e.target;
         if (!form || form.id !== 'ShowroomCheckModel') return;
         // Native HTML5 validation still gates: submit only fires when the form is valid.
+        e.preventDefault();
+        var card = form.closest('[data-sr-form-card]');
         var btn = form.querySelector('button[type="submit"]');
-        if (btn && btn.disabled) { e.preventDefault(); return; } // in-flight guard
-        form.setAttribute('target', iframe.getAttribute('name'));
-        pending = { card: form.closest('[data-sr-form-card]'), btn: btn };
+        if (btn && btn.disabled) return; // in-flight guard: no duplicate submits
         if (btn) btn.disabled = true;
-        // Do NOT preventDefault — let the browser POST into the hidden iframe.
-      });
-
-      iframe.addEventListener('load', function () {
-        if (!pending) return; // ignore the initial (empty) load
-        var current = pending;
-        pending = null;
-        var doc = null, href = '';
-        try { doc = iframe.contentDocument; } catch (e) {}
-        try { href = iframe.contentWindow.location.href; } catch (e) {}
-        var success = /[?&]contact_posted=true/.test(href) ||
-          (doc && doc.querySelector('[data-sr-form-card] [data-sr-success]'));
-        if (success && current.card) { showSuccess(current.card); return; }
-        var errNode = doc && (doc.querySelector('[data-sr-form-card] [data-sr-errors]') || doc.querySelector('#ShowroomCheckModel .sr-form-errors'));
-        var errHTML = errNode && (errNode.textContent || '').trim() ? errNode.innerHTML : '';
-        var formNow = current.card && current.card.querySelector('#ShowroomCheckModel');
-        if (formNow) showErrors(formNow, errHTML);
-        if (current.btn) current.btn.disabled = false;
+        var action = form.getAttribute('action') || '/contact';
+        var body;
+        try { body = new URLSearchParams(new FormData(form)); } catch (err) { body = new FormData(form); }
+        fetch(action, { method: 'POST', body: body, credentials: 'same-origin' })
+          .then(function (res) { return res.text().then(function (t) { return { url: res.url, text: t, redirected: res.redirected }; }); })
+          .then(function (o) {
+            var doc = null;
+            try { doc = new DOMParser().parseFromString(o.text, 'text/html'); } catch (err) {}
+            // Shopify redirects on success (to ?contact_posted=true) and re-renders inline on error.
+            var success = o.redirected === true ||
+              /[?&]contact_posted=true/.test(o.url) ||
+              (doc && doc.querySelector('[data-sr-form-card] [data-sr-success]'));
+            if (success && card) { showSuccess(card); return; }
+            var errNode = doc && (doc.querySelector('[data-sr-form-card] [data-sr-errors]') || doc.querySelector('#ShowroomCheckModel .sr-form-errors'));
+            var errHTML = errNode && (errNode.textContent || '').trim() ? errNode.innerHTML : '';
+            showErrors(form, errHTML);
+            if (btn) btn.disabled = false;
+          })
+          .catch(function () {
+            // Do not auto-resubmit (avoids a reload + duplicate); let the visitor retry.
+            showErrors(form, '');
+            if (btn) btn.disabled = false;
+          });
       });
     }
 
