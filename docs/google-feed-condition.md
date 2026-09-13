@@ -511,12 +511,26 @@ it was re-pointed to, and all three shipping fields are populated:
 | `FF-RR-BPR-43`, `FF-RR-BR-43`, `FF-RR-DBR-43`, `FF-RR-JBS-20-CM`, `FF-RR-KBR-43` | 19.99 / 15.99 / 11.99 |
 
 Tim's concern was that a re-association fixes one field and silently changes
-another. It did not: every rate follows the house ratio, **2nd day = ground ×
-0.8, overnight = ground × 0.6**, exactly, on all eleven. That ratio holds across
-the wider record set and is worth knowing as a validation rule.
+another. It did not: all eleven carry a rate, and all eleven follow **2nd day =
+ground × 0.8, overnight = ground × 0.6** exactly.
 
-This is verified at the source record. Confirming it in feed output needs the
-next regeneration.
+**Correction to an earlier draft of this note**, which called that a
+catalogue-wide validation rule. It is not. Re-checked against all 4,655 records,
+shipping falls into two families and the ratio describes only one:
+
+| Family | Shape | Records |
+| --- | --- | --- |
+| Free / manufacturer-shipped | `0 / 0 / 0` | 1,069 |
+| Freight tiers, fixed triples | `449/299/149`, `399/249/149`, `499/386.5/199`, `349/249/149` | ~1,950 |
+| Parcel, ratio-derived | `19.99/15.99/11.99`, `28/22.4/16.8`, `44/35.2/26.4`, `68/54.4/40.8`, `12/9.6/7.2` | ~1,255 |
+
+All eleven re-keyed records are parcel-family accessories, so the ratio is the
+right check for them and a false one anywhere else. Catalogue-wide it holds on
+1,255 records and does not on 2,243.
+
+Verified at the source record; confirming it in feed output needs the next
+regeneration. Row detail: `docs/third-party-rekeyed-verification.csv`, 11/11
+PASS.
 
 ### 2. The 12 blank SKUs — spec in `docs/third-party-missing-records-spec.csv`
 
@@ -645,3 +659,44 @@ at different times. `FF-STW-WB-3` was tagged `REMOVE FROM FEEDS` on Sept 10 and
 left the feeds; the tag has since been removed and it is back in the Meta Feeds
 collections. "Not in any feed" was true on Sept 10, "in the FF feed" is true
 now.
+
+### Re-verified against live Shopify, 2026-09-13
+
+Larianne's import landed. Re-pulling all 4,655 `3rd_party` records and diffing
+against the Sept 11 snapshot:
+
+| `product_condition` | Sept 11 | Now |
+| --- | --- | --- |
+| `new` | 2,957 | **3,262** |
+| `refurbished` | 1,335 | **1,343** |
+| `New` | 320 | 31 |
+| *(null)* | 21 | 18 |
+| `new ` / `New ` / `Refurbished` / `refurbished ` / `149` | 20 | **0** |
+| `Used` | 1 | 1 |
+
+**312 records changed, not 323.** The difference is not a shortfall: 11 of the
+323 were the rows Larianne re-pointed to different metaobject ids, and those
+target records already read `new`, so the import was a no-op on them. Her count
+of 323 imported and this count of 312 changed are both correct and describe
+different things.
+
+Every wrong-case, padded and junk value is gone. `149` is gone.
+
+**Fifty records remain non-clean, and only one of them is actionable:**
+
+| Category | Records | Reaches a feed? |
+| --- | --- | --- |
+| `New` on orphan records no product references | 31 | no |
+| *(null)* on orphan records | 7 | no |
+| *(null)* on the 11 old ids Larianne re-keyed away from | 11 | no |
+| **`Used` — the Maxicam** | **1** | **yes** |
+
+So the answer to Tim's Sept 13 question is: **the lowercase `used` edit has not
+been applied.** `maxicam-2tsdr` still reads `Used`, which is why Iqra's QA
+counted `used 0` on the Bing main feed. It is the single remaining record
+standing between the data stage and a clean pass.
+
+Full row detail: `docs/third-party-condition-status-2026-09-13.csv`.
+
+One record was created since Sept 11 — `296986444092`, French Fitness Rack & Rig
+43" Bench Prop w/Spotter Platform, already reading `new`.
