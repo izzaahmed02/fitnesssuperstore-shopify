@@ -107,3 +107,58 @@ item IDs have not been read independently here. Shopify-side values only.
 3. Confirm `custom_label_0` is unowned by any existing feed rule or campaign.
 4. Plan the October 1 teardown in the same change: both fields clear when the
    discount expires, so the marker does not outlive the offer.
+
+---
+
+# Go-live — GMC promotion FSS_SEP2026_10
+
+Added 2026-09-14 after Tim created the promotion in Merchant Center and set a
+Wednesday September 16 deadline.
+
+## Upload file
+
+`supplemental_sep2026_promotion_id.csv` — two columns, `id` and `promotion_id`,
+16 rows, nothing else. This is the controlled supplemental described in Tim's
+September 14 instruction: a small id + promotion_id file linked to BOTH serving
+primaries (the legacy primaries Google serves today, not the PR #830 generated
+files — cutover has not happened).
+
+It does not touch `supplemental_priority_labels_v2.csv`, so `custom_label_3`
+tiers and `custom_label_4` series values are unaffected.
+
+`optional_custom_label_0_not_for_upload.csv` holds the Ads grouping label
+(`sep2026_overstock_10`) from the earlier proposal. It is deliberately a
+separate file and is NOT part of the September 16 upload — one controlled
+supplemental only. It goes in via the generator, or on a separate written GO.
+
+## Why these 16 ids are the right keys
+
+The serving primaries take their `id` from the Multifeeds gated Item ID
+expression. Re-read from live Shopify on 2026-09-14: all 16 products have
+`custom.gmc_id_rollout_status` = `approved` and `custom.legacy_gmc_id` populated
+and identical to the variant SKU, so each emits its SKU. Full evidence in
+`september_overstock_16_id_diff.csv` (16/16 `GATE_PASS_LEGACY_EQ_SKU`).
+
+If the live export of a serving primary shows a different `id` on any row, that
+export wins — re-key that row before upload.
+
+## Date check — one difference to settle
+
+| | Start | End |
+| --- | --- | --- |
+| GMC promotion FSS_SEP2026_10 | Sep 16, 2026 5:00 PM | Sep 30, 2026 5:00 PM |
+| Shopify discount 1741840056636 | Sep 8, 2026 12:00 AM PT | Sep 30, 2026 11:59:59 PM PT |
+
+The promotion ends about seven hours before the checkout discount. That is the
+safe direction — the ad badge never outlives the discount, so it is not a
+disapproval risk — but the two do not match. Recommendation: extend the GMC
+promotion end to Sep 30 11:59 PM Pacific rather than shorten the Shopify
+discount, which is live and approved. Account-side call, Tim's.
+
+Re-verified on 2026-09-14: discount ACTIVE, 10%, exactly 16 products, all three
+combinations off, unchanged.
+
+## What is not done here
+
+The upload into Merchant Center itself. That is item 1 in Tim's list, owned by
+Yusra, and no Merchant Center write is possible from this side.
