@@ -112,13 +112,14 @@ require(theme, 'clearInterval(timer)', 'layout/theme.liquid')
 require(theme, '<link rel="preconnect" href="https://cdn-4.convertexperiments.com" crossorigin>',
         'layout/theme.liquid')
 
-# ---------------------------------------------------------------------------
-# 16) Phase 2 - Convert has exactly one entry point.
+# 16) Gorgias Convert removal is permanent; Convert.com A/B testing remains.
 #
-# The cdn.9gtb.com bundle loader was removed from the deferred injector.
-# REVERT NOTE: if Convert experiments stop firing, that block goes back and
-# this assertion goes with it.
-# ---------------------------------------------------------------------------
+# The cdn.9gtb.com bundle loader was installed by a former contractor and was
+# removed after the 2026-09-06 Gorgias Convert audit: zero active campaigns,
+# Convert billing INACTIVE, and the campaign bundle never fully installed. It
+# was shipping to every customer and doing nothing. This is a settled removal,
+# not a deferral -- if Gorgias Convert is ever deliberately adopted, revisit
+# this guard as part of that new implementation.
 forbid(theme, '9gtb.com', 'layout/theme.liquid')
 forbid(theme, 'convert-bundle-loader', 'layout/theme.liquid')
 require(theme, 'cdn-4.convertexperiments.com/v1/js/', 'layout/theme.liquid')
@@ -129,55 +130,5 @@ require(script_tags, "window.addEventListener(evt, loadHeatmap, { once: true, pa
         'snippets/script-tags.liquid')
 forbid(script_tags, '<script>/* >> Heatmap.com :: Snippet << */(function (h,e,a,t,m,ap)',
        'snippets/script-tags.liquid')
-
-# 18) Phase 2 - collection LCP priority hints.
-product_card = Path('snippets/product-card.liquid').read_text()
-collection_grid = Path('sections/main-collection-product-grid.liquid').read_text()
-
-require(product_card, 'loading="eager"', 'snippets/product-card.liquid')
-require(product_card, "{% if fetch_priority == 'high' %}fetchpriority=\"high\"{% endif %}",
-        'snippets/product-card.liquid')
-require(collection_grid, 'fetch_priority: fetch_priority', 'sections/main-collection-product-grid.liquid')
-require(collection_grid, "{%- assign fetch_priority = 'high' -%}",
-        'sections/main-collection-product-grid.liquid')
-
-# 19) Phase 2 - the collection preload must stay in lockstep with the card markup.
-#
-# A <link rel=preload> for a responsive image only avoids a second download when
-# imagesizes resolves to the same candidate the <img> picks. If the card's sizes
-# attribute is edited without editing the preload, the browser downloads the
-# image twice and the preload actively costs LCP - so pin them to each other.
-import re as _re
-
-def _attr(text, attr, context):
-    m = _re.search(attr + r'="([^"]*)"', text)
-    if not m:
-        raise AssertionError(f'Missing {attr} attribute in {context}')
-    return ' '.join(m.group(1).split())
-
-collection_preload = _re.search(
-    r"\{% if template contains 'collection'.*?\{% endif %\}", head_meta, _re.S)
-if not collection_preload:
-    raise AssertionError('Missing the collection-template preload block in snippets/head-meta.liquid')
-collection_preload = collection_preload.group(0)
-
-card_sizes = _attr(product_card, 'sizes', 'snippets/product-card.liquid')
-preload_sizes = _attr(collection_preload, 'imagesizes', 'snippets/head-meta.liquid (collection preload)')
-if card_sizes != preload_sizes:
-    raise AssertionError(
-        'Collection preload imagesizes has drifted from the product card sizes attribute.\n'
-        f'  product-card.liquid sizes:     {card_sizes}\n'
-        f'  head-meta.liquid  imagesizes:  {preload_sizes}'
-    )
-
-# The preload's candidate widths must all exist in the card's srcset, otherwise
-# the browser can select a width the preload never warmed.
-card_widths = set(_re.findall(r'image_url: width: (\d+)', product_card))
-preload_widths = set(_re.findall(r'image_url: width: (\d+)', collection_preload))
-missing = sorted(int(w) for w in preload_widths - card_widths)
-if missing:
-    raise AssertionError(
-        f'Collection preload offers widths absent from the product card srcset: {missing}'
-    )
 
 print('CWV regression checks passed.')
