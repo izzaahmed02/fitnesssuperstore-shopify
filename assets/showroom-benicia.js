@@ -23,7 +23,7 @@
 
     // Check a Model form: in-place (AJAX) submit through the native contact form.
     // Falls back to a normal submit when JS or fetch is unavailable.
-    try { console.debug('sr-showroom form: ajax v5 (capture)'); } catch (e) {}
+    try { console.debug('sr-showroom form: ajax v6 (urlencoded + stopprop)'); } catch (e) {}
     var card0 = document.querySelector('[data-sr-form-card]');
     var formEl0 = card0 && card0.querySelector('form');
     // Cache the pristine form markup so "New Request" can restore it without a reload.
@@ -90,13 +90,26 @@
         if (!card) return;
         // Native HTML5 validation still gates: submit only fires when the form is valid.
         e.preventDefault();
+        // Stop any theme-level contact handler from ALSO submitting (which caused the
+        // second, native submit that reloaded the page to the success state).
+        e.stopImmediatePropagation();
         var btn = form.querySelector('button[type="submit"]');
         if (btn && btn.disabled) return; // in-flight guard: no duplicate submits
         if (btn) btn.disabled = true;
         var action = form.getAttribute('action') || '/contact';
-        var body;
-        try { body = new URLSearchParams(new FormData(form)); } catch (err) { body = new FormData(form); }
-        fetch(action, { method: 'POST', body: body, credentials: 'same-origin' })
+        // Build an explicit x-www-form-urlencoded body. Shopify's /contact returns 400 for
+        // multipart, so never send FormData directly.
+        var pairs = [];
+        new FormData(form).forEach(function (v, k) {
+          if (typeof v === 'string') pairs.push(encodeURIComponent(k) + '=' + encodeURIComponent(v));
+        });
+        var body = pairs.join('&').replace(/%20/g, '+');
+        fetch(action, {
+          method: 'POST',
+          body: body,
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'text/html' },
+          credentials: 'same-origin'
+        })
           .then(function (res) { return res.text().then(function (t) { return { url: res.url, text: t, redirected: res.redirected }; }); })
           .then(function (o) {
             var doc = null;
