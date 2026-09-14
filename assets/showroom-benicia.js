@@ -23,7 +23,7 @@
 
     // Check a Model form: in-place (AJAX) submit through the native contact form.
     // Falls back to a normal submit when JS or fetch is unavailable.
-    try { console.debug('sr-showroom form: ajax v6 (urlencoded + stopprop)'); } catch (e) {}
+    try { console.debug('sr-showroom form: native v7'); } catch (e) {}
     var card0 = document.querySelector('[data-sr-form-card]');
     var formEl0 = card0 && card0.querySelector('form');
     // Cache the pristine form markup so "New Request" can restore it without a reload.
@@ -77,59 +77,15 @@
       if (e.target && e.target.id === 'sr-method') syncPhoneRequirement(e.target);
     });
 
-    // In-place submit: POST the native contact form via fetch as URL-ENCODED data.
-    // Shopify's /contact rejects multipart (400) but accepts x-www-form-urlencoded and
-    // then 302-redirects to ?contact_posted=true, so we key success off that redirect.
-    if (window.fetch) {
-      // Capture phase so our preventDefault runs before any theme-level submit handler
-      // that might stop propagation (which would otherwise let the native submit reload).
-      document.addEventListener('submit', function (e) {
-        var form = e.target;
-        // Match by our own wrapper, not the Shopify-assigned id (which may not stick).
-        var card = form && form.closest ? form.closest('[data-sr-form-card]') : null;
-        if (!card) return;
-        // Native HTML5 validation still gates: submit only fires when the form is valid.
-        e.preventDefault();
-        // Stop any theme-level contact handler from ALSO submitting (which caused the
-        // second, native submit that reloaded the page to the success state).
-        e.stopImmediatePropagation();
-        var btn = form.querySelector('button[type="submit"]');
-        if (btn && btn.disabled) return; // in-flight guard: no duplicate submits
-        if (btn) btn.disabled = true;
-        var action = form.getAttribute('action') || '/contact';
-        // Build an explicit x-www-form-urlencoded body. Shopify's /contact returns 400 for
-        // multipart, so never send FormData directly.
-        var pairs = [];
-        new FormData(form).forEach(function (v, k) {
-          if (typeof v === 'string') pairs.push(encodeURIComponent(k) + '=' + encodeURIComponent(v));
-        });
-        var body = pairs.join('&').replace(/%20/g, '+');
-        fetch(action, {
-          method: 'POST',
-          body: body,
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'text/html' },
-          credentials: 'same-origin'
-        })
-          .then(function (res) { return res.text().then(function (t) { return { url: res.url, text: t, redirected: res.redirected }; }); })
-          .then(function (o) {
-            var doc = null;
-            try { doc = new DOMParser().parseFromString(o.text, 'text/html'); } catch (err) {}
-            // Shopify redirects on success (to ?contact_posted=true) and re-renders inline on error.
-            var success = o.redirected === true ||
-              /[?&]contact_posted=true/.test(o.url) ||
-              (doc && doc.querySelector('[data-sr-form-card] [data-sr-success]'));
-            if (success && card) { showSuccess(card); return; }
-            var errNode = doc && doc.querySelector('[data-sr-form-card] [data-sr-errors]');
-            var errHTML = errNode && (errNode.textContent || '').trim() ? errNode.innerHTML : '';
-            showErrors(form, errHTML);
-            if (btn) btn.disabled = false;
-          })
-          .catch(function () {
-            // Do not auto-resubmit (avoids a reload + duplicate); let the visitor retry.
-            showErrors(form, '');
-            if (btn) btn.disabled = false;
-          });
-      }, true);
+    // NOTE: This store rejects scripted (fetch/XHR) POSTs to /contact with HTTP 400 — only
+    // a real navigation submit is accepted — and X-Frame-Options: DENY blocks an iframe
+    // submit. So an in-place (no-reload) submit is not possible with the native contact
+    // form here. The form submits natively and Shopify redirects back to the page with
+    // ?contact_posted=true, where the section renders the success card.
+    // Fire the conversion event once, only on that accepted-submission page.
+    if (/[?&]contact_posted=true/.test(window.location.search) &&
+        document.querySelector('[data-sr-form-card] [data-sr-success]')) {
+      push('check_model_submit', { location: 'check_model_form' });
     }
 
     // "New Request" — restore the form in the same card, no page reload.
