@@ -86,4 +86,16 @@ for f in [
     if Path(f).exists():
         raise AssertionError(f"Expected removed file still exists: {f}")
 
+# 13) Convert has exactly one entry point: the official convertexperiments tag.
+#
+# The cdn.9gtb.com bundle loader was installed by a former contractor and was
+# removed after the 2026-09-06 Gorgias Convert audit: zero active campaigns,
+# Convert billing INACTIVE, and the campaign bundle never fully installed. It
+# was shipping to every customer and doing nothing. This is a settled removal,
+# not a deferral -- if Convert campaign tooling is ever genuinely adopted, it
+# gets re-added deliberately and this check is revisited then.
+forbid(theme, '9gtb.com', 'layout/theme.liquid')
+forbid(theme, 'convert-bundle-loader', 'layout/theme.liquid')
+require(theme, 'cdn-4.convertexperiments.com/v1/js/', 'layout/theme.liquid')
+
 print('CWV regression checks passed.')
