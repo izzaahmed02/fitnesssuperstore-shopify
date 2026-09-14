@@ -23,7 +23,7 @@
 
     // Check a Model form: in-place (AJAX) submit through the native contact form.
     // Falls back to a normal submit when JS or fetch is unavailable.
-    try { console.debug('sr-showroom form: ajax v4'); } catch (e) {}
+    try { console.debug('sr-showroom form: ajax v5 (capture)'); } catch (e) {}
     var card0 = document.querySelector('[data-sr-form-card]');
     var formEl0 = card0 && card0.querySelector('form');
     // Cache the pristine form markup so "New Request" can restore it without a reload.
@@ -81,6 +81,8 @@
     // Shopify's /contact rejects multipart (400) but accepts x-www-form-urlencoded and
     // then 302-redirects to ?contact_posted=true, so we key success off that redirect.
     if (window.fetch) {
+      // Capture phase so our preventDefault runs before any theme-level submit handler
+      // that might stop propagation (which would otherwise let the native submit reload).
       document.addEventListener('submit', function (e) {
         var form = e.target;
         // Match by our own wrapper, not the Shopify-assigned id (which may not stick).
@@ -114,10 +116,11 @@
             showErrors(form, '');
             if (btn) btn.disabled = false;
           });
-      });
+      }, true);
     }
 
     // "New Request" — restore the form in the same card, no page reload.
+    // Capture phase so it wins over any theme click handler on the button.
     document.addEventListener('click', function (e) {
       var nr = e.target.closest('[data-sr-new-request]');
       if (!nr) return;
@@ -129,7 +132,7 @@
         var first = f && f.querySelector('input:not([type="hidden"]), select, textarea');
         if (first) { try { first.focus(); } catch (e) {} }
       }
-    });
+    }, true);
 
     // Video walkthrough: click-to-play overlay (no autoplay)
     document.querySelectorAll('[data-sr-video]').forEach(function (wrap) {
