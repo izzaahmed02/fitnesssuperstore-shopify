@@ -23,8 +23,9 @@
 
     // Check a Model form: in-place (AJAX) submit through the native contact form.
     // Falls back to a normal submit when JS or fetch is unavailable.
+    try { console.debug('sr-showroom form: ajax v4'); } catch (e) {}
     var card0 = document.querySelector('[data-sr-form-card]');
-    var formEl0 = card0 && card0.querySelector('#ShowroomCheckModel');
+    var formEl0 = card0 && card0.querySelector('form');
     // Cache the pristine form markup so "New Request" can restore it without a reload.
     if (card0 && formEl0 && formEl0.querySelector('button[type="submit"]')) {
       window.__srFormHTML = card0.innerHTML;
@@ -82,10 +83,11 @@
     if (window.fetch) {
       document.addEventListener('submit', function (e) {
         var form = e.target;
-        if (!form || form.id !== 'ShowroomCheckModel') return;
+        // Match by our own wrapper, not the Shopify-assigned id (which may not stick).
+        var card = form && form.closest ? form.closest('[data-sr-form-card]') : null;
+        if (!card) return;
         // Native HTML5 validation still gates: submit only fires when the form is valid.
         e.preventDefault();
-        var card = form.closest('[data-sr-form-card]');
         var btn = form.querySelector('button[type="submit"]');
         if (btn && btn.disabled) return; // in-flight guard: no duplicate submits
         if (btn) btn.disabled = true;
@@ -102,7 +104,7 @@
               /[?&]contact_posted=true/.test(o.url) ||
               (doc && doc.querySelector('[data-sr-form-card] [data-sr-success]'));
             if (success && card) { showSuccess(card); return; }
-            var errNode = doc && (doc.querySelector('[data-sr-form-card] [data-sr-errors]') || doc.querySelector('#ShowroomCheckModel .sr-form-errors'));
+            var errNode = doc && doc.querySelector('[data-sr-form-card] [data-sr-errors]');
             var errHTML = errNode && (errNode.textContent || '').trim() ? errNode.innerHTML : '';
             showErrors(form, errHTML);
             if (btn) btn.disabled = false;
@@ -123,7 +125,7 @@
       var card = nr.closest('[data-sr-form-card]');
       if (card && window.__srFormHTML) {
         card.innerHTML = window.__srFormHTML;
-        var f = card.querySelector('#ShowroomCheckModel');
+        var f = card.querySelector('form');
         var first = f && f.querySelector('input:not([type="hidden"]), select, textarea');
         if (first) { try { first.focus(); } catch (e) {} }
       }
