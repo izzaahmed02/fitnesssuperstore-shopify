@@ -131,4 +131,29 @@ require(script_tags, "window.addEventListener(evt, loadHeatmap, { once: true, pa
 forbid(script_tags, '<script>/* >> Heatmap.com :: Snippet << */(function (h,e,a,t,m,ap)',
        'snippets/script-tags.liquid')
 
+# ---------------------------------------------------------------------------
+# 18) Split guard - the Phase 3 collection LCP work must not drift back in.
+#
+# Tim's 14 Sep ruling moved two things out of this merge track and parked them
+# on phase-3/boost-rendering-parked: the head-meta collection-template image
+# preload, and the product-card / collection-grid eager+fetchpriority hints.
+#
+# Both were removed because they cannot do what they were meant to do. The
+# theme grid is disabled on every collection template that carries traffic
+# (Boost renders the list client-side), and the preload resolves to a URL the
+# Boost-rendered <img> never requests, which costs LCP instead of saving it.
+#
+# Without this guard a re-merge, a revert or a stray cherry-pick from the Phase
+# 3 branch puts them back silently. They return deliberately, with the Boost
+# work, or not at all.
+# ---------------------------------------------------------------------------
+product_card = Path('snippets/product-card.liquid').read_text()
+collection_grid = Path('sections/main-collection-product-grid.liquid').read_text()
+
+# The PDP preload keeps its own fetchpriority="high" (check 4), so this pins the
+# collection-template block specifically rather than the attribute.
+forbid(head_meta, "template contains 'collection'", 'snippets/head-meta.liquid')
+forbid(product_card, 'fetch_priority', 'snippets/product-card.liquid')
+forbid(collection_grid, 'fetch_priority', 'sections/main-collection-product-grid.liquid')
+
 print('CWV regression checks passed.')

@@ -6,9 +6,11 @@ Branch under test: `claude/cwv-phase-2-task-i9g8m0`
 Base: `main` @ `24d92ff` (Tim's patches were cut against `191c2b8`; none of the
 six files they touch changed between those two commits, so they apply unchanged)
 
-Status: **code verified, static QA complete, deploy QA blocked.**
-Two findings below are merge blockers because they change what the change is
-expected to achieve, not because the code is wrong.
+Status: **split executed; QA run against the re-pointed preview. Items 2, 3, 10
+and 11 PASS. Items 4 (partial), 5 and 6 need a real browser / PSI web UI.**
+Both findings below were accepted by Tim on 6 Sep and the PR was split on
+14 Sep. Sections 1-3 are the original pre-split review and are kept as the
+record; section 6 is the current state.
 
 ---
 
@@ -157,14 +159,22 @@ Phase 1 and Phase 2 invariants:
 - 16 — no `9gtb.com` / `convert-bundle-loader`; the convertexperiments tag is the
   single entry point.
 - 17 — Heatmap is interaction/load deferred, not eager.
-- 18 — the collection LCP priority hints are present.
-- 19 — the collection preload's `imagesizes` must stay byte-identical to the
-  product card's `sizes`, and its candidate widths must all exist in the card's
-  `srcset`. This is the guard against the double-download failure in Blocker 2.
+- ~~18 — the collection LCP priority hints are present.~~ **Removed in the split.**
+- ~~19 — the collection preload pinned to the card markup.~~ **Removed in the
+  split.** Both guarded code that left the merge track and would fail outright
+  once it was gone. They survive intact on `phase-3/boost-rendering-parked`.
+- 18 (new) — **split guard.** The parked work must not drift back into the merge
+  track: no collection-template block in `head-meta.liquid`, no `fetch_priority`
+  in `product-card.liquid` or `main-collection-product-grid.liquid`. Without it a
+  re-merge, revert or stray cherry-pick from the Phase 3 branch restores them
+  silently.
 
-All 19 checks pass on this branch. Checks 13, 16, 17 and 19 were mutation-tested
-(cloaking snippet restored, `9gtb` re-added, Heatmap re-eagered, card `sizes`
-drifted by 5px) and each failed as intended, so they are not vacuous.
+All checks pass. Mutation-tested and each fails as intended: 13 (cloaking marker
+restored), 16 (`9gtb` re-added), 17 (Heatmap re-eagered), and 18 in four
+directions — the preload block restored, the hints restored in the card, the
+`fetch_priority` assign restored in the grid, and the PDP preload's own
+`fetchpriority="high"` broken (which must still fail check 4, confirming the new
+guard did not swallow it).
 
 ---
 
@@ -212,3 +222,74 @@ Additional checks this QA recommends adding to section 4:
 Everything asserted above about production behaviour comes from the live
 `collections/treadmills` HTML fetched 6 Sep 2026 and from the template JSON in
 this repository.
+
+---
+
+## 6. Split executed, and the QA run against the re-pointed preview
+
+### The split (Izza, 14 Sep, commit `16b8a96`, head `df169af`)
+
+Verified against `origin/main`, not taken on trust:
+
+| Piece | Expected | Verified |
+|---|---|---|
+| `snippets/product-card.liquid` | hints out | MD5 identical to `main` |
+| `sections/main-collection-product-grid.liquid` | hints out | MD5 identical to `main` |
+| `snippets/head-meta.liquid` | preload out, Phase 1 in | differs from `main` by exactly one line, the removed `{% render 'optimization' %}` |
+| `snippets/optimization.liquid` | gone | absent |
+| `layout/theme.liquid` | Phase 1 + 9gtb removal | `9gtb` occurs 0 times |
+| `snippets/script-tags.liquid` | Heatmap deferred | `loadHeatmap` present |
+| Parked work | not deleted | `phase-3/boost-rendering-parked` @ `1b184513`, the full pre-split head including checks 18 and 19 |
+
+### Preview theme — verified against live Shopify
+
+The re-point was done as a **new** theme, `188406268220`
+(`fitnesssuperstore-shopify/claude/cwv-phase-2-ta...`), UNPUBLISHED. All five
+touched files match `df169af` byte for byte and `optimization.liquid` is absent.
+
+Working URL: `https://www.fitnesssuperstore.com/?preview_theme_id=188406268220`
+
+**MAIN is untouched.** Theme `186120208700` still carries
+`optimization.liquid` (MD5 `768fb2a6…`) and its `layout/theme.liquid`,
+`head-meta.liquid` and `script-tags.liquid` still match `origin/main` exactly.
+
+**Stale-preview hazard:** the older theme `188182692156` ("CWV Phase 1+2 — QA
+only") still exists, still UNPUBLISHED, and still holds the **pre-split** head
+`1b184513` (last updated 6 Sep). Two QA previews now exist and the older one is
+wrong. It should be renamed or deleted so no one measures it by accident.
+
+### QA results — preview vs production, same request shape
+
+`preview_theme_id` sets a cookie and redirects, so the preview only renders when
+the cookie survives the redirect. Fetched with a cookie jar; production fetched
+separately with a clean one. The contrast confirms the preview really served:
+
+| Marker | Production | Preview |
+|---|---|---|
+| `__isPSA`, `___mnag`, `asyncLazyLoad`, `text/lazyload`, `loadJSscripts`, `script_loaded` | all present | **all 0** |
+| `9gtb` | 1 | **0** |
+| `loadHeatmap` (deferred loader) | 0 | **4** |
+| `Shopify.theme` metadata | `themeId 186120208700, published true` | `themeId 188406268220, published false` |
+
+| # | Check | Result |
+|---|---|---|
+| 2 | Collection page (`/collections/treadmills`) | **PASS.** `fetchpriority="high"` 0 on both preview and production; `loading="eager"` 3 on both; no collection preload link; `main-collection-product-grid` 0 occurrences, `boost-sd` 1,726 with 240 skeleton placeholders. The post-split expectation is *no change versus MAIN*, and that is what renders. Blocker 1 re-confirmed on the merge head |
+| 3 | PDP unchanged | **PASS.** Same 10 preload links in the same order; the featured-image preload is the same image with the same `width=1440` and the same `imagesrcset`. Only differences are the theme asset prefix (`/t/584/` vs `/t/418/`) and asset cache-busting versions, which differ by construction between two themes |
+| 4 | Heatmap + Gorgias | **PARTIAL PASS.** Static half verified: Heatmap is behind `function loadHeatmap()` with a `{ once: true, passive: true }` listener and is not eager; the Gorgias injector is intact. The "does not fire before first interaction, does fire after" half needs a real browser |
+| 5 | Convert experiment fires | **NOT RUN.** Needs JS execution or the Convert dashboard |
+| 6 | PSI baseline | **NOT RUN.** PSI API still returns HTTP 429, `Quota exceeded for quota metric 'Queries' and limit 'Queries per day'`, so the quota has not reset |
+| 10 | `collection.ab-test` card markup undisturbed | **PASS**, and stronger than a render check: `product-card.liquid` and `main-collection-product-grid.liquid` are MD5-identical to `main`, so the live A/B cell cannot have changed |
+| 11 | Shopify analytics + Facebook pixel on load | **PASS.** `class="analytics"` 1 on both, `trekkie` 33 on both, `facebookCapiEnabled: true` on both. The single `connect.facebook.net` difference is not a regression: in production that string occurs only *inside the cloaking snippet's own de-src list*, the code Phase 1 removes. There is no `<script src>` to `connect.facebook.net` on either build |
+
+Items 7-9 (collection page 2, Boost-filtered collection, single-fetch network
+count) are moot for the merge track now that the preload is gone, and move to
+Phase 3 with the parked work.
+
+### Still blocked from this environment
+
+- **Items 4 (runtime half) and 5** need a real browser. Headless Chromium is
+  installed here but cannot complete TLS to the storefront through this
+  session's egress proxy, and the sandbox blocks adding the proxy CA to the
+  browser trust store.
+- **Item 6** needs the PSI web UI. The API is still over its daily quota.
+
