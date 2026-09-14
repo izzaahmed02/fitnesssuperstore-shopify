@@ -15,14 +15,16 @@
         assign announcement_bar = true
     endif
 
-    assign now_s = 'now' | date: '%s' | plus: 0
-    assign ld_start_s = settings.laborday_start | date: '%s' | plus: 0
-    assign ld_end_s = settings.laborday_end | date: '%s' | plus: 0
-    assign ld_in_window = false
-    if settings.laborday_force_preview or request.design_mode
-        assign ld_in_window = true
-    elsif ld_start_s > 0 and ld_end_s > 0 and now_s >= ld_start_s and now_s < ld_end_s
-        assign ld_in_window = true
+    comment
+        The bar has no chrome of its own - it is only ever the frame around an announcement
+        block, a locale selector or the social icons. With none of those it would still paint
+        the orange `.utility-bar` strip below, so gate the whole thing on having content.
+    endcomment
+    assign has_bar_content = false
+    if announcement_bar or language_country_selector
+        assign has_bar_content = true
+    elsif section.settings.show_social and social_icons
+        assign has_bar_content = true
     endif
 -%}
 
@@ -122,15 +124,14 @@
 {% endstyle %}
 
 {%- comment -%}
-  Labor Day 2026 (PR #758): date-gate the announcement bar to the sale window (Sept 1-7)
-  so it does not persist after the sale ends. Safe to gate the whole utility bar here
-  because this section has show_social=false and both locale selectors off, so the Labor
-  Day announcement is its only content. Theme editor (request.design_mode) and
-  settings.laborday_force_preview both bypass the dates, mirroring
-  snippets/labor-day-sale-note.liquid. If social icons or a locale selector are ever
-  enabled on this section, move this gate to the announcement block instead.
+  Labor Day 2026 ran behind a settings.laborday_start/_end date gate here (PR #758), which
+  expired the bar on its own at the end of Sept 8. The campaign block itself is now removed
+  from sections/header-group.json, so that gate is retired with it: leaving a lapsed sale
+  window wrapped around the whole section would have silently swallowed the NEXT
+  announcement someone adds in the Customizer. The gate below is campaign-agnostic - it
+  renders the bar whenever the section actually has something to show.
 {%- endcomment -%}
-{%- if ld_in_window -%}
+{%- if has_bar_content -%}
 <div
         class="utility-bar color-{{ section.settings.color_scheme }} gradient{% if section.settings.show_line_separator and section.blocks.size > 0 %} utility-bar--bottom-border{% elsif section.settings.show_line_separator and section.settings.show_social and social_icons %} utility-bar--bottom-border-social-only{% endif %}{% if section.settings.enable_country_selector or section.settings.enable_language_selector %} header-localization{% endif %}"
         {{ block.shopify_attributes }}
