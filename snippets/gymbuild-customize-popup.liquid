@@ -192,6 +192,12 @@
                         assign inclusion_title = card_block.settings.custom_title | default: inclusion_product.title
                         assign inclusion_variant = inclusion_product.selected_or_first_available_variant
                         assign inclusion_image_url = inclusion_product.featured_image | image_url: width: 300
+                        # No real per-item quantity field exists yet — placeholder until
+                        # a metaobject/metafield source is wired in (see CLAUDE.md's
+                        # "Data Wiring Notes"). Kept as one variable so data-item-qty,
+                        # data-original-qty, and the pool JSON's "qty" below all move
+                        # together when a real source replaces this.
+                        assign inclusion_qty = 1
 
                         capture inclusion_pool_json
                           echo '['
@@ -214,6 +220,8 @@
                               echo pool_image_url | json
                               echo ',"price":'
                               echo pool_variant.price
+                              echo ',"qty":'
+                              echo inclusion_qty
                               echo '}'
                               assign pool_first = false
                             endif
@@ -228,11 +236,13 @@
                         data-item-title="{{ inclusion_title | escape }}"
                         data-item-image="{{ inclusion_image_url }}"
                         data-item-price="{{ inclusion_variant.price }}"
+                        data-item-qty="{{ inclusion_qty }}"
                         data-item-pool="{{ inclusion_pool_json | escape }}"
                         data-original-id="{{ inclusion_variant.id }}"
                         data-original-title="{{ inclusion_title | escape }}"
                         data-original-image="{{ inclusion_image_url }}"
                         data-original-price="{{ inclusion_variant.price }}"
+                        data-original-qty="{{ inclusion_qty }}"
                       >
                         <div class="gymbuild-customize-drawer__card-image-wrap">
                           {% if inclusion_product.featured_image %}
@@ -874,7 +884,8 @@
       activeCard.dataset.itemImage = alt.image;
       activeCard.dataset.itemPrice = alt.price;
 
-      runningTotalCents += deltaCents;
+      var qty = parseInt(activeCard.dataset.itemQty, 10) || 1;
+      runningTotalCents += deltaCents * qty;
       if (subtotalEl) subtotalEl.textContent = formatMoney(runningTotalCents);
 
       showMainView();
