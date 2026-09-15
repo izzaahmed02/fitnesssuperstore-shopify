@@ -957,6 +957,80 @@
     }
   }
 
+  /* --- Corrections found by measuring the skinned form on the preview -------- */
+
+  /* PFB's form element carries its own 30px padding INSIDE .globo-form-app's
+     32px, so fields rendered 560 - 60 = 500px wide in a 624px card. The card's
+     padding is the only one we want; this removes the inner one. Same story for
+     the app's own 30px vertical margin, which stacked on .cgb-pfb's 28px. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-app {
+    margin: 0;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb form.g-container {
+    padding: 0;
+  }
+
+  /* PFB's inputs are content-box, so the 16px side padding was being added to a
+     percentage width rather than taken out of it. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input {
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input input,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input select,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input textarea {
+    box-sizing: border-box;
+    width: 100%;
+  }
+
+  /* The select chevron is the one property PFB defends with !important, so this
+     is the one place the skin has to answer in kind. SS7: 14 x 8, #393940. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8' fill='none'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%23393940' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 16px center !important;
+    background-size: 14px 8px !important;
+  }
+
+  /* SS9 buttons row: flex, space-between, 16px gap, 24px above. PFB's footer is
+     display:block with 8px side padding, which also made the button 484px in a
+     560px card. */
+  #shopify-section-{{ section.id }} .cgb-pfb .gfb__footer,
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0;
+    margin-top: 24px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .gfb__footer .action,
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__footer .action {
+    flex: 0 0 auto;
+    min-width: 120px;
+  }
+
+  /* Step 1 shows Continue full width; step 2 puts Back and Submit in a row. PFB
+     marks the Back button .hidden on step 1, so its own state class is the hook -
+     no JS needed, and it flips automatically on step change. */
+  #shopify-section-{{ section.id }} .cgb-pfb .gfb__footer .action.previous.hidden ~ .action.next,
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__footer .action.previous.hidden ~ .action.next {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .cgb-pfb .gfb__footer,
+    #shopify-section-{{ section.id }} .cgb-pfb .wizard__footer {
+      margin-top: 16px;
+    }
+  }
+
 {%- endstyle -%}
 
 <div class="cgb-form{% unless section.settings.legacy_card_visible %} cgb-form--legacy-off{% endunless %}" id="commercial-gym-buildouts-form">
