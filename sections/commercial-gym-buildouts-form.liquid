@@ -1108,6 +1108,28 @@
     }
   }
 
+  /* --- Put the step indicator back in flow ---------------------------------- */
+  /* PFB positions .wizard__steps absolutely and translates it (-272px, 8px), so
+     it escaped the card's 32px padding and rendered 15px ABOVE the card's top
+     edge - and margin-bottom on it did nothing, since absolute elements push no
+     siblings. The positioning comes from PFB's stylesheet, not an inline style,
+     so ID-scoped rules win it back without !important.
+     The 24px gap below the row (SS5) is then supplied by .panel's own 25px top
+     padding, which is left alone deliberately: .panels carries a JS-measured
+     inline height, so the less this skin disturbs panel box metrics the better. */
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__steps {
+    position: static;
+    transform: none;
+    margin-bottom: 0;
+  }
+
+  /* The form's own header is now empty - its heading, subheading and phase row
+     were removed in PFB admin so the section can render them - but it kept a
+     20px bottom margin, pushing everything down by that much. */
+  #shopify-section-{{ section.id }} .cgb-pfb .gfb__page-header {
+    margin: 0;
+  }
+
 {%- endstyle -%}
 
 <div class="cgb-form{% unless section.settings.legacy_card_visible %} cgb-form--legacy-off{% endunless %}" id="commercial-gym-buildouts-form">
