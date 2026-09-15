@@ -1154,6 +1154,53 @@
     margin: 0;
   }
 
+  /* --- Step 2 fixes: pill groups and the two-button row --------------------- */
+
+  /* The bordered 48px box belongs to text and select fields only. On a checkbox
+     or radio control the same wrapper holds a fieldset of pills, so the border
+     drew a second box around the whole group (SS8 has no such box). */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control[data-type='checkbox'] .globo-form-input,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control[data-type='radio'] .globo-form-input {
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+  }
+
+  /* PFB draws its own 16x16 checkbox/radio glyph as ::before on the label (and a
+     tick as ::after), which sat outside each pill. The native input is already
+     hidden; these are what remained visible. SS8's pill is the whole control. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .checkbox-label::before,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .checkbox-label::after,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .radio-label::before,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .radio-label::after {
+    display: none;
+  }
+
+  /* PFB forces its footer buttons to width:100% and paints Back white, both with
+     enough weight to survive an ID-scoped override - so this is the second and
+     last place the skin answers with !important. D1 keeps Back solid orange:
+     the section wins over Figma's white/#d3d9e5 outline. */
+  #shopify-section-{{ section.id }} .cgb-pfb .gfb__footer .action,
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__footer .action {
+    width: auto !important;
+    min-width: 120px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .gfb__footer .action.previous,
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__footer .action.previous {
+    background-color: #d83d0e !important;
+    color: #ffffff !important;
+    border: none !important;
+  }
+
+  /* Step 1 has no Back, so Continue stays full width - keyed to PFB's own
+     .hidden state class, and now needs !important to beat the width rule above. */
+  #shopify-section-{{ section.id }} .cgb-pfb .gfb__footer .action.previous.hidden ~ .action.next,
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__footer .action.previous.hidden ~ .action.next {
+    width: 100% !important;
+    flex: 1 1 100%;
+  }
+
 {%- endstyle -%}
 
 <div class="cgb-form{% unless section.settings.legacy_card_visible %} cgb-form--legacy-off{% endunless %}" id="commercial-gym-buildouts-form">
