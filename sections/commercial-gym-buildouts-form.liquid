@@ -622,6 +622,341 @@
     }
   }
 
+  /* ===========================================================================
+     PHASE 2 RE-SKIN - Powerful Form Builder form 164478.
+
+     Targets PFB's real rendered markup, read from the preview DOM, not assumed:
+
+       .globo-form-control[data-type]        one field
+         label.globo-label                   floating label (absolute in PFB)
+           span.label-content                the text
+           span.text-danger                  the " *" required marker
+         .globo-form-input                   the "filled" box (bg tint, radius)
+           input.material_filled-input  | fieldset > ul.flex-wrap > li.globo-list-control
+         small.help-text.globo-description   the hint
+
+     PFB renders in its material_filled preset: Almarai font, dark-green
+     (#2e4e49) buttons, 2px radii, a tinted .globo-form-input, and labels
+     absolutely positioned *inside* the field. Every rule below sets its target
+     value outright rather than merely unsetting a Material one, so this skin
+     also holds if the form's style preset is changed in PFB admin later.
+
+     No !important anywhere - these selectors already outrank PFB's
+     .material_filled-* by specificity, matching the approach in
+     assets/section-custom-form.css.
+
+     Values cite cgb-form-style-tokens.md. The section file remains the source
+     of truth; Figma corroborates only.
+     =========================================================================== */
+
+  /* --- Card: token sheet SS4 ------------------------------------------------ */
+  /* PFB caps its own app at 600px and paints a 3-layer Material shadow. The card
+     is white on a white section, so the shadow is the only thing separating it
+     from the page - it is the one style to get right if nothing else lands. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-app {
+    max-width: none;
+    width: 100%;
+    padding: 32px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(126, 126, 126, 0.12);
+    font-family: 'Lato', sans-serif;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form.boxed-form {
+    max-width: none;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  /* --- Field wrapper: SS6, 16px desktop / 12px mobile ----------------------- */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control {
+    margin-bottom: 16px;
+    padding: 0;
+  }
+
+  /* --- Label: SS6 - Lato 12/18 #393940, 6px above the input ----------------- */
+  /* PFB floats this: position absolute, pointer-events none, translate(12,16).
+     All three are undone here so it sits statically above the field. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control .globo-label {
+    position: static;
+    transform: none;
+    pointer-events: auto;
+    display: block;
+    margin: 0 0 6px;
+    padding: 0;
+    font-family: 'Lato', sans-serif;
+    font-size: 12px;
+    line-height: 18px;
+    font-weight: 400;
+    color: #393940;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control .globo-label .label-content {
+    font-size: 12px;
+    line-height: 18px;
+    color: #393940;
+  }
+
+  /* Required marker - SS6 uses #d83d0e */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control .text-danger {
+    color: #d83d0e;
+  }
+
+  /* --- Input box: SS6 - 48px, 1px #e5e5e5, radius 8, white ------------------ */
+  /* The material_filled look is only a background tint on this wrapper - there
+     are no ::before/::after underlines to neutralise (both compute to none). */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input {
+    background-color: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    overflow: visible;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input input,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input select,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input textarea {
+    height: 48px;
+    min-height: 48px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 8px;
+    background-color: transparent;
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    color: #393940;
+    box-shadow: none;
+  }
+
+  /* SS6 textarea: 72px, 12px top/bottom padding */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input textarea {
+    height: 72px;
+    min-height: 72px;
+    padding: 12px 16px;
+    line-height: 24px;
+    resize: vertical;
+  }
+
+  /* D4 - the section defines no ::placeholder; #b3b3b3 is the theme's
+     established placeholder colour and matches the custom select's fake one. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input input::placeholder,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input textarea::placeholder {
+    color: #b3b3b3;
+    opacity: 1;
+  }
+
+  /* D3 - focus is genuinely absent from the section, which is an a11y gap, not
+     a style preference. Resolved toward the in-repo precedent:
+     assets/section-custom-form.css focuses Globo inputs with a #D83D0E border. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input:focus-within {
+    border-color: #d83d0e;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input input:focus,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input select:focus,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input textarea:focus {
+    outline: none;
+  }
+
+  /* --- Select: SS7 is a visual target only ---------------------------------- */
+  /* PFB uses a native select, whose open list the OS draws - the section built a
+     custom listbox precisely because that list cannot be styled. The closed
+     state is matched here; the open list is an accepted approximation. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 40px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8' fill='none'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%23393940' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    cursor: pointer;
+  }
+
+  /* --- Hint: SS6 - Lato 10/14 #808080, 6px below the input ------------------ */
+  #shopify-section-{{ section.id }} .cgb-pfb .help-text.globo-description {
+    display: block;
+    margin-top: 6px;
+    font-family: 'Lato', sans-serif;
+    font-size: 10px;
+    line-height: 14px;
+    color: #808080;
+  }
+
+  /* --- Group headings: SS6 - Lato Bold 14/20 #000 --------------------------- */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control[data-type='heading'] {
+    margin-bottom: 16px;
+    font-family: 'Lato', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 700;
+    color: #000000;
+  }
+
+  /* SS6: 48px between "Your project" and "Your contact details". The general
+     sibling combinator picks only a heading that follows another heading, so
+     step 1's single heading is untouched. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control[data-type='heading'] ~ .globo-form-control[data-type='heading'] {
+    margin-top: 48px;
+  }
+
+  /* --- Tag pills: SS8 -------------------------------------------------------- */
+  /* Equipment zones (multi) and preferred contact method (single). PFB renders
+     a native checkbox/radio list; this restyles that markup into the pill row.
+     CSS only - per the runbook the JS interaction is NOT rebuilt. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input ul.flex-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input li.globo-list-control {
+    width: auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* The native control is taken out of flow rather than display:none, so it
+     stays keyboard-focusable and the :checked selector below still works. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .checkbox-input,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .radio-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    margin: 0;
+    pointer-events: none;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .checkbox-label,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .radio-label {
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+    padding: 6px 12px;
+    background-color: #ffffff;
+    border: 1px solid #f2f2f2;
+    border-radius: 6px;
+    font-family: 'Lato', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: #393940;
+    cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+  }
+
+  /* SS8 selected: #d83d0e fill, #ffffff border, #ffffff text */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .checkbox-input:checked + .checkbox-label,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .radio-input:checked + .radio-label {
+    background-color: #d83d0e;
+    border-color: #ffffff;
+    color: #ffffff;
+  }
+
+  /* The native box is visually hidden, so focus has to be shown on the pill. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .checkbox-input:focus-visible + .checkbox-label,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .radio-input:focus-visible + .radio-label {
+    outline: 2px solid #d83d0e;
+    outline-offset: 2px;
+  }
+
+  /* --- Buttons: SS9 ---------------------------------------------------------- */
+  /* Both fixes the section had to make to the theme's .button recur here, for the
+     same reasons: PFB sets no font-family on its buttons, and lays them out with
+     flex and no justify-content, so a label in a full-width button packs left.
+     Back stays solid orange per D1 - the section wins over Figma's outline. */
+  #shopify-section-{{ section.id }} .cgb-pfb .gfb__footer .action,
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__footer .action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    height: 48px;
+    padding: 12px 24px;
+    background-color: #d83d0e;
+    border: none;
+    border-radius: 8px;
+    color: #ffffff;
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 700;
+    box-shadow: none;
+    cursor: pointer;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .gfb__footer .action.previous,
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__footer .action.previous {
+    background-color: #d83d0e;
+    border: none;
+    color: #ffffff;
+  }
+
+  /* --- Status messages: SS10 ------------------------------------------------- */
+  /* PFB exposes .message.success / .message.error as full-panel replacements,
+     which is the same shape as the section's status panels. */
+  #shopify-section-{{ section.id }} .cgb-pfb .message.success,
+  #shopify-section-{{ section.id }} .cgb-pfb .message.error {
+    text-align: center;
+    padding: 48px 0 8px;
+    font-family: 'Lato', sans-serif;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .message .gfb__content-title {
+    margin-bottom: 8px;
+    font-family: 'Lato', sans-serif;
+    font-size: 28px;
+    line-height: 36px;
+    font-weight: 700;
+    color: #393940;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .message .content,
+  #shopify-section-{{ section.id }} .cgb-pfb .message .content p {
+    max-width: 560px;
+    margin-left: auto;
+    margin-right: auto;
+    font-family: 'Lato', sans-serif;
+    font-size: 20px;
+    line-height: 26px;
+    color: #808080;
+  }
+
+  /* SS13 error banner */
+  #shopify-section-{{ section.id }} .cgb-pfb .message.error {
+    background-color: #fdece7;
+    border: 1px solid #d83d0e;
+    border-radius: 8px;
+    color: #d83d0e;
+  }
+
+  /* --- Mobile: SS4 card padding 16, SS6 field gap 12 ------------------------- */
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .cgb-pfb .globo-form-app {
+      padding: 16px;
+    }
+
+    #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control {
+      margin-bottom: 12px;
+    }
+
+    #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control[data-type='heading'] {
+      margin-bottom: 12px;
+    }
+  }
+
 {%- endstyle -%}
 
 <div class="cgb-form{% unless section.settings.legacy_card_visible %} cgb-form--legacy-off{% endunless %}" id="commercial-gym-buildouts-form">
