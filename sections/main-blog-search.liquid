@@ -22,6 +22,11 @@
   border-color: rgb(var(--color-foreground, 18 18 18));
 }
 
+/* Search-result thumbnail. width/height attributes on the <img> carry the
+   aspect ratio so the image reserves space and does not shift layout. */
+.blog-search-result__media { display: block; margin-bottom: 8px; }
+.blog-search-result__media img { width: 100%; height: auto; display: block; border-radius: 8px; }
+
 {%- endstyle -%}
 
 {%- liquid
@@ -96,8 +101,15 @@
               assign card_tags = article.tags | join: ' '
               assign published_epoch = article.published_at | date: '%s'
             -%}
+            {%- assign img_json = 'null' -%}
+            {%- if article.image -%}
+              {%- assign img_ar = article.image.aspect_ratio -%}
+              {%- if img_ar == blank or img_ar == 0 -%}{%- assign img_ar = 1.5 -%}{%- endif -%}
+              {%- assign img_h = 400 | divided_by: img_ar | round -%}
+              {%- capture img_json -%}{"url":{{ article.image | image_url: width: 400 | json | replace: '<', '\u003c' }},"alt":{{ article.image.alt | default: article.title | strip_html | json | replace: '<', '\u003c' }},"width":400,"height":{{ img_h }}}{%- endcapture -%}
+            {%- endif -%}
             {%- unless first_item -%},{%- endunless -%}{%- assign first_item = false -%}
-            {"title":{{ article.title | strip_html | json | replace: '<', '\u003c' }},"excerpt":{{ card_excerpt | json | replace: '<', '\u003c' }},"tags":{{ card_tags | json | replace: '<', '\u003c' }},"published_at":{{ published_epoch | json }},"url":{{ article.url | json | replace: '<', '\u003c' }}}
+            {"title":{{ article.title | strip_html | json | replace: '<', '\u003c' }},"excerpt":{{ card_excerpt | json | replace: '<', '\u003c' }},"tags":{{ card_tags | json | replace: '<', '\u003c' }},"published_at":{{ published_epoch | json }},"url":{{ article.url | json | replace: '<', '\u003c' }},"image":{{ img_json }}}
           {%- endfor -%}
         {%- endif -%}
       {%- endfor -%}
@@ -142,6 +154,25 @@ document.addEventListener('DOMContentLoaded', () => {
   function buildResultCard(article) {
     const wrapper = document.createElement('div');
     wrapper.className = 'article-card-wrapper card-wrapper blog-search-result';
+
+    // Thumbnail (lazy, with explicit dimensions to avoid layout shift).
+    // Articles with no featured image render no media element at all — no
+    // broken image, no empty box.
+    if (article.image && article.image.url) {
+      const media = document.createElement('a');
+      media.className = 'blog-search-result__media';
+      media.href = article.url;
+      const img = document.createElement('img');
+      img.src = article.image.url;
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      if (article.image.width) { img.width = article.image.width; }
+      if (article.image.height) { img.height = article.image.height; }
+      // Never an empty alt on a linked card: fall back to the article title.
+      img.alt = article.image.alt || article.title || '';
+      media.appendChild(img);
+      wrapper.appendChild(media);
+    }
 
     const heading = document.createElement('h3');
     heading.className = 'card__heading';
