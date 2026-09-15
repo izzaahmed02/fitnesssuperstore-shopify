@@ -1,5 +1,31 @@
+{% doc %}
+  Route September products to one campaign card; otherwise retain Labor Day.
+  @param {product} product - Current product.
+  @param {string} [section_id] - Section identifier used by variant refresh.
+  @param {boolean} [hide_on_mobile] - Hide the desktop-layout copy on mobile.
+{% enddoc %}
+{%- comment -%}
+  Separate September campaign extension. Keep the original Labor Day body below
+  intact when integrating other pricing changes; September does not depend on
+  the permanent-price cleanup. The capture marker selects one card only.
+{%- endcomment -%}
+{%- capture september_campaign_markup -%}
+  {%- render 'september-overstock-sale-note', product: product, section_id: section_id, hide_on_mobile: hide_on_mobile -%}
+{%- endcapture -%}
+{%- if september_campaign_markup contains 'data-september-overstock-2026' -%}
+  {{- september_campaign_markup -}}
+{%- else -%}
 {% comment %}
   snippets/labor-day-sale-note.liquid
+
+  POST-SALE (Labor Day 2026 ended Sept 8, 11:59:59 p.m. PT): this snippet renders NOTHING.
+  settings.sale_promo_ff and settings.sale_promo_reman are both blank, which is the
+  per-branch kill switch documented below, so campaign_kind stays '' and the card is
+  skipped on every path - including the request.design_mode / laborday_force_preview
+  bypasses that the date window alone does not cover. The date window has also lapsed.
+  The file, its render calls and the two product-info.js refresh hooks are deliberately
+  left in place: they are the reusable card, not the campaign, and the next campaign turns
+  it back on by filling those two settings and setting a new laborday_start/_end window.
 
   Price-adjacent sale note on eligible PDPs, keyed to ACTUAL discount eligibility
   (collection membership), not the product title. Replaces the previous
@@ -125,4 +151,6 @@
       </p>
     </div>
   </div>
+{%- endif -%}
+
 {%- endif -%}
