@@ -5,6 +5,10 @@ Preview: theme `188124725564` (UNPUBLISHED) | Production: theme `186120208700` (
 Assignment: Tim's 2026-09-08 revised sequence, step 2 — fresh byte check of the new head, and
 confirm the merged candidate carries #819, #821 and the three local inventory feed files.
 
+> **Superseded for head state (2026-09-15).** This record's head `96013bd` is no longer the
+> candidate. See `pr784-candidate-state-566b2396-2026-09-15.md` for the current head and the
+> `labor-day-sale-note.liquid` reconciliation with #833. The findings below stand as of their date.
+
 Supersedes the head-specific findings in `pr784-prepublish-gate-2026-09-08.md`. That record's
 canary and deletion pre-flight sections still stand.
 
