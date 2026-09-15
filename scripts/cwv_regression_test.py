@@ -44,12 +44,30 @@ require(script_tags, "<script src=\"{{ 'jquery.min.js' | asset_url }}\" defer=\"
 forbid(script_tags, 'js.squarecdn.com', 'snippets/script-tags.liquid')
 forbid(script_tags, "function loadSquareMarketplace()", 'snippets/script-tags.liquid')
 
-# 7) Google Maps should be interaction/load triggered for heavy pages.
-require(script_tags, "function loadGoogleMaps()", 'snippets/script-tags.liquid')
+# 7) Google Maps stays interaction/load triggered, and consumers wait for it.
+# The loader now lives in its own snippet so any section can render it, rather
+# than being gated on template names in script-tags.liquid - a gate that silently
+# missed one warehouse template and left its map unable to load at all.
+maps_loader = Path('snippets/google-maps-loader.liquid').read_text()
+require(maps_loader, "function loadGoogleMaps()", 'snippets/google-maps-loader.liquid')
+require(maps_loader, "window.googleMapsReady", 'snippets/google-maps-loader.liquid')
+
 # The eager tag is matched by URL prefix only. The assertion needs the request
 # shape, not the credential, and a prefix also keeps the check valid if the key
 # is ever rotated or replaced.
+forbid(maps_loader, '<script src="https://maps.googleapis.com/maps/api/js', 'snippets/google-maps-loader.liquid')
 forbid(script_tags, '<script src="https://maps.googleapis.com/maps/api/js', 'snippets/script-tags.liquid')
+forbid(script_tags, 'maps.googleapis.com', 'snippets/script-tags.liquid')
+
+# Sections using google.maps must render the loader and wait on its promise.
+# Initialising inside a window load handler is the defect fixed here: loading is
+# deliberately deferred, so the API is not present at load and the map fails.
+for maps_section in ['sections/map.liquid', 'sections/map-warehouse.liquid']:
+    section_source = Path(maps_section).read_text()
+    require(section_source, "{% render 'google-maps-loader' %}", maps_section)
+    require(section_source, "window.googleMapsReady.then(", maps_section)
+    forbid(section_source, "addEventListener('load'", maps_section)
+    forbid(section_source, 'maps.googleapis.com', maps_section)
 
 # 8) Heatmap loader should stay on the lightweight preprocessor implementation.
 require(script_tags, 'preprocessor.min.js?sid=', 'snippets/script-tags.liquid')
