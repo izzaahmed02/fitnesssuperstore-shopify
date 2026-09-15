@@ -597,9 +597,34 @@
     }
   }
 
+  /* ---------------------------------------------------------------------------
+     MIGRATION SCAFFOLDING - Powerful Form Builder form 164478.
+     .cgb-pfb mirrors .cgb-form__card's box (624 max-width, 28px above, centred) so
+     the PFB form lands exactly where the legacy card sits once the legacy card is
+     toggled off. Placed last in the style block so the max-width:749px override
+     below wins at equal specificity - same reason the existing mobile block sits
+     after the base rules. Remove with the embed when the migration completes.
+     See CGB-Form-Migration-Runbook.md.
+     --------------------------------------------------------------------------- */
+  #shopify-section-{{ section.id }} .cgb-form--legacy-off .cgb-form__card {
+    display: none;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb {
+    width: 100%;
+    max-width: 624px;
+    margin: 28px auto 0;
+  }
+
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .cgb-pfb {
+      margin-top: 20px;
+    }
+  }
+
 {%- endstyle -%}
 
-<div class="cgb-form" id="commercial-gym-buildouts-form">
+<div class="cgb-form{% unless section.settings.legacy_card_visible %} cgb-form--legacy-off{% endunless %}" id="commercial-gym-buildouts-form">
   <div class="page-width section-{{ section.id }}-padding">
     {%- unless section.settings.heading == blank -%}
       <div class="title-wrapper-with-link title-wrapper--self-padded-mobile title-wrapper--no-top-margin">
@@ -907,6 +932,22 @@
         {%- endif -%}
       {%- endform -%}
     </div>
+
+    {%- comment -%}
+      MIGRATION SCAFFOLDING - Powerful Form Builder form 164478 (data-id "MTY0NDc4"),
+      embedded per the theme's existing convention (sections/contact-form.liquid:76,
+      request-form.liquid:28, address-section.liquid:26). Renders as a sibling of the
+      legacy card above, and deliberately outside the Shopify form tag since nested
+      forms are invalid HTML.
+      The legacy card remains the source of truth and is untouched; this block and the
+      two toggles in the schema are migration scaffolding, not its retirement.
+      See CGB-Form-Migration-Runbook.md.
+    {%- endcomment -%}
+    {%- if section.settings.pfb_enabled -%}
+      <div class="cgb-pfb" data-cgb-pfb-form-id="164478">
+        <div class="globo-formbuilder" data-id="MTY0NDc4"></div>
+      </div>
+    {%- endif -%}
   </div>
 </div>
 
@@ -1276,6 +1317,22 @@
       "unit": "px",
       "label": "t:sections.all.padding.padding_bottom",
       "default": 80
+    },
+    {
+      "type": "header",
+      "content": "Form migration"
+    },
+    {
+      "type": "checkbox",
+      "id": "pfb_enabled",
+      "label": "Show new form (PFB)",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "legacy_card_visible",
+      "label": "Show legacy form",
+      "default": true
     }
   ],
   "presets": [
