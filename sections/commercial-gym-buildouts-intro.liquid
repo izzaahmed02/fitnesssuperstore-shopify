@@ -232,11 +232,14 @@
     padding: 0px 16px;
   }
 
-    /* No negative right margin here. The -4px this rule used to carry existed only to
-       cancel the 4px right padding the theme puts on <body> via
-       `.page-width-desktop.page-width-index`; that padding is removed on this page by
-       the full-width override in layout/theme.liquid, so the -4px pushed this section
-       4px past the viewport and gave the page a horizontal scrollbar. */
+    /* No negative right margin here, deliberately. This rule used to carry
+       `margin-right: -4px` to cancel the 4px right padding the theme puts on <body> via
+       `.page-width-desktop.page-width-index`. That framed container is back on this page,
+       so the -4px would apply again — but it was only ever on the RIGHT, so it bled this
+       one section 4px into the frame's right padding while its left edge stayed put,
+       leaving the intro visibly 4px out of line with every other section on the page.
+       The `min-width: 1290px` rule at the foot of this file now centres the column at
+       Figma's exact 1280px instead, which is symmetric. Do not reinstate the -4px. */
     @media screen and (max-width: 767px) {
       .imageTextInner {
         border-bottom: .1rem solid rgba(var(--color-foreground), .08);
@@ -269,6 +272,24 @@
     padding-bottom: 0;
     }
     }
+
+  /* Framed-container column. From 1290px up the theme's standard container
+     (`.page-width-desktop.page-width-index` in assets/base.css.liquid: max-width 1290px,
+     4px padding, 1px side borders, box-sizing border-box) caps the content at exactly
+     1280px — precisely the column Figma's 1440px frame carries at its 80px inset. So the
+     section hands the edge back to the frame here instead of adding an inset of its own,
+     which also stops the column stretching without limit on wide monitors (it measured
+     1760px at 1920px viewport while the page was full-width). Below 1290px the body is
+     still fluid and the 990px rule above stays in charge, so that band is unchanged. */
+  @media screen and (min-width: 1290px) {
+    #shopify-section-{{ section.id }} .section-{{ section.id }}-padding.imageText {
+      max-width: 1280px;
+      margin-left: auto;
+      margin-right: auto;
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
 {%- endstyle -%}
 
 {%- liquid

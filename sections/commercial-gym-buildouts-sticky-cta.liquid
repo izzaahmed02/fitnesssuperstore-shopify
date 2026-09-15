@@ -106,11 +106,24 @@
   /* Desktop — Figma node 5229:82674 inside frame 5229:81503: a bare 255x48 pill with
      no bar behind it, 22px from the right edge (1440 - 388 - 255 + frame origin) and
      24px up from the bottom (1024 - 952 - 48). Width comes from the theme's own
-     .button padding (24px + 207px label + 24px = 255px), so it is not hard-coded. */
+     .button padding (24px + 207px label + 24px = 255px), so it is not hard-coded.
+
+     The 22px is measured from the right edge of Figma's page frame, not from the right
+     edge of the browser window. The theme boxes this page into a 1290px framed container
+     (`.page-width-desktop.page-width-index`, assets/base.css.liquid) centred in the
+     viewport, so on anything wider than 1290px the window edge and the frame edge are
+     different places — a flat `right: 22px` left the pill stranded out on the page
+     background, 337px clear of the content at 1920px. The element is `position: fixed`,
+     so it is positioned against the viewport regardless; the calc below re-derives the
+     frame's own right edge and offsets 22px in from that. `100%` resolves against the
+     containing block (the viewport, excluding the scrollbar), which is what the body is
+     centred within, so the two stay aligned. max() pins the offset at a plain 22px below
+     1290px, where the container is fluid and the frame edge IS the window edge — and
+     that also covers 750-990px, where the framed container does not apply at all. */
   @media screen and (min-width: 750px) {
     .cgb-sticky-cta {
       left: auto;
-      right: 22px;
+      right: calc(max(0px, (100% - 1290px) / 2) + 22px);
       bottom: 24px;
       width: auto;
       padding: 0;

@@ -48,19 +48,19 @@
     }
   }
 
-  /* Full-width page requirement — the theme also boxes the ENTIRE <body> (header
-     included) to 1290px via `.page-width-desktop.page-width-index` in
-     assets/base.css.liquid (a site-wide "framed" design, !important, desktop only).
-     `commercial-gym-buildouts` is auto-added to <body> by layout/theme.liquid via
-     page.template_suffix, so scope the counter-override to that class only —
-     this must NOT change the framed look on any other page. */
-  @media screen and (min-width: 990px) {
-    body.commercial-gym-buildouts.page-width-desktop.page-width-index {
-      max-width: none !important;
-      padding: 0 !important;
-      border-left: none !important;
-      border-right: none !important;
-      box-shadow: none !important;
+  /* The page sits inside the theme's standard framed container again (`.page-width-desktop
+     .page-width-index` in assets/base.css.liquid: max-width 1290px, 4px padding, 1px side
+     borders, box-sizing border-box -> exactly 1280px of usable content width). That 1280px
+     is precisely the content column Figma's 1440px frame carries at an 80px inset, so from
+     1290px up the section drops its own side inset entirely and lets the frame supply the
+     edge. Below 1290px the body is still fluid, so the 40px/80px insets above stay in
+     charge and this page behaves exactly as it did before. */
+  @media screen and (min-width: 1290px) {
+    #shopify-section-{{ section.id }} .page-width {
+      --cgb-inset: 0px;
+      max-width: 1280px;
+      margin-left: auto;
+      margin-right: auto;
     }
   }
 
