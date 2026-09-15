@@ -48,21 +48,15 @@
     }
   }
 
-  /* The page sits inside the theme's standard framed container again (`.page-width-desktop
+  /* The page sits inside the theme's standard framed container (`.page-width-desktop
      .page-width-index` in assets/base.css.liquid: max-width 1290px, 4px padding, 1px side
-     borders, box-sizing border-box -> exactly 1280px of usable content width). That 1280px
-     is precisely the content column Figma's 1440px frame carries at an 80px inset, so from
-     1290px up the section drops its own side inset entirely and lets the frame supply the
-     edge. Below 1290px the body is still fluid, so the 40px/80px insets above stay in
-     charge and this page behaves exactly as it did before. */
-  @media screen and (min-width: 1290px) {
-    #shopify-section-{{ section.id }} .page-width {
-      --cgb-inset: 0px;
-      max-width: 1280px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-  }
+     borders, box-sizing border-box -> 1280px of usable width). `.banner` carries
+     `.page-width` with no side padding at >= 750px, so the hero photo bleeds the full
+     1280px to the frame edge, while `.banner__content` keeps the doubled `--cgb-inset`
+     and holds the copy 80px in from it — Figma's inset, measured from the container edge
+     rather than the window edge. Do not pin a max-width here: the container already
+     supplies the cap, and pinning it removed the inset and put the copy against the
+     frame border. */
 
   /* Figma node 4583:81338 "banner" — third fill is a linear gradient scrim over the
      photo, giving the left-hand copy its contrast. Derived from the Figma fill:

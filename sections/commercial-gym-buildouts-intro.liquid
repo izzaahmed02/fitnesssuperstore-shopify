@@ -121,18 +121,31 @@
        The image's aspect box is already correct — its padding-bottom ratio is 0.624,
        so 487 wide yields 304 tall on its own; only the column width was wrong. The
        media item's own 24px right padding is dropped because the 32px grid gap is
-       what separates image from text here. */
+       what separates image from text here.
+
+       Expressed as percentages of that 1216px content box rather than the raw pixels:
+         487 / 1216 = 40.0493%   624 / 1216 = 51.3158%
+       At 1216 these resolve to exactly 487px and 624px, so the Figma reading is
+       unchanged. They matter below that. This page sits in the theme's 1290px framed
+       container (1280px usable), and the 80px inset above leaves the card a 1056px
+       content box — narrower than the 1143px the two fixed columns needed. The row
+       therefore wrapped to a single column, stacking the image above the text and
+       leaving ~500px of dead card to the right, which grew the section from 448px to
+       634px tall. Percentages keep it a two-column row at any width and scale both
+       columns and the left-packed slack together, so a narrower container reads as the
+       same design at a smaller size instead of a broken one. Do not put the fixed
+       pixel widths back. */
     .section-{{ section.id }}-padding .image-with-text__media-item {
-    flex: 0 0 487px;
-    width: 487px;
-    max-width: 487px;
+    flex: 0 0 40.0493%;
+    width: 40.0493%;
+    max-width: 40.0493%;
     padding-right: 0;
     }
 
     .section-{{ section.id }}-padding .image-with-text__text-item {
-    flex: 0 0 624px;
-    width: 624px;
-    max-width: 624px;
+    flex: 0 0 51.3158%;
+    width: 51.3158%;
+    max-width: 51.3158%;
     }
     }
 
@@ -272,24 +285,6 @@
     padding-bottom: 0;
     }
     }
-
-  /* Framed-container column. From 1290px up the theme's standard container
-     (`.page-width-desktop.page-width-index` in assets/base.css.liquid: max-width 1290px,
-     4px padding, 1px side borders, box-sizing border-box) caps the content at exactly
-     1280px — precisely the column Figma's 1440px frame carries at its 80px inset. So the
-     section hands the edge back to the frame here instead of adding an inset of its own,
-     which also stops the column stretching without limit on wide monitors (it measured
-     1760px at 1920px viewport while the page was full-width). Below 1290px the body is
-     still fluid and the 990px rule above stays in charge, so that band is unchanged. */
-  @media screen and (min-width: 1290px) {
-    #shopify-section-{{ section.id }} .section-{{ section.id }}-padding.imageText {
-      max-width: 1280px;
-      margin-left: auto;
-      margin-right: auto;
-      padding-left: 0;
-      padding-right: 0;
-    }
-  }
 {%- endstyle -%}
 
 {%- liquid
