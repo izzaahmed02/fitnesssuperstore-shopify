@@ -606,10 +606,6 @@
      after the base rules. Remove with the embed when the migration completes.
      See CGB-Form-Migration-Runbook.md.
      --------------------------------------------------------------------------- */
-  #shopify-section-{{ section.id }} .cgb-form--legacy-off .cgb-form__card {
-    display: none;
-  }
-
   #shopify-section-{{ section.id }} .cgb-pfb {
     width: 100%;
     max-width: 624px;
@@ -1218,7 +1214,7 @@
 
 {%- endstyle -%}
 
-<div class="cgb-form{% unless section.settings.legacy_card_visible %} cgb-form--legacy-off{% endunless %}" id="commercial-gym-buildouts-form">
+<div class="cgb-form" id="commercial-gym-buildouts-form">
   <div class="page-width section-{{ section.id }}-padding">
     {%- unless section.settings.heading == blank -%}
       <div class="title-wrapper-with-link title-wrapper--self-padded-mobile title-wrapper--no-top-margin">
@@ -1241,6 +1237,7 @@
       <span class="cgb-form__phase">{{ section.settings.phase_3_text }}</span>
     </div>
 
+    {%- if section.settings.legacy_card_visible -%}
     <div class="cgb-form__card">
       {%- assign cgb_form_dom_id = 'CommercialGymBuildoutsForm-' | append: section.id -%}
       {%- form 'contact', id: cgb_form_dom_id, class: 'cgb-form__form' -%}
@@ -1526,6 +1523,7 @@
         {%- endif -%}
       {%- endform -%}
     </div>
+    {%- endif -%}
 
     {%- comment -%}
       MIGRATION SCAFFOLDING - Powerful Form Builder form 164478 (data-id "MTY0NDc4"),
@@ -1926,7 +1924,8 @@
       "type": "checkbox",
       "id": "legacy_card_visible",
       "label": "Show legacy form",
-      "default": true
+      "info": "Kept as the rollback path until the PFB form is signed off. Retires at Phase 8.",
+      "default": false
     }
   ],
   "presets": [
