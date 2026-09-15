@@ -1031,6 +1031,83 @@
     }
   }
 
+  /* --- Placeholders: PFB hides them with visibility, not colour ------------- */
+  /* material_filled shows the placeholder only once its floating label has moved
+     up. That label is now static, so the placeholder must be visible at rest -
+     otherwise every text field renders blank. Colour/opacity were already ours;
+     visibility is the property that was actually hiding them. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input input::placeholder,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input textarea::placeholder {
+    visibility: visible;
+    color: #b3b3b3;
+    opacity: 1;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input input::-webkit-input-placeholder,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input textarea::-webkit-input-placeholder {
+    visibility: visible;
+    color: #b3b3b3;
+    opacity: 1;
+  }
+
+  /* --- Progress indicator: SS5 ---------------------------------------------- */
+  /* PFB does ship a native step indicator - nav.steps > .step > .step__content >
+     p.step__number + .lines > .line.-background / .line.-start / .line.-progress.
+     It carries no text, but it is a real track, so per the runbook it gets
+     restyled rather than duplicated with a parallel one of our own.
+     PFB's palette here is dark green #2e4e49 on grey #c3c3c3. */
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__steps {
+    margin-bottom: 24px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__steps .line.-background {
+    height: 4px;
+    background-color: #fce6de;
+    border-radius: 2px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__steps .line.-start,
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__steps .line.-progress {
+    height: 4px;
+    background-color: #f1592a;
+    border-radius: 2px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__steps .step__number {
+    background-color: #ffffff;
+    border-color: #f1592a;
+  }
+
+  /* SS5 also puts a "Step 1/2" label above the track. PFB renders no text at all
+     in its indicator, so it is supplied here and keyed to PFB's own state class:
+     the Back button carries .hidden on step 1 only. :has() drives it, so the
+     label flips on step change with no JS; where :has() is unsupported the label
+     simply does not render and the track still reads correctly. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-formbuilder-wizard:has(.action.previous.hidden) .wizard__steps::before,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-formbuilder-wizard:has(.action.previous:not(.hidden)) .wizard__steps::before {
+    display: block;
+    margin-bottom: 4px;
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 700;
+    color: #000000;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-formbuilder-wizard:has(.action.previous.hidden) .wizard__steps::before {
+    content: 'Step 1/2';
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-formbuilder-wizard:has(.action.previous:not(.hidden)) .wizard__steps::before {
+    content: 'Step 2/2';
+  }
+
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .cgb-pfb .wizard__steps {
+      margin-bottom: 16px;
+    }
+  }
+
 {%- endstyle -%}
 
 <div class="cgb-form{% unless section.settings.legacy_card_visible %} cgb-form--legacy-off{% endunless %}" id="commercial-gym-buildouts-form">
