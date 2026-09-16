@@ -157,8 +157,8 @@ def restore_feed_from_items(items_path):
                     "sku": external_id,
                     "product_type": metadata.get("product_type") or "",
                     "product_category": metadata.get("product_category") or "",
-                    "inventory_quantity": None,
-                    "inventory_policy": None,
+                    "inventory_quantity": metadata.get("inventory_quantity"),
+                    "inventory_policy": metadata.get("inventory_policy"),
                     "published": bool(attributes.get("published", True)),
                 }
             )

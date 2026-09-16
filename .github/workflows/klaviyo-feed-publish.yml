@@ -164,6 +164,9 @@ jobs:
         if: failure()
         env:
           GH_TOKEN: ${{ github.token }}
+          # Checkout may be the step that failed, leaving no git remote for gh
+          # to infer the repository from.
+          GH_REPO: ${{ github.repository }}
           ALERT_TITLE: Klaviyo feed publish is failing
         run: |
           set -euo pipefail
@@ -188,9 +191,12 @@ jobs:
       # Close the alert once a run recovers, so an open issue always means
       # "the feed is stale right now" rather than "it broke once, months ago".
       - name: Close the alert issue on recovery
-        if: success()
+        if: ${{ success() && !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ github.token }}
+          # Checkout may be the step that failed, leaving no git remote for gh
+          # to infer the repository from.
+          GH_REPO: ${{ github.repository }}
           ALERT_TITLE: Klaviyo feed publish is failing
         run: |
           set -euo pipefail
