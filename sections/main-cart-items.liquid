@@ -752,7 +752,7 @@
 <div class="overlay"></div>
 <div class="cart-items__popup" style="display: none;">
   <div class="cart-items__popup-wrapper">
-    <a href="#" class="cart-items__popup-close" role="button" aria-label="{{ 'accessibility.close' | t }}">{% render 'cart-item-remove' %}</a>
+    <a href="#" class="cart-items__popup-close" role="button" aria-label="{{ 'accessibility.close' | t }}">{% render 'drawer-close' %}</a>
     <h5 class="cart-items__popup-title">{{ section.settings.popup_title }}</h5>
     <p class="cart-items__popup-copy">{{ section.settings.popup_copy }}</p>
     <div class="cart-items__popup-buttons">
@@ -773,6 +773,12 @@
   </div>
 </div>
 
+{%- comment -%}
+  Wrapper is rendered unconditionally and is listed as its own render target in
+  CartItems.getSectionsToRender(), so the option popups are rebuilt alongside
+  the Modify buttons inside .js-contents on every AJAX cart update.
+{%- endcomment -%}
+<div id="CartItems-ProductOptions">
 {% if show_product_options %}
   {% assign has_info = false %}
   {% for item in cart.items %}
@@ -808,7 +814,10 @@
       {% endfor %}
     {% endfor %}
   {% endfor %}
+{% endif %}
+</div>
 
+{% if show_product_options %}
   <script src="{{ 'product-custom-options.js' | asset_url }}" defer></script>
 {% endif %}
 
