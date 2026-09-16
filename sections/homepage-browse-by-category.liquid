@@ -55,6 +55,14 @@
                      
           {% endif %}
         {% endfor %}
+        {% comment %} Item 6 (hp-p1): "All Equipment" tile — shows only in the mobile static grid (first/Cardio tab); hidden on the desktop slider. {% endcomment %}
+        {% if forloop.first %}
+          <div class="category-card browse-grid-only">
+            <a class="all-equipment-link" aria-label="View all equipment" href="{{ routes.collections_url }}">
+              <h3>All Equipment&nbsp;&rarr;</h3>
+            </a>
+          </div>
+        {% endif %}
       </div>
     </div>
   {% endfor %}
@@ -66,6 +74,30 @@ line-height: 22px;
 }
 .homepage-browse-category .category-card {
 padding: 24px 18px;
+}
+
+/* Item 6 (hp-p1): below 990px the slick carousel is replaced by a static 2-column
+   tap grid. Desktop (>=990px) keeps the slick slider untouched. The grid rules only
+   apply while the track is NOT slick-initialized, so they can never fight slick. */
+.homepage-browse-category .browse-grid-only { display: none; }
+@media screen and (max-width: 989px) {
+  .homepage-browse-category [class*="slider-tab-"]:not(.slick-initialized) {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .homepage-browse-category [class*="slider-tab-"]:not(.slick-initialized) .category-card {
+    margin: 0;
+  }
+  .homepage-browse-category .browse-grid-only { display: block; }
+  .homepage-browse-category .all-equipment-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-decoration: none;
+  }
 }
 </style>
 
