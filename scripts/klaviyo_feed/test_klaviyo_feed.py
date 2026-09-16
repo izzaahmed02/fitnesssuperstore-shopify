@@ -325,6 +325,25 @@ class BulkExportTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             client.submit("{}")
 
+    def test_preflight_accepts_a_token_that_can_read_products(self):
+        client, _ = self.make([{"data": {
+            "shop": {"myshopifyDomain": "example.myshopify.com"},
+            "products": {"edges": [{"node": {"id": "gid://shopify/Product/1"}}]}}}])
+        self.assertEqual(client.preflight(), "example.myshopify.com")
+
+    def test_preflight_names_the_missing_scope(self):
+        client, _ = self.make([{"errors": [{"message": "ACCESS_DENIED", "extensions": {
+            "code": "ACCESS_DENIED", "requiredAccess": "read_products"}}]}])
+        with self.assertRaises(SystemExit) as caught:
+            client.preflight()
+        self.assertIn("read_products", str(caught.exception))
+
+    def test_preflight_rejects_a_revoked_token(self):
+        client, _ = self.make([{"data": {"shop": None, "products": None}}])
+        with self.assertRaises(SystemExit) as caught:
+            client.preflight()
+        self.assertIn("revoked", str(caught.exception))
+
     def test_missing_credentials_fail_loudly(self):
         saved = {k: os.environ.pop(k, None) for k in ("SHOPIFY_SHOP", "SHOPIFY_ADMIN_TOKEN")}
         try:

@@ -52,6 +52,13 @@ query poll($id: ID!) {
 }
 """
 
+PREFLIGHT_QUERY = """
+query preflight {
+  shop { myshopifyDomain }
+  products(first: 1) { edges { node { id } } }
+}
+"""
+
 TERMINAL_STATUSES = {"COMPLETED", "FAILED", "CANCELED", "EXPIRED"}
 
 
@@ -91,6 +98,36 @@ class ShopifyBulkExporter:
         if payload.get("errors"):
             raise SystemExit(f"Shopify GraphQL error: {json.dumps(payload['errors'])[:500]}")
         return payload.get("data") or {}
+
+    def preflight(self):
+        """Prove the token authenticates and carries read_products, cheaply.
+
+        A bulk export takes minutes and only fails at the end; this fails in one
+        round trip instead, and distinguishes the two ways a token goes wrong:
+        wrong or revoked token, versus a valid token without `read_products`.
+        """
+        try:
+            data = self._call(PREFLIGHT_QUERY, {})
+        except SystemExit as error:
+            message = str(error)
+            if "ACCESS_DENIED" in message or "access scope" in message:
+                raise SystemExit(
+                    "Preflight failed: the token authenticates but is missing the "
+                    "`read_products` Admin API access scope."
+                )
+            raise SystemExit(f"Preflight failed before the export started. {message}")
+        shop = (data.get("shop") or {}).get("myshopifyDomain")
+        if not shop:
+            raise SystemExit(
+                "Preflight failed: no shop returned. The token is likely revoked, "
+                "or belongs to a different store than SHOPIFY_SHOP."
+            )
+        if (data.get("products") or {}).get("edges") is None:
+            raise SystemExit(
+                "Preflight failed: the token cannot read products. Check that "
+                "`read_products` is in its Admin API access scopes."
+            )
+        return shop
 
     def submit(self, bulk_query):
         data = self._call(RUN_MUTATION, {"q": bulk_query})
@@ -141,6 +178,11 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", required=True, help="Destination JSONL path")
     parser.add_argument(
+        "--preflight-only",
+        action="store_true",
+        help="Check credentials and scopes, then exit without starting an export",
+    )
+    parser.add_argument(
         "--query",
         default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "bulk_export_query.graphql"),
         help="GraphQL bulk query file",
@@ -157,6 +199,11 @@ def main(argv=None):
         bulk_query = handle.read()
 
     exporter = ShopifyBulkExporter()
+    shop = exporter.preflight()
+    print(f"preflight ok: authenticated to {shop} with read_products", flush=True)
+    if args.preflight_only:
+        return 0
+
     operation_id = exporter.submit(bulk_query)
     print(f"submitted {operation_id}", flush=True)
 
