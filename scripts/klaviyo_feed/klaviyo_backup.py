@@ -38,21 +38,18 @@ PAGE_SIZE = 100
 # replacement feed are directly comparable.
 FEED_KEYS = [
     "id",
+    "mpn",
     "title",
+    "upc",
+    "condition",
+    "price",
+    "product_category",
+    "brand",
+    "availability",
     "description",
     "link",
     "image_link",
-    "price",
-    "availability",
-    "condition",
-    "mpn",
-    "upc",
-    "sku",
     "product_type",
-    "product_category",
-    "inventory_quantity",
-    "inventory_policy",
-    "published",
 ]
 
 
@@ -157,9 +154,13 @@ def restore_feed_from_items(items_path):
                     "sku": external_id,
                     "product_type": metadata.get("product_type") or "",
                     "product_category": metadata.get("product_category") or "",
-                    "inventory_quantity": metadata.get("inventory_quantity"),
-                    "inventory_policy": metadata.get("inventory_policy"),
-                    "published": bool(attributes.get("published", True)),
+                    # `brand` is mapped as Categories (List), so its values live
+                    # in catalog categories rather than custom_metadata and
+                    # cannot be read back per item. The live catalog holds zero
+                    # categories, so an empty brand reproduces its present state
+                    # faithfully; if categories are ever repopulated, this needs
+                    # to read them from catalog_categories.jsonl instead.
+                    "brand": metadata.get("brand") or "",
                 }
             )
     return [{key: row[key] for key in FEED_KEYS} for row in feed]

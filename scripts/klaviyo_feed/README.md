@@ -65,6 +65,19 @@ recommendation-event history line up.
 | `upc` | `custom.upc_code` |
 | `product_type` | `custom.main_category > custom.sub_category` |
 | `product_category` | Shopify Standard Product Taxonomy `category.fullName` |
+| `brand` | `product.vendor` |
+
+The feed emits **exactly** these thirteen fields — no more, no less. Klaviyo
+requires every field in a custom-catalog feed to be mapped: an extra field forces
+a mapping edit on source 24138, and a missing one fails a required field on sync.
+Both are cutover risks, and editing the mapping is not ours to do.
+
+`brand` is mapped on 24138 with field type **Categories (List)**: it is what
+populates Klaviyo catalog categories, which is in turn what Collection-based
+product feeds select on (e.g. `NewBA_FF`, "Collection: BA French Fitness").
+Omitting it leaves the catalog with zero categories and those feeds with nothing
+to draw from. Shopify `vendor` is populated on every product in the export, so
+requiring it excludes nothing.
 
 `product_type` and `product_category` are the two fields whose **wording** the
 legacy feed owns rather than Shopify: the legacy catalog carried a Volusion
@@ -94,8 +107,8 @@ Blocking:
   means a new identity problem to triage.
 - `GIFT_CERTIFICATE` — gift certificates are not products and are absent from
   the current catalog; they must not enter a recommendation feed.
-- `BLANK_REQUIRED_FIELD_<FIELD>` — `description`, `product_type` or
-  `product_category` blank. The source 24138 mapping requires these, so a blank
+- `BLANK_REQUIRED_FIELD_<FIELD>` — `description`, `product_type`,
+  `product_category` or `brand` blank. The source 24138 mapping requires these, so a blank
   risks an item-level sync failure. All 3,221 live catalog items carry both
   taxonomy fields populated, which is consistent with that.
 - `ZERO_OR_NEGATIVE_PRICE`, `UNPARSEABLE_PRICE`, `MISSING_PRODUCT_URL`,
