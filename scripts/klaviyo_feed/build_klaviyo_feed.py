@@ -463,11 +463,23 @@ def main(argv=None):
                 reason_counts[reason] += 1
 
     accounted = len(feed) + len(excluded)
+    # A duplicate with no preferred parent drops every owner of that SKU, so the
+    # SKU vanishes from the feed entirely. Those rows still count as accounted,
+    # so the arithmetic below balances and the loss is silent. Gate on it.
+    resolved_duplicate_skus = sorted(
+        sku
+        for sku in duplicated_skus
+        if any(r["id"] == sku and r["_dup_resolution"] == "preferred" for r in candidates)
+    )
+    unresolved_duplicate_skus = sorted(
+        set(duplicated_skus) - set(resolved_duplicate_skus)
+    )
     reconciliation_clean = (
         malformed == 0
         and not products_without_variants
         and accounted == len(candidates)
         and not duplicate_emitted
+        and not unresolved_duplicate_skus
         and len(feed) >= args.min_items
     )
 
@@ -497,20 +509,8 @@ def main(argv=None):
         "duplicate_sku_analysis": {
             "distinct_duplicated_skus": len(duplicated_skus),
             "excluded_rows": sum(sku_counts[sku] for sku in duplicated_skus),
-            "resolved_parent_preferred": sorted(
-                sku
-                for sku in duplicated_skus
-                if any(
-                    r["id"] == sku and r["_dup_resolution"] == "preferred" for r in candidates
-                )
-            ),
-            "unresolved": sorted(
-                sku
-                for sku in duplicated_skus
-                if not any(
-                    r["id"] == sku and r["_dup_resolution"] == "preferred" for r in candidates
-                )
-            ),
+            "resolved_parent_preferred": resolved_duplicate_skus,
+            "unresolved": unresolved_duplicate_skus,
             "claiming_shopify_products": dict(duplicate_parents.most_common()),
         },
         "blank_sku_rows": blank_sku_rows,

@@ -203,6 +203,37 @@ class BuilderTests(unittest.TestCase):
         self.assertNotIn("pk_", json.dumps(report))
 
 
+class UnresolvedDuplicateTests(unittest.TestCase):
+    """A duplicate with no preferred parent loses the SKU silently otherwise."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+
+    def test_unresolved_duplicate_fails_reconciliation(self):
+        a_node, a_variant = product(901, "DUP-1", "100.00")
+        b_node, b_variant = product(902, "DUP-1", "200.00")
+        ok_node, ok_variant = product(903, "OK-1", "300.00")
+        jsonl = os.path.join(self.tmp, "bulk.jsonl")
+        write_jsonl(jsonl, [a_node, a_variant, b_node, b_variant, ok_node, ok_variant])
+        out = os.path.join(self.tmp, "out")
+        code = builder.main(
+            ["--jsonl", jsonl, "--out", out, "--min-items", "1"]
+        )
+        with open(os.path.join(out, "build_report.json"), encoding="utf-8") as handle:
+            report = json.load(handle)
+        with open(os.path.join(out, "klaviyo_feed.json"), encoding="utf-8") as handle:
+            feed = json.load(handle)
+
+        # the SKU is gone from the feed entirely - both owners were dropped
+        self.assertNotIn("DUP-1", [row["id"] for row in feed])
+        self.assertEqual(report["duplicate_sku_analysis"]["unresolved"], ["DUP-1"])
+        # the row arithmetic still balances, which is exactly why it needs its own guard
+        self.assertEqual(report["counts"]["accounted"], report["counts"]["variant_rows"])
+        # so reconciliation must fail on the unresolved duplicate alone
+        self.assertFalse(report["reconciliation_clean"])
+        self.assertEqual(code, 1)
+
+
 class BackupTests(unittest.TestCase):
     def test_restore_feed_reproduces_the_live_catalog_verbatim(self):
         tmp = tempfile.mkdtemp()
@@ -227,6 +258,8 @@ class BackupTests(unittest.TestCase):
                                 "availability": "In Stock",
                                 "product_type": "Home > Home > Legacy",
                                 "product_category": "Legacy Cat",
+                                "inventory_quantity": 4,
+                                "inventory_policy": "deny",
                             },
                         },
                     }
@@ -241,6 +274,9 @@ class BackupTests(unittest.TestCase):
         self.assertIn(".htm", row["link"])
         self.assertIn("vspfiles", row["image_link"])
         self.assertEqual(row["product_type"], "Home > Home > Legacy")
+        # hard-coded nulls here would erase these two fields on rollback
+        self.assertEqual(row["inventory_quantity"], 4)
+        self.assertEqual(row["inventory_policy"], "deny")
         self.assertEqual(list(row.keys()), backup.FEED_KEYS)
 
     def test_feed_key_order_matches_the_builder(self):
