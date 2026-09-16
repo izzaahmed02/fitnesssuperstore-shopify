@@ -23,6 +23,7 @@ def product(pid, sku, price, **overrides):
         "id": f"gid://shopify/Product/{pid}",
         "title": f"Product {pid}",
         "status": "ACTIVE",
+        "vendor": "French Fitness",
         "description": "<p>Hello  world</p>",
         "onlineStoreUrl": f"https://www.fitnesssuperstore.com/products/p{pid}",
         "featuredMedia": {"preview": {"image": {"url": "https://cdn.shopify.com/hero.webp"}}},
@@ -203,6 +204,48 @@ class BuilderTests(unittest.TestCase):
         self.assertNotIn("pk_", json.dumps(report))
 
 
+class BrandFieldTests(unittest.TestCase):
+    """`brand` is mapped as Categories (List) on source 24138 and is required.
+
+    It is what populates Klaviyo catalog categories, which Collection-based
+    product feeds select on. A feed without it fails a required field on sync.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+
+    def build(self, nodes):
+        jsonl = os.path.join(self.tmp, "bulk.jsonl")
+        write_jsonl(jsonl, nodes)
+        out = os.path.join(self.tmp, "out")
+        code = builder.main(["--jsonl", jsonl, "--out", out, "--min-items", "0"])
+        with open(os.path.join(out, "klaviyo_feed.json"), encoding="utf-8") as handle:
+            feed = json.load(handle)
+        return code, feed
+
+    def test_brand_comes_from_shopify_vendor(self):
+        node, variant = product(701, "BRAND-1", "100.00", vendor="Body-Solid")
+        _, feed = self.build([node, variant])
+        self.assertEqual(feed[0]["brand"], "Body-Solid")
+
+    def test_blank_vendor_is_blocking(self):
+        node, variant = product(702, "BRAND-2", "100.00", vendor="")
+        _, feed = self.build([node, variant])
+        self.assertEqual(feed, [])
+
+    def test_feed_matches_the_source_24138_field_set_exactly(self):
+        node, variant = product(703, "BRAND-3", "100.00")
+        _, feed = self.build([node, variant])
+        # every field mapped, no field unmapped - either breaks the sync
+        self.assertEqual(list(feed[0].keys()), builder.FEED_KEYS)
+        self.assertNotIn("sku", feed[0])
+        self.assertNotIn("inventory_quantity", feed[0])
+        self.assertNotIn("published", feed[0])
+
+    def test_rollback_feed_uses_the_same_field_set(self):
+        self.assertEqual(backup.FEED_KEYS, builder.FEED_KEYS)
+
+
 class UnresolvedDuplicateTests(unittest.TestCase):
     """A duplicate with no preferred parent loses the SKU silently otherwise."""
 
@@ -258,8 +301,6 @@ class BackupTests(unittest.TestCase):
                                 "availability": "In Stock",
                                 "product_type": "Home > Home > Legacy",
                                 "product_category": "Legacy Cat",
-                                "inventory_quantity": 4,
-                                "inventory_policy": "deny",
                             },
                         },
                     }
@@ -274,9 +315,9 @@ class BackupTests(unittest.TestCase):
         self.assertIn(".htm", row["link"])
         self.assertIn("vspfiles", row["image_link"])
         self.assertEqual(row["product_type"], "Home > Home > Legacy")
-        # hard-coded nulls here would erase these two fields on rollback
-        self.assertEqual(row["inventory_quantity"], 4)
-        self.assertEqual(row["inventory_policy"], "deny")
+        # inventory_quantity/inventory_policy are deliberately absent: they are
+        # not in the source 24138 mapping, and an unmapped field breaks the sync
+        self.assertNotIn("inventory_quantity", row)
         self.assertEqual(list(row.keys()), backup.FEED_KEYS)
 
     def test_feed_key_order_matches_the_builder(self):

@@ -39,7 +39,7 @@ DUPLICATE_PARENT_PREFERRED = "duplicate_sku_parent_preferred"
 # failure, so a blank excludes the row instead of merely warning. Verified
 # against the live catalog: all 3,221 items carry product_type and
 # product_category populated, while upc, mpn and condition are blank on some.
-REQUIRED_MAPPED_FIELDS = ("description", "product_type", "product_category")
+REQUIRED_MAPPED_FIELDS = ("description", "product_type", "product_category", "brand")
 
 # Gift certificates are not products and are absent from the current catalog.
 # They must not enter a product-recommendation feed.
@@ -51,24 +51,30 @@ def is_gift_certificate(row):
         "gift certificate" in row["title"].lower()
     )
 
-# Feed keys, in the order the existing source 24138 mapping consumes them.
+# Exactly the field set the existing source 24138 mapping consumes — no more, no
+# less. Klaviyo requires every field in the feed to be mapped, so an extra field
+# forces a mapping edit and a missing one fails a required field. Both are
+# cutover risks, and editing the mapping is explicitly not ours to do.
+#
+# `brand` is mapped with field type Categories (List): it is what populates
+# Klaviyo catalog categories, which is in turn what Collection-based product
+# feeds (e.g. NewBA_FF, "Collection: BA French Fitness") select on. Omitting it
+# would leave the catalog with zero categories and those feeds with nothing to
+# draw from.
 FEED_KEYS = [
     "id",
+    "mpn",
     "title",
+    "upc",
+    "condition",
+    "price",
+    "product_category",
+    "brand",
+    "availability",
     "description",
     "link",
     "image_link",
-    "price",
-    "availability",
-    "condition",
-    "mpn",
-    "upc",
-    "sku",
     "product_type",
-    "product_category",
-    "inventory_quantity",
-    "inventory_policy",
-    "published",
 ]
 
 TAG_RE = re.compile(r"<[^>]+>")
@@ -211,6 +217,9 @@ def build_row(product, variant, legacy_taxonomy=None, variant_count=1):
         "sku": sku,
         "product_type": product_type,
         "product_category": product_category,
+        # Shopify's vendor is the brand. Populated on every product in the
+        # export, so requiring it excludes nothing.
+        "brand": (product.get("vendor") or "").strip(),
         "inventory_quantity": variant.get("inventoryQuantity"),
         "inventory_policy": 0 if (variant.get("inventoryPolicy") or "").upper() == "DENY" else 1,
         "published": True,
