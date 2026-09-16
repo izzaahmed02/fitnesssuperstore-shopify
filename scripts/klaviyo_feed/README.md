@@ -158,7 +158,6 @@ survivable.
 | --- | --- | --- |
 | `SHOPIFY_SHOP` | repo secret | `<store>.myshopify.com` |
 | `SHOPIFY_ADMIN_TOKEN` | repo secret | Admin API access token (`shpat_`), `read_products` only. Only a legacy custom app issues this; an app-automation token (`atkn_`) or an OAuth client secret (`shpss_`) will not work. |
-| `FEED_ALERT_SLACK_WEBHOOK` | repo secret | Slack incoming-webhook URL (optional; without it a failure only annotates the run) |
 | Pages source | repo Settings → Pages | GitHub Actions |
 | Custom domain | repo Settings → Pages | `feeds.fitnesssuperstore.com` |
 | DNS | DNS provider | `CNAME feeds → <owner>.github.io` |
@@ -185,7 +184,10 @@ survivable.
   partial or inconsistent export cannot overwrite a good feed.
 - `concurrency` prevents two publishes racing, so a half-written feed is never
   served.
-- Failure posts to the alert webhook. A silent failure is the one outcome that
+- Failure opens a GitHub issue titled "Klaviyo feed publish is failing", and a
+  later successful run closes it. No external service and no credential is
+  involved — GitHub emails repository watchers on its own. An open issue always
+  means the feed is stale right now. A silent failure is the one outcome that
   must not happen: Klaviyo would keep serving the last good feed with nobody
   aware it had stopped refreshing.
 - `robots.txt` disallows everything. Note the feed is still publicly fetchable
