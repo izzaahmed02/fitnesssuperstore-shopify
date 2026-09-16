@@ -32,6 +32,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  issues: write   # the failure alert opens/closes a tracking issue
 
 # Never let two publishes race; a half-written feed must never be served.
 concurrency:
@@ -157,16 +158,45 @@ jobs:
 
       # Staleness and failure monitoring. A silent failure is the one outcome
       # that must not happen: Klaviyo would keep serving the last good feed with
-      # nobody aware it had stopped refreshing.
-      - name: Notify on failure
+      # nobody aware it had stopped refreshing. An issue needs no external
+      # service and no credential — GitHub emails watchers on its own.
+      - name: Raise an alert issue on failure
         if: failure()
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.FEED_ALERT_SLACK_WEBHOOK }}
+          GH_TOKEN: ${{ github.token }}
+          ALERT_TITLE: Klaviyo feed publish is failing
         run: |
-          if [ -z "$SLACK_WEBHOOK_URL" ]; then
-            echo "::error::Klaviyo feed publish FAILED and no alert webhook is configured."
-            exit 0
+          set -euo pipefail
+          body=$(cat <<EOF
+          Run \`${GITHUB_RUN_ID}\` of **Klaviyo Feed Publish** failed on \`${GITHUB_SHA}\`.
+
+          Catalog source 24138 is still serving the **last good feed** — nothing is
+          corrupted — but it has stopped refreshing, so it drifts further from
+          Shopify with every hour this stays open.
+
+          https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+          EOF
+          )
+          existing=$(gh issue list --state open --search "\"$ALERT_TITLE\" in:title" \
+            --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "$ALERT_TITLE" --body "$body"
           fi
-          curl -sS -X POST -H 'Content-Type: application/json' \
-            --data "{\"text\":\":rotating_light: Klaviyo feed publish FAILED — run ${GITHUB_RUN_ID}. Source 24138 is still serving the last good feed. https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}" \
-            "$SLACK_WEBHOOK_URL"
+
+      # Close the alert once a run recovers, so an open issue always means
+      # "the feed is stale right now" rather than "it broke once, months ago".
+      - name: Close the alert issue on recovery
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ALERT_TITLE: Klaviyo feed publish is failing
+        run: |
+          set -euo pipefail
+          existing=$(gh issue list --state open --search "\"$ALERT_TITLE\" in:title" \
+            --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue close "$existing" \
+              --comment "Recovered: run ${GITHUB_RUN_ID} published successfully."
+          fi
