@@ -157,7 +157,7 @@ survivable.
 | Setting | Where | Value |
 | --- | --- | --- |
 | `SHOPIFY_SHOP` | repo secret | `<store>.myshopify.com` |
-| `SHOPIFY_ADMIN_TOKEN` | repo secret | Admin API token, `read_products` only |
+| `SHOPIFY_ADMIN_TOKEN` | repo secret | Admin API access token (`shpat_`), `read_products` only. Only a legacy custom app issues this; an app-automation token (`atkn_`) or an OAuth client secret (`shpss_`) will not work. |
 | `FEED_ALERT_SLACK_WEBHOOK` | repo secret | Slack incoming-webhook URL (optional; without it a failure only annotates the run) |
 | Pages source | repo Settings → Pages | GitHub Actions |
 | Custom domain | repo Settings → Pages | `feeds.fitnesssuperstore.com` |
@@ -167,11 +167,16 @@ survivable.
 
 1. Add the secrets, enable Pages (source: GitHub Actions), add the custom
    domain, add the DNS CNAME.
-2. Run the workflow manually once (**Run workflow**). Check the run summary and
-   fetch the URL.
-3. Only when that run is green and Tim has given the GO, uncomment the
+2. Run the workflow manually once (**Run workflow**) with **dry_run** ticked.
+   That exercises the credentials, the export, the build and the verification
+   step without publishing, so a first attempt that fails cannot disturb what
+   Pages is already serving. The first step is a one-round-trip credential
+   preflight, so a wrong, revoked or under-scoped token fails in seconds rather
+   than 30 minutes into a bulk export.
+3. Re-run with **dry_run** unticked. Check the run summary and fetch the URL.
+4. Only when that run is green and Tim has given the GO, uncomment the
    `schedule:` block to start the 4-hourly rebuild.
-4. Tim pastes the URL into source 24138 and triggers the sync. That is the GO.
+5. Tim pastes the URL into source 24138 and triggers the sync. That is the GO.
 
 ### Guards in the pipeline
 
@@ -191,7 +196,7 @@ survivable.
 
 ### Still to verify against live Shopify
 
-`shopify_bulk_export.py` has offline unit tests covering its submit, poll and
-failure paths through an injected transport, but it has not yet run against the
-live Admin API. The single manual `workflow_dispatch` run in step 2 is what
-validates it. Do not enable the schedule before that run is green.
+`shopify_bulk_export.py` has offline unit tests covering its preflight, submit,
+poll and failure paths through an injected transport, but it has not yet run
+against the live Admin API. The manual `workflow_dispatch` runs in steps 2 and 3
+are what validate it. Do not enable the schedule before step 3 is green.

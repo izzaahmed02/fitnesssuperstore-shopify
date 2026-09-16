@@ -11,13 +11,20 @@
 # (R2, S3, a company server) without the Klaviyo source URL ever changing.
 #
 # BEFORE the schedule is enabled, run this once via "Run workflow" and confirm
-# the summary and the published URL. The cron below stays commented until that
+# the summary and the published URL. Tick "dry_run" on the very first attempt:
+# it exercises the credentials, the export and the build without publishing, so
+# a first run that fails cannot disturb what Pages is already serving. The cron below stays commented until that
 # manual run is green and Tim has given the GO.
 
 name: Klaviyo Feed Publish
 
 on:
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Export, build and verify only — do not publish to Pages'
+        type: boolean
+        default: false
   # schedule:
   #   - cron: '0 */4 * * *'   # every 4 hours; enable only after a green manual run
 
@@ -45,6 +52,17 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      # One round trip that separates "wrong or revoked token" from "valid token
+      # without read_products", instead of discovering either 30 minutes into a
+      # bulk export. Runs first so a credential problem costs seconds.
+      - name: Check Shopify credentials and scopes
+        env:
+          SHOPIFY_SHOP: ${{ secrets.SHOPIFY_SHOP }}
+          SHOPIFY_ADMIN_TOKEN: ${{ secrets.SHOPIFY_ADMIN_TOKEN }}
+        run: |
+          python3 scripts/klaviyo_feed/shopify_bulk_export.py \
+            --out /dev/null --preflight-only
 
       - name: Read-only Shopify bulk export
         env:
@@ -116,11 +134,13 @@ jobs:
           PY
 
       - name: Upload Pages artifact
+        if: ${{ !inputs.dry_run }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./site
 
       - name: Deploy to GitHub Pages
+        if: ${{ !inputs.dry_run }}
         id: deploy
         uses: actions/deploy-pages@v4
 
