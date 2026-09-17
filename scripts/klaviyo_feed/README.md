@@ -94,6 +94,22 @@ under `taxonomy_source_counts`, and `review.csv` flags each row's
 Blocking codes keep a row out of the feed; warnings are emitted and reported so
 each exception line stays individually explainable.
 
+Whole-product suppression, applied before anything else looks at the rows:
+
+- `remove_from_feeds_tag` — the product carries a `REMOVE FROM FEEDS` tag
+  (matched case- and padding-insensitively).
+- `option_carrier_excluded` — the product is an option carrier listed in
+  `OPTION_CARRIER_PRODUCT_IDS`: its variants are configuration choices on
+  another product, not purchasable items.
+
+Suppressed products are removed from the candidate set entirely rather than
+excluded row by row. This matters because the duplicate analysis counts SKUs
+across candidates: leaving a suppressed product in would make its SKUs look
+duplicated and drop the live products that legitimately carry them. The combined
+Turf listing is exactly that case — zero inventory on every variant, carrying the
+same three SKUs as the in-stock standalones. Suppressed rows are still counted in
+`variant_rows` and `accounted`, so reconciliation cannot lose them.
+
 Blocking:
 
 - `BLANK_SKU` — no SKU, so no stable feed id.

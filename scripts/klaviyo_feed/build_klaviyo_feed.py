@@ -35,6 +35,39 @@ PREFERRED_PARENT_PRODUCT_IDS = {
 
 DUPLICATE_PARENT_PREFERRED = "duplicate_sku_parent_preferred"
 
+# Products suppressed before anything else looks at them. These are removed from
+# the candidate set entirely rather than excluded per row, because the duplicate
+# analysis counts SKUs across candidates: leaving a suppressed product in would
+# make its SKUs look duplicated and drop the live products that legitimately
+# carry them.
+#
+# Per the 2026-09-17 ruling, the combined Turf listing carries REMOVE FROM FEEDS
+# and zero inventory on every variant. Preferring it would emit three Out of
+# Stock rows and drop the three in-stock standalones that carry the same SKUs.
+FEED_SUPPRESSION_TAGS = {"remove from feeds"}
+REMOVE_FROM_FEEDS = "remove_from_feeds_tag"
+
+# Option-carrier products never feed: their variants are configuration choices
+# on another product, not purchasable items in their own right. Per the
+# 2026-09-05 feed rule, reaffirmed 2026-09-17 for the consolidated APU PDPs.
+OPTION_CARRIER_PRODUCT_IDS = {
+    # French Fitness Aluminum Pulley Upgrade (New) - 124 option variants
+    "gid://shopify/Product/10278798000444",
+    # Aluminum Pulley Upgrade - Accessories / Add Ons (484) - 105 option variants
+    "gid://shopify/Product/9939989037372",
+}
+OPTION_CARRIER_EXCLUDED = "option_carrier_excluded"
+
+
+def suppression_reason(product):
+    """Reason this whole product never reaches the candidate set, or None."""
+    if product.get("id") in OPTION_CARRIER_PRODUCT_IDS:
+        return OPTION_CARRIER_EXCLUDED
+    for tag in product.get("tags") or []:
+        if str(tag).strip().lower() in FEED_SUPPRESSION_TAGS:
+            return REMOVE_FROM_FEEDS
+    return None
+
 # Fields the source 24138 mapping requires. A blank risks an item-level sync
 # failure, so a blank excludes the row instead of merely warning. Verified
 # against the live catalog: all 3,221 items carry product_type and
@@ -355,21 +388,45 @@ def main(argv=None):
     products, variants_by_parent, malformed = load_bulk_jsonl(args.jsonl)
 
     candidates = []
+    suppressed = []
     products_without_variants = []
     for gid, product in products.items():
         variants = variants_by_parent.get(gid, [])
         if not variants:
             products_without_variants.append(gid)
             continue
+        reason = suppression_reason(product)
         for variant in variants:
-            candidates.append(build_row(product, variant, legacy_taxonomy, len(variants)))
+            row = build_row(product, variant, legacy_taxonomy, len(variants))
+            if reason:
+                row["_suppression_reason"] = reason
+                suppressed.append(row)
+            else:
+                candidates.append(row)
 
+    # Suppressed rows are deliberately absent here: their SKUs must not count
+    # toward duplicate detection.
     sku_counts = Counter(row["id"] for row in candidates if row["id"])
     resolve_duplicates(candidates, sku_counts)
 
     feed = []
     exceptions = []
     review = []
+    for row in suppressed:
+        reason = row["_suppression_reason"]
+        review.append(dict(row, _emitted=False, _reasons=reason))
+        exceptions.append(
+            {
+                "sku": row["id"],
+                "shopify_product_id": row["_shopify_product_id"],
+                "shopify_variant_id": row["_shopify_variant_id"],
+                "title": row["title"],
+                "variant_title": row["_variant_title"],
+                "price": row["price"],
+                "disposition": "EXCLUDED",
+                "reasons": reason,
+            }
+        )
     for row in candidates:
         blocking, warnings = classify(row, sku_counts)
         emitted = not blocking
@@ -471,6 +528,9 @@ def main(argv=None):
             if reason:
                 reason_counts[reason] += 1
 
+    # Suppressed rows never entered `candidates`, so the row arithmetic has to
+    # add them back explicitly or reconciliation silently loses them.
+    variant_rows = len(candidates) + len(suppressed)
     accounted = len(feed) + len(excluded)
     # A duplicate with no preferred parent drops every owner of that SKU, so the
     # SKU vanishes from the feed entirely. Those rows still count as accounted,
@@ -486,7 +546,7 @@ def main(argv=None):
     reconciliation_clean = (
         malformed == 0
         and not products_without_variants
-        and accounted == len(candidates)
+        and accounted == variant_rows
         and not duplicate_emitted
         and not unresolved_duplicate_skus
         and len(feed) >= args.min_items
@@ -504,9 +564,10 @@ def main(argv=None):
         "counts": {
             "products": len(products),
             "products_without_variants": len(products_without_variants),
-            "variant_rows": len(candidates),
+            "variant_rows": variant_rows,
             "emitted": len(feed),
             "excluded": len(excluded),
+            "suppressed_products": len(suppressed),
             "emitted_with_warning": len(exceptions) - len(excluded),
             "accounted": accounted,
         },
