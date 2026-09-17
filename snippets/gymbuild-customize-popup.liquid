@@ -791,7 +791,7 @@
     var swapCurrentEl = modal.querySelector('[data-gymbuild-swap-current]');
     var swapGridEl = modal.querySelector('[data-gymbuild-swap-grid]');
     var backBtn = modal.querySelector('[data-gymbuild-back]');
-    var runningTotalCents = footer ? parseInt(footer.dataset.basePrice, 10) || 0 : 0;
+    var basePriceCents = footer ? parseInt(footer.dataset.basePrice, 10) || 0 : 0;
     var activeCard = null;
 
     function formatMoney(cents) {
@@ -805,6 +805,40 @@
       if (deltaCents === 0) return '';
       var sign = deltaCents > 0 ? '+ ' : '- ';
       return sign + formatMoney(Math.abs(deltaCents));
+    }
+
+    // The subtotal is recomputed from the DOM on every change instead of
+    // being kept as a running counter. The add-ons carousel sits outside
+    // this drawer and can be toggled while the drawer is closed, so an
+    // incremental total would drift out of sync with it. This reads the
+    // same two sources the quote-review popup reads, so both surfaces
+    // always agree.
+    function selectedAddOnsTotalCents() {
+      var total = 0;
+      document
+        .querySelectorAll('product-add-ons-quote [data-addon-state="selected"]')
+        .forEach(function (btn) {
+          total += parseInt(btn.dataset.addonPriceCents, 10) || 0;
+        });
+      return total;
+    }
+
+    function swapDeltaTotalCents() {
+      var total = 0;
+      modal.querySelectorAll('[data-gymbuild-item]').forEach(function (card) {
+        var currentPrice = parseInt(card.dataset.itemPrice, 10) || 0;
+        var originalPrice = parseInt(card.dataset.originalPrice, 10) || 0;
+        var qty = parseInt(card.dataset.itemQty, 10) || 1;
+        total += (currentPrice - originalPrice) * qty;
+      });
+      return total;
+    }
+
+    function recalcSubtotal() {
+      if (!subtotalEl) return;
+      subtotalEl.textContent = formatMoney(
+        basePriceCents + swapDeltaTotalCents() + selectedAddOnsTotalCents()
+      );
     }
 
     function showMainView() {
@@ -860,7 +894,7 @@
             '<p class="gymbuild-customize-drawer__swap-card-delta ' + deltaClass + '">' + formatDelta(deltaCents) + '</p>';
 
           btn.addEventListener('click', function () {
-            selectAlternate(alt, deltaCents);
+            selectAlternate(alt);
           });
 
           swapGridEl.appendChild(btn);
@@ -870,7 +904,7 @@
       content.classList.add('is-swap-view');
     }
 
-    function selectAlternate(alt, deltaCents) {
+    function selectAlternate(alt) {
       if (!activeCard) return;
 
       var image = activeCard.querySelector('.gymbuild-customize-drawer__card-image');
@@ -884,9 +918,7 @@
       activeCard.dataset.itemImage = alt.image;
       activeCard.dataset.itemPrice = alt.price;
 
-      var qty = parseInt(activeCard.dataset.itemQty, 10) || 1;
-      runningTotalCents += deltaCents * qty;
-      if (subtotalEl) subtotalEl.textContent = formatMoney(runningTotalCents);
+      recalcSubtotal();
 
       showMainView();
     }
@@ -901,5 +933,17 @@
     if (backBtn) {
       backBtn.addEventListener('click', showMainView);
     }
+
+    // Add-ons are toggled out on the PDP, behind this drawer's overlay, so
+    // refresh the footer whenever the drawer is about to be opened.
+    // Delegated on document for the same reason the quote-review popup's
+    // trigger listener is: the opener may be parsed after this script runs.
+    document.addEventListener('click', function (event) {
+      if (event.target.closest('[data-modal="#GymBuildCustomizeModal-{{ section.id }}"]')) {
+        recalcSubtotal();
+      }
+    });
+
+    recalcSubtotal();
   })();
 </script>

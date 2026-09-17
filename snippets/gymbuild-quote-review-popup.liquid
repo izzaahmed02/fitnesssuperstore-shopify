@@ -15,11 +15,21 @@
   button inside gymbuild-customize-popup.liquid's footer. Both carry
   [data-gymbuild-open-review]; a single shared listener below (a) closes
   the customize drawer if it's open, (b) re-populates the Swaps and
-  Customizations / price breakdown from whatever is currently selected
-  there, then (c) shows this modal. This is why the swap cards in that
+  Customizations summary, the Add-Ons summary, and the price breakdown
+  from whatever is currently selected, then (c) shows this modal. This is why the swap cards in that
   other snippet also carry data-original-* attributes (added alongside
   the existing mutable data-item-* ones specifically to support this) —
   comparing original vs. current is how a "swap" is detected here.
+
+  THE SUBTOTAL HAS TWO SOURCES, not one (add-ons added 2026-09-18): the
+  swap deltas from the customize drawer's cards, AND whatever is toggled
+  on in the PDP's add-ons carousel (product-add-ons-quote.liquid, read via
+  [data-addon-state="selected"] / data-addon-price-cents). Both are read
+  fresh from the DOM each time this modal opens, never tracked in a
+  parallel JS array. Before 2026-09-18 only swaps were counted, so the
+  "Estimated equipment subtotal" understated the build whenever any add-on
+  was selected. Keep both sources in any future change to this math — the
+  customize drawer's own footer subtotal reads the same two sources.
 
   UI ONLY, per explicit direction (2026-09-08): everything that's already
   real/live is wired dynamically (package name/price/SKU/weight, the live
@@ -49,7 +59,41 @@
   same as any other new customer-facing copy in this build.
 {% endcomment -%}
 
-<modal-dialog id="GymBuildQuoteReviewModal-{{ section.id }}" class="gymbuild-quote-review-modal">
+{%- liquid
+  assign review_payload_image = current_variant.featured_image
+  if review_payload_image == blank
+    assign review_payload_image = product.featured_image
+  endif
+  assign review_payload_image_url = review_payload_image | image_url: width: 520
+  assign review_payload_build_url = shop.url | append: current_variant.url
+-%}
+
+{% comment %}
+  data-review-* below is the machine-readable mirror of the package facts
+  displayed in this modal, for the Phase 3 quote-payload builder. The
+  visible copy is formatted for humans (money / weight_with_unit), and
+  parsing "$70,673.30" or "4284.0 lb" back into numbers is lossy and
+  locale-fragile — so every value here is raw: price in cents, weight as a
+  plain number plus its unit, URLs absolute. Same convention as
+  data-item-* / data-addon-* elsewhere in this build.
+
+  No package code is emitted: no real source field exists for it yet (see
+  the header comment above), and the payload builder should send null
+  rather than anything invented here.
+{% endcomment %}
+<modal-dialog
+  id="GymBuildQuoteReviewModal-{{ section.id }}"
+  class="gymbuild-quote-review-modal"
+  data-review-product-id="{{ product.id }}"
+  data-review-variant-id="{{ current_variant.id }}"
+  data-review-sku="{{ current_variant.sku | escape }}"
+  data-review-package-size="{{ current_variant.title | escape }}"
+  data-review-base-price="{{ current_variant.price }}"
+  data-review-weight="{{ current_variant.weight_in_unit }}"
+  data-review-weight-unit="{{ current_variant.weight_unit }}"
+  data-review-image="{{ review_payload_image_url }}"
+  data-review-build-url="{{ review_payload_build_url }}"
+>
   <div
     role="dialog"
     aria-label="Request quote review for this build"
@@ -116,71 +160,139 @@
         <div class="gymbuild-quote-review-modal__swaps-list" data-gymbuild-review-swaps></div>
       </div>
 
-      <div class="gymbuild-quote-review-modal__delivery">
-        <p class="gymbuild-quote-review-modal__section-heading">Delivery info:</p>
-
-        <div class="gymbuild-quote-review-modal__field-row">
-          <div class="gymbuild-quote-review-modal__field">
-            <label for="GymBuildReviewZip-{{ section.id }}">ZIP code</label>
-            <input type="text" id="GymBuildReviewZip-{{ section.id }}" name="zip" placeholder="Your ZIP code">
-          </div>
-          <div class="gymbuild-quote-review-modal__field">
-            <label for="GymBuildReviewDelivery-{{ section.id }}">
-              Delivery &amp; Installation Options
-            </label>
-            <select id="GymBuildReviewDelivery-{{ section.id }}" name="delivery_preference">
-              <option value="">Select your preference</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="gymbuild-quote-review-modal__field">
-          <label for="GymBuildReviewName-{{ section.id }}">Your name</label>
-          <input type="text" id="GymBuildReviewName-{{ section.id }}" name="customer_name" placeholder="Name here">
-        </div>
-
-        <div class="gymbuild-quote-review-modal__field-row">
-          <div class="gymbuild-quote-review-modal__field">
-            <label for="GymBuildReviewPhone-{{ section.id }}">Your phone</label>
-            <input type="tel" id="GymBuildReviewPhone-{{ section.id }}" name="customer_phone" placeholder="Phone here">
-          </div>
-          <div class="gymbuild-quote-review-modal__field">
-            <label for="GymBuildReviewEmail-{{ section.id }}">Your email</label>
-            <input type="email" id="GymBuildReviewEmail-{{ section.id }}" name="customer_email" placeholder="Email here">
-          </div>
-        </div>
-
-        <div class="gymbuild-quote-review-modal__field">
-          <label for="GymBuildReviewNotes-{{ section.id }}">Notes</label>
-          <textarea id="GymBuildReviewNotes-{{ section.id }}" name="notes" rows="3" placeholder="Notes here..."></textarea>
-        </div>
+      <div class="gymbuild-quote-review-modal__swaps">
+        <p class="gymbuild-quote-review-modal__section-heading">Add-Ons:</p>
+        <p class="gymbuild-quote-review-modal__no-swaps" data-gymbuild-review-no-addons>
+          No add-ons selected.
+        </p>
+        <div class="gymbuild-quote-review-modal__swaps-list" data-gymbuild-review-addons></div>
       </div>
 
-      <p class="gymbuild-quote-review-modal__disclaimer">
-        Equipment subtotal only. Final freight, tax, delivery, installation, availability, and approved customization pricing will be confirmed by our team during quote review.
-      </p>
+      {% comment %}
+        A real form element, so the Phase 3 submit handler gets clean key/value
+        pairs from new FormData(form) and the browser does the required /
+        type="email" validation natively. It has no action and never
+        submits anywhere: the guard listener at the bottom of this snippet
+        preventDefault()s every submit, so this can't turn into a page
+        navigation or hit any Shopify endpoint. The button itself is still
+        disabled — nothing is submitted anywhere yet.
+      {% endcomment %}
+      <form data-gymbuild-review-form>
+        <div class="gymbuild-quote-review-modal__delivery">
+          <p class="gymbuild-quote-review-modal__section-heading">Delivery info:</p>
 
-      <div class="gymbuild-quote-review-modal__breakdown">
-        <div class="gymbuild-quote-review-modal__breakdown-row">
-          <span>Base Package</span>
-          <span>{{ current_variant.price | money }}</span>
-        </div>
-        <div class="gymbuild-quote-review-modal__breakdown-row" data-gymbuild-review-customizations-row hidden>
-          <span>Customizations</span>
-          <span data-gymbuild-review-customizations-price></span>
-        </div>
-        <div class="gymbuild-quote-review-modal__breakdown-row gymbuild-quote-review-modal__breakdown-row--total">
-          <span>Estimated equipment subtotal</span>
-          <span data-gymbuild-review-subtotal>{{ current_variant.price | money }}</span>
-        </div>
-      </div>
+          <div class="gymbuild-quote-review-modal__field-row">
+            <div class="gymbuild-quote-review-modal__field">
+              <label for="GymBuildReviewZip-{{ section.id }}">ZIP code</label>
+              <input
+                type="text"
+                id="GymBuildReviewZip-{{ section.id }}"
+                name="zip"
+                placeholder="Your ZIP code"
+                inputmode="numeric"
+                autocomplete="postal-code"
+                pattern="[0-9]{5}(-[0-9]{4})?"
+                maxlength="10"
+                title="5-digit ZIP code, optionally ZIP+4 (e.g. 94510 or 94510-1234)"
+                required
+              >
+            </div>
+            <div class="gymbuild-quote-review-modal__field">
+              <label for="GymBuildReviewDelivery-{{ section.id }}">
+                Delivery &amp; Installation Options
+              </label>
+              {% comment %}
+                Deliberately NOT required: the real option list is still
+                missing (no approved source for it — see the header
+                comment), so a required select with only the empty
+                placeholder would make the form permanently unsubmittable.
+                Add required at the same time the real options are added.
+              {% endcomment %}
+              <select id="GymBuildReviewDelivery-{{ section.id }}" name="delivery_preference">
+                <option value="">Select your preference</option>
+              </select>
+            </div>
+          </div>
 
-      <div class="gymbuild-quote-review-modal__submit-row">
-        <button type="button" class="gymbuild-quote-review-modal__submit" disabled>
-          Submit GymBuild Quote Review
-        </button>
-        <span class="gymbuild-quote-review-modal__submit-note">Quote submission unavailable in preview</span>
-      </div>
+          <div class="gymbuild-quote-review-modal__field">
+            <label for="GymBuildReviewName-{{ section.id }}">Your name</label>
+            <input
+              type="text"
+              id="GymBuildReviewName-{{ section.id }}"
+              name="customer_name"
+              placeholder="Name here"
+              autocomplete="name"
+              required
+            >
+          </div>
+
+          <div class="gymbuild-quote-review-modal__field-row">
+            <div class="gymbuild-quote-review-modal__field">
+              <label for="GymBuildReviewPhone-{{ section.id }}">Your phone</label>
+              <input
+                type="tel"
+                id="GymBuildReviewPhone-{{ section.id }}"
+                name="customer_phone"
+                placeholder="Phone here"
+                autocomplete="tel"
+                required
+              >
+            </div>
+            <div class="gymbuild-quote-review-modal__field">
+              <label for="GymBuildReviewEmail-{{ section.id }}">Your email</label>
+              <input
+                type="email"
+                id="GymBuildReviewEmail-{{ section.id }}"
+                name="customer_email"
+                placeholder="Email here"
+                autocomplete="email"
+                required
+              >
+            </div>
+          </div>
+
+          <div class="gymbuild-quote-review-modal__field">
+            <label for="GymBuildReviewNotes-{{ section.id }}">Notes</label>
+            <textarea id="GymBuildReviewNotes-{{ section.id }}" name="notes" rows="3" placeholder="Notes here..."></textarea>
+          </div>
+        </div>
+
+        <p class="gymbuild-quote-review-modal__disclaimer">
+          Equipment subtotal only. Final freight, tax, delivery, installation, availability, and approved customization pricing will be confirmed by our team during quote review.
+        </p>
+
+        <div class="gymbuild-quote-review-modal__breakdown">
+          <div class="gymbuild-quote-review-modal__breakdown-row">
+            <span>Base Package</span>
+            <span>{{ current_variant.price | money }}</span>
+          </div>
+          <div class="gymbuild-quote-review-modal__breakdown-row" data-gymbuild-review-customizations-row hidden>
+            <span>Customizations</span>
+            <span data-gymbuild-review-customizations-price></span>
+          </div>
+          <div class="gymbuild-quote-review-modal__breakdown-row" data-gymbuild-review-addons-row hidden>
+            <span>Add-Ons</span>
+            <span data-gymbuild-review-addons-price></span>
+          </div>
+          <div class="gymbuild-quote-review-modal__breakdown-row gymbuild-quote-review-modal__breakdown-row--total">
+            <span>Estimated equipment subtotal</span>
+            <span data-gymbuild-review-subtotal>{{ current_variant.price | money }}</span>
+          </div>
+        </div>
+
+        <div class="gymbuild-quote-review-modal__submit-row">
+          {% comment %}
+            type="submit" so the browser runs the form's native validation
+            once this is enabled in Phase 3 — it stays disabled until then,
+            and the form's submit guard below blocks any navigation
+            regardless.
+          {% endcomment %}
+          <button type="submit" class="gymbuild-quote-review-modal__submit" disabled>
+            Submit GymBuild Quote Review
+          </button>
+          <span class="gymbuild-quote-review-modal__submit-note">Quote submission unavailable in preview</span>
+        </div>
+      </form>
     </div>
   </div>
 </modal-dialog>
@@ -517,6 +629,10 @@
     var swapsListEl = reviewModal.querySelector('[data-gymbuild-review-swaps]');
     var customizationsRow = reviewModal.querySelector('[data-gymbuild-review-customizations-row]');
     var customizationsPriceEl = reviewModal.querySelector('[data-gymbuild-review-customizations-price]');
+    var noAddonsEl = reviewModal.querySelector('[data-gymbuild-review-no-addons]');
+    var addonsListEl = reviewModal.querySelector('[data-gymbuild-review-addons]');
+    var addonsRow = reviewModal.querySelector('[data-gymbuild-review-addons-row]');
+    var addonsPriceEl = reviewModal.querySelector('[data-gymbuild-review-addons-price]');
     var subtotalEl = reviewModal.querySelector('[data-gymbuild-review-subtotal]');
     var basePriceCents = {{ current_variant.price }};
 
@@ -532,7 +648,9 @@
       return sign + formatMoney(Math.abs(deltaCents));
     }
 
-    function populateReview() {
+    // Returns the swaps' net price delta in cents, so the caller can fold it
+    // into the subtotal alongside the add-ons total.
+    function populateSwaps() {
       var items = Array.from(document.querySelectorAll('[data-gymbuild-item]'));
       var swapped = items.filter(function (item) {
         return item.dataset.itemId !== item.dataset.originalId;
@@ -543,8 +661,7 @@
       if (!swapped.length) {
         noSwapsEl.hidden = false;
         customizationsRow.hidden = true;
-        subtotalEl.textContent = formatMoney(basePriceCents);
-        return;
+        return 0;
       }
 
       noSwapsEl.hidden = true;
@@ -574,7 +691,65 @@
 
       customizationsRow.hidden = false;
       customizationsPriceEl.textContent = formatDelta(totalDeltaCents);
-      subtotalEl.textContent = formatMoney(basePriceCents + totalDeltaCents);
+      return totalDeltaCents;
+    }
+
+    // Add-ons are toggled on the PDP's own carousel (product-add-ons-quote),
+    // outside this modal — the DOM there is the single source of truth, read
+    // fresh each time this modal opens. Returns their total in cents.
+    function populateAddOns() {
+      var selected = Array.from(
+        document.querySelectorAll('product-add-ons-quote [data-addon-state="selected"]')
+      );
+
+      addonsListEl.innerHTML = '';
+
+      if (!selected.length) {
+        noAddonsEl.hidden = false;
+        addonsRow.hidden = true;
+        return 0;
+      }
+
+      noAddonsEl.hidden = true;
+
+      var totalCents = 0;
+
+      selected.forEach(function (toggle) {
+        var priceCents = parseInt(toggle.dataset.addonPriceCents, 10) || 0;
+        totalCents += priceCents;
+
+        var row = document.createElement('div');
+        row.className = 'gymbuild-quote-review-modal__swap-item';
+        row.innerHTML =
+          '<img class="gymbuild-quote-review-modal__swap-item-image" src="' + toggle.dataset.addonImage + '" alt="" loading="lazy">' +
+          '<div>' +
+          '<p class="gymbuild-quote-review-modal__swap-item-title">' + toggle.dataset.addonTitle + '</p>' +
+          '<p class="gymbuild-quote-review-modal__swap-item-delta is-increase">' + formatDelta(priceCents) + '</p>' +
+          '</div>';
+
+        addonsListEl.appendChild(row);
+      });
+
+      addonsRow.hidden = false;
+      addonsPriceEl.textContent = formatDelta(totalCents);
+      return totalCents;
+    }
+
+    function populateReview() {
+      var swapsDeltaCents = populateSwaps();
+      var addOnsTotalCents = populateAddOns();
+      subtotalEl.textContent = formatMoney(basePriceCents + swapsDeltaCents + addOnsTotalCents);
+    }
+
+    // Nothing is submitted anywhere yet, and this form has no action, so an
+    // uncaught submit would just reload the PDP with the fields as query
+    // params. Block it unconditionally — the Phase 3 handler replaces this
+    // body with the payload build + fetch(), keeping the preventDefault().
+    var reviewForm = reviewModal.querySelector('[data-gymbuild-review-form]');
+    if (reviewForm) {
+      reviewForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+      });
     }
 
     // Delegated on document (not querySelectorAll + per-element listeners):

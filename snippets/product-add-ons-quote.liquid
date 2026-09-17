@@ -192,6 +192,15 @@
                                 data-addon-variant-id="{{ add_on_variant.id }}"
                                 data-addon-sku="{{ add_on_variant.sku | escape }}"
                                 data-addon-price="{{ addon_price | money_without_currency }}"
+                                {% comment %}
+                                  Raw cents, alongside the formatted decimal above.
+                                  money_without_currency emits thousands separators
+                                  ("1,299.00"), which can't be parsed back to a number
+                                  reliably; every other price attribute in this build
+                                  (data-item-price, data-base-price) is already cents,
+                                  so the subtotal math reads this one instead.
+                                {% endcomment %}
+                                data-addon-price-cents="{{ addon_price }}"
                                 data-addon-title="{{ add_on_title | escape }}"
                                 data-addon-image="{{ addon_image_url }}"
                                 data-default-label="{{ add_on_button_label | escape }}"
