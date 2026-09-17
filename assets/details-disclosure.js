@@ -40,10 +40,39 @@ class HeaderMenu extends DetailsDisclosure {
   }
 
   connectedCallback() {
+    // Keyboard activation for the desktop mega-menu trigger. global.js sets
+    // role="button" on these <summary> elements, which suppresses the native
+    // Enter/Space details toggle in Safari, and nothing else provides a keyboard
+    // open path (the hover listeners below are pointer-only). Bind an explicit
+    // handler so keyboard users can open the menu in every browser. It is bound
+    // regardless of hover capability; a hidden (mobile drawer) summary never
+    // receives key events, so this does not affect mobile/tablet navigation.
+    this.mainDetailsToggle
+      .querySelector('summary')
+      .addEventListener('keydown', this.onSummaryKeydown.bind(this));
+
     if (!window.matchMedia('(hover: hover) and (min-width: 990px)').matches) return;
 
     this.mainDetailsToggle.addEventListener('mouseenter', this.openOnHover.bind(this));
     this.mainDetailsToggle.addEventListener('mouseleave', this.closeOnLeave.bind(this));
+  }
+
+  onSummaryKeydown(event) {
+    // Only Enter and Space activate the trigger. preventDefault stops the page
+    // from scrolling on Space and stops any native/synthesized toggle from
+    // competing with the explicit toggle below, so exactly one toggle happens
+    // per keypress. Reuse the existing open/close paths so aria-expanded, the
+    // sibling-menu close, and --header-bottom-position-desktop stay consistent
+    // with pointer behavior.
+    if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') return;
+
+    event.preventDefault();
+
+    if (this.mainDetailsToggle.hasAttribute('open')) {
+      this.close();
+    } else {
+      this.openOnHover();
+    }
   }
 
   onToggle() {
