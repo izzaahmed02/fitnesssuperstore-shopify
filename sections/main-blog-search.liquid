@@ -102,14 +102,16 @@
               assign published_epoch = article.published_at | date: '%s'
             -%}
             {%- assign img_json = 'null' -%}
-            {%- if article.image -%}
+            {%- if section.settings.show_image and article.image -%}
               {%- assign img_ar = article.image.aspect_ratio -%}
               {%- if img_ar == blank or img_ar == 0 -%}{%- assign img_ar = 1.5 -%}{%- endif -%}
               {%- assign img_h = 400 | divided_by: img_ar | round -%}
               {%- capture img_json -%}{"url":{{ article.image | image_url: width: 400 | json | replace: '<', '\u003c' }},"alt":{{ article.image.alt | default: article.title | strip_html | json | replace: '<', '\u003c' }},"width":400,"height":{{ img_h }}}{%- endcapture -%}
             {%- endif -%}
+            {%- assign card_author = '' -%}
+            {%- if section.settings.show_author -%}{%- assign card_author = article.author -%}{%- endif -%}
             {%- unless first_item -%},{%- endunless -%}{%- assign first_item = false -%}
-            {"title":{{ article.title | strip_html | json | replace: '<', '\u003c' }},"excerpt":{{ card_excerpt | json | replace: '<', '\u003c' }},"tags":{{ card_tags | json | replace: '<', '\u003c' }},"published_at":{{ published_epoch | json }},"url":{{ article.url | json | replace: '<', '\u003c' }},"image":{{ img_json }}}
+            {"title":{{ article.title | strip_html | json | replace: '<', '\u003c' }},"excerpt":{{ card_excerpt | json | replace: '<', '\u003c' }},"tags":{{ card_tags | json | replace: '<', '\u003c' }},"published_at":{{ published_epoch | json }},"url":{{ article.url | json | replace: '<', '\u003c' }},"author":{{ card_author | json | replace: '<', '\u003c' }},"image":{{ img_json }}}
           {%- endfor -%}
         {%- endif -%}
       {%- endfor -%}
@@ -126,6 +128,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!searchInput || !container) return;
 
   const MAX_RESULTS = {{ max_results | json }};
+  // Publication time stays in the data for relevance tie-breaking; this flag
+  // controls only whether the date is DISPLAYED on a result card.
+  const SHOW_DATE = {{ section.settings.show_date | json }};
 
   const normalize = value => (value || '').toLowerCase();
 
@@ -184,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
     wrapper.appendChild(heading);
 
     const epoch = Number(article.published_at || 0);
-    if (epoch) {
+    if (SHOW_DATE && epoch) {
       const date = new Date(epoch * 1000);
       if (!isNaN(date.getTime())) {
         const time = document.createElement('span');
@@ -194,6 +199,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         wrapper.appendChild(time);
       }
+    }
+
+    // Author renders only when show_author is on (it is then present in the
+    // data; otherwise it is omitted from the JSON entirely).
+    if (article.author) {
+      const author = document.createElement('span');
+      author.className = 'article-card__info caption-with-letter-spacing blog-search-result__author';
+      author.textContent = article.author;
+      wrapper.appendChild(author);
     }
 
     if (article.excerpt) {
