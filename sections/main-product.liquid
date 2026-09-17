@@ -1,3 +1,9 @@
+{%- comment -%}
+  #775: French Fitness permanent comparison pricing ("As high as:" / MSRP, the crossed-out
+  reference price and the permanent "You save" badge) is suppressed brand-wide. The selling
+  price and any time-limited promotion are untouched. See snippets/ff-permanent-compare-hidden.
+{%- endcomment -%}
+{%- capture hide_perm_price -%}{%- render 'ff-permanent-compare-hidden', product: product -%}{%- endcapture -%}
 {% style %}
   #shopify-section-{{ section.id }} .product-main-container{
     display: grid;
@@ -221,17 +227,33 @@
 
 
 
-                <div>
-                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
+                <div id="Product-Prices-Mobile-{{ section.id }}">
+                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price and hide_perm_price contains 'false' %}
                     <span class="pr_custom_compare_price"
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
                   {% endif %}
-                  {% if product.metafields.custom.saleprice_name != blank %}
+                  {%- comment -%}
+                    #793: enter this branch only on the condition the banner actually
+                    renders on - a sale name alone is not a sale. Gating on the name only
+                    meant a product whose sale_price is blank, zero, or not below the
+                    regular price took the banner branch, the banner then declined to
+                    render, and because the alternative branch had already been skipped
+                    the PDP showed no price at all. This is reachable on live data: both
+                    gym packages carry a saleprice_name whose sale_price equals the
+                    regular price. The banner, this branch and "Total with options" now
+                    all test the sale value identically.
+                  {%- endcomment -%}
+                  {%- assign _pm_variant = product.selected_or_first_available_variant -%}
+                  {%- assign _pm_sale_cents = 0 -%}
+                  {%- if product.metafields.custom.saleprice_name != blank -%}
+                    {%- assign _pm_sale_cents = product.metafields.custom.sale_price | replace: ',', '' | times: 100.0 -%}
+                  {%- endif -%}
+                  {% if _pm_sale_cents > 0 and _pm_variant.price > _pm_sale_cents %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
-                      current_price: product.selected_or_first_available_variant.compare_at_price,
+                      current_price: _pm_variant.price,
                       sale_price: product.metafields.custom.sale_price
                     %}
                   {% else %}
@@ -244,6 +266,7 @@
                       -%}
 
                       {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
+                        and hide_perm_price contains 'false'
                       %}
                         <span class="you-save"
                           >You save
@@ -869,17 +892,33 @@
 
 
                 <div class="product__price-row">
-                <div class="product__prices hidden lg:block">
-                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
+                <div id="Product-Prices-Desktop-{{ section.id }}" class="product__prices hidden lg:block">
+                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price and hide_perm_price contains 'false' %}
                     <span class="pr_custom_compare_price"
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
                   {% endif %}
-                  {% if product.metafields.custom.saleprice_name != blank %}
+                  {%- comment -%}
+                    #793: enter this branch only on the condition the banner actually
+                    renders on - a sale name alone is not a sale. Gating on the name only
+                    meant a product whose sale_price is blank, zero, or not below the
+                    regular price took the banner branch, the banner then declined to
+                    render, and because the alternative branch had already been skipped
+                    the PDP showed no price at all. This is reachable on live data: both
+                    gym packages carry a saleprice_name whose sale_price equals the
+                    regular price. The banner, this branch and "Total with options" now
+                    all test the sale value identically.
+                  {%- endcomment -%}
+                  {%- assign _pm_variant = product.selected_or_first_available_variant -%}
+                  {%- assign _pm_sale_cents = 0 -%}
+                  {%- if product.metafields.custom.saleprice_name != blank -%}
+                    {%- assign _pm_sale_cents = product.metafields.custom.sale_price | replace: ',', '' | times: 100.0 -%}
+                  {%- endif -%}
+                  {% if _pm_sale_cents > 0 and _pm_variant.price > _pm_sale_cents %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
-                      current_price: product.selected_or_first_available_variant.compare_at_price,
+                      current_price: _pm_variant.price,
                       sale_price: product.metafields.custom.sale_price
                     %}
                   {% else %}
@@ -892,6 +931,7 @@
                       -%}
 
                       {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
+                        and hide_perm_price contains 'false'
                       %}
                         <span class="you-save"
                           >You save
@@ -959,10 +999,27 @@
 
                   <div class="product_price_with_options-contaniner">
                     <div class="product_prices">
+                      {%- comment -%}
+                        #793: "Total with options" must build on the price the customer
+                        actually pays. When the promo banner is active (saleprice_name set
+                        AND sale_price positive and below the variant price) that banner
+                        price is the selling price; otherwise it is the native variant
+                        price. This is the same test the banner and the branch above use,
+                        so the displayed package price and the option-adjusted total can no
+                        longer be built on different numbers.
+                      {%- endcomment -%}
+                      {%- assign twp_variant = product.selected_or_first_available_variant -%}
+                      {%- assign twp_price = twp_variant.price -%}
+                      {%- if product.metafields.custom.saleprice_name != blank -%}
+                        {%- assign twp_sale = product.metafields.custom.sale_price | replace: ',', '' | times: 100.0 -%}
+                        {%- if twp_sale > 0 and twp_price > twp_sale -%}
+                          {%- assign twp_price = twp_sale -%}
+                        {%- endif -%}
+                      {%- endif -%}
                       <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
                         <div class="pr_custom_price-container">
-                           <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{  product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
-                            {{ product.selected_or_first_available_variant.price | money }}
+                           <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{ twp_price | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
+                            {{ twp_price | money }}
                           </p>
                         </div>
                       </div>
@@ -1024,7 +1081,11 @@
                               data-variant-id="{{ product.selected_or_first_available_variant.id }}"
                             >
                               {%- if product.selected_or_first_available_variant.quantity_price_breaks.size > 0 -%}
-                                {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                                {%- comment -%} #775: stays nil on French Fitness, so the crossed-out volume reference price is not rendered. {%- endcomment -%}
+                                {%- assign variant_price_compare = nil -%}
+                                {%- if hide_perm_price contains 'false' -%}
+                                  {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                                {%- endif -%}
                                 <div class="price-per-item">
                                   {%- if variant_price_compare -%}
                                     <dl class="price-per-item--current">
@@ -1064,7 +1125,11 @@
                                 {%- assign variant_price = product.selected_or_first_available_variant.price
                                   | money_with_currency
                                 -%}
-                                {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                                {%- comment -%} #775: stays nil on French Fitness, so the crossed-out volume reference price is not rendered. {%- endcomment -%}
+                                {%- assign variant_price_compare = nil -%}
+                                {%- if hide_perm_price contains 'false' -%}
+                                  {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                                {%- endif -%}
                                 <div class="price-per-item">
                                   {%- if variant_price_compare -%}
                                     <dl class="price-per-item--current">
@@ -1535,7 +1600,11 @@
                         data-variant-id="{{ product.selected_or_first_available_variant.id }}"
                       >
                         {%- if product.selected_or_first_available_variant.quantity_price_breaks.size > 0 -%}
-                          {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                          {%- comment -%} #775: stays nil on French Fitness, so the crossed-out volume reference price is not rendered. {%- endcomment -%}
+                          {%- assign variant_price_compare = nil -%}
+                          {%- if hide_perm_price contains 'false' -%}
+                            {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                          {%- endif -%}
                           <div class="price-per-item">
                             {%- if variant_price_compare -%}
                               <dl class="price-per-item--current">
@@ -1575,7 +1644,11 @@
                           {%- assign variant_price = product.selected_or_first_available_variant.price
                             | money_with_currency
                           -%}
-                          {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                          {%- comment -%} #775: stays nil on French Fitness, so the crossed-out volume reference price is not rendered. {%- endcomment -%}
+                          {%- assign variant_price_compare = nil -%}
+                          {%- if hide_perm_price contains 'false' -%}
+                            {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                          {%- endif -%}
                           <div class="price-per-item">
                             {%- if variant_price_compare -%}
                               <dl class="price-per-item--current">
