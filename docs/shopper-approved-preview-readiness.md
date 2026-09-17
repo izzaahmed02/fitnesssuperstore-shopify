@@ -24,6 +24,7 @@ Controlling architecture, from Tim's Aug 18 and Aug 27 decisions:
 | `sections/main-product-comb.liquid` | Legacy inline loader replaced by the snippet. |
 | `sections/main-product-variants.liquid` | Legacy inline loader replaced by the snippet. |
 | `snippets/schema-product.liquid` | The theme's own JSON-LD node is tagged `data-schema-source="theme"` so the guard can never remove it. One attribute, no output change. |
+| `snippets/modals-and-templates.liquid` | Skips the Shopper Approved merchant widget on product templates while the display is enabled; the two widgets collide over shared globals and containers. |
 | `config/settings_schema.json` | New "Shopper Approved Product Reviews" group with `sa_product_reviews_enabled`, default `false`. |
 | `config/settings_data.json` | Sets `sa_product_reviews_enabled` to `true` so the preview theme renders the display. Preview activation only — see the merge gate below. |
 
@@ -136,9 +137,13 @@ All three sit on the default `product.json` template, so all three exercise the
 `FFT-LPSCR` carries no `reviews.rating` / `reviews.rating_count` metafields, so the theme's
 schema emits no AggregateRating for it. That makes it the sharpest test on the branch: if
 Shopper Approved's JSON-LD were left running, it would become the page's *only* rating
-source — an unsourced rating on a product Judge.me says has no reviews. The correct preview
-result is zero AggregateRating nodes and an empty Shopper Approved display, with the legacy
-`FFB-LPS` reviews left where they are.
+source — an unsourced rating on a product Judge.me says has no reviews. Measured: zero
+AggregateRating nodes, which is the pass.
+
+Whether its Shopper Approved display should be empty is still open. The first preview pass
+showed three reviews under it, but those were the merchant widget's store-wide set, not the
+product's — see the widget collision below. Its own count needs re-reading now that the
+collision is fixed.
 
 Its template suffix is `Default product`, and no `templates/product.Default product.json`
 exists in the theme, so it falls back to `templates/product.json` and the `main-product`
@@ -155,6 +160,60 @@ UNPUBLISHED, `/t/589`. Connected to this branch, so it redeploys on every push.
 | `FF-FSR90` | https://www.fitnesssuperstore.com/products/french-fitness-fsr90-functional-trainer-smith-squat-rack-machine-new?preview_theme_id=188470526268 |
 | `FF-WSPA5` | https://www.fitnesssuperstore.com/products/french-fitness-5-lb-weight-stack-plate-adapter-new?preview_theme_id=188470526268 |
 | `FFT-LPSCR` | https://www.fitnesssuperstore.com/products/french-fitness-tahoe-seated-leg-press-sled-calf-raise-new?preview_theme_id=188470526268 |
+
+### Widget collision — the merchant widget must not run on product pages
+
+`layout/theme.liquid` renders `snippets/modals-and-templates.liquid` on every page, which
+loads the Shopper Approved merchant widget, `widgets/group2.0/34099.js`. That is the **same
+codebase** as the product widget. Both define the globals `sa_rtype`, `sa_overall`,
+`sa_foundrows` and `sa_product_reviews`, and both render into `#product_page` and
+`#review_header`. Whichever finishes last wins.
+
+Measured on the preview theme, same build, same minute:
+
+| PDP | `sa_rtype` | `sa_overall` | `sa_foundrows` | What rendered |
+| --- | --- | --- | --- | --- |
+| `FF-FSR90` | `product` | 4.9 | 31 | the product's own reviews |
+| `FFT-LPSCR` | `merchant` | 5 | **428** | the site-wide store reviews |
+
+428 is the whole-store review count. On `FFT-LPSCR` the merchant widget had replaced the
+product's reviews with generic company reviews — the exact "one visible review display"
+failure Tim's gate is there to catch, and intermittent, because it is a race.
+
+This was latent before this branch: with no `#product_page` or `#review_header` anywhere on a
+product page, neither widget had anywhere to write, so the collision was invisible. Adding the
+product display is what gave the merchant widget a target.
+
+Fix: `modals-and-templates.liquid` skips the merchant widget on product templates while
+`sa_product_reviews_enabled` is on. There is no merchant-widget container anywhere in the
+theme — `#merchant_page`, `.shopperapproved_widget` and `#shopper_approved` appear nowhere —
+so nothing visible is lost, and with the setting off the snippet is byte-identical to before.
+
+## Preview results
+
+Preview theme 188470526268, logged out, desktop.
+
+| | `FF-FSR90` | `FF-WSPA5` | `FFT-LPSCR` |
+| --- | --- | --- | --- |
+| ProductID sent | `FF-FSR90` | `FF-WSPA5` | `FFT-LPSCR` |
+| Reviews rendered | 3 of 31 | 3 | re-test pending |
+| Summary header | yes | yes | re-test pending |
+| JSON-LD nodes | 2 | 2 | 1 |
+| AggregateRating sources | 1, `theme 4.91/32` | 1, `theme 5.0/17` | **0** |
+| `saSchemaSuppressed` | true | true | true |
+| Guard removals | 0 | 0 | 0 |
+
+`FF-FSR90` and `FF-WSPA5` pass. The Shopper Approved payload for `FF-FSR90` claims 4.9 over
+31 reviews against Judge.me's 4.91 over 32, so the duplicate this branch prevents would also
+have been a contradictory one.
+
+Guard removals of `0` alongside `saSchemaSuppressed: true` is the result to want: the JSON-LD
+was never built, rather than built and cleaned up. Before `sa_schema = 0`, `FF-FSR90` carried
+three JSON-LD nodes; it now carries two.
+
+`FFT-LPSCR` needs re-running after the merchant-widget fix. Its first pass was measuring the
+collision above, not the product, so its own Shopper Approved review count is still unknown —
+`sa_foundrows` had been overwritten with the store-wide 428 before it could be read.
 
 ## Preview test plan
 
@@ -187,7 +246,7 @@ the list because they are the other Shopper Approved surfaces on the site.
 - Preview theme: set `sa_product_reviews_enabled` back to `false`, in Theme settings →
   Shopper Approved Product Reviews or in `config/settings_data.json`. The display and the
   Shopper Approved product script both disappear. No code change.
-- Branch: the work is isolated in the commits touching the eight files above. `git revert`
+- Branch: the work is isolated in the commits touching the nine files above. `git revert`
   restores the legacy inline loaders exactly.
 - Nothing to roll back on live: the branch is unmerged, the preview theme is unpublished, and
   no Shopper Approved, Judge.me, feed, GMC, ProductID or product setting was touched.

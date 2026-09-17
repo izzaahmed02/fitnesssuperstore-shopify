@@ -3,16 +3,37 @@
   <div id="dynamic-product-content" class="scroll-trigger animate--slide-in"></div>
 </div>
 
-{%- comment -%} Shopper Approved Script {%- endcomment -%}
-<script type="text/javascript" defer>
-  function saLoadScript(src) {
-    var js = window.document.createElement('script');
-    js.src = src;
-    js.type = 'text/javascript';
-    document.getElementsByTagName('head')[0].appendChild(js);
-  }
-  saLoadScript('https://www.shopperapproved.com/widgets/group2.0/34099.js');
-</script>
+{%- comment -%}
+  Shopper Approved merchant (group2.0) widget.
+
+  Not loaded on product pages while the Shopper Approved product-review display
+  is enabled. The two widgets are the same codebase: they share the globals
+  sa_rtype, sa_overall, sa_foundrows and sa_product_reviews, and both render into
+  #product_page and #review_header. Whichever finishes last wins, so with both on
+  a product page the merchant widget intermittently replaces a product's reviews
+  with the site-wide set — 428 store reviews in place of the product's own.
+
+  Harmless before the product display existed, because a product page had none of
+  those elements for either widget to write into. With
+  settings.sa_product_reviews_enabled off, this is byte-identical to before.
+{%- endcomment -%}
+{%- liquid
+  assign load_sa_merchant_widget = true
+  if settings.sa_product_reviews_enabled and template.name == 'product'
+    assign load_sa_merchant_widget = false
+  endif
+-%}
+{%- if load_sa_merchant_widget -%}
+  <script type="text/javascript" defer>
+    function saLoadScript(src) {
+      var js = window.document.createElement('script');
+      js.src = src;
+      js.type = 'text/javascript';
+      document.getElementsByTagName('head')[0].appendChild(js);
+    }
+    saLoadScript('https://www.shopperapproved.com/widgets/group2.0/34099.js');
+  </script>
+{%- endif -%}
 
 {%- comment -%} Drawer visibility fix {%- endcomment -%}
 <style>
