@@ -18,21 +18,30 @@ Controlling architecture, from Tim's Aug 18 and Aug 27 decisions:
 
 | File | Change |
 | --- | --- |
-| `snippets/shopper-approved-product-reviews.liquid` | New. The single loader + display container for Shopper Approved product reviews. Gated on a theme setting that defaults to **off**. |
+| `snippets/shopper-approved-product-reviews.liquid` | New. The single loader + display container for Shopper Approved product reviews. Gated on `sa_product_reviews_enabled`. |
 | `assets/shopper-approved-schema-guard.js` | New. Strips JSON-LD injected by Shopper Approved so the page keeps exactly one AggregateRating source. |
 | `sections/main-product.liquid` | Renders the snippet. The default template previously had **no** Shopper Approved loader at all. |
 | `sections/main-product-comb.liquid` | Legacy inline loader replaced by the snippet. |
 | `sections/main-product-variants.liquid` | Legacy inline loader replaced by the snippet. |
 | `snippets/schema-product.liquid` | The theme's own JSON-LD node is tagged `data-schema-source="theme"` so the guard can never remove it. One attribute, no output change. |
 | `config/settings_schema.json` | New "Shopper Approved Product Reviews" group with `sa_product_reviews_enabled`, default `false`. |
+| `config/settings_data.json` | Sets `sa_product_reviews_enabled` to `true` so the preview theme renders the display. Preview activation only — see the merge gate below. |
 
-### Why it is off by default
+### The activation flag, and the one thing that must not be merged
 
-`sa_product_reviews_enabled` defaults to `false`, so on any theme that does not explicitly
-turn it on — including `main` — the snippet renders nothing and no Shopper Approved product
-script is requested. Merging this branch would be a no-op on live output. The preview theme
-is the only place the checkbox gets ticked, in Theme settings → Shopper Approved Product
-Reviews.
+`sa_product_reviews_enabled` defaults to `false` in `settings_schema.json`, so on any theme
+that does not explicitly turn it on the snippet renders nothing and no Shopper Approved
+product script is requested.
+
+`config/settings_data.json` **on this branch** sets it to `true`, because the preview theme
+is built from this branch and has to actually show the display. `main` has its own
+`settings_data.json` with no such key, so live output is unaffected while this branch stays
+unmerged.
+
+> **Merge gate:** `config/settings_data.json` carries `"sa_product_reviews_enabled": true`.
+> That line is preview activation, not a production decision. Do not carry it into `main`
+> without Tim's separate written GO — merging it turns Shopper Approved product reviews on
+> across the live storefront. Everything else on this branch is inert without it.
 
 ### Three defects this fixes
 
@@ -70,16 +79,38 @@ clean **before** anyone touches the Shopper Approved account.
 All three sit on the default `product.json` template, so all three exercise the
 `main-product.liquid` path that had no loader at all.
 
-| Case | SKU / ProductID | Product | Handle | Expected in preview |
+| Case | SKU / ProductID | Product | Judge.me rating metafields | Expected AggregateRating in preview |
 | --- | --- | --- | --- | --- |
-| Ordinary exact match | `FF-FSR90` | French Fitness FSR90 All-in-One Smith Machine, Functional Trainer & Squat Rack (New) — `9878150218044`, ACTIVE | `french-fitness-fsr90-functional-trainer-smith-squat-rack-machine-new` | Display renders, keyed on `FF-FSR90`. One AggregateRating, from Judge.me/theme. |
-| Identity collision | `FF-WSPA5` | French Fitness 5 lb Weight Stack Plate Adapter (New) — `9879092658492`, ACTIVE | `french-fitness-5-lb-weight-stack-plate-adapter-new` | Keyed on `FF-WSPA5` only. Legacy `71023` is never requested. Confirmed live: no current product carries SKU `71023`. |
-| No-auto-remap exception | `FFT-LPSCR` | French Fitness Tahoe Seated Leg Press Sled / Calf Raise (New) — `10026483908924`, ACTIVE | `french-fitness-tahoe-seated-leg-press-sled-calf-raise-new` | Keyed on `FFT-LPSCR`. Legacy `FFB-LPS` reviews are **not** pulled in. Empty display is the correct result. |
+| Ordinary exact match | `FF-FSR90` | French Fitness FSR90 All-in-One Smith Machine, Functional Trainer & Squat Rack (New) — `9878150218044`, ACTIVE | 4.91 / 32 reviews | Exactly one, from the theme node. |
+| Identity collision | `FF-WSPA5` | French Fitness 5 lb Weight Stack Plate Adapter (New) — `9879092658492`, ACTIVE | 5.0 / 17 reviews | Exactly one, from the theme node. Keyed on `FF-WSPA5` only; legacy `71023` is never requested, and no current product carries that SKU. |
+| No-auto-remap exception | `FFT-LPSCR` | French Fitness Tahoe Seated Leg Press Sled / Calf Raise (New) — `10026483908924`, ACTIVE | **none** | **Zero.** See below. |
+
+`FFT-LPSCR` carries no `reviews.rating` / `reviews.rating_count` metafields, so the theme's
+schema emits no AggregateRating for it. That makes it the sharpest test on the branch: if
+Shopper Approved's JSON-LD were left running, it would become the page's *only* rating
+source — an unsourced rating on a product Judge.me says has no reviews. The correct preview
+result is zero AggregateRating nodes and an empty Shopper Approved display, with the legacy
+`FFB-LPS` reviews left where they are.
+
+Its template suffix is `Default product`, and no `templates/product.Default product.json`
+exists in the theme, so it falls back to `templates/product.json` and the `main-product`
+section — the path that previously had no Shopper Approved loader at all. Confirmed against
+the preview theme's file list.
+
+## Preview theme
+
+`fitnesssuperstore-shopify/claude/friendly-dirac-lrn44h`, theme ID **188470526268**,
+UNPUBLISHED, `/t/589`. Connected to this branch, so it redeploys on every push.
+
+| Case | Preview URL |
+| --- | --- |
+| `FF-FSR90` | https://www.fitnesssuperstore.com/products/french-fitness-fsr90-functional-trainer-smith-squat-rack-machine-new?preview_theme_id=188470526268 |
+| `FF-WSPA5` | https://www.fitnesssuperstore.com/products/french-fitness-5-lb-weight-stack-plate-adapter-new?preview_theme_id=188470526268 |
+| `FFT-LPSCR` | https://www.fitnesssuperstore.com/products/french-fitness-tahoe-seated-leg-press-sled-calf-raise-new?preview_theme_id=188470526268 |
 
 ## Preview test plan
 
-On the unpublished preview theme, with `sa_product_reviews_enabled` ticked, logged out,
-desktop and mobile, for each of the three products above:
+Logged out, desktop and mobile, for each of the three products above:
 
 1. **Display** — exactly one Shopper Approved review block. No second block, no duplicate of
    the Judge.me widget.
@@ -87,9 +118,15 @@ desktop and mobile, for each of the three products above:
    equals the product's current SKU, and the network request is
    `shopperapproved.com/product/34099/<that SKU>.js`.
 3. **Schema count** — in console:
-   `document.querySelectorAll('script[type="application/ld+json"]').length` and the count of
-   `"aggregateRating"` across those nodes. Expect exactly one Product node and one
-   AggregateRating node, both from `data-schema-source="theme"`.
+
+   ```js
+   [...document.querySelectorAll('script[type="application/ld+json"]')]
+     .map(n => ({ src: n.dataset.schemaSource || 'unknown',
+                  agg: (n.textContent.match(/AggregateRating/g) || []).length }));
+   ```
+
+   Expect one node, `src: "theme"`, with `agg: 1` on `FF-FSR90` and `FF-WSPA5` and `agg: 0`
+   on `FFT-LPSCR`. Any node with `src: "unknown"` is a leak the guard missed.
 4. **Guard** — `window.shopperApprovedSchemaGuard.removed`. Any value above `0` means
    Shopper Approved is still emitting JSON-LD and the vendor-side disable is still required.
 5. **Rich Results Test** on the preview URL — one Product, one AggregateRating, no
@@ -103,9 +140,10 @@ the list because they are the other Shopper Approved surfaces on the site.
 
 ## Rollback
 
-- Preview theme: untick `sa_product_reviews_enabled`. The display and the Shopper Approved
-  product script both disappear immediately. No redeploy.
-- Branch: the work is isolated in the commits touching the seven files above. `git revert`
+- Preview theme: set `sa_product_reviews_enabled` back to `false`, in Theme settings →
+  Shopper Approved Product Reviews or in `config/settings_data.json`. The display and the
+  Shopper Approved product script both disappear. No code change.
+- Branch: the work is isolated in the commits touching the eight files above. `git revert`
   restores the legacy inline loaders exactly.
 - Nothing to roll back on live: the branch is unmerged, the preview theme is unpublished, and
   no Shopper Approved, Judge.me, feed, GMC, ProductID or product setting was touched.
