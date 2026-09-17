@@ -8,13 +8,24 @@
 
   Rules this snippet is built to:
   - Judge.me and snippets/schema-product.liquid stay the sole Product, Offer and
-    AggregateRating source. Shopper Approved is display-only here; any JSON-LD it
-    injects is stripped by assets/shopper-approved-schema-guard.js.
+    AggregateRating source. `sa_schema = 0` is Shopper Approved's own documented
+    kill switch for its JSON-LD block; it is read by the product script before it
+    builds the node, so nothing is ever inserted. It is a page-side variable, so
+    it is scoped to this theme and needs no account change.
   - The Shopper Approved ProductID is the product's current variant SKU, used
     verbatim. No remapping, no legacy-ID fallback. A product whose reviews sit
     under a retired SKU shows an empty display rather than borrowed reviews.
   - One loader and one display container per page. The legacy inline loaders in
     main-product-comb and main-product-variants are replaced by this snippet.
+
+  Container contract, read off the live product script
+  (shopperapproved.com/product/34099/<id>.js), not guessed:
+  - #product_page                     review list + paging, saOpenPage() writes here
+  - #review_header                    rating summary block, and the jump anchor
+  - #product_just_stars               inline star summary + "N reviews" jump link
+  - .shopperapproved_product_summary  wrapper the script .show()s once loaded
+  - #review_image                     widget footer logo; the script fills its <a>
+  - #shopper_review_page              scope for the stylesheet the script injects
 
   Accepts:
   - product   {Object} the product to display reviews for
@@ -28,14 +39,35 @@
 -%}
 
 {%- if settings.sa_product_reviews_enabled and sa_product_id != blank -%}
-  <div class="sa-product-reviews" data-sa-product-id="{{ sa_product_id | escape }}">
-    <h2 class="sa-product-reviews__heading">Verified customer reviews</h2>
-    <div id="shopper_approved"></div>
+  <div
+    id="shopper_review_page"
+    class="sa-product-reviews"
+    data-sa-product-id="{{ sa_product_id | escape }}"
+  >
+    <div class="shopperapproved_product_summary" style="display: none;">
+      <span id="product_just_stars"></span>
+    </div>
+
+    <div id="shopperapproved_div"></div>
+    <div id="review_header"></div>
+    <div id="product_page"></div>
+    <div id="review_image">
+      <a
+        href="https://www.shopperapproved.com/reviews/fitnesssuperstore.com/"
+        target="_blank"
+        rel="nofollow noopener"
+      ></a>
+    </div>
   </div>
 
   <script src="{{ 'shopper-approved-schema-guard.js' | asset_url }}" defer="defer"></script>
 
-  <script defer type="text/javascript">
+  <script type="text/javascript">
+    // Suppress the Shopper Approved Product/AggregateRating/Review JSON-LD.
+    // Must be set before the product script runs — it reads sa_schema at the top
+    // of the file and only builds the node when this is unset or 1.
+    var sa_schema = 0;
+
     var sa_products_count = 3;
     var sa_date_format = 'F j, Y';
     var sa_product = {{ sa_product_id | json }};

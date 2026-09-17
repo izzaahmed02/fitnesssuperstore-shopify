@@ -50,8 +50,9 @@ unmerged.
    `product.json` template — which is all three of the evidence products below — could not
    render a Shopper Approved product review even in principle.
 2. **No display container existed anywhere.** The legacy loader fetched
-   `shopperapproved.com/product/34099/<id>.js` but no template rendered the
-   `#shopper_approved` element the widget writes into, so nothing could appear.
+   `shopperapproved.com/product/34099/<id>.js` — 200, script executed — but no
+   template rendered any of the elements it writes into, so the output had
+   nowhere to go and the page stayed blank.
 3. **The ProductID was read from the wrong variant.** The legacy loader used
    `window.product.variants[0].sku`, the *first* variant, not the selected one. The snippet
    uses `product.selected_or_first_available_variant.sku`, rendered server-side in Liquid.
@@ -63,16 +64,63 @@ legacy-ID fallback and no alias table. A product whose reviews sit under a retir
 renders an empty display rather than borrowing another product's reviews. That is the
 `FFT-LPSCR` / `FFB-LPS` exception behaving as Tim specified, not a bug.
 
+### Container contract
+
+Read off the live product script, not guessed. An early version of this snippet rendered
+`<div id="shopper_approved">`, which the widget never writes to — the script returned 200,
+executed, and produced nothing. The elements it actually targets are:
+
+| Element | Role |
+| --- | --- |
+| `#product_page` | Review list and paging. `saOpenPage()` writes here. |
+| `#review_header` | Rating summary block, and the target of the "N reviews" jump link. |
+| `#product_just_stars` | Inline star summary plus the jump link. |
+| `.shopperapproved_product_summary` | Wrapper the script `.show()`s once reviews load, so it starts hidden. |
+| `#review_image` | Widget footer logo; the script fills its `<a>`. |
+| `#shopper_review_page` | Scope for the stylesheet the script injects. |
+| `#shopperapproved_div` | Optional jump anchor; falls back to `#review_header` when absent. |
+
+`#shopper_approved` appears in the script only in `ReviewProduct()`, the write-review popup
+flow. `sa_write_review` is `0` for SiteID 34099, so that path is inert here.
+
+`#product_just_stars` currently sits inside the review block. It is designed to live next to
+the product title; moving it is a layout decision for after the display itself is signed off.
+
+### Structured-data: the JSON-LD disable is page-side, not an account setting
+
+The product script builds its own Product + AggregateRating + Review JSON-LD and inserts it
+before the page's first `<script>`. Its kill switch is in the same file:
+
+```js
+if ((typeof sa_schema !== 'undefined' && sa_schema == 1) || typeof sa_schema === 'undefined') {
+    var j = document.createElement('script');
+    j.type = 'application/ld+json';
+    j.innerHTML = json_sa;
+    sa_s.parentNode.insertBefore(j, sa_s);
+}
+```
+
+`sa_schema` is an ordinary page-side JavaScript variable. The snippet sets `sa_schema = 0`
+before the loader, so the node is never built. **This is scoped to whichever theme renders
+the snippet and requires no Shopper Approved account change**, which answers the question Tim
+put to Khéri on Aug 17 — whether the control is preview-specific or account-wide. It is
+preview-specific, and it is ours.
+
 ### Structured-data guard
 
-`shopper-approved-schema-guard.js` removes a `script[type="application/ld+json"]` node only
-when it is inside `#shopper_approved` or its own text identifies it as Shopper Approved, and
-never when it carries `data-schema-source="theme"`. It reports itself at
-`window.shopperApprovedSchemaGuard` (`{ removed, samples }`) for evidence capture.
+`shopper-approved-schema-guard.js` is the check on that switch, plus a backstop for other
+Shopper Approved surfaces. It removes a JSON-LD node only when it is positively Shopper
+Approved's — inside `#shopper_review_page`, or self-identifying in its text — and never when
+it carries `data-schema-source="theme"`. Nodes belonging to other apps are **reported, not
+removed**: silently dropping another app's structured data would be its own defect.
 
-The guard is preview-side belt and braces, not the fix. The supported fix is the vendor-side
-JSON-LD disable Khéri confirmed on Aug 20. The guard exists so the preview can be proven
-clean **before** anyone touches the Shopper Approved account.
+`window.shopperApprovedSchemaGuard.audit()` returns every JSON-LD node on the page with its
+source, types, AggregateRating count, `ratingValue` and `reviewCount`. Any node reporting
+`src: "unattributed"` alongside a rating is a second opinion on the product's rating and
+needs a decision.
+
+Verified in Chromium against a fixture: a Shopper Approved node removed, a third-party node
+with a conflicting rating left intact and reported, and the theme node untouched.
 
 ## Evidence products
 
@@ -117,18 +165,14 @@ Logged out, desktop and mobile, for each of the three products above:
 2. **ProductID** — `document.querySelector('.sa-product-reviews').dataset.saProductId`
    equals the product's current SKU, and the network request is
    `shopperapproved.com/product/34099/<that SKU>.js`.
-3. **Schema count** — in console:
-
-   ```js
-   [...document.querySelectorAll('script[type="application/ld+json"]')]
-     .map(n => ({ src: n.dataset.schemaSource || 'unknown',
-                  agg: (n.textContent.match(/AggregateRating/g) || []).length }));
-   ```
-
-   Expect one node, `src: "theme"`, with `agg: 1` on `FF-FSR90` and `FF-WSPA5` and `agg: 0`
-   on `FFT-LPSCR`. Any node with `src: "unknown"` is a leak the guard missed.
-4. **Guard** — `window.shopperApprovedSchemaGuard.removed`. Any value above `0` means
-   Shopper Approved is still emitting JSON-LD and the vendor-side disable is still required.
+3. **Schema audit** — `window.shopperApprovedSchemaGuard.audit()` in console. Expect no
+   entry with `shopperApproved: true`, and the theme entry carrying the rating:
+   `aggregateRatings: 1` on `FF-FSR90` and `FF-WSPA5`, `0` on `FFT-LPSCR`. Every
+   `src: "unattributed"` entry claiming a rating must be attributed to an app before this
+   ships.
+4. **Kill switch** — `window.shopperApprovedSchemaGuard.saSchemaSuppressed` must be `true`
+   and `.removed` must be `0`. A non-zero `removed` means `sa_schema = 0` did not take and
+   the guard caught the node instead — a snippet ordering bug, not a vendor problem.
 5. **Rich Results Test** on the preview URL — one Product, one AggregateRating, no
    duplicate-structured-data warning.
 6. **Live untouched** — same schema counts on the live PDP before and after, to prove the
@@ -155,13 +199,12 @@ side**. The widget reads one account endpoint, `/product/34099/<id>.js`; merging
 `36248`'s reviews into that response is an account-side cross-domain-sharing setting on
 Shopper Approved, which Tim's Aug 30 GO explicitly excludes.
 
-Per item 2 of that GO, this is reported rather than actioned. Two account-side settings would
-be needed, neither authorised here:
+Per item 2 of that GO, this is reported rather than actioned. One account-side setting would
+be needed, and it is not authorised here: **cross-domain review sharing between SiteID 34099
+and SiteID 36248.** Without it the preview shows each domain's own reviews only. The 19 exact
+shared ProductIDs are the population this would affect.
 
-1. **Cross-domain review sharing between SiteID 34099 and SiteID 36248.** Without it the
-   preview shows each domain's own reviews only. The 19 exact shared ProductIDs are the
-   population this would affect.
-2. **The Shopper Approved JSON-LD disable.** Whether it is preview-scoped or account-wide is
-   still open — that was the question Tim put to Khéri on Aug 17 and it has not come back
-   with a scope. If it is account-wide, enabling it changes live output and needs its own GO.
-   The client-side guard covers the preview in the meantime.
+The JSON-LD disable is no longer on this list. It turned out not to be an account setting at
+all — `sa_schema = 0` is a page-side variable, set by this snippet, scoped to whichever theme
+renders it. No account change, no GO, no risk to live output. That resolves the question Tim
+put to Khéri on Aug 17 without waiting on a vendor reply.
