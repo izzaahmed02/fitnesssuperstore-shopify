@@ -161,7 +161,7 @@ UNPUBLISHED, `/t/589`. Connected to this branch, so it redeploys on every push.
 | `FF-WSPA5` | https://www.fitnesssuperstore.com/products/french-fitness-5-lb-weight-stack-plate-adapter-new?preview_theme_id=188470526268 |
 | `FFT-LPSCR` | https://www.fitnesssuperstore.com/products/french-fitness-tahoe-seated-leg-press-sled-calf-raise-new?preview_theme_id=188470526268 |
 
-### Widget collision — the merchant widget must not run on product pages
+### Widget collision — the merchant widget should not run on product pages
 
 `layout/theme.liquid` renders `snippets/modals-and-templates.liquid` on every page, which
 loads the Shopper Approved merchant widget, `widgets/group2.0/34099.js`. That is the **same
@@ -169,25 +169,54 @@ codebase** as the product widget. Both define the globals `sa_rtype`, `sa_overal
 `sa_foundrows` and `sa_product_reviews`, and both render into `#product_page` and
 `#review_header`. Whichever finishes last wins.
 
-Measured on the preview theme, same build, same minute:
+This is latent on the live theme rather than caused here: with no `#product_page` or
+`#review_header` anywhere on a product page, neither widget had anywhere to write, so it could
+not surface. Adding the product display is what would give the merchant widget a target.
 
-| PDP | `sa_rtype` | `sa_overall` | `sa_foundrows` | What rendered |
-| --- | --- | --- | --- | --- |
-| `FF-FSR90` | `product` | 4.9 | 31 | the product's own reviews |
-| `FFT-LPSCR` | `merchant` | 5 | **428** | the site-wide store reviews |
-
-428 is the whole-store review count. On `FFT-LPSCR` the merchant widget had replaced the
-product's reviews with generic company reviews — the exact "one visible review display"
-failure Tim's gate is there to catch, and intermittent, because it is a race.
-
-This was latent before this branch: with no `#product_page` or `#review_header` anywhere on a
-product page, neither widget had anywhere to write, so the collision was invisible. Adding the
-product display is what gave the merchant widget a target.
-
-Fix: `modals-and-templates.liquid` skips the merchant widget on product templates while
+`modals-and-templates.liquid` therefore skips the merchant widget on product pages while
 `sa_product_reviews_enabled` is on. There is no merchant-widget container anywhere in the
 theme — `#merchant_page`, `.shopperapproved_widget` and `#shopper_approved` appear nowhere —
 so nothing visible is lost, and with the setting off the snippet is byte-identical to before.
+
+This is defensive. It was **not** the cause of the merchant reviews seen on `FFT-LPSCR`; that
+turned out to be the vendor behaviour below, which reproduced with the merchant widget
+already gone.
+
+### The merchant fallback — a product with no reviews borrows the whole store's
+
+When a ProductID has no reviews in Shopper Approved, the product endpoint does not return an
+empty result. It returns a loader for `merchantfallback.js` and nothing else. The entire
+body of `product/34099/FFT-LPSCR.js` is:
+
+```js
+var sa_productid = 'FFTLPSCR';
+var sa_product_desc = 'French Fitness Tahoe Seated Leg Press Sled / Calf Raise (New)';
+var sa_product_image_src = 'https://cdn.shopify.com/...';
+
+(function(w,d,t,f,s,a){s=d.createElement(t),
+a=d.getElementsByTagName(t)[0];s.async=1;s.src=f;a.parentNode.insertBefore(s,a)
+})(window,document,'script','//www.shopperapproved.com/product/34099/merchantfallback.js');
+```
+
+The fallback sets `sa_rtype` to `merchant`, `sa_overall` to 5 and `sa_foundrows` to **428** —
+the store-wide review count — and renders those reviews into the product's container, where
+they read as that product's reviews.
+
+Unlike the JSON-LD, there is no flag. The fallback loader *is* the response, so it cannot be
+switched off vendor-side. `shopper-approved-product-reviews.liquid` blocks the insertion
+instead: an inline patch, installed before the loader because the product script is async,
+intercepts `<script>` nodes for that one file on `appendChild` and `insertBefore` and passes
+everything else through. Verified in Chromium: the file is never requested, never executes,
+and `sa_rtype` / `sa_foundrows` are left untouched, while an ordinary injected script still
+loads normally. `window.shopperApprovedMerchantFallbackBlocked` reports whether it fired.
+
+**Scope, and why this matters beyond the three evidence products.** Masum's Aug 29 diff found
+412 ProductIDs in the Fitness Superstore account against a Shopify catalog many times larger.
+Every product without a Shopper Approved review takes this path. Shipping the display without
+this block would put 428 store-wide reviews on the majority of product pages, presented as
+each product's own — a far larger exposure than the cross-domain question this workstream
+started from, and one nothing in the diagnostic to date would have caught, because it only
+appears once a product page has somewhere to render.
 
 ## Preview results
 
@@ -196,8 +225,8 @@ Preview theme 188470526268, logged out, desktop.
 | | `FF-FSR90` | `FF-WSPA5` | `FFT-LPSCR` |
 | --- | --- | --- | --- |
 | ProductID sent | `FF-FSR90` | `FF-WSPA5` | `FFT-LPSCR` |
-| Reviews rendered | 3 of 31 | 3 | re-test pending |
-| Summary header | yes | yes | re-test pending |
+| Reviews rendered | 3 of 31 | 3 | **0**, correct |
+| Summary header | yes | yes | no, correct |
 | JSON-LD nodes | 2 | 2 | 1 |
 | AggregateRating sources | 1, `theme 4.91/32` | 1, `theme 5.0/17` | **0** |
 | `saSchemaSuppressed` | true | true | true |
@@ -211,9 +240,10 @@ Guard removals of `0` alongside `saSchemaSuppressed: true` is the result to want
 was never built, rather than built and cleaned up. Before `sa_schema = 0`, `FF-FSR90` carried
 three JSON-LD nodes; it now carries two.
 
-`FFT-LPSCR` needs re-running after the merchant-widget fix. Its first pass was measuring the
-collision above, not the product, so its own Shopper Approved review count is still unknown —
-`sa_foundrows` had been overwritten with the store-wide 428 before it could be read.
+`FFT-LPSCR` holds **zero** reviews in Shopper Approved under its current SKU, which is what
+the no-remap rule predicts: its reviews sit under legacy `FFB-LPS` and are not migrated. The
+three reviews its first two passes showed were the merchant fallback's store-wide set, not the
+product's. With the fallback blocked it renders nothing, which is the correct result.
 
 ## Preview test plan
 
@@ -232,6 +262,12 @@ Logged out, desktop and mobile, for each of the three products above:
 4. **Kill switch** — `window.shopperApprovedSchemaGuard.saSchemaSuppressed` must be `true`
    and `.removed` must be `0`. A non-zero `removed` means `sa_schema = 0` did not take and
    the guard caught the node instead — a snippet ordering bug, not a vendor problem.
+5. **Loaded scripts** — `window.shopperApprovedLoaded()` must list only
+   `product/34099/<SKU>.js` and Shopper Approved's jQuery. `group2.0` means the merchant
+   widget gate failed; `merchantfallback.js` means the block failed.
+6. **Fallback** — `window.shopperApprovedMerchantFallbackBlocked`. `true` means the product
+   has no Shopper Approved reviews and the store-wide set was stopped from standing in for
+   them; the display should be empty. `sa_rtype` must never read `merchant` on a PDP.
 5. **Rich Results Test** on the preview URL — one Product, one AggregateRating, no
    duplicate-structured-data warning.
 6. **Live untouched** — same schema counts on the live PDP before and after, to prove the

@@ -74,6 +74,42 @@
         }
       );
     };
+
+    // Shopper Approved answers a ProductID that has no reviews by serving a
+    // loader for merchantfallback.js and nothing else. That fallback renders the
+    // store-wide merchant reviews — 428 of them — into this product's review
+    // container, presented as the product's own. There is no vendor flag for it:
+    // the fallback loader is the entire response body.
+    //
+    // So block the insertion. This runs inline, before the loader below, because
+    // the product script is async and can execute before a deferred script would.
+    // Only <script> nodes for that one file are intercepted; everything else is
+    // passed straight through.
+    window.shopperApprovedMerchantFallbackBlocked = false;
+
+    (function () {
+      var methods = ['appendChild', 'insertBefore'];
+
+      for (var i = 0; i < methods.length; i++) {
+        (function (name) {
+          var original = Node.prototype[name];
+
+          Node.prototype[name] = function (node) {
+            if (
+              node &&
+              node.tagName === 'SCRIPT' &&
+              typeof node.src === 'string' &&
+              node.src.indexOf('/merchantfallback.js') !== -1
+            ) {
+              window.shopperApprovedMerchantFallbackBlocked = true;
+              return node;
+            }
+
+            return original.apply(this, arguments);
+          };
+        })(methods[i]);
+      }
+    })();
   </script>
 
   <script type="text/javascript">
