@@ -319,6 +319,12 @@ Tim, 2026-09-14 items 4 and 5: bake `promotion_id` into the generator so a repoi
 mid-promotion does not strip the badge, and carry `custom_label_0 =
 sep2026_overstock_10` here rather than via a supplemental.
 
+**FSS_SEP2026_10 is approved and live** as of 2026-09-17: policy review approved,
+SKU review approved, final state live, scheduled Sep 16 to Sep 30 2026, matched by
+Promotion ID rather than a filter. So the guard is no longer theoretical. Any
+repoint between now and Sep 30 that does not carry `promotion_id` strips the badge
+off a live, approved promotion.
+
 `feeds/promotion-map.csv` is the roster. The generator joins it by SKU and emits
 both attributes, so both leave the UNMAPPED list. Today `promotion_id` reaches
 Google only through SUPPLEMENTAL SOURCE 20, which is exactly why the guard matters:
