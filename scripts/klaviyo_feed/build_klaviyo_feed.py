@@ -567,7 +567,11 @@ def main(argv=None):
             "variant_rows": variant_rows,
             "emitted": len(feed),
             "excluded": len(excluded),
-            "suppressed_products": len(suppressed),
+            # One row per suppressed variant, and the distinct products behind
+            # them: an option carrier contributes 100+ rows from a single
+            # product, so the two are very different numbers.
+            "suppressed_variant_rows": len(suppressed),
+            "suppressed_products": len({row["_shopify_product_id"] for row in suppressed}),
             "emitted_with_warning": len(exceptions) - len(excluded),
             "accounted": accounted,
         },
