@@ -11,8 +11,60 @@
     if section.settings.enable_country_selector or section.settings.enable_language_selector
         assign language_country_selector = true
     endif
-    if section.blocks.size > 0
+    comment
+        PER-BLOCK SCHEDULING (campaign-agnostic). Each announcement block may carry an
+        optional promo_start / promo_end (ISO 8601 with UTC offset). A block outside its
+        window is not counted, not rendered, and cannot leave the bar advertising an
+        expired offer - so a campaign ends on its own date rather than on someone
+        remembering to delete the block. Blank dates mean "always on", which is what every
+        pre-existing block has, so evergreen announcements are unaffected.
+
+        Deliberately NO request.design_mode bypass: Labor Day 2026 shipped one and an
+        expired campaign kept rendering inside the Customizer. The block and its settings
+        are still listed and editable in the theme editor sidebar; only the rendered copy
+        is withheld. To preview a future window, move promo_start.
+
+        promo_end is EXCLUSIVE - the block stops rendering at that instant.
+    endcomment
+    assign announcement_now_s = 'now' | date: '%s' | plus: 0
+    assign live_announcement_ids = ''
+    assign live_announcement_count = 0
+    for announcement_block in section.blocks
+        assign announcement_live = true
+        if announcement_block.settings.promo_start != blank
+            assign promo_start_s = announcement_block.settings.promo_start | date: '%s' | plus: 0
+            if promo_start_s > 0 and announcement_now_s < promo_start_s
+                assign announcement_live = false
+            endif
+        endif
+        if announcement_block.settings.promo_end != blank
+            assign promo_end_s = announcement_block.settings.promo_end | date: '%s' | plus: 0
+            if promo_end_s > 0 and announcement_now_s >= promo_end_s
+                assign announcement_live = false
+            endif
+        endif
+        if announcement_live
+            assign live_announcement_count = live_announcement_count | plus: 1
+            assign live_announcement_ids = live_announcement_ids | append: ',' | append: announcement_block.id | append: ','
+            if live_announcement_count == 1
+                assign first_live_announcement = announcement_block
+            endif
+        endif
+    endfor
+    if live_announcement_count > 0
         assign announcement_bar = true
+    endif
+
+    comment
+        The bar has no chrome of its own - it is only ever the frame around an announcement
+        block, a locale selector or the social icons. With none of those it would still paint
+        the orange `.utility-bar` strip below, so gate the whole thing on having content.
+    endcomment
+    assign has_bar_content = false
+    if announcement_bar or language_country_selector
+        assign has_bar_content = true
+    elsif section.settings.show_social and social_icons
+        assign has_bar_content = true
     endif
 -%}
 
@@ -43,44 +95,119 @@
     .announcement-bar .h5 a {
     text-decoration: underline;
     }
+
+    /* The mobile bar is CENTERED. base-v2.min.css sets `.announcement-bar__message
+       { text-align: start }` below 990px, which is the only breakpoint where the bar is not
+       centered - desktop is centered by the unscoped rule. `.mobile-text` is the copy shown
+       across this whole range, so the override is scoped to match it rather than to the
+       749px block below. */
+    @media screen and (max-width: 990px) {
+      .announcement-bar__message {
+        text-align: center;
+      }
+    }
+
+    /* Labor Day 2026 (PR #758): compact mobile announcement bar, target ~46px vs the 54px cap.
+       Root cause (Yusra QA): 12px font at 24px line-height (2.0 ratio) wraps to two lines.
+       Fix to QA target: 14px font, 1.2 line-height, 6px padding. To be re-measured by Yusra. */
+    @media screen and (max-width: 749px) {
+      .announcement-bar__message.h5 {
+        font-size: 14px;
+        line-height: 1.2;
+        padding-top: 6px;
+        padding-bottom: 6px;
+      }
+
+      /* The 14px above lands on the wrapper, but `mobile-text` is a richtext setting, so the
+         visible copy is a <p> child and base-v2.min.css sets
+         `.announcement-bar .h5 p { font-size: 11.5px }` below 990px. A child's own font-size
+         wins over its parent's, so the bar still rendered at 11.5px against the 14-15px spec.
+         Targeting the paragraph at (0,3,1) beats that rule's (0,2,1) regardless of load order
+         (the same declaration exists in both base-v2.min.css and base.css.liquid). */
+      .announcement-bar__message.h5 .mobile-text p {
+        font-size: 14px;
+        line-height: 1.2;
+      }
+
+      /* Tracking is what buys the single line. The mobile copy is now a SINGLE centered line
+         (bar height 29px, well under the 54px cap). Measured in Chromium at real Lato 700
+         14px against this stylesheet: available width is 316px at a 320px viewport (the
+         `.utility-bar__grid { padding: 0 2px }` rule below 389px overrides `.page-width`'s
+         24px, so 320px is not the tightest case it looks like). The current string renders
+         299px - about 17px of headroom.
+
+         COPY BUDGET: keep the mobile string at or under ~300px rendered, roughly 45
+         characters. Past that it wraps back to two lines. It is not clipped and nothing is
+         hidden, so a longer string degrades to the old two-line bar rather than truncating -
+         but it stops being the single centered line this is tuned for.
+
+         Do not restore the 0.6px tracking from base-v2.min.css: measured, it pushes even the
+         current 45-character string onto two lines at 320, 360 and 390px. Tracking is
+         Dmitri's call as visual owner - this is the implementation constraint, not a design
+         preference. */
+      .announcement-bar__message .mobile-text {
+        letter-spacing: 0.2px;
+      }
+    }
+
+    /* base-v2.min.css pins `.utility-bar { height: 30px }` below 389px while below 350px is
+       already `height: auto`. That is why QA measured 320px at 55px but 375px as a 30px bar
+       holding a ~48px message: at 375px the copy overflows its parent and can collide with the
+       header. Releasing the fixed height makes 320-430px uniformly auto, which is the normal
+       state everywhere above 388px. `.gradient` is unconditional on this element, so (0,2,0)
+       overrides the (0,1,0) rule without depending on stylesheet order. */
+    @media screen and (max-width: 388px) {
+      .utility-bar.gradient {
+        height: auto;
+      }
+    }
 {% endstyle %}
 
+{%- comment -%}
+  Labor Day 2026 ran behind a settings.laborday_start/_end date gate here (PR #758), which
+  expired the bar on its own at the end of Sept 8. The campaign block itself is now removed
+  from sections/header-group.json, so that gate is retired with it: leaving a lapsed sale
+  window wrapped around the whole section would have silently swallowed the NEXT
+  announcement someone adds in the Customizer. The gate below is campaign-agnostic - it
+  renders the bar whenever the section actually has something to show.
+{%- endcomment -%}
+{%- if has_bar_content -%}
 <div
-        class="utility-bar color-{{ section.settings.color_scheme }} gradient{% if section.settings.show_line_separator and section.blocks.size > 0 %} utility-bar--bottom-border{% elsif section.settings.show_line_separator and section.settings.show_social and social_icons %} utility-bar--bottom-border-social-only{% endif %}{% if section.settings.enable_country_selector or section.settings.enable_language_selector %} header-localization{% endif %}"
+        class="utility-bar color-{{ section.settings.color_scheme }} gradient{% if section.settings.show_line_separator and live_announcement_count > 0 %} utility-bar--bottom-border{% elsif section.settings.show_line_separator and section.settings.show_social and social_icons %} utility-bar--bottom-border-social-only{% endif %}{% if section.settings.enable_country_selector or section.settings.enable_language_selector %} header-localization{% endif %}"
         {{ block.shopify_attributes }}
 >
     <div class="page-width utility-bar__grid{% if announcement_bar and language_country_selector or section.settings.show_social and social_icons %} utility-bar__grid--3-col{% elsif language_country_selector or section.settings.show_social and social_icons %} utility-bar__grid--2-col{% endif %}">
         {%- if section.settings.show_social and social_icons -%}
             {%- render 'social-icons' -%}
         {%- endif -%}
-        {%- if section.blocks.size == 1 -%}
+        {%- if live_announcement_count == 1 -%}
             <div
                     class="announcement-bar{% if section.settings.show_social %} announcement-bar--one-announcement{% endif %}"
                     role="region"
                     aria-label="{{ 'sections.header.announcement' | t }}"
                     {{ block.shopify_attributes }}
             >
-                {%- if section.blocks.first.settings.text != blank -%}
-                    {%- if section.blocks.first.settings.link != blank -%}
+                {%- if first_live_announcement.settings.text != blank -%}
+                    {%- if first_live_announcement.settings.link != blank -%}
                         <a
-                        aria-label="{{ section.blocks.first.settings.text }}"
-                        href="{{ section.blocks.first.settings.link }}"
+                        aria-label="{{ first_live_announcement.settings.text }}"
+                        href="{{ first_live_announcement.settings.link }}"
                         class="announcement-bar__link link link--text focus-inset animate-arrow"
                         >
                     {%- endif -%}
                     <div class="announcement-bar__message h5">
-                        <span class="desktop-text">{{ section.blocks.first.settings.text | replace: '<a ', '<a aria-label="Link to Warehouse"' }}</span>
-                        <span class="mobile-text">{{ section.blocks.first.settings.mobile-text | replace: '<a ', '<a aria-label="Link to Warehouse"' }}</span>
-                        {%- if section.blocks.first.settings.link != blank -%}
+                        <span class="desktop-text">{{ first_live_announcement.settings.text | replace: '<a ', '<a aria-label="Link to Warehouse"' }}</span>
+                        <span class="mobile-text">{{ first_live_announcement.settings['mobile-text'] | replace: '<a ', '<a aria-label="Link to Warehouse"' }}</span>
+                        {%- if first_live_announcement.settings.link != blank -%}
                             {% render 'icon-arrow' %}
                         {%- endif -%}
                     </div>
-                    {%- if section.blocks.first.settings.link != blank -%}
+                    {%- if first_live_announcement.settings.link != blank -%}
                         </a>
                     {%- endif -%}
                 {%- endif -%}
             </div>
-        {%- elsif section.blocks.size > 1 -%}
+        {%- elsif live_announcement_count > 1 -%}
             <slideshow-component
                     class="announcement-bar"
                     role="region"
@@ -105,14 +232,20 @@
                             data-autoplay="{{ section.settings.auto_rotate }}"
                             data-speed="{{ section.settings.change_slides_speed }}"
                     >
+                        {%- assign live_slide_index = 0 -%}
                         {%- for block in section.blocks -%}
+                            {%- assign live_block_key = ',' | append: block.id | append: ',' -%}
+                            {%- unless live_announcement_ids contains live_block_key -%}
+                                {%- continue -%}
+                            {%- endunless -%}
+                            {%- assign live_slide_index = live_slide_index | plus: 1 -%}
                             <div
                                     class="slideshow__slide slider__slide grid__item grid--1-col"
-                                    id="Slide-{{ section.id }}-{{ forloop.index }}"
+                                    id="Slide-{{ section.id }}-{{ live_slide_index }}"
                                     {{ block.shopify_attributes }}
                                     role="group"
                                     aria-roledescription="{{ 'sections.announcements.announcement' | t }}"
-                                    aria-label="{{ forloop.index }} {{ 'general.slider.of' | t }} {{ forloop.length }}"
+                                    aria-label="{{ live_slide_index }} {{ 'general.slider.of' | t }} {{ live_announcement_count }}"
                                     tabindex="-1"
                             >
                                 <div
@@ -131,7 +264,7 @@
                                         {%- endif -%}
                                         <div class="announcement-bar__message h5">
                                             <span class="desktop-text">{{ block.settings.text | replace: '<a ', '<a aria-label="Warehouse Page"' }}</span>
-                                            <span class="mobile-text">{{ block.settings.mobile-text | replace: '<a ', '<a aria-label="Warehouse Page"' }}</span>
+                                            <span class="mobile-text">{{ block.settings['mobile-text'] | replace: '<a ', '<a aria-label="Warehouse Page"' }}</span>
                                             {%- if block.settings.link != blank -%}
                                                 {% render 'icon-arrow' %}
                                             {%- endif -%}
@@ -191,6 +324,7 @@
         </div>
     </div>
 </div>
+{%- endif -%}
 
 {% schema %}
 {
@@ -302,6 +436,18 @@
           "type": "url",
           "id": "link",
           "label": "t:sections.announcement-bar.blocks.announcement.settings.link.label"
+        },
+        {
+          "type": "text",
+          "id": "promo_start",
+          "label": "Show from (optional)",
+          "info": "ISO 8601 with UTC offset, e.g. 2026-09-08T00:00:00-07:00. Blank = show immediately."
+        },
+        {
+          "type": "text",
+          "id": "promo_end",
+          "label": "Hide at (optional, exclusive)",
+          "info": "ISO 8601 with UTC offset, e.g. 2026-09-30T23:59:59-07:00. Blank = never expires. The block stops rendering at this instant, in the theme editor too."
         }
       ]
     }
