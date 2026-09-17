@@ -226,6 +226,7 @@ class SuppressionTests(unittest.TestCase):
         _, report, feed = self.build([node, variant])
         self.assertEqual(feed, [])
         self.assertEqual(report["counts"]["suppressed_products"], 1)
+        self.assertEqual(report["counts"]["suppressed_variant_rows"], 1)
 
     def test_tag_match_ignores_case_and_padding(self):
         node, variant = product(802, "TAG-2", "100.00", tags=["  remove from feeds  "])
@@ -248,6 +249,21 @@ class SuppressionTests(unittest.TestCase):
         self.assertEqual(report["duplicate_sku_analysis"]["unresolved"], [])
         self.assertTrue(report["reconciliation_clean"])
         self.assertEqual(code, 0)
+
+    def test_multi_variant_suppression_counts_products_and_rows_apart(self):
+        """An option carrier is one product but many rows; the report must not
+        conflate them."""
+        node, variant = product(807, "MV-1", "10.00", tags=["REMOVE FROM FEEDS"])
+        extra = dict(variant, id="gid://shopify/ProductVariant/8072", sku="MV-2")
+        third = dict(variant, id="gid://shopify/ProductVariant/8073", sku="MV-3")
+        ok_node, ok_variant = product(808, "OK-9", "10.00")
+        _, report, _ = self.build([node, variant, extra, third, ok_node, ok_variant])
+        counts = report["counts"]
+        self.assertEqual(counts["suppressed_products"], 1)
+        self.assertEqual(counts["suppressed_variant_rows"], 3)
+        self.assertEqual(counts["variant_rows"], 4)
+        self.assertEqual(counts["accounted"], 4)
+        self.assertTrue(report["reconciliation_clean"])
 
     def test_option_carrier_product_is_suppressed_by_id(self):
         pid = 10278798000444
