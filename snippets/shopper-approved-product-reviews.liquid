@@ -1,0 +1,60 @@
+{%- comment -%}
+  Shopper Approved product-review display.
+
+  Preview-readiness build. Off by default: the display and the Shopper Approved
+  product loader only render when the theme setting
+  "Shopper Approved product reviews" is enabled, so merging this snippet leaves
+  live output byte-identical.
+
+  Rules this snippet is built to:
+  - Judge.me and snippets/schema-product.liquid stay the sole Product, Offer and
+    AggregateRating source. Shopper Approved is display-only here; any JSON-LD it
+    injects is stripped by assets/shopper-approved-schema-guard.js.
+  - The Shopper Approved ProductID is the product's current variant SKU, used
+    verbatim. No remapping, no legacy-ID fallback. A product whose reviews sit
+    under a retired SKU shows an empty display rather than borrowed reviews.
+  - One loader and one display container per page. The legacy inline loaders in
+    main-product-comb and main-product-variants are replaced by this snippet.
+
+  Accepts:
+  - product   {Object} the product to display reviews for
+  - site_id   {String} optional Shopper Approved SiteID override; defaults to the
+              Fitness Superstore account, 34099
+{%- endcomment -%}
+
+{%- liquid
+  assign sa_site_id = site_id | default: '34099'
+  assign sa_product_id = product.selected_or_first_available_variant.sku | strip
+-%}
+
+{%- if settings.sa_product_reviews_enabled and sa_product_id != blank -%}
+  <div class="sa-product-reviews" data-sa-product-id="{{ sa_product_id | escape }}">
+    <h2 class="sa-product-reviews__heading">Verified customer reviews</h2>
+    <div id="shopper_approved"></div>
+  </div>
+
+  <script src="{{ 'shopper-approved-schema-guard.js' | asset_url }}" defer="defer"></script>
+
+  <script defer type="text/javascript">
+    var sa_products_count = 3;
+    var sa_date_format = 'F j, Y';
+    var sa_product = {{ sa_product_id | json }};
+    (function (w, d, t, f, o, s, a) {
+      o = 'shopperapproved';
+      if (!w[o]) {
+        w[o] = function () {
+          (w[o].arg = w[o].arg || []).push(arguments);
+        };
+        (s = d.createElement(t)), (a = d.getElementsByTagName(t)[0]);
+        s.async = 1;
+        s.src = f;
+        a.parentNode.insertBefore(s, a);
+      }
+    })(
+      window,
+      document,
+      'script',
+      'https://www.shopperapproved.com/product/{{ sa_site_id }}/' + encodeURIComponent(sa_product) + '.js'
+    );
+  </script>
+{%- endif -%}
