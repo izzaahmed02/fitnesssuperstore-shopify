@@ -1,4 +1,8 @@
-# Klaviyo custom-catalog feed rebuild (source 24138)
+# Klaviyo custom-catalog feed rebuild (source 24138, "2026 Klaviyo Feed")
+
+The Klaviyo source label was renamed from "New Klaviyo Feed" to "2026 Klaviyo
+Feed" on 2026-09-16. The source ID is unchanged: **24138**. Restore notes and
+any runbook referring to the old label should use the new one.
 
 Offline builder for the Klaviyo hosted custom-catalog feed, driven from a
 read-only Shopify Admin bulk export. Supports the READ-ONLY AUDIT thread
