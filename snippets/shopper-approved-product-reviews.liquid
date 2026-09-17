@@ -63,6 +63,20 @@
   <script src="{{ 'shopper-approved-schema-guard.js' | asset_url }}" defer="defer"></script>
 
   <script type="text/javascript">
+    // Diagnostic for the preview: which Shopper Approved widgets this page loaded.
+    // The merchant (group2.0) widget shares globals and containers with the product
+    // widget, so anything other than the product script here means a collision.
+    window.shopperApprovedLoaded = function () {
+      return [].map.call(
+        document.querySelectorAll('script[src*="shopperapproved.com"]'),
+        function (s) {
+          return s.src;
+        }
+      );
+    };
+  </script>
+
+  <script type="text/javascript">
     // Suppress the Shopper Approved Product/AggregateRating/Review JSON-LD.
     // Must be set before the product script runs — it reads sa_schema at the top
     // of the file and only builds the node when this is unset or 1.
