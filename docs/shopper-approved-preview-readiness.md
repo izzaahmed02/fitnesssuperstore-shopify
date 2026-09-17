@@ -231,8 +231,11 @@ Preview theme 188470526268, logged out, desktop.
 | AggregateRating sources | 1, `theme 4.91/32` | 1, `theme 5.0/17` | **0** |
 | `saSchemaSuppressed` | true | true | true |
 | Guard removals | 0 | 0 | 0 |
+| Scripts loaded | product script | product script | product script only |
+| Merchant fallback | not triggered | not triggered | **blocked** |
+| `sa_rtype` | `product` | `product` | never set |
 
-`FF-FSR90` and `FF-WSPA5` pass. The Shopper Approved payload for `FF-FSR90` claims 4.9 over
+All three pass. The Shopper Approved payload for `FF-FSR90` claims 4.9 over
 31 reviews against Judge.me's 4.91 over 32, so the duplicate this branch prevents would also
 have been a contradictory one.
 
