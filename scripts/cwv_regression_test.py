@@ -46,7 +46,10 @@ forbid(script_tags, "function loadSquareMarketplace()", 'snippets/script-tags.li
 
 # 7) Google Maps should be interaction/load triggered for heavy pages.
 require(script_tags, "function loadGoogleMaps()", 'snippets/script-tags.liquid')
-forbid(script_tags, "<script src=\"https://maps.googleapis.com/maps/api/js?key=AIzaSyC1KAxFSFi-ORhUWVMuZfaHGyjAF-pmVDw\" defer></script>", 'snippets/script-tags.liquid')
+# The eager tag is matched by URL prefix only. The assertion needs the request
+# shape, not the credential, and a prefix also keeps the check valid if the key
+# is ever rotated or replaced.
+forbid(script_tags, '<script src="https://maps.googleapis.com/maps/api/js', 'snippets/script-tags.liquid')
 
 # 8) Heatmap loader should stay on the lightweight preprocessor implementation.
 require(script_tags, 'preprocessor.min.js?sid=', 'snippets/script-tags.liquid')
