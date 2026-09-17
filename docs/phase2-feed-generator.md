@@ -313,6 +313,68 @@ It exists mainly so `--excluded` is never forgotten. `feed_id_diff.py` without i
 still runs and reports every drop as `unexplained`, which reads like a catastrophe
 and is really a missing argument.
 
+## The September Overstock promotion (cutover guard)
+
+Tim, 2026-09-14 items 4 and 5: bake `promotion_id` into the generator so a repoint
+mid-promotion does not strip the badge, and carry `custom_label_0 =
+sep2026_overstock_10` here rather than via a supplemental.
+
+`feeds/promotion-map.csv` is the roster. The generator joins it by SKU and emits
+both attributes, so both leave the UNMAPPED list. Today `promotion_id` reaches
+Google only through SUPPLEMENTAL SOURCE 20, which is exactly why the guard matters:
+Ilsaa measured it at 0 of 970 and 0 of 1,537 in the serving primaries on 2026-09-17.
+
+### Three things must agree, and each drifts on its own
+
+`scripts/check_promotion_scope.py` compares the repo roster against the live
+Shopify checkout discount, and against the GMC supplemental when you pass an export
+of it. The two failure directions are not equally bad:
+
+| Direction | Consequence | Treated as |
+| --- | --- | --- |
+| badged in the feed, not discounted at checkout | Google disapproval, account-quality hit | hard failure |
+| discounted at checkout, not badged | promotion nobody sees | warning |
+
+**Live on 2026-09-17 the two sets do not match.** The Shopify discount
+(`1741840056636`) covers **17** SKUs; the GMC supplemental and this roster cover
+**16**. The difference is `FF-FSR100`, product `9875868123452`, $3,999, which
+discounts at checkout but carries no `promotion_id`. It was not in the discount when
+the same discount was read on 2026-09-10, so it was added after Ilsaa built the
+mapping. It is a real catalogue SKU, `p2_core` / `FSR Series` in the v2 lookup.
+
+This is the safe direction, so it is not a disapproval risk and it does not block the
+promotion. It is a $3,999 product silently missing its badge, and Larianne's
+confirmation of the final list (Tim's item 2) has not landed, so whether it belongs
+is a call for her and Tim, not something to assume either way.
+
+### `custom_label_0` has an existing owner
+
+Worth checking in Merchant Center before cutover: the **Flowboost Labelizer**
+supplemental supplies `custom_label_0` on at least some offers in this account. A
+supplemental overrides the primary for the attributes it carries, so if Flowboost
+covers any of the 16, it would overwrite `sep2026_overstock_10` the moment the
+generated primaries serve. The check is Products > one of the 16 > raw attributes,
+and see which source is contributing `custom_label_0`.
+
+## sale_price only where the landing page shows it
+
+Tim's standing rule, 2026-09-14 item 8. The generator now verifies, at generation
+time, that the landing page visibly carries both the discounted price and the
+struck-through price before submitting a `sale_price`. Only rows that would carry one
+are fetched, roughly two dozen, not the catalogue.
+
+It fails safe: a fetch error, or either figure missing from the page, drops the sale
+price and logs the reason to `excluded_rows.csv`. A row without a sale price is a
+missed discount; a row whose sale price the PDP does not show is a landing-page
+mismatch, and only one of those costs us anything.
+
+This is what makes PR #784 self-correcting. If the French Fitness strikethrough is
+removed, those rows drop their sale price at the next generation with no
+intervention. `--skip-pdp-check` exists for offline dry runs only.
+
+None of the 17 Overstock products carries a `compareAtPrice` at all, so the rule
+does not currently touch any promotion row.
+
 ## Still open
 
 1. Merchant Center account-level tax confirmation, before the three tax columns come out.

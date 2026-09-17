@@ -61,6 +61,11 @@ TITLE_OVERRIDES = ROOT / "feeds" / "hero-title-overrides.csv"
 # a File (manual) source back. Tim's attachment of 2026-09-07 / 2026-09-08, which is
 # byte-for-byte the file live on the supplemental source since 2026-09-05 18:46 PDT.
 LABEL_LOOKUP = ROOT / "feeds" / "supplemental_priority_labels_v2.csv"
+# Cutover guard, Tim 2026-09-14 items 4 and 5. promotion_id reaches Google today
+# only through SUPPLEMENTAL SOURCE 20, so a repoint mid-promotion would strip the
+# badge from every mapped SKU. The generator bakes it in, together with the
+# custom_label_0 campaign label Tim ruled must NOT go via supplemental.
+PROMOTION_MAP = ROOT / "feeds" / "promotion-map.csv"
 
 API_VERSION = "2025-07"
 
@@ -142,7 +147,6 @@ FF_COLUMNS = [
 # intentionally dropped.
 UNMAPPED = [
     "google_product_category",   # live rows carry a full Google taxonomy string
-    "custom_label_0",            # live rows carry the product-type taxonomy
     "custom_label_1",
     "custom_label_2",            # live rows carry price tiers, e.g. T3_1000+
     "price_tiers",               # e.g. aov_4000
@@ -152,7 +156,6 @@ UNMAPPED = [
     "std_shopping_ff_product_lines_1000plus_control",
     "product_detail",
     "product_highlight",
-    "promotion_id",              # supplied today by a separate supplemental
     "virtual_model_link",
 ]
 
@@ -320,6 +323,65 @@ def labels_for(labels, sku, offer_id, product_id, label_report):
                 ))
             return labels[key], source
     return ("", ""), None
+
+
+def load_promotions():
+    """sku -> {promotion_id, custom_label_0}. Empty if the file is absent."""
+    if not PROMOTION_MAP.exists():
+        return {}
+    with PROMOTION_MAP.open(encoding="utf-8-sig") as fh:
+        return {
+            (row["sku"] or "").strip(): {
+                "promotion_id": (row.get("promotion_id") or "").strip(),
+                "custom_label_0": (row.get("custom_label_0") or "").strip(),
+            }
+            for row in csv.DictReader(fh)
+            if (row.get("sku") or "").strip()
+        }
+
+
+def pdp_shows_price(link, sale, regular, cache):
+    """Tim's standing rule, 2026-09-14 item 8: submit a sale price ONLY for rows
+    whose landing page visibly displays that discounted / strikethrough price at
+    generation time.
+
+    Google requires the submitted sale price to be visible on the landing page, so
+    this is checked rather than assumed. Only rows that would carry a sale_price
+    are fetched, which is roughly two dozen, not the catalogue.
+
+    Fails SAFE: any fetch error, or either figure missing from the page, drops the
+    sale price. A row without a sale price is merely a missed discount; a row whose
+    sale price the PDP does not show is a landing-page mismatch. This is also what
+    makes PR #784 self-correcting - if the French Fitness strikethrough goes away,
+    these rows drop their sale price at the next generation on their own.
+    """
+    if not link:
+        return False, "no landing page"
+    if link in cache:
+        return cache[link]
+    try:
+        req = urllib.request.Request(link, headers={"User-Agent": "FSS-feed-generator/1.0"})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            html = resp.read().decode("utf-8", errors="replace")
+    except Exception as exc:  # noqa: BLE001 - any failure must fail safe
+        result = (False, f"could not fetch landing page: {type(exc).__name__}")
+        cache[link] = result
+        return result
+
+    def shown(amount):
+        bare = f"{amount:.2f}"
+        grouped = f"{amount:,.2f}"
+        return any(form in html for form in (bare, grouped, bare.rstrip("0").rstrip("."),
+                                             grouped.rstrip("0").rstrip(".")))
+
+    if not shown(sale):
+        result = (False, f"landing page does not show the sale price {sale}")
+    elif not shown(regular):
+        result = (False, f"landing page does not show the struck-through price {regular}")
+    else:
+        result = (True, "")
+    cache[link] = result
+    return result
 
 
 def load_shipping(path):
@@ -541,7 +603,8 @@ def automatic_discount_for(product, discounts):
 
 
 def variant_rows(product, feed, rules, labels, titles, shipping, ground_estimates, report,
-                 label_report=None, label_sources=None, discounts=None):
+                 label_report=None, label_sources=None, discounts=None,
+                 promotions=None, pdp_cache=None, verify_pdp=True):
     """One row per sellable variant, keyed <productID>-<variantID>.
 
     A bare product id can only carry one offer, which is why multi-variant
@@ -598,6 +661,16 @@ def variant_rows(product, feed, rules, labels, titles, shipping, ground_estimate
             compare_at = Decimal(compare_at)
             if compare_at > price:
                 list_price, sale_price = compare_at, money(price)
+                # Tim's standing rule, 2026-09-14 item 8. Only rows whose landing
+                # page visibly shows the discounted / struck-through price may
+                # submit a sale price. Checked, not assumed, and it fails safe.
+                if verify_pdp:
+                    ok, why = pdp_shows_price(
+                        product["onlineStoreUrl"], price, compare_at,
+                        pdp_cache if pdp_cache is not None else {})
+                    if not ok:
+                        list_price, sale_price = price, ""
+                        report.append((offer_id, sku, f"sale_price withheld: {why}"))
             elif compare_at > 0:
                 report.append((offer_id, sku, f"compare-at {compare_at} not above price {price}; no sale_price"))
 
@@ -626,6 +699,7 @@ def variant_rows(product, feed, rules, labels, titles, shipping, ground_estimate
             report.append((offer_id, sku, "excluded: not published to the online store"))
             continue
 
+        promo = (promotions or {}).get(sku, {})
         title = titles.get(sku) or product["title"]
         (tier, series), source = labels_for(
             labels, sku, offer_id, product_id,
@@ -683,6 +757,8 @@ def variant_rows(product, feed, rules, labels, titles, shipping, ground_estimate
             "size": options.get("size", ""),
             "material": options.get("material", ""),  # no custom.material metafield exists
             "shipping_weight": f"{weight.get('value')} lb" if weight.get("value") else "",
+            "promotion_id": promo.get("promotion_id", ""),
+            "custom_label_0": promo.get("custom_label_0", ""),
             "custom_label_3": tier,
             "custom_label_4": series,
             "sell_on_google_quantity": str(variant["inventoryQuantity"] or 0),
@@ -721,6 +797,10 @@ def main():
                              "promotions whose discounted price actually renders on the PDP, "
                              "because Google requires the submitted sale price to be visible "
                              "on the landing page.")
+    parser.add_argument("--skip-pdp-check", action="store_true",
+                        help="Skip the landing-page check behind Tim's 2026-09-14 standing rule. "
+                             "Only for offline dry runs: skipping it can emit a sale_price the "
+                             "PDP does not display, which is a landing-page mismatch.")
     parser.add_argument("--out-dir", default="build/feeds")
     parser.add_argument("--shop", default=os.environ.get("SHOPIFY_SHOP"))
     parser.add_argument("--token", default=os.environ.get("SHOPIFY_ADMIN_TOKEN"))
@@ -734,6 +814,8 @@ def main():
     titles = load_title_overrides()
     shipping = load_shipping(args.shipping_lookup)
     ground_estimates = load_ground_estimates(args.ground_shipping_estimates)
+    promotions = load_promotions()
+    pdp_cache = {}
     discounts = None
     if args.sale_price_from_automatic_discounts:
         discounts = fetch_active_discounts(args.shop, args.token)
@@ -761,7 +843,8 @@ def main():
             continue
         buckets[feed].extend(
             variant_rows(product, feed, rules, labels, titles, shipping, ground_estimates, report,
-                         label_report, label_sources, discounts))
+                         label_report, label_sources, discounts,
+                         promotions, pdp_cache, not args.skip_pdp_check))
 
     ff_cols = write_feed(out / "googleshoppingfrenchfitness.csv", FF_COLUMNS, buckets["googleshoppingfrenchfitness"])
     fs_cols = write_feed(out / "googleshoppingfs.csv", FS_COLUMNS, buckets["googleshoppingfs"])
@@ -788,6 +871,12 @@ def main():
     print(f"excluded rows logged         {len(report):>5}  -> {out / 'excluded_rows.csv'}")
     print(f"rows with blank shipping     {len(missing_shipping):>5}  (owned by the missing-shipping pass)")
     print(f"tax columns emitted              0  (all three dropped per delta 5)")
+    promo_rows = [r for rows in buckets.values() for r in rows if r.get("promotion_id")]
+    print(f"promotion_id baked in        {len(promo_rows):>5}  (cutover guard; map has {len(promotions)} SKUs)")
+    if promotions and len(promo_rows) != len(promotions):
+        missing = sorted(set(promotions) - {r["old_id"] for r in promo_rows})
+        print(f"  WARNING: {len(missing)} mapped SKUs are not in either feed: {', '.join(missing)}")
+        print("  A repoint would drop the badge on those. Check scripts/check_promotion_scope.py.")
     print(f"labels resolved by SKU       {by_source.get('sku', 0):>6}")
     print(f"labels resolved by offer id  {by_source.get('offer_id', 0):>6}")
     print(f"labels resolved by product id{by_source.get('product_id', 0):>6}")
