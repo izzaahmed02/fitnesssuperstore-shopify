@@ -36,6 +36,8 @@
   endif
   assign installation_needle = installation_match | downcase | strip
 
+  assign pdp_force_visible_needles = 'aluminum pulley,pulley upgrade' | split: ','
+
   assign quantity_index = 0
   assign warranty_index = 1
   assign color_index = 1
@@ -237,13 +239,29 @@
           instead of rendered invisible.
         endcomment
         assign pdp_category_needed = false
+        assign pdp_category_force_visible = false
         for product_option in category.product_options.value
           if product_option.mandatory or product_option.product_option_sets_default.value.id
             assign pdp_category_needed = true
           endif
+          assign pdp_option_title_dc = product_option.product_option_title | downcase
+          if pdp_option_title_dc == 'weight stack'
+            assign pdp_category_needed = true
+            assign pdp_category_force_visible = true
+          endif
+          for pdp_needle in pdp_force_visible_needles
+            if pdp_option_title_dc contains pdp_needle
+              assign pdp_category_needed = true
+              assign pdp_category_force_visible = true
+            endif
+          endfor
         endfor
         if pdp_pass == 'rest' and pdp_category_needed == false
           assign pdp_in_pass = false
+        endif
+
+        if pdp_pass == 'rest' and pdp_category_needed and pdp_category_force_visible == false and pdp_covered == false
+          assign pdp_covered = true
         endif
 
         comment
@@ -337,6 +355,25 @@
         {% endif %}
         <div class="product-options__category-notification"></div>
         {% for product_option in category.product_options.value %}
+          {% liquid
+            assign pdp_option_needed = true
+            if pdp_pass == 'rest'
+              assign pdp_option_needed = false
+              if product_option.mandatory or product_option.product_option_sets_default.value.id
+                assign pdp_option_needed = true
+              endif
+              assign pdp_option_title_dc = product_option.product_option_title | downcase
+              if pdp_option_title_dc == 'weight stack'
+                assign pdp_option_needed = true
+              endif
+              for pdp_needle in pdp_force_visible_needles
+                if pdp_option_title_dc contains pdp_needle
+                  assign pdp_option_needed = true
+                endif
+              endfor
+            endif
+          %}
+          {% if pdp_option_needed %}
           {% assign title = product_option.product_option_title | downcase %}
           {% if title == 'paint color' or title == 'paint colors' or title == 'color' %}
             {% if product_option.product_option_sets_default.value.id %}
@@ -369,6 +406,7 @@
               {% assign default = product_option.product_option_sets_default.value.id %}
             {% endif %}
             {% render 'product-option-accordion', category: category, default: default, product_option: product_option, forloop_index: forloop.index, product_id: product.id %}
+          {% endif %}
           {% endif %}
         {% endfor %}
       </div>
