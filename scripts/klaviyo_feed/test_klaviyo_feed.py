@@ -204,6 +204,85 @@ class BuilderTests(unittest.TestCase):
         self.assertNotIn("pk_", json.dumps(report))
 
 
+class SuppressionTests(unittest.TestCase):
+    """Whole-product suppression, applied before duplicate counting."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+
+    def build(self, nodes):
+        jsonl = os.path.join(self.tmp, "bulk.jsonl")
+        write_jsonl(jsonl, nodes)
+        out = os.path.join(self.tmp, "out")
+        code = builder.main(["--jsonl", jsonl, "--out", out, "--min-items", "0"])
+        with open(os.path.join(out, "build_report.json"), encoding="utf-8") as handle:
+            report = json.load(handle)
+        with open(os.path.join(out, "klaviyo_feed.json"), encoding="utf-8") as handle:
+            feed = json.load(handle)
+        return code, report, feed
+
+    def test_remove_from_feeds_tag_suppresses_the_product(self):
+        node, variant = product(801, "TAG-1", "100.00", tags=["Flooring", "REMOVE FROM FEEDS"])
+        _, report, feed = self.build([node, variant])
+        self.assertEqual(feed, [])
+        self.assertEqual(report["counts"]["suppressed_products"], 1)
+        self.assertEqual(report["counts"]["suppressed_variant_rows"], 1)
+
+    def test_tag_match_ignores_case_and_padding(self):
+        node, variant = product(802, "TAG-2", "100.00", tags=["  remove from feeds  "])
+        _, _, feed = self.build([node, variant])
+        self.assertEqual(feed, [])
+
+    def test_suppressed_product_does_not_make_its_sku_look_duplicated(self):
+        """The Turf case: a zero-inventory combined listing carrying the same
+        SKUs as live standalones must not drag those standalones out of the feed.
+        """
+        live, live_variant = product(803, "FF-AGSL", "669.00")
+        combined, combined_variant = product(
+            804, "FF-AGSL", "669.00", tags=["REMOVE FROM FEEDS"]
+        )
+        code, report, feed = self.build([live, live_variant, combined, combined_variant])
+
+        # the standalone survives, exactly once, and reconciliation still balances
+        self.assertEqual([r["id"] for r in feed], ["FF-AGSL"])
+        self.assertEqual(feed[0]["link"], live["onlineStoreUrl"])
+        self.assertEqual(report["duplicate_sku_analysis"]["unresolved"], [])
+        self.assertTrue(report["reconciliation_clean"])
+        self.assertEqual(code, 0)
+
+    def test_multi_variant_suppression_counts_products_and_rows_apart(self):
+        """An option carrier is one product but many rows; the report must not
+        conflate them."""
+        node, variant = product(807, "MV-1", "10.00", tags=["REMOVE FROM FEEDS"])
+        extra = dict(variant, id="gid://shopify/ProductVariant/8072", sku="MV-2")
+        third = dict(variant, id="gid://shopify/ProductVariant/8073", sku="MV-3")
+        ok_node, ok_variant = product(808, "OK-9", "10.00")
+        _, report, _ = self.build([node, variant, extra, third, ok_node, ok_variant])
+        counts = report["counts"]
+        self.assertEqual(counts["suppressed_products"], 1)
+        self.assertEqual(counts["suppressed_variant_rows"], 3)
+        self.assertEqual(counts["variant_rows"], 4)
+        self.assertEqual(counts["accounted"], 4)
+        self.assertTrue(report["reconciliation_clean"])
+
+    def test_option_carrier_product_is_suppressed_by_id(self):
+        pid = 10278798000444
+        node, variant = product(pid, "FF-ACC-APU", "439.00")
+        self.assertIn(f"gid://shopify/Product/{pid}", builder.OPTION_CARRIER_PRODUCT_IDS)
+        _, report, feed = self.build([node, variant])
+        self.assertEqual(feed, [])
+        self.assertEqual(report["exception_reason_counts"]["option_carrier_excluded"], 1)
+
+    def test_suppressed_rows_are_still_accounted_for(self):
+        ok_node, ok_variant = product(805, "OK-1", "10.00")
+        sup_node, sup_variant = product(806, "SUP-1", "10.00", tags=["REMOVE FROM FEEDS"])
+        _, report, _ = self.build([ok_node, ok_variant, sup_node, sup_variant])
+        counts = report["counts"]
+        self.assertEqual(counts["variant_rows"], 2)
+        self.assertEqual(counts["accounted"], 2)
+        self.assertTrue(report["reconciliation_clean"])
+
+
 class BrandFieldTests(unittest.TestCase):
     """`brand` is mapped as Categories (List) on source 24138 and is required.
 
