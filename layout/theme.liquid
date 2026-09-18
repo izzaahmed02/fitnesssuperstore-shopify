@@ -5,6 +5,7 @@
 
     <title>{{- page_title | escape_once -}}{% if current_tags %} &ndash; tagged "{{ current_tags | join: ', ' }}"{% endif %}{% if current_page != 1 %} &ndash; Page {{ current_page }}{% endif %}</title>
 
+  <link rel="preconnect" href="https://cdn-4.convertexperiments.com" crossorigin>
   <script async type="text/javascript" src="//cdn-4.convertexperiments.com/v1/js/10019770-100110328.js?environment=production"></script>
   
     {% comment %}
@@ -117,15 +118,9 @@
         {%- if settings.predictive_search_enabled -%}
           <script src="{{ 'predictive-search.js' | asset_url }}" defer="defer"></script>
         {%- endif -%}
-    {%- render 'optimization', postpone_loading: 'reset' -%}
 
 <script>
 (function() {
-  var ua = navigator.userAgent || "";
-  if (ua.includes("Chrome-Lighthouse") || ua.includes("Page Speed Insights")) {
-    return;
-  }
-
   var injected = false;
 
   function injectNonCriticalVendors() {
@@ -138,14 +133,6 @@
       g.src = "https://config.gorgias.chat/bundle-loader/01K99R9MBC365Z3RW2GPE0EGSQ";
       g.defer = true;
       document.head.appendChild(g);
-    }
-
-    if (!document.getElementById('convert-bundle-loader')) {
-      var c = document.createElement("script");
-      c.id = "convert-bundle-loader";
-      c.src = "https://cdn.9gtb.com/loader.js?g_cvt_id=96541d45-9050-46e9-90bb-874d67c6ed47";
-      c.defer = true;
-      document.head.appendChild(c);
     }
 
     ['scroll','mousemove','touchstart','keydown','click'].forEach(function(evt) {
@@ -214,11 +201,16 @@
   
   </div>
 <script>
-  setInterval(function() {
-  if (typeof jdgm !== 'undefined' && typeof jdgm.customizeBadges === 'function') {
-    jdgm.customizeBadges();
-  }
-}, 1500); 
+  (function() {
+    var tries = 0;
+    var timer = setInterval(function() {
+      tries++;
+      if (typeof jdgm !== 'undefined' && typeof jdgm.customizeBadges === 'function') {
+        jdgm.customizeBadges();
+      }
+      if (tries >= 30) clearInterval(timer); // stop after ~45s; no permanent main-thread churn
+    }, 1500);
+  })();
 </script>
 {% endif %}
 <style>
