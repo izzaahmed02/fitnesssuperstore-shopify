@@ -1623,10 +1623,12 @@
 
   captureAttribution();
 
-  // Reads Shopify's native Customer Privacy API only. Deliberately does not
-  // integrate with any third-party consent app (e.g. a store's cookie-banner
-  // app) - if this store's consent banner is handled by such an app instead
-  // of Shopify's native privacy settings, this stays 'unavailable' on hold.
+  // Reads Shopify's native Customer Privacy API only. Vladimir confirmed on
+  // 2026-09-17 that this store's consent banner runs on that native API and
+  // not on a third-party cookie-banner app, so there is nothing else to
+  // integrate with and this is the whole consent source, not a stopgap.
+  // The 'unavailable' return below is a defensive branch for the API being
+  // absent - it is no longer a placeholder waiting on that answer.
   function getConsentState() {
     try {
       if (window.Shopify && window.Shopify.customerPrivacy &&
@@ -1650,15 +1652,45 @@
     return 'cgb-' + Date.now() + '-' + Math.random().toString(16).slice(2);
   }
 
-  // GATE 6a PLACEHOLDER - the transport is confined to this one function on
-  // purpose. Vladimir's routing answer (Stape delivery mechanism, target
-  // container, consent source) decides whether these events go out via
-  // dataLayer.push or Shopify.analytics.publish; dataLayer.push is the
-  // current default and switching is a change here and nowhere else.
-  // Do not inline a transport at any other call site.
+  // Routing, per Vladimir's answer (2026-09-17): both events publish to
+  // Shopify Customer Events through the Web Pixels API, which is where his
+  // server-side "GTM & dataLayer" Customer Events pixel subscribes.
+  //
+  // A plain dataLayer.push from inline theme JS is NOT a substitute - it
+  // never crosses into the Customer Events pixel sandbox, so nothing there
+  // would ever see it. It is deliberately NOT kept as a fallback either:
+  // this page already carries a client-side GTM container that reads
+  // window.dataLayer (it stamped gtm.uniqueEventId onto our pushes while
+  // dataLayer was the transport), so pushing there as well would expose
+  // these events to a second, client-side firing path that nobody has
+  // approved - and would double-count against the server-side pixel if a
+  // tag were ever bound to either event name.
+  //
+  // Stape Conversion Tracking is cancelled and is not a target here.
+  //
+  // This remains the only transport in the file. Do not inline one at any
+  // other call site, and do not reintroduce a dataLayer push.
   function routeEvent(eventName, payload) {
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push(Object.assign({ event: eventName }, payload));
+    try {
+      if (window.Shopify && window.Shopify.analytics &&
+          typeof window.Shopify.analytics.publish === 'function') {
+        window.Shopify.analytics.publish(eventName, payload);
+        return;
+      }
+    } catch (e) {}
+
+    // Should be unreachable: Shopify.analytics is injected by
+    // content_for_header on every storefront page, and it keeps its own
+    // replayQueue, so a publish made before the pixel manager initialises is
+    // replayed rather than lost. Surfaced rather than silently swallowed,
+    // because the alternative is an accepted lead going unrecorded with no
+    // trace of why.
+    if (window.console && typeof window.console.warn === 'function') {
+      window.console.warn(
+        '[CGB] Shopify.analytics.publish unavailable; lead event not delivered:',
+        eventName
+      );
+    }
   }
 
   // Called only once acceptance has been confirmed by the provider hook below
