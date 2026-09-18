@@ -1544,6 +1544,197 @@
 </div>
 
 <script>
+(function () {
+  /* --------------------------------------------------------------------------
+     Commercial Gym Buildouts - lead measurement.
+
+     Fires the two locked events for an accepted submission of Powerful Form
+     Builder form 164478. The acceptance signal, how it was verified and the
+     failure paths it was tested against are documented in
+     cgb-form-hook-documentation.md - read that before changing anything here.
+
+     No form field values are read or emitted anywhere in this block, per the
+     locked no-PII measurement contract.
+  -------------------------------------------------------------------------- */
+
+  var PROVIDER = 'powerful_form_builder';
+  var PROVIDER_FORM_ID = '164478';
+  var SECTION_FORM_ID = 'commercial_gym_buildouts_form';
+  var ATTRIBUTION_STORAGE_KEY = 'cgbAttribution';
+  var ATTRIBUTION_KEYS = [
+    'utm_source',
+    'utm_medium',
+    'utm_campaign',
+    'utm_content',
+    'utm_term',
+    'oppref'
+  ];
+
+  // Capture on arrival, not at fire time. Reading location.search when the
+  // event fires loses attribution for anyone who lands on a campaign URL and
+  // then navigates within the site before submitting. Persisted for the
+  // session so it survives that navigation.
+  //
+  // Scope limit, deliberate: this script only runs on this page, so a visitor
+  // who arrives on a campaign URL elsewhere on the site and reaches this page
+  // by navigation is not captured. Covering that needs a theme-wide snippet in
+  // layout/theme.liquid, which would widen the page-scoped footprint this PR
+  // was reviewed as having. Flagged rather than assumed.
+  function captureAttribution() {
+    var params;
+
+    try {
+      params = new URLSearchParams(window.location.search);
+    } catch (e) {
+      return;
+    }
+
+    var found = {};
+    var any = false;
+
+    ATTRIBUTION_KEYS.forEach(function (key) {
+      var value = params.get(key);
+      if (value) {
+        found[key] = value;
+        any = true;
+      }
+    });
+
+    // Only overwrite when this arrival actually carries parameters, so an
+    // ordinary param-less pageview cannot wipe a campaign touch.
+    if (!any) return;
+
+    try {
+      window.sessionStorage.setItem(ATTRIBUTION_STORAGE_KEY, JSON.stringify(found));
+    } catch (e) {}
+  }
+
+  function readAttribution() {
+    try {
+      var raw = window.sessionStorage.getItem(ATTRIBUTION_STORAGE_KEY);
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') return parsed;
+      }
+    } catch (e) {}
+
+    return {};
+  }
+
+  captureAttribution();
+
+  // Reads Shopify's native Customer Privacy API only. Deliberately does not
+  // integrate with any third-party consent app (e.g. a store's cookie-banner
+  // app) - if this store's consent banner is handled by such an app instead
+  // of Shopify's native privacy settings, this stays 'unavailable' on hold.
+  function getConsentState() {
+    try {
+      if (window.Shopify && window.Shopify.customerPrivacy &&
+          typeof window.Shopify.customerPrivacy.currentVisitorConsent === 'function') {
+        var consent = window.Shopify.customerPrivacy.currentVisitorConsent();
+        return {
+          marketing: !!consent.marketing,
+          analytics: !!consent.analytics,
+          preferences: !!consent.preferences,
+          sale_of_data: !!consent.sale_of_data
+        };
+      }
+    } catch (e) {}
+
+    return 'unavailable';
+  }
+
+  // Fallback id for the legacy card only - see the note in fireLeadEvents.
+  function makeEventId() {
+    if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+    return 'cgb-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+  }
+
+  // GATE 6a PLACEHOLDER - the transport is confined to this one function on
+  // purpose. Vladimir's routing answer (Stape delivery mechanism, target
+  // container, consent source) decides whether these events go out via
+  // dataLayer.push or Shopify.analytics.publish; dataLayer.push is the
+  // current default and switching is a change here and nowhere else.
+  // Do not inline a transport at any other call site.
+  function routeEvent(eventName, payload) {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push(Object.assign({ event: eventName }, payload));
+  }
+
+  // Called only once acceptance has been confirmed by the provider hook below
+  // - never on click, on validation passing, on a loading state, on a timeout,
+  // or on a rejected or errored response.
+  function fireLeadEvents(submissionId) {
+    // Deduped on the provider's own submission id, not on a per-pageview flag.
+    // That matters in both directions: the form resets to step 1 after a
+    // successful submit, so a genuine second lead in the same pageview must
+    // still fire, while a refresh or back-navigation must not re-fire the
+    // first one.
+    var dedupeKey = 'cgbLeadFired:' + PROVIDER_FORM_ID + ':' + submissionId;
+
+    try {
+      if (window.sessionStorage && window.sessionStorage.getItem(dedupeKey)) return;
+    } catch (e) {}
+
+    var basePayload = Object.assign({
+      provider: PROVIDER,
+      provider_submission_id: submissionId,
+      provider_form_id: PROVIDER_FORM_ID,
+      form_id: SECTION_FORM_ID,
+      page_path: window.location.pathname,
+      event_timestamp: new Date().toISOString(),
+      consent_state: getConsentState()
+    }, readAttribution());
+
+    routeEvent('lead_created', basePayload);
+    routeEvent('fss_commercial_buildout_lead_success', basePayload);
+
+    try {
+      if (window.sessionStorage) window.sessionStorage.setItem(dedupeKey, '1');
+    } catch (e) {}
+  }
+
+  // The accepted-submission hook. The app dispatches this inside its own
+  // if ("true" == f.success) branch, which is reachable only after the submit
+  // fetch resolved with response.ok - two independent server conditions.
+  // Verified against the shipped bundle and seven executed scenarios,
+  // including a 200 whose body said success:"false", which correctly did not
+  // fire. Confirmed by Globo support on 2026-09-18.
+  document.addEventListener('globo.formbuilder.form.submitted', function (e) {
+    var detail = e && e.detail;
+    if (!detail) return;
+
+    // The listener is on document and this theme registers seven Globo forms,
+    // so without this guard a submission on any other one would fire a
+    // Commercial Gym Buildouts conversion. formId is the numeric id as a
+    // string: the app rewrites the section's base64 data-id ("MTY0NDc4") to
+    // 164478 when it renders the form, so comparing against the base64 value
+    // would silently never match.
+    if (String(detail.formId) !== PROVIDER_FORM_ID) return;
+
+    // Re-assert the response shape rather than trusting the dispatch
+    // condition. Globo confirmed the mechanism but stated plainly that it is
+    // undocumented, so an app update could change when this fires with no
+    // notice. This check is what keeps that from becoming a false conversion.
+    var responses = Array.isArray(detail.response) ? detail.response : [detail.response];
+    var result = null;
+
+    for (var i = 0; i < responses.length; i++) {
+      var candidate = responses[i];
+      if (candidate && typeof candidate === 'object' && 'success' in candidate) {
+        result = candidate;
+        break;
+      }
+    }
+
+    // success is the string "true", not a boolean - the app itself tests it
+    // with a loose comparison.
+    if (!result || String(result.success) !== 'true' || !result.id) return;
+
+    fireLeadEvents(String(result.id));
+  });
+
+
   document.addEventListener('DOMContentLoaded', function () {
     var root = document.getElementById('shopify-section-{{ section.id }}');
     if (!root) return;
@@ -1560,6 +1751,13 @@
     var progressRow = root.querySelector('.cgb-form__progress-row');
     var statusPanels = root.querySelectorAll('[data-cgb-status]');
     var tryAgainBtn = root.querySelector('[data-cgb-try-again]');
+
+    // The legacy card is gated off by default (legacy_card_visible), and when
+    // it is not rendered every lookup above returns null. Everything below
+    // wires that card's own controls, so it must not run. Without this the
+    // script threw "Cannot read properties of null" at the first
+    // addEventListener and aborted, taking the rest of the block with it.
+    if (!form || !continueBtn || !backBtn || !submitBtn) return;
 
     function showPanel(name) {
       step1.hidden = name !== '1';
@@ -1702,75 +1900,6 @@
       progressFill.style.width = '50%';
     });
 
-    var CGB_FORM_ID = 'commercial_gym_buildouts_form';
-
-    function getAttributionParams() {
-      var params = new URLSearchParams(window.location.search);
-      var keys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'oppref'];
-      var out = {};
-
-      keys.forEach(function (key) {
-        var value = params.get(key);
-        if (value) out[key] = value;
-      });
-
-      return out;
-    }
-
-    function makeEventId() {
-      if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
-      return 'cgb-' + Date.now() + '-' + Math.random().toString(16).slice(2);
-    }
-
-    // Reads Shopify's native Customer Privacy API only. Deliberately does not
-    // integrate with any third-party consent app (e.g. a store's cookie-banner
-    // app) — if this store's consent banner is handled by such an app instead
-    // of Shopify's native privacy settings, this stays 'unavailable' on hold.
-    function getConsentState() {
-      try {
-        if (window.Shopify && window.Shopify.customerPrivacy &&
-            typeof window.Shopify.customerPrivacy.currentVisitorConsent === 'function') {
-          var consent = window.Shopify.customerPrivacy.currentVisitorConsent();
-          return {
-            marketing: !!consent.marketing,
-            analytics: !!consent.analytics,
-            preferences: !!consent.preferences,
-            sale_of_data: !!consent.sale_of_data
-          };
-        }
-      } catch (e) {}
-
-      return 'unavailable';
-    }
-
-    // Fires only once acceptance has already been confirmed by the
-    // provider-confirmed hook below — never on click, animation, timeout,
-    // or a failed/rejected response. No form field values are included,
-    // per the locked no-PII measurement contract.
-    function fireLeadEvents(eventId) {
-      var dedupeKey = 'cgbLeadFired:' + eventId;
-
-      try {
-        if (window.sessionStorage && window.sessionStorage.getItem(dedupeKey)) return;
-      } catch (e) {}
-
-      var basePayload = Object.assign({
-        provider_submission_id: eventId,
-        form_id: CGB_FORM_ID,
-        page_path: window.location.pathname,
-        event_timestamp: new Date().toISOString(),
-        consent_state: getConsentState()
-      }, getAttributionParams());
-
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push(Object.assign({ event: 'lead_created' }, basePayload));
-      window.dataLayer.push(Object.assign({ event: 'fss_commercial_buildout_lead_success' }, basePayload));
-
-      try {
-        if (window.sessionStorage) window.sessionStorage.setItem(dedupeKey, '1');
-      } catch (e) {}
-    }
-
     submitBtn.addEventListener('click', function () {
       if (submitBtn.disabled) return;
       if (!validateStep(step2)) return;
@@ -1824,6 +1953,7 @@
       });
     });
   });
+})();
 </script>
 
 {% schema %}
