@@ -33,6 +33,10 @@ jobs:
       - name: Validate current section with synthetic data
         shell: bash
         run: |
+          if [ ! -f sections/blog-featured-latest.liquid ]; then
+            echo "::notice::section not on main yet — arrives with #748"
+            exit 0
+          fi
           set -o pipefail
           ruby scripts/blog_feed_fixtures.rb | tee fixture-results/after.json
       - uses: actions/upload-artifact@v4
