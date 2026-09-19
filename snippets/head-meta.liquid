@@ -7,16 +7,51 @@
 {% assign base_url = shop.url | replace: 'http://', 'https://' %}
 {% assign https_canonical_url = canonical_url | replace_first: 'http://', 'https://' %}
 
-{% if template contains 'product' and product and product.featured_media %}
+{% assign bounded_pdp_template = false %}
+{% if template.suffix == 'combined-listings' or template.suffix == 'variants' or template.suffix == 'variants-pulley' or template.suffix == 'gift_cards' %}
+  {% assign bounded_pdp_template = true %}
+{% endif %}
+
+{% if template contains 'product' and product %}
   <link rel="preconnect" href="https://cdn.shopify.com" crossorigin>
-  <link
-    rel="preload"
-    as="image"
-    href="{{ product.featured_media.preview_image | image_url: width: 1440 }}"
-    imagesrcset="{{ product.featured_media.preview_image | image_url: width: 360 }} 360w, {{ product.featured_media.preview_image | image_url: width: 540 }} 540w, {{ product.featured_media.preview_image | image_url: width: 720 }} 720w, {{ product.featured_media.preview_image | image_url: width: 900 }} 900w, {{ product.featured_media.preview_image | image_url: width: 1080 }} 1080w, {{ product.featured_media.preview_image | image_url: width: 1440 }} 1440w"
-    imagesizes="(min-width: 1200px) 34vw, (min-width: 990px) 38vw, 100vw"
-    fetchpriority="high"
-  >
+
+  {% if bounded_pdp_template %}
+    {% assign initial_media = product.media.first %}
+    {% assign initial_model = product.media | where: 'media_type', 'model' | first %}
+
+    {% if initial_media and initial_media.media_type == 'image' %}
+      <link
+        rel="preload"
+        as="image"
+        media="(max-width: 989px)"
+        href="{{ initial_media.preview_image | image_url: width: 480 }}"
+        imagesrcset="{{ initial_media.preview_image | image_url: width: 320 }} 320w, {{ initial_media.preview_image | image_url: width: 480 }} 480w, {{ initial_media.preview_image | image_url: width: 800 }} 800w"
+        imagesizes="(max-width: 768px) 100vw, 800px"
+        fetchpriority="high"
+      >
+    {% endif %}
+
+    {% if initial_model == blank and initial_media and initial_media.media_type == 'image' %}
+      <link
+        rel="preload"
+        as="image"
+        media="(min-width: 990px)"
+        href="{{ initial_media.preview_image | image_url: width: 580 }}"
+        imagesrcset="{{ initial_media.preview_image | image_url: width: 280 }} 280w, {{ initial_media.preview_image | image_url: width: 490 }} 490w, {{ initial_media.preview_image | image_url: width: 580 }} 580w, {{ initial_media.preview_image | image_url: width: 980 }} 980w, {{ initial_media.preview_image | image_url: width: 1160 }} 1160w"
+        imagesizes="(min-width: 1290px) 580px, (min-width: 990px) calc(100vw - 710px), 100vw"
+        fetchpriority="high"
+      >
+    {% endif %}
+  {% elsif product.featured_media %}
+    <link
+      rel="preload"
+      as="image"
+      href="{{ product.featured_media.preview_image | image_url: width: 1440 }}"
+      imagesrcset="{{ product.featured_media.preview_image | image_url: width: 360 }} 360w, {{ product.featured_media.preview_image | image_url: width: 540 }} 540w, {{ product.featured_media.preview_image | image_url: width: 720 }} 720w, {{ product.featured_media.preview_image | image_url: width: 900 }} 900w, {{ product.featured_media.preview_image | image_url: width: 1080 }} 1080w, {{ product.featured_media.preview_image | image_url: width: 1440 }} 1440w"
+      imagesizes="(min-width: 1200px) 34vw, (min-width: 990px) 38vw, 100vw"
+      fetchpriority="high"
+    >
+  {% endif %}
 {% endif %}
 
 
