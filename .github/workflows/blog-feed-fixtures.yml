@@ -1,0 +1,43 @@
+name: Blog feed synthetic fixtures
+on:
+  pull_request:
+    paths:
+      - 'sections/blog-featured-latest.liquid'
+      - 'scripts/blog_feed_fixtures.rb'
+      - '.github/workflows/blog-feed-fixtures.yml'
+permissions:
+  contents: read
+jobs:
+  liquid-fixtures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+      - name: Install pinned Liquid runtime
+        run: gem install liquid -v 5.8.7 --no-document
+      - name: Capture pre-fix negative control
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p fixture-results
+          git show a7054f48ae0d340d14d919472d374c5c02514891:sections/blog-featured-latest.liquid > /tmp/blog-feed-before.liquid
+          set -o pipefail
+          ruby scripts/blog_feed_fixtures.rb /tmp/blog-feed-before.liquid | tee fixture-results/before.json
+      - name: Validate current section with synthetic data
+        shell: bash
+        run: |
+          set -o pipefail
+          ruby scripts/blog_feed_fixtures.rb | tee fixture-results/after.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: blog-feed-fixture-results
+          path: fixture-results/*.json
+          retention-days: 14
