@@ -1,0 +1,52 @@
+{%- comment -%} Benicia Showroom — Showroom Hours (structure; hours copy from Larianne) {%- endcomment -%}
+{{ 'showroom-benicia.css' | asset_url | stylesheet_tag }}
+{%- assign s = section.settings -%}
+<section class="sr-page sr-section sr-hours">
+  <div class="sr-container">
+    <h2 class="sr-section__title sr-center">{{ s.heading }}</h2>
+    {%- if s.intro != blank -%}<p class="sr-section__lede sr-center">{{ s.intro }}</p>{%- endif -%}
+
+    {%- assign has_rows = false -%}
+    {%- for block in section.blocks -%}{%- if block.settings.label != blank -%}{%- assign has_rows = true -%}{%- endif -%}{%- endfor -%}
+
+    {%- if has_rows -%}
+      <ul class="sr-hours__list">
+        {%- for block in section.blocks -%}
+          {%- if block.settings.label != blank -%}
+            <li class="sr-hours__row" {{ block.shopify_attributes }}>
+              <span class="sr-hours__day">{{ block.settings.label }}</span>
+              <span class="sr-hours__time">{{ block.settings.time }}</span>
+            </li>
+          {%- endif -%}
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
+
+    {%- if s.note != blank -%}<p class="sr-hours__note sr-center">{{ s.note }}</p>{%- endif -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Showroom Hours",
+  "tag": "section",
+  "class": "section section-showroom-hours",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Showroom Hours" },
+    { "type": "textarea", "id": "intro", "label": "Intro" },
+    { "type": "textarea", "id": "note", "label": "Note" }
+  ],
+  "blocks": [
+    {
+      "type": "hour_row",
+      "name": "Hours row",
+      "settings": [
+        { "type": "text", "id": "label", "label": "Day(s)", "info": "e.g. Monday – Friday" },
+        { "type": "text", "id": "time", "label": "Hours", "info": "Use Larianne's confirmed hours — do not enter from memory." }
+      ]
+    }
+  ],
+  "max_blocks": 7,
+  "presets": [{ "name": "Showroom Hours" }]
+}
+{% endschema %}
