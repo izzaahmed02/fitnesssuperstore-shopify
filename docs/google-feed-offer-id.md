@@ -843,9 +843,11 @@ Fitness Superstore feed: *derive the expected set from the feed's own
 id-to-mpn mapping.*
 
 `mpn` is the manufacturer part number. The column the fix actually emits is
-`old_id`, which is the Shopify variant SKU — verified against Shopify on
-four products (`ST-8TR-20-ATSC` / `-OOB`, `ST-8RDE-16-ATSC` / `-OOB`,
-`sttr4500`, `935`), all exact matches to `old_id` and none to `mpn`.
+`old_id`, which is the Shopify variant SKU. Verified exhaustively, not by
+sample: all 98 Fitness Superstore rows across 96 products, and all 19 French
+Fitness rows across 10 products, were read back from Shopify's own variant
+records. **Zero mismatches against `old_id`.** `mpn` matches on only 24 of
+the 98.
 
 On googleshoppingfs the two columns disagree on **74 of the 98** fallback
 rows, and `mpn` is not unique: 98 rows collapse to 95 distinct values across
@@ -906,3 +908,35 @@ on both in this lane's favour — ten distinct FF-MSS SKUs, and
 `ST-8TR-20-ATSC-OOB` getting its own offer — so the repoint branch must ship
 `--dedupe-mode rekey-oob`; its default drops the open-box row and would
 undo this.
+
+
+### Verification record, 19 Sept
+
+Every claim in the Monday expected sets was read back from the live
+Shopify Admin API on 19 September, not inferred from the feed alone.
+
+| Claim | How it was checked | Result |
+|---|---|---|
+| feed `old_id` is the variant SKU | `nodes(ids:)` over all 96 FS products + 10 FF products | 0 mismatches / 117 rows |
+| `931`, `933`, `935` are real SKUs | Precor 9.31 / 9.33 / 9.35 variant records | confirmed, all three |
+| Vail Torso Rotation SKU | `10124211355964` variants | `FF-VAIL-TR`, not `FF-VAIL-GM` |
+| FF-MSS is ten variants | `10269254254908` variants | ten distinct SKUs, all matching the feed |
+| WMR20 has a SKU | `10378837819708` variant | `FF-WMR20`, set 17 Sept 10:01 PT |
+| StudioWall is out of the feed | tags + `inCollection(513321435452)` | `REMOVE FROM FEEDS` present, membership false |
+| repoint alternative exists | `origin/claude/missing-shipping-feed-repoint-4yg4rr` | `--dedupe-mode rekey-oob`, default is `drop-oob` |
+
+**WMR20 corrects the thread's record, not Larianne's.** `FF-WMR20` has been
+on the variant since 17 September; the 18 September note that it had "no SKU
+at all" read the feed's empty `mpn` cell as a missing SKU. Nothing about the
+Monday run is gated on a new SKU assignment.
+
+**What could not be verified from here.** The Fitness Superstore figures
+come from the 9 September pull. Tim's 17 September night pull reported it
+byte-identical and the 18 September pull reported it unchanged at
+1,537 rows / 1,535 offers, so three readings agree — but
+`feedfiles.woolytech.com` is blocked by the egress policy in this
+environment, so the pull must be repeated by hand on Monday morning before
+the run. The StudioWall tag write has no Shopify event record (tag edits are
+not logged as events); the evidence available is the tag itself, the
+collection exit, and a product `updatedAt` of 19 Sept 13:33 PT as an outer
+bound.
