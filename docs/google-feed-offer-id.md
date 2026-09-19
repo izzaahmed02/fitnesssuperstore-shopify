@@ -834,3 +834,75 @@ vendor French Fitness.
 
 **Execution totals: 98 rows in `googleshoppingfs`, 18 in
 `googleshoppingfrenchfitness`, 116 in all.**
+
+## Monday 21 Sept run: the expected sets, and why they are not derived from `mpn`
+
+Tim's 18 Sept correction closed the rekey accounting and set the Monday
+sequence, with one instruction that does not survive contact with the
+Fitness Superstore feed: *derive the expected set from the feed's own
+id-to-mpn mapping.*
+
+`mpn` is the manufacturer part number. The column the fix actually emits is
+`old_id`, which is the Shopify variant SKU — verified against Shopify on
+four products (`ST-8TR-20-ATSC` / `-OOB`, `ST-8RDE-16-ATSC` / `-OOB`,
+`sttr4500`, `935`), all exact matches to `old_id` and none to `mpn`.
+
+On googleshoppingfs the two columns disagree on **74 of the 98** fallback
+rows, and `mpn` is not unique: 98 rows collapse to 95 distinct values across
+three duplicate pairs.
+
+| mpn | SKUs sharing it |
+|---|---|
+| `9-9281-8TR-110-LCD-60BLK` | `ST-8TR-20-ATSC`, `ST-8TR-20-ATSC-OOB` |
+| `9-6150-8RDE-A15-60B` | `ST-8RDE-16-ATSC`, `ST-8RDE-16-ATSC-OOB` |
+| `9-3150-KINTP0` | `ST-3150-KINTP0-SILVER`, `ST-3150-KINTP0` |
+
+The first two are the Star Trac collisions themselves. An mpn-derived run
+reproduces both of them unchanged — `ST-8TR-20-ATSC-OOB` still has no offer
+of its own, which is the one acceptance criterion Tim named — and creates a
+third collision out of a pair that is currently fine. Derived from SKU the
+same 98 rows give 98 distinct ids, no duplicates, and no collision with any
+id already serving.
+
+French Fitness reads clean under `mpn` only because its singles happen to
+carry SKU and mpn alike. It breaks in the same two ways as soon as you look
+past them: all ten FF-MSS variants carry `mpn = FF-MSS`, and the Vail Torso
+Rotation carries `mpn = FF-VAIL-GM` against variant SKU `FF-VAIL-TR`.
+`FF-VAIL-GM` is not a SKU in the catalogue.
+
+### googleshoppingfs — 98 rows (`docs/monday-run-expected-set-fs.csv`)
+
+The count on the thread is 101. Three of those are the Precor 9.31 / 9.33 /
+9.35 remanufactured treadmills, whose variant SKUs are literally `931`,
+`933` and `935`. They already arrive through the approved branch and do not
+move. The test that separates them is `id == item_group_id`, never "the id
+looks numeric".
+
+    rows                1,537
+    rows changing          98
+    offers 1,535 -> 1,537  (+2, both Star Trac collisions resolving)
+    duplicate ids after     0
+
+### googleshoppingfrenchfitness — 19 rows (`docs/monday-run-expected-set-ff.csv`)
+
+Ten products, against the 18 Sept pull of 970 rows / 961 offers. Two changes
+since that pull:
+
+- **WMR20 (`10378837819708`) is in.** It now carries variant SKU
+  `FF-WMR20` in Shopify, so Tim's Monday 10:00 condition is already met.
+- **StudioWall (`10414127087932`) is out.** `REMOVE FROM FEEDS` is applied
+  and the product has left collection `513321435452`
+  (`inCollection` returns false), so its row leaves the feed on the next
+  generation rather than being re-keyed. Confirm against that generation
+  before the run.
+
+    rows after StudioWall drops   969
+    rows changing                  19
+    offers 960 -> 969             (+9, the FF-MSS ten-way resolving)
+
+The FF-MSS ten-way and the Star Trac open-box rows are the same 14 rows the
+missing-shipping repoint stages differently. Tim's 18 Sept correction rules
+on both in this lane's favour — ten distinct FF-MSS SKUs, and
+`ST-8TR-20-ATSC-OOB` getting its own offer — so the repoint branch must ship
+`--dedupe-mode rekey-oob`; its default drops the open-box row and would
+undo this.
