@@ -86,6 +86,13 @@
     if (/[?&]contact_posted=true/.test(window.location.search) &&
         document.querySelector('[data-sr-form-card] [data-sr-success]')) {
       push('check_model_submit', { location: 'check_model_form' });
+      // Strip the flag so refreshing the confirmation page does not re-fire the event
+      // (and a refresh then shows a clean form rather than re-confirming).
+      try {
+        var u = new URL(window.location.href);
+        u.searchParams.delete('contact_posted');
+        window.history.replaceState({}, document.title, u.pathname + (u.search || '') + u.hash);
+      } catch (e) {}
     }
 
     // "New Request" — restore the form in the same card, no page reload.
