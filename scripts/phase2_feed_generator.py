@@ -26,6 +26,11 @@ applies the five spec deltas from Tim's 2026-09-06 email:
   5. price / sale_price derived from Shopify, and all three tax columns dropped
      (`tax`, the long `tax(...)` form, and `tax_category`).
 
+Plus the under-$100 campaign exception, Tim 2026-09-19: French Fitness in-stock rows
+priced $25.00-$99.99 listed in feeds/under-100-campaign.csv carry
+custom_label_0 = p_under_100, survive the $100 floor, and emit with shipping. The
+floor holds absolute everywhere else. Gate: scripts/check_under_100_scope.py.
+
 Read-only against Shopify. Writes CSVs to --out-dir; uploads nothing.
 
     export SHOPIFY_SHOP=79ef8b-5e.myshopify.com
@@ -66,6 +71,21 @@ LABEL_LOOKUP = ROOT / "feeds" / "supplemental_priority_labels_v2.csv"
 # badge from every mapped SKU. The generator bakes it in, together with the
 # custom_label_0 campaign label Tim ruled must NOT go via supplemental.
 PROMOTION_MAP = ROOT / "feeds" / "promotion-map.csv"
+# Tim's 2026-09-19 ruling, OPTION A SCOPED. The under-$100 campaign proceeds with a
+# floor inside the exception: custom_label_0 = p_under_100 goes on French Fitness
+# in-stock rows priced $25.00-$99.99 only, and those rows survive the $100 feed
+# floor. Everything else keeps the floor absolutely, including the sub-$25 rows,
+# which drop at cutover as designed. The roster is a committed file rather than a
+# live price sweep because the campaign Tim scoped is the 17 in-stock under-$100
+# offers his 2026-09-17 heads-up named - all weight variants of product
+# 10247596147004 - not the 431 in-stock under-$100 French Fitness variants that
+# exist catalogue-wide. A live sweep would quietly widen the feed by hundreds of
+# rows that have no shipping quote and were never in Monday's handback.
+UNDER_100_CAMPAIGN = ROOT / "feeds" / "under-100-campaign.csv"
+UNDER_100_LABEL = "p_under_100"
+UNDER_100_FEED = "googleshoppingfrenchfitness"
+UNDER_100_MIN = Decimal("25.00")
+UNDER_100_MAX = Decimal("99.99")
 
 API_VERSION = "2025-07"
 
@@ -340,6 +360,27 @@ def load_promotions():
         }
 
 
+def load_under_100_campaign(path=None):
+    """The p_under_100 roster: {sku}. Empty if the file is absent.
+
+    Membership alone is not enough. Every row is re-checked against live Shopify at
+    generation time (French Fitness feed, in stock, $25.00-$99.99) before the floor
+    exception or the label is applied, so a price move or a stock-out closes the
+    exception by itself instead of leaving a row in the feed that the ruling no
+    longer covers.
+    """
+    path = pathlib.Path(path) if path else UNDER_100_CAMPAIGN
+    if not path.exists():
+        return set()
+    with path.open(encoding="utf-8-sig") as fh:
+        # The roster carries its provenance as leading `#` comments - where the
+        # scope came from and which rows the $25.00 cut removed. csv does not
+        # strip those, so do it here.
+        lines = [ln for ln in fh if not ln.lstrip().startswith("#")]
+    return {(row.get("sku") or "").strip() for row in csv.DictReader(lines)
+            if (row.get("sku") or "").strip()}
+
+
 def pdp_shows_price(link, sale, regular, cache):
     """Tim's standing rule, 2026-09-14 item 8: submit a sale price ONLY for rows
     whose landing page visibly displays that discounted / strikethrough price at
@@ -604,7 +645,7 @@ def automatic_discount_for(product, discounts):
 
 def variant_rows(product, feed, rules, labels, titles, shipping, ground_estimates, report,
                  label_report=None, label_sources=None, discounts=None,
-                 promotions=None, pdp_cache=None, verify_pdp=True):
+                 promotions=None, pdp_cache=None, verify_pdp=True, under_100=None):
     """One row per sellable variant, keyed <productID>-<variantID>.
 
     A bare product id can only carry one offer, which is why multi-variant
@@ -625,8 +666,34 @@ def variant_rows(product, feed, rules, labels, titles, shipping, ground_estimate
         offer_id = f"{product_id}-{numeric_id(variant['id'])}" if multi else product_id
 
         price = Decimal(variant["price"] or "0")
-        if price < Decimal(str(cfg["price_usd_below"])):
-            report.append((offer_id, sku, "excluded: price below $%s" % cfg["price_usd_below"]))
+
+        # Tim 2026-09-19, ruling 2: rows carrying custom_label_0 = p_under_100
+        # survive the $100 floor and emit with shipping. Re-checked against live
+        # data here, not taken on the roster's word - the roster says which rows
+        # the campaign covers, live Shopify says whether each one still qualifies.
+        # The exception only lifts the price floor; out of stock, the $1,000
+        # ground-shipping rule and every other exclusion below still apply.
+        in_stock = (variant["inventoryQuantity"] or 0) > 0
+        campaign_row = False
+        if feed == UNDER_100_FEED and sku in (under_100 or set()):
+            if in_stock and UNDER_100_MIN <= price <= UNDER_100_MAX:
+                campaign_row = True
+            elif price < Decimal(str(cfg["price_usd_below"])):
+                report.append((offer_id, sku,
+                               "p_under_100 exception NOT applied: price %s / %s; "
+                               "row falls back to the $%s floor"
+                               % (price, "in stock" if in_stock else "out of stock",
+                                  cfg["price_usd_below"])))
+
+        if price < Decimal(str(cfg["price_usd_below"])) and not campaign_row:
+            detail = ""
+            if feed == UNDER_100_FEED and price < UNDER_100_MIN:
+                # Ruling 1: sub-$25.00 variants do not get the label, on economics -
+                # a Shopping click plus shipping exceeds the ticket. They drop at
+                # cutover as designed.
+                detail = " (below the $%s p_under_100 floor)" % UNDER_100_MIN
+            report.append((offer_id, sku, "excluded: price below $%s%s"
+                           % (cfg["price_usd_below"], detail)))
             continue
         if cfg.get("out_of_stock") and (variant["inventoryQuantity"] or 0) <= 0:
             report.append((offer_id, sku, "excluded: out of stock"))
@@ -700,6 +767,26 @@ def variant_rows(product, feed, rules, labels, titles, shipping, ground_estimate
             continue
 
         promo = (promotions or {}).get(sku, {})
+        custom_label_0 = promo.get("custom_label_0", "")
+        if campaign_row:
+            # custom_label_0 holds one value. A live promotion badge outranks a
+            # campaign label, so the promotion roster wins and the collision is
+            # reported rather than resolved silently - the row still keeps its
+            # floor exception either way.
+            if custom_label_0 and custom_label_0 != UNDER_100_LABEL:
+                report.append((offer_id, sku,
+                               "custom_label_0 conflict: promotion label %r kept, "
+                               "%r not applied" % (custom_label_0, UNDER_100_LABEL)))
+            else:
+                custom_label_0 = UNDER_100_LABEL
+            if not shipping.get(offer_id, ""):
+                # Tim 2026-09-19 ruling 2: these emit WITH shipping. The rates come
+                # from Monday's reconciliation handback, so until that file is fed
+                # in with --shipping-lookup the row would serve blank and sit Not
+                # eligible in Merchant Center. Loud, not silent.
+                report.append((offer_id, sku,
+                               "p_under_100 row has NO shipping rate yet; "
+                               "feed it Monday's handback via --shipping-lookup"))
         title = titles.get(sku) or product["title"]
         (tier, series), source = labels_for(
             labels, sku, offer_id, product_id,
@@ -758,7 +845,7 @@ def variant_rows(product, feed, rules, labels, titles, shipping, ground_estimate
             "material": options.get("material", ""),  # no custom.material metafield exists
             "shipping_weight": f"{weight.get('value')} lb" if weight.get("value") else "",
             "promotion_id": promo.get("promotion_id", ""),
-            "custom_label_0": promo.get("custom_label_0", ""),
+            "custom_label_0": custom_label_0,
             "custom_label_3": tier,
             "custom_label_4": series,
             "sell_on_google_quantity": str(variant["inventoryQuantity"] or 0),
@@ -801,6 +888,11 @@ def main():
                         help="Skip the landing-page check behind Tim's 2026-09-14 standing rule. "
                              "Only for offline dry runs: skipping it can emit a sale_price the "
                              "PDP does not display, which is a landing-page mismatch.")
+    parser.add_argument("--under-100-campaign", default=str(UNDER_100_CAMPAIGN),
+                        help="the p_under_100 roster. Tim's 2026-09-19 ruling: French Fitness "
+                             "in-stock rows priced $25.00-$99.99 carry custom_label_0 = "
+                             "p_under_100 and survive the $100 floor. Every SKU is re-checked "
+                             "against live Shopify before the exception is applied.")
     parser.add_argument("--out-dir", default="build/feeds")
     parser.add_argument("--shop", default=os.environ.get("SHOPIFY_SHOP"))
     parser.add_argument("--token", default=os.environ.get("SHOPIFY_ADMIN_TOKEN"))
@@ -815,6 +907,7 @@ def main():
     shipping = load_shipping(args.shipping_lookup)
     ground_estimates = load_ground_estimates(args.ground_shipping_estimates)
     promotions = load_promotions()
+    under_100 = load_under_100_campaign(args.under_100_campaign)
     pdp_cache = {}
     discounts = None
     if args.sale_price_from_automatic_discounts:
@@ -844,7 +937,7 @@ def main():
         buckets[feed].extend(
             variant_rows(product, feed, rules, labels, titles, shipping, ground_estimates, report,
                          label_report, label_sources, discounts,
-                         promotions, pdp_cache, not args.skip_pdp_check))
+                         promotions, pdp_cache, not args.skip_pdp_check, under_100))
 
     ff_cols = write_feed(out / "googleshoppingfrenchfitness.csv", FF_COLUMNS, buckets["googleshoppingfrenchfitness"])
     fs_cols = write_feed(out / "googleshoppingfs.csv", FS_COLUMNS, buckets["googleshoppingfs"])
@@ -877,6 +970,22 @@ def main():
         missing = sorted(set(promotions) - {r["old_id"] for r in promo_rows})
         print(f"  WARNING: {len(missing)} mapped SKUs are not in either feed: {', '.join(missing)}")
         print("  A repoint would drop the badge on those. Check scripts/check_promotion_scope.py.")
+    u100_rows = [r for r in buckets[UNDER_100_FEED] if r.get("custom_label_0") == UNDER_100_LABEL]
+    print(f"p_under_100 rows             {len(u100_rows):>5}  (roster has {len(under_100)} SKUs; "
+          f"$100 floor lifted for these only)")
+    if under_100:
+        missing = sorted(under_100 - {r["old_id"] for r in u100_rows})
+        if missing:
+            print(f"  WARNING: {len(missing)} roster SKUs carry no p_under_100 label: "
+                  f"{', '.join(missing)}")
+            print("  They no longer qualify, or a promotion label won custom_label_0. "
+                  "See excluded_rows.csv.")
+        blank = [r["id"] for r in u100_rows if not r["shipping"]]
+        if blank:
+            print(f"  WARNING: {len(blank)} p_under_100 rows have no shipping rate. Tim's ruling "
+                  "is that they emit WITH shipping;")
+            print("  supply Monday's reconciliation handback via --shipping-lookup before "
+                  "these serve.")
     print(f"labels resolved by SKU       {by_source.get('sku', 0):>6}")
     print(f"labels resolved by offer id  {by_source.get('offer_id', 0):>6}")
     print(f"labels resolved by product id{by_source.get('product_id', 0):>6}")

@@ -35,7 +35,7 @@ if [[ -z "${SHOPIFY_SHOP:-}" || -z "${SHOPIFY_ADMIN_TOKEN:-}" ]]; then
   exit 2
 fi
 
-echo "== 0/6  promotion scope check =="
+echo "== 0/7  promotion scope check =="
 # Three-way: repo map vs live Shopify checkout discount vs (optionally) the GMC
 # supplemental. A row badged in the feed that does not discount at checkout is a
 # Google disapproval, so this runs before anything is generated.
@@ -43,21 +43,30 @@ promo_rc=0
 python3 scripts/check_promotion_scope.py || promo_rc=$?
 
 echo
-echo "== 1/6  validating the v2 label lookup =="
+echo "== 1/7  validating the v2 label lookup =="
 python3 scripts/validate_label_lookup.py --shop "$SHOPIFY_SHOP" --token "$SHOPIFY_ADMIN_TOKEN"
 
 echo
-echo "== 2/6  generating both primaries from live Shopify =="
+echo "== 2/7  generating both primaries from live Shopify =="
 # sale_price from automatic discounts stays OFF per Tim's 2026-09-07 ruling.
 python3 scripts/phase2_feed_generator.py --out-dir "$OUT"
 
 echo
-echo "== 3/6  price and tax gate =="
+echo "== 3/7  price and tax gate =="
 python3 scripts/check_feed_prices.py "$OUT/googleshoppingfrenchfitness.csv"
 python3 scripts/check_feed_prices.py "$OUT/googleshoppingfs.csv"
 
 echo
-echo "== 4/6  reason-coded id diffs =="
+echo "== 4/7  under-\$100 campaign scope gate =="
+# Tim 2026-09-19: the p_under_100 exception is the only hole in the $100 floor.
+# This fails if the label escaped its roster, drifted out of $25.00-$99.99, landed
+# on the FS feed, or emitted without a shipping rate.
+u100_rc=0
+python3 scripts/check_under_100_scope.py \
+  "$OUT/googleshoppingfrenchfitness.csv" "$OUT/googleshoppingfs.csv" || u100_rc=$?
+
+echo
+echo "== 5/7  reason-coded id diffs =="
 # Each diff exits non-zero while any row is still unexplained. That is the gate
 # doing its job, not a failure, so don't let set -e kill the run before the
 # no-tier report is written.
@@ -71,7 +80,7 @@ python3 scripts/feed_id_diff.py \
   --excluded "$OUT/excluded_rows.csv" --out "$OUT/id_diff_fs.csv" || fs_rc=$?
 
 echo
-echo "== 5/6  no-tier list, price descending =="
+echo "== 6/7  no-tier list, price descending =="
 python3 scripts/no_tier_report.py \
   "$OUT/googleshoppingfrenchfitness.csv" "$OUT/googleshoppingfs.csv" \
   --out "$OUT/no_tier_by_price.csv"
@@ -87,6 +96,11 @@ if (( promo_rc != 0 )); then
   echo "PROMOTION SCOPE FAILED. A mapped SKU does not discount at checkout."
   echo "Fix the roster before these feeds serve; that combination is a Google disapproval."
 fi
+if (( u100_rc != 0 )); then
+  echo
+  echo "UNDER-\$100 SCOPE FAILED. The p_under_100 exception is outside Tim's ruling."
+  echo "Fix the roster or the shipping handback before these feeds serve."
+fi
 if (( ff_rc != 0 || fs_rc != 0 )); then
   echo
   echo "UNEXPLAINED ROWS PRESENT. Say so in the reply and do not repoint."
@@ -94,6 +108,6 @@ if (( ff_rc != 0 || fs_rc != 0 )); then
   echo "  grep -c unexplained $OUT/id_diff_ff.csv $OUT/id_diff_fs.csv"
   exit 1
 fi
-if (( promo_rc != 0 )); then exit 1; fi
+if (( promo_rc != 0 || u100_rc != 0 )); then exit 1; fi
 echo
 echo "Every add and every drop carries a reason code. Clean to send."

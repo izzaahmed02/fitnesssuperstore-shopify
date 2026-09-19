@@ -54,11 +54,30 @@ query Discount($id: ID!) {
                 nodes { id title variants(first: 100) { nodes { sku } } }
               }
             }
-            ... on DiscountCollections { collections(first: 50) { nodes { title } } }
+            ... on DiscountCollections { collections(first: 50) { nodes { id title } } }
             ... on AllDiscountItems { allItems }
           }
         }
       }
+    }
+  }
+}
+"""
+
+
+# Tim, 2026-09-17: the September Overstock discount is being repointed to
+# collection-as-scope (/collections/sale) because Shopify caps product-list
+# automatic discounts at 100 products, and the sale is expanding from 16 to 120
+# French Fitness SKUs. Confirmed live on 2026-09-19: discount 1741840056636 now
+# targets the "Sale" collection, 120 products. So the roster has to be compared
+# against collection membership, not a fixed product list.
+COLLECTION_QUERY = """
+query CollectionProducts($id: ID!, $after: String) {
+  collection(id: $id) {
+    title
+    products(first: 100, after: $after) {
+      pageInfo { hasNextPage endCursor }
+      nodes { id title variants(first: 100) { nodes { sku } } }
     }
   }
 }
@@ -106,21 +125,41 @@ def discount_skus(shop, token, node_id):
     items = (node.get("customerGets") or {}).get("items") or {}
     if items.get("allItems"):
         raise SystemExit(f"{node['title']!r} targets ALL items; a promotion roster cannot be derived from it")
+    skus = {}
     if items.get("collections"):
-        names = ", ".join(n["title"] for n in items["collections"]["nodes"])
-        raise SystemExit(
-            f"{node['title']!r} targets collections ({names}), not a product list. "
-            "Collection membership changes without notice, so map the promotion from the "
-            "collection rather than a fixed SKU list, or pin the discount to products.")
+        # Collection-scoped. Membership is what discounts at checkout, so resolve it
+        # rather than refusing: the alternative is a gate that false-fails the whole
+        # cutover run, which is what Tim asked to avoid. Membership moves without
+        # notice, so this is read fresh every run and never cached to the roster.
+        for collection in items["collections"]["nodes"]:
+            skus.update(collection_skus(shop, token, collection["id"]))
+        return node, skus
     products = items.get("products") or {"nodes": [], "pageInfo": {}}
     if products["pageInfo"].get("hasNextPage"):
         raise SystemExit("discount targets more than 250 products; paginate before trusting this check")
-    skus = {}
     for p in products["nodes"]:
         for v in p["variants"]["nodes"]:
             if v["sku"]:
                 skus[v["sku"]] = (p["id"].rsplit("/", 1)[-1], p["title"])
     return node, skus
+
+
+def collection_skus(shop, token, collection_id):
+    """{sku: (product_id, title)} for every product in a collection, paginated."""
+    skus, after = {}, None
+    while True:
+        data = graphql(shop, token, COLLECTION_QUERY, {"id": collection_id, "after": after})
+        collection = data.get("collection")
+        if not collection:
+            raise SystemExit(f"no collection at {collection_id}")
+        page = collection["products"]
+        for p in page["nodes"]:
+            for v in p["variants"]["nodes"]:
+                if v["sku"]:
+                    skus[v["sku"]] = (p["id"].rsplit("/", 1)[-1], p["title"])
+        if not page["pageInfo"]["hasNextPage"]:
+            return skus
+        after = page["pageInfo"]["endCursor"]
 
 
 def main():
@@ -152,6 +191,10 @@ def main():
         print(f"   status     {node['status']}  {node['startsAt']} -> {node['endsAt']}")
         print(f"   amount     {pct * 100 if pct else '?'}%")
         print(f"   repo map   {len(mapped)} SKUs   (feeds/promotion-map.csv)")
+        scope = (node.get("customerGets") or {}).get("items") or {}
+        if scope.get("collections"):
+            names = ", ".join(n["title"] for n in scope["collections"]["nodes"])
+            print(f"   scope      collection: {names}  (membership read live, not pinned)")
         print(f"   checkout   {len(live)} SKUs   (live Shopify)")
 
         badged_not_discounted = sorted(set(mapped) - set(live))
