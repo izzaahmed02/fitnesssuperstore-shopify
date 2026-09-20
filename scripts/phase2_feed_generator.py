@@ -1010,10 +1010,15 @@ def main():
     # otherwise fail a perfectly complete read, so the gate is a SHORTFALL against
     # the smaller of the two readings, not an equality against a stale snapshot.
     catalogue_count_after, precision_after = product_count(args.shop, args.token)
-    floor_count = min(c for c in (catalogue_count, catalogue_count_after) if c is not None)
-    if "EXACT" not in (catalogue_precision, precision_after):
+    counts = [c for c in (catalogue_count, catalogue_count_after) if c is not None]
+    floor_count = min(counts) if counts else None
+    if floor_count is None:
+        print("WARNING: Shopify returned no product count, so the completeness gate could "
+              "not run this run.")
+    elif "EXACT" not in (catalogue_precision, precision_after):
         print(f"WARNING: Shopify reported a {catalogue_precision}/{precision_after} product "
-              "count, so the completeness gate cannot be trusted this run.")
+              "count. An approximate reading cannot gate completeness, so this run is "
+              "NOT proven complete.")
     elif tally["products_fetched"] < floor_count:
         raise SystemExit(
             f"incomplete read: Shopify reports {catalogue_count} products matching "
