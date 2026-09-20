@@ -1,0 +1,51 @@
+{
+  "_ref": "Tim, 2026-09-20, \"Re: Phase 2 feed build\" item 2: add a matched-vs-designed count guard. The automated local feed served 46 offers short for two weeks in silence because nothing compared Merchant Center's matched count against the designed count.",
+  "_how_to_update": "Every number here is a deliberate, dated expectation, not a cache of the last run. When a ruling changes scope, edit this file in the SAME commit as the scope change and move the as_of date. A run that disagrees with this file fails; that is the point.",
+  "_precedence": "scripts/check_expected_counts.py reads build/feeds/run_manifest.json from the generator and compares it here. Merchant Center's matched count is supplied at check time with --matched, because the generator has no Merchant Center access and should not pretend to.",
+  "as_of": "2026-09-20",
+  "catalogue": {
+    "product_filter": "status:active",
+    "note": "The page loop must return exactly what Shopify's productsCount reports for the same filter. Any shortfall is the 250-item pagination clamp class of bug and fails the run inside the generator itself. Live read 2026-09-20: 3757 active products.",
+    "min_products": 3600
+  },
+  "feeds": {
+    "googleshoppingfrenchfitness": {
+      "min_rows": 700,
+      "max_rows": 1400,
+      "note": "861 generated on 2026-09-09 against 966 live; 970 live on 2026-09-17. The band is wide because the composite-variant expansion and the exclusion fixes both move it, and because the catalog-additions scope is still growing. It is a floor against shipping short, not a target."
+    },
+    "googleshoppingfs": {
+      "min_rows": 1500,
+      "max_rows": 2200,
+      "note": "1783 generated on 2026-09-09 against 1537 live. Same reasoning."
+    }
+  },
+  "rosters": {
+    "p_under_100_rows": {
+      "exact": 12,
+      "note": "Tim 2026-09-19 OPTION A SCOPED, confirmed 2026-09-19: the committed 12-row roster, not the 431 catalogue-wide. Exact, because this one is a closed list and any drift is a defect."
+    },
+    "promotion_rows": {
+      "min": 17,
+      "note": "feeds/promotion-map.csv carries 17 SKUs including FF-FSR100. Rises to the full expanded list in one pass when Ilsaa posts it on the WASP thread. A promotion row missing from the feed strips a live badge, so this is a floor."
+    }
+  },
+  "matched_vs_designed": {
+    "tolerance_rows": 0,
+    "note": "Merchant Center matched must equal designed. Supply it with --matched <feed>=<count> from the Merchant Center source page after a fetch. 46 short for two weeks is what a tolerance above zero buys you."
+  },
+  "catalog_additions": {
+    "_ref": "Tim, 2026-09-20, \"Re: Phase 2 feed build\" item 1: GO, the 31 French Fitness variants at $100 and over from the 439 missing-primary-offer set enter the catalog-additions scope, alongside the 55 missing master SKUs already queued.",
+    "_measured_as": "Rows the id diff codes added:new_offer, i.e. a SKU with no counterpart anywhere in the live export. added:variant_expansion and rekeyed:* are the composite-id work, not catalog additions, and are excluded.",
+    "_source": "439 absent from all four primaries, split by Izza on the local inventory thread 2026-09-19: 31 at $100 and over (IN, unconditional), 285 at $26-99 (OUT, floor stands), 123 at $4-24 (OUT, sub-$25 cut). The p_under_100 exception stays the committed 12-row roster and does not extend to the 285.",
+    "_pending": "Izza has not posted the 31 SKUs themselves. Until that list lands this is a count expectation, not a roster: the guard proves the right NUMBER of catalog additions landed, not yet that they are the right 31.",
+    "googleshoppingfrenchfitness": {
+      "min_new_offers": 31
+    },
+    "googleshoppingfs": {
+      "min_new_offers": 0
+    },
+    "_combined_note": "31 French Fitness variants at $100 and over plus the 55 queued master SKUs. This one WARNS rather than fails: the 31 are unconditional, but the 55 pre-date this GO and at least one of them cannot emit (FF-RIT24 is $16 and the floor drops it), so a hard combined floor would false-fail a correct run.",
+    "combined_expected_new_offers": 86
+  }
+}

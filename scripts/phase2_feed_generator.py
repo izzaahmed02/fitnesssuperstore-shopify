@@ -51,6 +51,7 @@ Then diff against the live exports before repointing anything:
 import argparse
 import collections
 import csv
+import datetime
 import json
 import os
 import pathlib
@@ -179,6 +180,23 @@ UNMAPPED = [
     "virtual_model_link",
 ]
 
+# The product query's filter, kept in one place so the completeness count below
+# asks Shopify about exactly the same set the generator paginates through.
+PRODUCT_FILTER = "status:active"
+
+# Tim 2026-09-19: "nothing compared Merchant Center's matched count against the
+# designed count", and the automated local feed served 46 offers short for two
+# weeks in silence. The cause there was Shopify clamping pagination at 250 items.
+# This generator paginates too, so the same class of bug can hit it: a truncated
+# page loop returns fewer products with no error at all. Asking Shopify for the
+# count of the same filtered set, and comparing, is what turns that into a loud
+# failure instead of a short feed.
+PRODUCT_COUNT_QUERY = """
+query ProductsCount($query: String) {
+  productsCount(query: $query) { count precision }
+}
+"""
+
 PRODUCT_QUERY = """
 query Products($cursor: String) {
   products(first: 50, after: $cursor, query: "status:active") {
@@ -213,6 +231,13 @@ query Products($cursor: String) {
 """
 
 
+# The count query and the page loop have to ask about the same set or the
+# completeness gate compares nothing to nothing. Cheap assertion, caught at import
+# rather than after a run.
+assert f'query: "{PRODUCT_FILTER}"' in PRODUCT_QUERY, (
+    "PRODUCT_FILTER and the filter inside PRODUCT_QUERY have drifted apart")
+
+
 class ShopifyError(RuntimeError):
     pass
 
@@ -234,11 +259,34 @@ def graphql(shop, token, query, variables):
     return payload["data"]
 
 
-def fetch_products(shop, token):
+def product_count(shop, token):
+    """How many products Shopify says match PRODUCT_FILTER.
+
+    Returns (count, precision). A non-EXACT precision is reported rather than
+    trusted: an approximate count cannot be used as a completeness gate.
+    """
+    data = graphql(shop, token, PRODUCT_COUNT_QUERY, {"query": PRODUCT_FILTER})
+    node = data.get("productsCount") or {}
+    return node.get("count"), node.get("precision")
+
+
+def fetch_products(shop, token, tally=None):
+    """Paginate the active catalogue, counting pages and products as we go.
+
+    `tally` is a dict the caller owns; the page and product counts land in it so
+    the run can prove it walked the whole set rather than stopping early.
+    """
     cursor = None
+    pages = 0
+    fetched = 0
     while True:
         data = graphql(shop, token, PRODUCT_QUERY, {"cursor": cursor})
         page = data["products"]
+        pages += 1
+        fetched += len(page["nodes"])
+        if tally is not None:
+            tally["pages"] = pages
+            tally["products_fetched"] = fetched
         yield from page["nodes"]
         if not page["pageInfo"]["hasNextPage"]:
             return
@@ -854,6 +902,13 @@ def variant_rows(product, feed, rules, labels, titles, shipping, ground_estimate
 
 
 def write_feed(path, columns, rows):
+    """Write the feed and prove on the way out that every designed row is in it.
+
+    Designed is len(rows); written is what the file actually holds when read back.
+    They can only differ through a write that failed quietly, and a feed that is
+    short by rows nobody counted is exactly the failure Tim's 2026-09-19 gate
+    exists to stop. Loud here, before anything is uploaded.
+    """
     columns = [c for c in columns if c not in _TAX_COLUMNS]
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as fh:
@@ -861,7 +916,14 @@ def write_feed(path, columns, rows):
         writer.writeheader()
         for row in rows:
             writer.writerow({c: row.get(c, "") for c in columns})
-    return columns
+    with path.open(encoding="utf-8", newline="") as fh:
+        written = sum(1 for _ in csv.DictReader(fh))
+    if written != len(rows):
+        raise SystemExit(
+            f"{path.name}: designed {len(rows)} rows, wrote {written}. Refusing to "
+            "ship short. Nothing downstream may use this file."
+        )
+    return columns, written
 
 
 def main():
@@ -925,8 +987,10 @@ def main():
     label_report = []
     label_sources = []
     scanned = 0
+    tally = {"pages": 0, "products_fetched": 0}
+    catalogue_count, catalogue_precision = product_count(args.shop, args.token)
 
-    for product in fetch_products(args.shop, args.token):
+    for product in fetch_products(args.shop, args.token, tally):
         scanned += 1
         reason = excluded_by_shared_rules(product, rules)
         if reason:
@@ -939,8 +1003,37 @@ def main():
                          label_report, label_sources, discounts,
                          promotions, pdp_cache, not args.skip_pdp_check, under_100))
 
-    ff_cols = write_feed(out / "googleshoppingfrenchfitness.csv", FF_COLUMNS, buckets["googleshoppingfrenchfitness"])
-    fs_cols = write_feed(out / "googleshoppingfs.csv", FS_COLUMNS, buckets["googleshoppingfs"])
+    # Completeness of the READ, before anything is judged on the write. A short
+    # page loop looks exactly like a smaller catalogue, which is how the local
+    # feed shipped 46 offers short for two weeks without a single error.
+    # Counted again after the loop. A product created or activated mid-run would
+    # otherwise fail a perfectly complete read, so the gate is a SHORTFALL against
+    # the smaller of the two readings, not an equality against a stale snapshot.
+    catalogue_count_after, precision_after = product_count(args.shop, args.token)
+    counts = [c for c in (catalogue_count, catalogue_count_after) if c is not None]
+    floor_count = min(counts) if counts else None
+    if floor_count is None:
+        print("WARNING: Shopify returned no product count, so the completeness gate could "
+              "not run this run.")
+    elif "EXACT" not in (catalogue_precision, precision_after):
+        print(f"WARNING: Shopify reported a {catalogue_precision}/{precision_after} product "
+              "count. An approximate reading cannot gate completeness, so this run is "
+              "NOT proven complete.")
+    elif tally["products_fetched"] < floor_count:
+        raise SystemExit(
+            f"incomplete read: Shopify reports {catalogue_count} products matching "
+            f"{PRODUCT_FILTER!r} ({catalogue_count_after} after the run), the page loop "
+            f"returned {tally['products_fetched']} over {tally['pages']} pages. Refusing to "
+            "generate from a truncated catalogue."
+        )
+    elif catalogue_count != catalogue_count_after:
+        print(f"note: the catalogue moved during the run, {catalogue_count} -> "
+              f"{catalogue_count_after}; the read is complete against the smaller reading.")
+
+    ff_cols, ff_written = write_feed(
+        out / "googleshoppingfrenchfitness.csv", FF_COLUMNS, buckets["googleshoppingfrenchfitness"])
+    fs_cols, fs_written = write_feed(
+        out / "googleshoppingfs.csv", FS_COLUMNS, buckets["googleshoppingfs"])
 
     with (out / "excluded_rows.csv").open("w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh)
@@ -958,7 +1051,39 @@ def main():
     missing_titles = sorted(set(titles) - {r["old_id"] for rows in buckets.values() for r in rows})
     missing_shipping = [r["id"] for rows in buckets.values() for r in rows if not r["shipping"]]
 
+    # The run manifest is what scripts/check_expected_counts.py reads. Designed
+    # counts have to leave the generator as data, not as a line of stdout nobody
+    # parses, or the matched-vs-designed comparison has nothing to compare to.
+    manifest = {
+        "generated_at": datetime.datetime.now(datetime.timezone.utc)
+                                 .replace(microsecond=0).isoformat(),
+        "product_filter": PRODUCT_FILTER,
+        "catalogue_count_reported": floor_count,
+        "catalogue_count_before": catalogue_count,
+        "catalogue_count_after": catalogue_count_after,
+        "catalogue_count_precision": catalogue_precision,
+        "products_fetched": tally["products_fetched"],
+        "pages": tally["pages"],
+        "products_in_scope": scanned,
+        "feeds": {
+            "googleshoppingfrenchfitness": {
+                "designed": len(buckets["googleshoppingfrenchfitness"]),
+                "written": ff_written,
+            },
+            "googleshoppingfs": {
+                "designed": len(buckets["googleshoppingfs"]),
+                "written": fs_written,
+            },
+        },
+        "p_under_100_rows": len(
+            [r for r in buckets[UNDER_100_FEED] if r.get("custom_label_0") == UNDER_100_LABEL]),
+        "promotion_rows": len([r for rows in buckets.values() for r in rows if r.get("promotion_id")]),
+    }
+    (out / "run_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
     print(f"scanned {scanned} active products")
+    print(f"catalogue read               {tally['products_fetched']:>5} of "
+          f"{catalogue_count} reported, {tally['pages']} pages  ({catalogue_precision})")
     print(f"googleshoppingfrenchfitness  {len(buckets['googleshoppingfrenchfitness']):>5} rows, {len(ff_cols)} columns")
     print(f"googleshoppingfs             {len(buckets['googleshoppingfs']):>5} rows, {len(fs_cols)} columns")
     print(f"excluded rows logged         {len(report):>5}  -> {out / 'excluded_rows.csv'}")
@@ -986,6 +1111,7 @@ def main():
                   "is that they emit WITH shipping;")
             print("  supply Monday's reconciliation handback via --shipping-lookup before "
                   "these serve.")
+    print(f"run manifest                       -> {out / 'run_manifest.json'}")
     print(f"labels resolved by SKU       {by_source.get('sku', 0):>6}")
     print(f"labels resolved by offer id  {by_source.get('offer_id', 0):>6}")
     print(f"labels resolved by product id{by_source.get('product_id', 0):>6}")
