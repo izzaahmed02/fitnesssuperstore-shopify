@@ -515,8 +515,11 @@ the committed 12-row roster, which does **not** extend to the 285.
 Catalog additions are measured as rows the id diff codes `added:new_offer`, meaning
 a SKU with no counterpart anywhere in the live export. `added:variant_expansion` and
 `rekeyed:*` are the composite-id work and are excluded from the count. The guard
-fails the run if fewer than 31 land on French Fitness, or fewer than 86 across both
-feeds.
+**fails** the run if fewer than 31 land on French Fitness, since Tim called those
+unconditional. The combined figure of 86 across both feeds only **warns**: the 55
+queued master SKUs pre-date this GO and at least one of them cannot emit, because
+FF-RIT24 is $16 and the floor drops it, so a hard combined floor would false-fail a
+correct run.
 
 One gap, flagged rather than guessed: Izza's split of the 439 gives the counts but
 not the 31 SKUs themselves. Until that list is posted this is a count expectation,
