@@ -36,6 +36,9 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 EXPECTED = ROOT / "feeds" / "expected-counts.json"
 DEFAULT_MANIFEST = ROOT / "build" / "feeds" / "run_manifest.json"
+# Tim, 2026-09-20 item 4: "Counts prove quantity; the roster proves identity."
+# Empty until Izza posts the 31 SKUs; the guard reports which mode it is in.
+CATALOG_ADDITIONS = ROOT / "feeds" / "catalog-additions.csv"
 
 
 def load_json(path, what):
@@ -57,6 +60,67 @@ def count_reason_codes(path):
             if code:
                 counts[code] = counts.get(code, 0) + 1
     return counts
+
+
+def new_offer_skus(path):
+    """{sku} for the rows an id diff codes added:new_offer.
+
+    Counting those rows proves the right NUMBER of catalog additions landed.
+    Naming them proves they are the right ones, which is the difference between
+    31 additions and the 31 additions Tim GO'd.
+    """
+    skus = set()
+    with pathlib.Path(path).open(encoding="utf-8-sig", newline="") as fh:
+        for row in csv.DictReader(fh):
+            if (row.get("reason_code") or "").strip() == "added:new_offer":
+                sku = (row.get("sku") or "").strip()
+                if sku:
+                    skus.add(sku)
+    return skus
+
+
+def load_roster():
+    """[{sku, feed, required, ...}] from feeds/catalog-additions.csv, comments stripped."""
+    if not CATALOG_ADDITIONS.exists():
+        return []
+    lines = [l for l in CATALOG_ADDITIONS.read_text(encoding="utf-8-sig").splitlines()
+             if not l.lstrip().startswith("#")]
+    return [r for r in csv.DictReader(lines) if (r.get("sku") or "").strip()]
+
+
+def check_roster(roster, landed_by_feed, failures, notes):
+    """Identity check: every rostered SKU must actually land as a catalog addition."""
+    everywhere = set().union(*landed_by_feed.values()) if landed_by_feed else set()
+    missing_required, missing_optional = [], []
+    for row in roster:
+        sku = row["sku"].strip()
+        feed = (row.get("feed") or "").strip()
+        expected_in = landed_by_feed.get(feed, everywhere) if feed else everywhere
+        if sku in expected_in:
+            continue
+        required = (row.get("required") or "").strip().lower() in ("yes", "true", "1")
+        (missing_required if required else missing_optional).append((sku, feed))
+
+    if missing_required:
+        failures.append(
+            f"{len(missing_required)} required catalog additions did not land: "
+            + ", ".join(f"{s} ({f or 'either feed'})" for s, f in missing_required[:20])
+            + ("" if len(missing_required) <= 20 else f" and {len(missing_required) - 20} more"))
+    if missing_optional:
+        notes.append(
+            f"WARN: {len(missing_optional)} non-required roster SKUs did not land: "
+            + ", ".join(s for s, _ in missing_optional[:20])
+            + ". Check excluded_rows.csv; a correct floor drop looks exactly like this.")
+
+    rostered = {r["sku"].strip() for r in roster}
+    unexpected = sorted(everywhere - rostered)
+    if unexpected:
+        notes.append(
+            f"WARN: {len(unexpected)} catalog additions are not on the roster: "
+            + ", ".join(unexpected[:20])
+            + ". Additions nobody signed off are how scope grows quietly.")
+    notes.append(f"roster: IDENTITY mode, {len(roster)} SKUs "
+                 f"({sum(1 for r in roster if (r.get('required') or '').strip().lower() in ('yes','true','1'))} required)")
 
 
 def check(manifest, expected, matched, id_diffs=None):
@@ -127,8 +191,10 @@ def check(manifest, expected, matched, id_diffs=None):
     adds = expected.get("catalog_additions") or {}
     if id_diffs:
         total_new = 0
+        landed_by_feed = {}
         for feed, path in id_diffs.items():
             counts = count_reason_codes(path)
+            landed_by_feed[feed] = new_offer_skus(path)
             new_offers = counts.get("added:new_offer", 0)
             total_new += new_offers
             unexplained = sum(v for k, v in counts.items() if k.endswith(":unexplained"))
@@ -149,6 +215,15 @@ def check(manifest, expected, matched, id_diffs=None):
         # queued master SKUs pre-date this GO and at least one of them cannot emit -
         # FF-RIT24 is $16 and the floor drops it - so a hard combined floor would
         # false-fail a correct run. Loud enough to look at, not loud enough to block.
+        roster = load_roster()
+        if roster:
+            check_roster(roster, landed_by_feed, failures, notes)
+        else:
+            notes.append("roster: COUNT mode. feeds/catalog-additions.csv has no rows yet, so "
+                         "this run proves the NUMBER of catalog additions, not their identity. "
+                         "Drop Izza's 31 SKUs in and it becomes an identity check with no code "
+                         "change.")
+
         combined = adds.get("combined_expected_new_offers")
         if combined is not None and total_new < combined:
             notes.append(f"WARN: {total_new} catalog additions across both feeds against an "
