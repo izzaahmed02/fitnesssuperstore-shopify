@@ -381,6 +381,94 @@ intervention. `--skip-pdp-check` exists for offline dry runs only.
 None of the 17 Overstock products carries a `compareAtPrice` at all, so the rule
 does not currently touch any promotion row.
 
+## The under-$100 campaign exception
+
+Tim's ruling of 2026-09-19 on the Phase 2 thread, OPTION A SCOPED. The campaign
+proceeds, and the `$100` floor gets exactly one hole:
+
+1. `custom_label_0 = p_under_100` goes only on French Fitness in-stock rows priced
+   **$25.00-$99.99**. Sub-$25.00 variants do not get it, on economics: a Shopping
+   click plus shipping exceeds the ticket on the light hex singles.
+2. Rows carrying the label survive the floor and emit **with shipping**. The floor
+   holds absolute for everything else, sub-$25.00 rows included, which drop at
+   cutover as designed.
+
+### Scope, and why the roster is a file rather than a price sweep
+
+The campaign Tim named in his 2026-09-17 heads-up is the **17 in-stock under-$100
+offers serving in the live French Fitness feed, all weight variants of product
+`10247596147004`, $4.50-$98.10**. Read live from Shopify on 2026-09-19, that product
+has exactly 17 in-stock variants under $100 and the range matches $4.50-$98.10 to the
+cent, so the set is confirmed rather than inferred.
+
+Catalogue-wide, however, live Shopify carries **431 in-stock French Fitness variants
+under $100** across 1,375 active French Fitness Product Index products. A generator
+that derived the exception from a live price sweep instead of a roster would put
+hundreds of rows into the feed that no one quoted shipping for and that were never in
+Monday's reconciliation handback. So `feeds/under-100-campaign.csv` names the rows,
+and the generator re-checks each one against live Shopify before applying anything:
+French Fitness feed, in stock, `$25.00 <= price <= $99.99`. A price move or a stock-out
+closes the exception on its own.
+
+### The cut, on the record
+
+Surviving, 12 rows (SKU, Shopify price on 2026-09-19):
+
+| SKU | price | | SKU | price |
+| --- | --- | --- | --- | --- |
+| `FF-RCHD15` | 28.80 | | `FF-RCHD30` | 56.70 |
+| `FF-RCHD17-5` | 32.40 | | `FF-RCHD35` | 65.70 |
+| `FF-RCHD20` | 37.80 | | `FF-RCHD40` | 75.60 |
+| `FF-RCHD22-5` | 42.30 | | `FF-RCHD45` | 84.60 |
+| `FF-RCHD25` | 46.80 | | `FF-RCHD50` | 93.60 |
+| `FF-RCHD27-5` | 51.30 | | `FF-RCHD55` | 98.10 |
+
+Dropped by the $25.00 floor, 5 rows: `FF-RCHD2-5` 4.50, `FF-RCHD5` 9.90,
+`FF-RCHD7-5` 14.40, `FF-RCHD10` 18.90, `FF-RCHD12-5` 23.40.
+
+Three of the twelve emit a feed `price` above $100 - `FF-RCHD45` 109.00, `FF-RCHD50`
+and `FF-RCHD55` 129.00 - because `price` is Google's regular price and the compare-at
+is the was-price. What the customer pays is the `sale_price`, and that is the figure
+the band applies to. `scripts/check_under_100_scope.py` checks the selling price for
+that reason.
+
+### Shipping
+
+The ruling is that these emit with shipping, and the rates come from Monday's
+reconciliation handback. Until that file is passed in with `--shipping-lookup`, the
+generator reports every labelled row with a blank `shipping` and the gate fails. That
+is deliberate: a row in the feed with no shipping rate sits **Not eligible** in
+Merchant Center, which is the state the campaign was supposed to fix.
+
+### `custom_label_0` collisions
+
+`custom_label_0` holds one value, and the September Overstock promotion already owns
+it for the mapped SKUs. The promotion label wins, the collision is reported, and the
+row keeps its floor exception either way. No collision exists today: none of the 12
+hex SKUs is in the Sale collection the discount now targets (checked live
+2026-09-19).
+
+## The Overstock discount is collection-scoped now
+
+Confirmed live on 2026-09-19: automatic discount `1741840056636` no longer targets a
+product list. It targets the **Sale** collection (`522382967100`), 120 products, 10%,
+through 2026-10-01 06:59:59 UTC. That is the expansion from 16 to 120 French Fitness
+SKUs Tim described on 2026-09-17, with the discount repointed because Shopify caps
+product-list automatic discounts at 100 products.
+
+`scripts/check_promotion_scope.py` used to abort on a collection-scoped discount. It
+now resolves collection membership live and paginated, per Tim's instruction to point
+the gate at the collection so it does not false-fail. Three-way state today:
+
+* repo map (`feeds/promotion-map.csv`): **17** SKUs, `FF-FSR100` added per Tim's
+  2026-09-17 ruling 3.
+* live checkout: **120** products.
+* badged but not discounted: **0**. No disapproval risk.
+* discounted but not badged: **103**, warn-only, which is the sanctioned expansion
+  landing. Eight of them are under $100 and discount without a badge by design.
+
+The roster takes the full expanded list in ONE pass once Ilsaa posts it, per Tim.
+
 ## Still open
 
 1. Merchant Center account-level tax confirmation, before the three tax columns come out.
