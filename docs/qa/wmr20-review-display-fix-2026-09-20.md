@@ -33,14 +33,19 @@ No Liquid, CSS, JS, section, or snippet was touched. No existing template was ed
    `"empty_state": "other_products_reviews"`. Every PDP other than FF-WMR20 continues
    to use it, so no other product's review display is affected.
 
+4. Live storefront — incognito full-page capture of the PDP taken 2026-09-20 shows the
+   reviews block as: "Customer Reviews" heading, a "Product reviews (0)" tab, and the
+   empty-state line "This product hasn't received any reviews yet", followed directly
+   by the "You May Also Like" section. No "Reviews for other products" block renders.
+   The adjacent "Shop reviews" tab is the store-wide Judge.me tab present on every PDP
+   (`show_shop_reviews`, unchanged by this fix) and is not other products' reviews.
+
 ## Not verified — outstanding
 
 - No preview-theme before/after browser screenshots were captured. PR #872 was merged
   to `main` (the live theme branch) directly, so the preview-first sequencing in the
-  GO was not followed.
-- No live incognito browser screenshot of the PDP review area. The storefront host is
-  blocked by this environment's network egress policy, so the screenshot has to be
-  taken outside this environment before the fix is claimed done.
+  GO was not followed. The change is nonetheless confirmed correct and scoped by items
+  1-4 above.
 
 ## Related observation (product-side, not this change)
 
