@@ -72,19 +72,29 @@
 }
 
 .footer__menu {
-   display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 30px;
-  
 }
 
-@media screen and (max-width: 1100px) {
- .footer__menu {
-   display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    gap: 30px;
-  
-} 
+/* Column counts are capped to what the row can actually hold. Above 989px
+   .footer__top is a max-content grid, so neither track shrinks: the nav is
+   always at least (157px * columns) + (30px * gaps) wide, and the
+   logo/contacts track is 296px (the seven social icons on one line) plus the
+   20px column gap. When that total passed the .page-width content box the
+   rightmost menu column ran outside the footer and scrolled the whole page
+   sideways — reported on live and on the Phase 1 preview at 1024x1366.
+   Five columns need 1321px of viewport, four need 1134px. */
+@media screen and (max-width: 1329px) {
+    .footer__menu {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media screen and (max-width: 1134px) {
+    .footer__menu {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
 }
 
 
