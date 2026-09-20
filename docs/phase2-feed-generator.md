@@ -469,6 +469,61 @@ the gate at the collection so it does not false-fail. Three-way state today:
 
 The roster takes the full expanded list in ONE pass once Ilsaa posts it, per Tim.
 
+## The matched-vs-designed count guard
+
+Tim, 2026-09-20: *"The automated local feed just served 46 offers short for two
+weeks, silently, because nothing compared Merchant Center's matched count against
+the designed count. Every generator output gets an expected-count check that fails
+the publish loudly instead of shipping short."*
+
+The local feed's root cause was Shopify clamping Liquid pagination at 250 items on
+a 367-product collection, so PRODUCTS_INVENTORY_FULL SOURCE 2 matched 220 against
+a designed 266. This generator paginates too, so the same class of bug can hit it.
+Three comparisons now stand between a short read and a published feed:
+
+1. **Read completeness, inside the generator.** `productsCount` is asked for the
+   generator's own filter and compared against what the page loop actually
+   returned. A shortfall raises and nothing is generated. A non-`EXACT` precision
+   is reported rather than trusted.
+2. **Designed vs written, inside `write_feed`.** Every output is read back and
+   counted. Designed and written must match or the run dies before anything
+   downstream touches the file.
+3. **Matched vs designed, at the gate.** `scripts/check_expected_counts.py` reads
+   `build/feeds/run_manifest.json` and compares it against
+   `feeds/expected-counts.json`: row bands per feed, the exact `p_under_100` roster
+   count, the promotion floor, and the catalog additions off the id diffs. Merchant
+   Center's matched count is supplied with `--matched <feed>=<count>`, because the
+   generator has no Merchant Center access and should not pretend to. Tolerance is
+   zero. 46 short for two weeks is what a tolerance above zero buys you.
+
+The gate runs as step 6/8 of `run_cutover_diff.sh`, after the diffs, because the
+catalog-additions check counts off them. Set `MATCHED_FF` and `MATCHED_FS` from the
+Merchant Center source pages after a fetch to turn comparison 3 on.
+
+`feeds/expected-counts.json` is a set of dated, deliberate expectations, not a
+cache of the last run. When a ruling changes scope, it is edited in the same commit
+as the scope change. A run that disagrees with it fails, and that is the point.
+
+## Catalog additions
+
+Tim, 2026-09-20, item 1: GO. The **31 French Fitness variants at $100 and over**
+from the 439 missing-primary-offer set enter the catalog-additions scope, alongside
+the **55 missing master SKUs** already queued. The floor stands for the rest: the
+285 at $26-99 and the 123 at $4-24 stay out, and the `p_under_100` exception remains
+the committed 12-row roster, which does **not** extend to the 285.
+
+Catalog additions are measured as rows the id diff codes `added:new_offer`, meaning
+a SKU with no counterpart anywhere in the live export. `added:variant_expansion` and
+`rekeyed:*` are the composite-id work and are excluded from the count. The guard
+fails the run if fewer than 31 land on French Fitness, or fewer than 86 across both
+feeds.
+
+One gap, flagged rather than guessed: Izza's split of the 439 gives the counts but
+not the 31 SKUs themselves. Until that list is posted this is a count expectation,
+not a roster, so the guard proves the right *number* of catalog additions landed and
+not yet that they are the right 31. When the list lands it becomes a roster here in
+one pass, the same shape as `feeds/under-100-campaign.csv`.
+
 ## Still open
 
 1. Merchant Center account-level tax confirmation, before the three tax columns come out.
