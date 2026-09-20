@@ -203,3 +203,36 @@ nothing happened between 30 May and now.
 
 Nothing here changes any ruling on the Post Avis Phase 2 candidate, and the
 candidate does not contain this rule.
+
+## Addendum 2 — the SupaEasy validation function list
+
+`docs/qa/evidence/supaeasy-validation-functions-list-2026-09-20.webp`, captured
+20 September from
+`admin.shopify.com/store/79ef8b-5e/apps/supaeasy/functions/validation`.
+
+The store handle in that URL, **79ef8b-5e**, is the production store. It is the
+same handle I confirmed against the Klaviyo integration on 7 September, so this
+screen is production and not a staging or dev store.
+
+Functions for checkout validation, complete list:
+
+| Title | Type | Enabled | Block | Debug |
+|---|---|---|---|---|
+| $0 subtotal validator | Validate Checkout | **off** | **off** | Operational |
+
+Three things follow.
+
+1. **There is exactly one validation function in SupaEasy.** So if a validation
+   rule blocked a customer from submitting an order, it was this one. There is no
+   second candidate hiding in the app.
+2. **Enabled and Block are separate toggles, and both are currently off.** The
+   per-campaign setting seen earlier, "Block if all qualify", is the behaviour
+   *within* the rule; this Block toggle is a second gate at the function level.
+   Nothing is blocking today.
+3. **The Logs are not on this screen.** This is the function list. The Logs tab
+   sits inside the individual function, reached with the pencil icon on the row.
+
+Still unestablished, and still the thing that would settle attribution: the dates
+this function was enabled and later disabled. Neither this screen nor the Shopify
+Admin API exposes that, because it is third-party app state. It has to come from
+the function's own Logs tab or from SupaEasy support.
