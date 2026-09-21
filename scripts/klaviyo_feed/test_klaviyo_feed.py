@@ -25,6 +25,7 @@ def product(pid, sku, price, **overrides):
         "status": "ACTIVE",
         "vendor": "French Fitness",
         "description": "<p>Hello  world</p>",
+        "handle": f"p{pid}",
         "onlineStoreUrl": f"https://www.fitnesssuperstore.com/products/p{pid}",
         "featuredMedia": {"preview": {"image": {"url": "https://cdn.shopify.com/hero.webp"}}},
         "category": {"fullName": "Sporting Goods > Weight Lifting"},
@@ -281,6 +282,111 @@ class SuppressionTests(unittest.TestCase):
         self.assertEqual(counts["variant_rows"], 2)
         self.assertEqual(counts["accounted"], 2)
         self.assertTrue(report["reconciliation_clean"])
+
+    def test_excluded_sku_is_dropped_from_an_otherwise_feedable_product(self):
+        """The standing guard: an excluded SKU is dropped even when its product
+        is feedable, so neither the option-carrier list nor a product tag is
+        needed to keep it out."""
+        node, variant = product(809, "FFT-DCC", "3499.00")
+        apu = dict(variant, id="gid://shopify/ProductVariant/8092", sku="FFT-DCC-APU")
+        _, report, feed = self.build([node, variant, apu])
+        self.assertEqual([r["id"] for r in feed], ["FFT-DCC"])
+        self.assertEqual(report["exception_reason_counts"]["sku_excluded"], 1)
+        # the product itself is not suppressed, so only the row count moves
+        self.assertEqual(report["counts"]["sku_excluded_rows"], 1)
+        self.assertEqual(report["counts"]["suppressed_products"], 0)
+        self.assertEqual(report["counts"]["accounted"], 2)
+        self.assertTrue(report["reconciliation_clean"])
+
+    def test_excluded_sku_match_ignores_case(self):
+        node, variant = product(810, "fft-dcc-apu", "159.00")
+        _, _, feed = self.build([node, variant])
+        self.assertEqual(feed, [])
+
+
+class CanonicalUrlFallbackTests(unittest.TestCase):
+    """2026-09-17 ruling 1: honour custom.product_canonical_url only while it
+    resolves to a product that is itself in the feed."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+
+    def build(self, nodes):
+        jsonl = os.path.join(self.tmp, "bulk.jsonl")
+        write_jsonl(jsonl, nodes)
+        out = os.path.join(self.tmp, "out")
+        builder.main(["--jsonl", jsonl, "--out", out, "--min-items", "0"])
+        with open(os.path.join(out, "klaviyo_feed.json"), encoding="utf-8") as handle:
+            return json.load(handle)
+
+    def test_canonical_to_a_feedable_product_is_honoured(self):
+        target, target_variant = product(901, "TARGET-1", "10.00")
+        node, variant = product(
+            902,
+            "SRC-1",
+            "10.00",
+            mf_canonical={"value": target["onlineStoreUrl"]},
+        )
+        feed = self.build([target, target_variant, node, variant])
+        link = next(r["link"] for r in feed if r["id"] == "SRC-1")
+        self.assertEqual(link, target["onlineStoreUrl"])
+
+    def test_canonical_to_a_suppressed_product_falls_back_to_own_url(self):
+        """The Turf case: the combined listing carries REMOVE FROM FEEDS, so the
+        three standalones must link to their own handles, not to it."""
+        combined, combined_variant = product(
+            903, "COMBINED-1", "669.00", tags=["REMOVE FROM FEEDS"]
+        )
+        standalone, standalone_variant = product(
+            904,
+            "FF-AGSL-V2",
+            "899.00",
+            mf_canonical={"value": combined["onlineStoreUrl"]},
+        )
+        feed = self.build(
+            [combined, combined_variant, standalone, standalone_variant]
+        )
+        link = next(r["link"] for r in feed if r["id"] == "FF-AGSL-V2")
+        self.assertEqual(link, standalone["onlineStoreUrl"])
+
+    def test_canonical_to_a_product_outside_the_export_falls_back(self):
+        node, variant = product(
+            905,
+            "SRC-2",
+            "10.00",
+            mf_canonical={"value": "https://www.fitnesssuperstore.com/products/gone"},
+        )
+        feed = self.build([node, variant])
+        self.assertEqual(feed[0]["link"], node["onlineStoreUrl"])
+
+    def test_fallback_keeps_the_variant_deep_link(self):
+        combined, combined_variant = product(
+            906, "COMBINED-2", "10.00", tags=["REMOVE FROM FEEDS"]
+        )
+        node, variant = product(
+            907,
+            "MV-A",
+            "10.00",
+            mf_canonical={"value": combined["onlineStoreUrl"]},
+        )
+        second = dict(variant, id="gid://shopify/ProductVariant/9072", sku="MV-B")
+        feed = self.build([combined, combined_variant, node, variant, second])
+        links = {r["id"]: r["link"] for r in feed}
+        self.assertEqual(links["MV-A"], f"{node['onlineStoreUrl']}?variant=9071")
+        self.assertEqual(links["MV-B"], f"{node['onlineStoreUrl']}?variant=9072")
+
+    def test_handle_is_read_from_the_url_path(self):
+        self.assertEqual(
+            builder.handle_from_product_url(
+                "https://www.fitnesssuperstore.com/products/Some-Handle?variant=1"
+            ),
+            "some-handle",
+        )
+        self.assertEqual(builder.handle_from_product_url(""), "")
+        self.assertEqual(
+            builder.handle_from_product_url("https://www.fitnesssuperstore.com/pages/x"),
+            "",
+        )
 
 
 class BrandFieldTests(unittest.TestCase):

@@ -60,7 +60,7 @@ recommendation-event history line up.
 | `id`, `sku` | `variant.sku` |
 | `title` | `product.title` |
 | `description` | `product.description`, tags and whitespace collapsed |
-| `link` | `custom.product_canonical_url`, else `product.onlineStoreUrl`; multi-variant products are deep-linked with `?variant=<id>` so each row resolves to its own variant |
+| `link` | `custom.product_canonical_url` while it resolves to a product that is itself in the feed, else `product.onlineStoreUrl`; multi-variant products are deep-linked with `?variant=<id>` so each row resolves to its own variant |
 | `image_link` | `variant.image`, else `product.featuredMedia` |
 | `price` | `variant.price` — Admin base price verbatim, no promotional discount inferred |
 | `availability` | `In Stock` / `Out of Stock` / `Backorder`, from `availableForSale` + inventory policy |
@@ -82,6 +82,25 @@ product feeds select on (e.g. `NewBA_FF`, "Collection: BA French Fitness").
 Omitting it leaves the catalog with zero categories and those feeds with nothing
 to draw from. Shopify `vendor` is populated on every product in the export, so
 requiring it excludes nothing.
+
+### Canonical-URL fallback
+
+Per the 2026-09-17 ruling, the builder honours `custom.product_canonical_url`
+only while the handle it points at belongs to a product that is in the feed.
+When the canonical target is suppressed, or is absent from the export
+altogether, the row falls back to the product's own `onlineStoreUrl`. Without
+this a reader clicking a turf row would land on the combined listing the feed
+had just suppressed for zero inventory.
+
+Nothing is changed in Shopify: the metafield on the three turf standalones is
+left exactly as it is, and each link flips back to the combined listing on its
+own once that listing re-enters the feed at the turf cutover. No second change
+is needed then.
+
+The rule is deliberately narrow. A canonical URL pointing at a product that is
+live and in the feed is still honoured — the FFS Silver rows that point at
+their FFB Black counterparts keep those links, because those products are in
+the feed. Changing that is a separate decision, not this ruling.
 
 `product_type` and `product_category` are the two fields whose **wording** the
 legacy feed owns rather than Shopify: the legacy catalog carried a Volusion
@@ -105,6 +124,18 @@ Whole-product suppression, applied before anything else looks at the rows:
 - `option_carrier_excluded` — the product is an option carrier listed in
   `OPTION_CARRIER_PRODUCT_IDS`: its variants are configuration choices on
   another product, not purchasable items.
+
+Single-row suppression, for an option row sitting on an otherwise feedable
+product, which neither of the above reaches:
+
+- `sku_excluded` — the variant's SKU is listed in `EXCLUDED_VARIANT_SKUS`.
+  `FFT-DCC-APU` is there per the 2026-09-21 instruction. It currently sits on
+  the consolidated APU carrier `10278798000444` (variant "Tahoe / Shasta /
+  FFT-DCC"), not on the live FFT-DCC product, so `option_carrier_excluded`
+  already keeps it out; this entry is the standing guard that holds even if the
+  row is later moved onto a feedable product or re-created after removal. These
+  rows are counted under `counts.sku_excluded_rows`, not
+  `counts.suppressed_products` — the product itself is not suppressed.
 
 Suppressed products are removed from the candidate set entirely rather than
 excluded row by row. This matters because the duplicate analysis counts SKUs

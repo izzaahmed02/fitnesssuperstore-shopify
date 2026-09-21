@@ -23,6 +23,7 @@ import re
 import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
+from urllib.parse import urlsplit
 
 # Rubber Coated Hex Dumbbell SKUs exist twice in Shopify: once as standalone
 # single-SKU products and once as variants of this multi-variant parent. Both
@@ -57,6 +58,27 @@ OPTION_CARRIER_PRODUCT_IDS = {
     "gid://shopify/Product/9939989037372",
 }
 OPTION_CARRIER_EXCLUDED = "option_carrier_excluded"
+
+# Individual variant rows that must never reach the feed, keyed by SKU. This
+# covers an option row sitting on an otherwise feedable product, which neither
+# the option-carrier product list nor a product tag reaches.
+#
+# FFT-DCC-APU is listed here per the 2026-09-21 instruction. It sits on the
+# consolidated APU carrier 10278798000444 (variant "Tahoe / Shasta / FFT-DCC"),
+# not on the live FFT-DCC product, so the option-carrier rule above already
+# keeps it out. This entry is the standing guard: it holds even if the row is
+# later moved onto a feedable product or re-created after removal.
+EXCLUDED_VARIANT_SKUS = {"FFT-DCC-APU"}
+SKU_EXCLUDED = "sku_excluded"
+_EXCLUDED_VARIANT_SKUS_UPPER = {sku.upper() for sku in EXCLUDED_VARIANT_SKUS}
+
+
+def variant_suppression_reason(variant):
+    """Reason this single variant row never reaches the candidate set, or None."""
+    sku = (variant.get("sku") or "").strip().upper()
+    if sku in _EXCLUDED_VARIANT_SKUS_UPPER:
+        return SKU_EXCLUDED
+    return None
 
 
 def suppression_reason(product):
@@ -197,14 +219,51 @@ def image_of(product, variant):
     return ((media.get("image") or {}).get("url") or "").strip()
 
 
-def link_of(product, variant=None, variant_count=1):
+def handle_from_product_url(url):
+    """The /products/<handle> segment of a storefront URL, lowercased."""
+    path = urlsplit((url or "").strip()).path.rstrip("/")
+    marker = "/products/"
+    if marker not in path:
+        return ""
+    return path.rsplit(marker, 1)[-1].split("/")[0].lower()
+
+
+def feedable_handles(products):
+    """Handles of the export's products that are not suppressed from the feed.
+
+    A canonical URL pointing anywhere else resolves either to a product the feed
+    has just removed or to no product in the export at all, so it cannot serve
+    as a row's link.
+    """
+    handles = set()
+    for product in products.values():
+        handle = (product.get("handle") or "").strip().lower()
+        if handle and not suppression_reason(product):
+            handles.add(handle)
+    return handles
+
+
+def link_of(product, variant=None, variant_count=1, usable_handles=None):
     """Product PDP, deep-linked to the variant when the product has several.
 
     A variant-level feed needs one distinct link per row; without the variant
     parameter every variant of a product would share the parent's URL and land
     the reader on whichever variant Shopify defaults to.
+
+    Per the 2026-09-17 ruling the builder honours custom.product_canonical_url
+    only while it resolves to a product that is itself in the feed. When the
+    canonical target is suppressed, or absent from the export, the row falls
+    back to the product's own URL instead of sending the reader to a page the
+    feed no longer carries. Nothing changes in Shopify: the metafield is left
+    exactly as it is, and the link flips back on its own the moment the target
+    re-enters the feed.
     """
-    url = mf(product, "mf_canonical") or (product.get("onlineStoreUrl") or "").strip()
+    own_url = (product.get("onlineStoreUrl") or "").strip()
+    canonical = mf(product, "mf_canonical")
+    url = canonical or own_url
+    if canonical and own_url and usable_handles is not None:
+        if handle_from_product_url(canonical) not in usable_handles:
+            url = own_url
     if not url or variant_count <= 1 or not variant:
         return url
 
@@ -215,7 +274,7 @@ def link_of(product, variant=None, variant_count=1):
     return f"{url}{separator}variant={variant_id}"
 
 
-def build_row(product, variant, legacy_taxonomy=None, variant_count=1):
+def build_row(product, variant, legacy_taxonomy=None, variant_count=1, usable_handles=None):
     sku = (variant.get("sku") or "").strip()
     price_raw = variant.get("price")
     try:
@@ -240,7 +299,7 @@ def build_row(product, variant, legacy_taxonomy=None, variant_count=1):
         "id": sku,
         "title": product.get("title") or "",
         "description": plain_text(product.get("description")),
-        "link": link_of(product, variant, variant_count),
+        "link": link_of(product, variant, variant_count, usable_handles),
         "image_link": image_of(product, variant),
         "price": price,
         "availability": availability_of(variant),
@@ -387,6 +446,11 @@ def main(argv=None):
 
     products, variants_by_parent, malformed = load_bulk_jsonl(args.jsonl)
 
+    # Resolved once, before any row is built: a row's link depends on whether
+    # its canonical target is itself feedable, which is a property of the whole
+    # export rather than of the row.
+    usable_handles = feedable_handles(products)
+
     candidates = []
     suppressed = []
     products_without_variants = []
@@ -397,9 +461,12 @@ def main(argv=None):
             continue
         reason = suppression_reason(product)
         for variant in variants:
-            row = build_row(product, variant, legacy_taxonomy, len(variants))
-            if reason:
-                row["_suppression_reason"] = reason
+            row = build_row(
+                product, variant, legacy_taxonomy, len(variants), usable_handles
+            )
+            row_reason = reason or variant_suppression_reason(variant)
+            if row_reason:
+                row["_suppression_reason"] = row_reason
                 suppressed.append(row)
             else:
                 candidates.append(row)
@@ -569,9 +636,20 @@ def main(argv=None):
             "excluded": len(excluded),
             # One row per suppressed variant, and the distinct products behind
             # them: an option carrier contributes 100+ rows from a single
-            # product, so the two are very different numbers.
+            # product, so the two are very different numbers. Rows dropped by
+            # SKU are counted separately — their product is not suppressed, so
+            # folding them into suppressed_products would overstate it.
             "suppressed_variant_rows": len(suppressed),
-            "suppressed_products": len({row["_shopify_product_id"] for row in suppressed}),
+            "suppressed_products": len(
+                {
+                    row["_shopify_product_id"]
+                    for row in suppressed
+                    if row["_suppression_reason"] != SKU_EXCLUDED
+                }
+            ),
+            "sku_excluded_rows": sum(
+                1 for row in suppressed if row["_suppression_reason"] == SKU_EXCLUDED
+            ),
             "emitted_with_warning": len(exceptions) - len(excluded),
             "accounted": accounted,
         },
