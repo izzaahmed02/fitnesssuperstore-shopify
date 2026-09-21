@@ -36,6 +36,32 @@ All ten products share an `updatedAt` of 2026-09-20T19:25:54Z, which is a bulk
 sync touch rather than ten separate edits; titles and prices are unchanged
 either side of it, so it does not confound the window.
 
+## Blocker: no Google Ads access
+
+**This read cannot be produced from here.** Yusra has Merchant Center access,
+granted by Tim on 2026-09-09, but not Google Ads. Every one of the four exports
+below lives in the Ads account, not in Merchant Center, so none of them can be
+pulled without access being granted first.
+
+What is needed is **read only**, the lowest level that can still download
+reports. No campaign, budget, bid or targeting change is involved, and per
+standing policy no paid media change happens without Tim's written instruction
+regardless.
+
+Granting it: Google Ads > Tools > Setup > **Access and security** > Users > the
+blue **+** > `yusra@fitnesssuperstore.com` > access level **Read only** > Send
+invitation. Accepting the emailed invite completes it.
+
+Timing: the window closes 2026-09-24 and the exports were promised for
+2026-09-25. Access needs to land before then for the read to be on time. If it
+does not, the alternative is that whoever holds the account pulls the four CSVs
+to the spec below and sends them over, and the prep work in this file still
+applies unchanged.
+
+Nothing else in this file is blocked. The window verification above was done
+against live Shopify and the repo, and the designed-count and search-term
+observations hold whoever pulls the exports.
+
 ## The four exports
 
 Google Ads, Product Lines campaign, date range set to **Sep 10 2026 – Sep 24
