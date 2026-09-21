@@ -940,3 +940,63 @@ the run. The StudioWall tag write has no Shopify event record (tag edits are
 not logged as events); the evidence available is the tag itself, the
 collection exit, and a product `updatedAt` of 19 Sept 13:33 PT as an outer
 bound.
+
+## 21 Sept: the run holds on Tim's own precondition
+
+Tim's 20 Sept 04:58 rule: *"Monday's FS run proceeds only if Izza's upload
+timestamps are on the freight thread first. If they are not there by Monday
+morning, the run holds and the window moves — the rekey date is downstream
+of the upload, not the calendar."*
+
+Checked the controlling freight thread ("Sitewide freight shipping increases
+— Split #1") end to end through 21 Sept 11:14 PT. **No upload timestamps are
+posted.** The sequence there reads:
+
+- 20 Sept 12:47 PT — Izza posts that she has no Woolytech access and cannot
+  grant Qash access.
+- 20 Sept 13:01 PT — Tim grants Qash access directly, Item E closed.
+- Qash's corrected source file is still described as one fix from PASS
+  (30 French Fitness straggler rows regenerating after a rate correction).
+
+The pause-then-upload on all four sources has therefore not run, so the
+re-key would propagate stale shipping values under fresh ids and reset
+Google's item history on bad data — the exact failure the rule exists to
+prevent. The run holds.
+
+### Zero-delay triage (his 20 Sept 04:37 qualifier)
+
+| Add-on | Call | Why |
+|---|---|---|
+| SKU-derived expected sets | **in** | already posted, zero cost |
+| PP-MY5 no-touch check | **in** | verified, zero cost |
+| Case-sensitivity answer | **in** | one line, computed below |
+| WMR20 in the FF remainder | **deferred** | rides with FF, which his own four-source gate defers |
+| 20-product FF source recommendation | **deferred** | needs Merchant Center source access; FS is not gated on it |
+
+The upload-timestamp rule is not an add-on and is not subject to the
+zero-delay qualifier — it is a precondition he set on the run itself.
+
+### Case sensitivity — the answer in one line
+
+`scripts/feed_offer_id_diff.py` compares exact strings throughout: the join
+key, the fallback test, the SKU match and the duplicate scan contain no
+`lower()`, `upper()`, `casefold()` or `re.IGNORECASE`. **The diff logic is
+case-sensitive, so nothing to change.** Checked for the defect class as
+well — across both feeds there are zero ids differing only by case, zero
+case-only pairs among the expected-set targets, and zero cases of a new id
+case-colliding with an id already serving.
+
+### PP-MY5
+
+The rename is already complete. Product `10491685667132` now carries
+`PP-MY5-MB`; the live Power Plate My5 (`9878568403260`) keeps `PP-My5`. No
+variant anywhere in the catalogue carries `PP-MY5`, so it cannot enter an
+expected set. It is held out of the feeds by `productType = "Product
+(Hidden)"`, which every feed collection excludes — note that its `status` is
+ACTIVE, so the product type is the only thing keeping it out.
+
+### Corroboration of the StudioWall drop
+
+Collection `513321435452` now reports **918** products, down from the 919 on
+the thread. Consistent with StudioWall having left, and independent of the
+feed pull.
