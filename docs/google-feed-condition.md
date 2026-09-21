@@ -700,3 +700,72 @@ Full row detail: `docs/third-party-condition-status-2026-09-13.csv`.
 
 One record was created since Sept 11 — `296986444092`, French Fitness Rack & Rig
 43" Bench Prop w/Spotter Platform, already reading `new`.
+
+## Turf combined product — spec, and the Flow-rule check (2026-09-21)
+
+### `3rd_party` spec for product `10380015927612`
+
+Unlike the FF-MSS set, this one is not blocked: the three standalone turf PDPs
+are the **same three items**, already live Google offers, and all three carry
+identical values. Detail in `docs/turf-combined-3rd-party-spec.csv`.
+
+| | Value | Evidence |
+| --- | --- | --- |
+| `product_condition` | `new` | `condition_state` is `New` on the combined product and on all three standalones |
+| `estimated_shipping_ground` | **349** | identical on all three standalone records |
+| `estimated_shipping_2nd_day` | **249** | identical on all three |
+| `estimated_shipping_overnight` | **149** | identical on all three |
+
+Source records: `125005136188` (V1, `9878926557500`), `125005168956`
+(V2, `9878927114556`), `125005201724` (V3, `9878927573308`). Prices match the
+combined variants 1:1 — 669 / 899 / 1099 — so these are the same offers, not
+merely comparable ones. One record on the product covers all three variants,
+and here that is correct rather than a compromise: all three take the same
+freight tier.
+
+**Separate defect, and it blocks shipping regardless of the record.** The three
+combined variants carry **0 lb**; the standalones carry **75 lb** each. Weight
+has to be set to 75 on all three or the shipping expression has nothing to
+compute from. That is a variant field, not a metaobject field, so creating the
+record does not fix it.
+
+### The Flow rule is not live
+
+Shopify does not expose Flow workflow definitions through the Admin API, so
+this is answered from observable state rather than from the rule itself.
+
+Of **2,217 UNLISTED products, 5 carry `REMOVE FROM FEEDS`** — consistent with
+the handful tagged by hand, not with an automated rule. The rule as approved
+fires forward-only on a status change, so untagged history is not proof on its
+own; five is.
+
+**No product is leaking right now.** Of the 2,212 untagged UNLISTED products,
+**zero** are in `french-fitness-meta-feeds`, `remanufactured-meta-feeds` or
+`other-brand-meta-feeds`. FF-STW-WB-3 now carries the tag and has dropped out of
+the FF collection. The exposure is future-tense: it needs a product that is both
+UNLISTED and a match for a feed collection's price/weight/vendor/type rules,
+which is exactly what FF-STW-WB-3 was, twice.
+
+### FFM-R30 and FF-RH80 are not a leak
+
+Both verified against live Shopify:
+
+| | `FFM-R30` | `FF-RH80` |
+| --- | --- | --- |
+| Product | `9878491857212` | `9878611984700` |
+| Status | ACTIVE, published 2025-01-14 | ACTIVE, published 2025-01-14 |
+| Price / condition | $999 / `New` | $999 / `New` |
+| Sellable | yes, DENY, 9,998 | yes, DENY, 9,999 |
+
+Both are legitimately live, sellable, and correctly in
+`french-fitness-meta-feeds`. They belong in the Bing feed. No tag, no action.
+
+**A likely campaign-side cause, though.** Both sit in
+`products-over-1000` **and** `gym-equipment-under-1-000` simultaneously, at
+$999. Only **6 products in the whole 6,485-product catalogue** are in both
+collections, and both Tier 2 surprises are among those 6. If the Tier 2 product
+group keys off a price bucket or a label derived from one, that contradiction is
+a better explanation for "expected nothing here" than anything in the feed. The
+other four are R8 Half Cage, FFS Silver Olympic Flat Bench, FFB Black Olympic
+Flat Bench and FFB Black Olympic Incline. Worth handing to whoever owns the Ads
+audit; the product-group definition sits in Microsoft Ads, not in Shopify.
