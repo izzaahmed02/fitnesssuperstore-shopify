@@ -25,7 +25,20 @@
 /* Search-result thumbnail. width/height attributes on the <img> carry the
    aspect ratio so the image reserves space and does not shift layout. */
 .blog-search-result__media { display: block; margin-bottom: 8px; }
-.blog-search-result__media img { width: 100%; height: auto; display: block; border-radius: 8px; }
+.blog-search-result__media img { width: 100%; height: auto; display: block; border-radius: 8px; object-fit: contain; }
+.blog-search-result__media--small img { height: 11rem; }
+.blog-search-result__media--medium img { height: 22rem; }
+.blog-search-result__media--large img { height: 33rem; }
+@media screen and (min-width: 750px) {
+  .blog-search-result__media--small img { height: 14.3rem; }
+  .blog-search-result__media--medium img { height: 21.9rem; }
+  .blog-search-result__media--large img { height: 27.5rem; }
+}
+@media screen and (min-width: 990px) {
+  .blog-search-result__media--small img { height: 17.7rem; }
+  .blog-search-result__media--medium img { height: 30.7rem; }
+  .blog-search-result__media--large img { height: 40.7rem; }
+}
 
 {%- endstyle -%}
 
@@ -131,6 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Publication time stays in the data for relevance tie-breaking; this flag
   // controls only whether the date is DISPLAYED on a result card.
   const SHOW_DATE = {{ section.settings.show_date | json }};
+  const IMAGE_HEIGHT = {{ section.settings.image_height | default: 'medium' | json }};
 
   const normalize = value => (value || '').toLowerCase();
 
@@ -166,6 +180,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (article.image && article.image.url) {
       const media = document.createElement('a');
       media.className = 'blog-search-result__media';
+      if (IMAGE_HEIGHT !== 'adapt') {
+        media.classList.add(`blog-search-result__media--${IMAGE_HEIGHT}`);
+      }
       media.href = article.url;
       const img = document.createElement('img');
       img.src = article.image.url;
