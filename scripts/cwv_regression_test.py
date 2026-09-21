@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 
@@ -33,9 +34,25 @@ require(theme, "function waitForGorgiasLoaded(timeoutMs)", 'layout/theme.liquid'
 require(theme, "window.clearTimeout(timer);", 'layout/theme.liquid')
 require(theme, "}, { once: true });", 'layout/theme.liquid')
 
-# 4) Product page should preload featured media for better LCP.
-require(head_meta, "{% if template contains 'product' and product and product.featured_media %}", 'snippets/head-meta.liquid')
-require(head_meta, 'fetchpriority="high"', 'snippets/head-meta.liquid')
+# 4) Product pages should preload the LCP image. The guard is
+# `template contains 'product' and product` so bounded PDP templates (combined
+# listings, variants, gift cards) can preload their first media while standard
+# PDPs fall back to product.featured_media. Assert that branching behaviour and
+# the preload shape rather than one exact guard string, which moves every time a
+# bounded template is added.
+require(head_meta, "{% if template contains 'product' and product %}", 'snippets/head-meta.liquid')
+require(head_meta, "{% elsif product.featured_media %}", 'snippets/head-meta.liquid')
+
+image_preloads = [
+    tag
+    for tag in re.findall(r'<link\b[^>]*rel="preload"[^>]*>', head_meta, re.S)
+    if 'as="image"' in tag
+]
+if not image_preloads:
+    raise AssertionError('Missing image preload in snippets/head-meta.liquid')
+for tag in image_preloads:
+    if 'fetchpriority="high"' not in tag:
+        raise AssertionError('Image preload without fetchpriority="high" in snippets/head-meta.liquid')
 
 # 5) jQuery should not be render-blocking.
 require(script_tags, "<script src=\"{{ 'jquery.min.js' | asset_url }}\" defer=\"defer\"></script>", 'snippets/script-tags.liquid')
