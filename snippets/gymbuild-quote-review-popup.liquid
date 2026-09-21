@@ -31,6 +31,18 @@
   was selected. Keep both sources in any future change to this math — the
   customize drawer's own footer subtotal reads the same two sources.
 
+  THE QUOTED WEIGHT HAS THE SAME TWO SOURCES (wired 2026-09-21, Phase 2).
+  Until then this modal showed the base package variant's weight and never
+  moved it, so a heavier swap or an extra add-on left the quoted weight
+  wrong — worse than the understated subtotal, because weight drives
+  freight. "Total Package Weight" is now base + swap deltas + add-ons,
+  recomputed from the DOM on open exactly like the subtotal. All weight
+  math runs in GRAMS (variant.weight on every source: data-item-weight,
+  data-addon-weight, data-review-base-weight-grams) and is converted to
+  the store's display unit once, at render. It is base + delta rather than
+  a sum of components on purpose — custom.gymbuild_items does not claim to
+  model every item in a package, so a sum would understate freight.
+
   UI ONLY, per explicit direction (2026-09-08): everything that's already
   real/live is wired dynamically (package name/price/SKU/weight, the live
   swap state and its price deltas, the build page URL). The "Submit
@@ -91,6 +103,15 @@
   data-review-base-price="{{ current_variant.price }}"
   data-review-weight="{{ current_variant.weight_in_unit }}"
   data-review-weight-unit="{{ current_variant.weight_unit }}"
+  {% comment %}
+    data-review-weight above is the BASE package variant's weight in the
+    store's display unit, unchanged. data-review-base-weight-grams is the
+    same weight in grams, which is what the swap/add-on weight math runs on:
+    data-item-weight and data-addon-weight are both variant.weight (grams),
+    so mixing in a display-unit number would silently add pounds to grams.
+    Convert once, at display time.
+  {% endcomment %}
+  data-review-base-weight-grams="{{ current_variant.weight }}"
   data-review-image="{{ review_payload_image_url }}"
   data-review-build-url="{{ review_payload_build_url }}"
 >
@@ -148,7 +169,13 @@
         <p class="gymbuild-quote-review-modal__section-heading">Details:</p>
         <ul class="gymbuild-quote-review-modal__details-list">
           <li>Shopify SKU: {{ current_variant.sku }}</li>
-          <li>Total Package Weight: {{ current_variant.weight | weight_with_unit: current_variant.weight_unit }}</li>
+          {% comment %}
+            Server-rendered value is the base package weight; the JS below
+            replaces it on open with base + swap deltas + add-ons, so a heavier
+            swap or an extra add-on moves the number the freight quote is based
+            on. Falls back to the static value if the JS never runs.
+          {% endcomment %}
+          <li>Total Package Weight: <span data-gymbuild-review-weight>{{ current_variant.weight | weight_with_unit: current_variant.weight_unit }}</span></li>
         </ul>
       </div>
 
@@ -634,7 +661,24 @@
     var addonsRow = reviewModal.querySelector('[data-gymbuild-review-addons-row]');
     var addonsPriceEl = reviewModal.querySelector('[data-gymbuild-review-addons-price]');
     var subtotalEl = reviewModal.querySelector('[data-gymbuild-review-subtotal]');
+    var weightEl = reviewModal.querySelector('[data-gymbuild-review-weight]');
     var basePriceCents = {{ current_variant.price }};
+
+    // Weight math is done entirely in grams (variant.weight everywhere) and
+    // converted once for display, so no per-item unit conversion is needed.
+    var baseWeightGrams = parseFloat(reviewModal.dataset.reviewBaseWeightGrams) || 0;
+    var weightUnit = reviewModal.dataset.reviewWeightUnit || 'lb';
+
+    var GRAMS_PER_UNIT = { g: 1, kg: 1000, oz: 28.349523125, lb: 453.59237 };
+
+    function formatWeight(grams) {
+      var perUnit = GRAMS_PER_UNIT[weightUnit] || GRAMS_PER_UNIT.lb;
+      var value = grams / perUnit;
+      return value.toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 1
+      }) + ' ' + weightUnit;
+    }
 
     function formatMoney(cents) {
       return '$' + (cents / 100).toLocaleString('en-US', {
@@ -648,8 +692,13 @@
       return sign + formatMoney(Math.abs(deltaCents));
     }
 
-    // Returns the swaps' net price delta in cents, so the caller can fold it
-    // into the subtotal alongside the add-ons total.
+    // Returns the swaps' net deltas — price in cents AND weight in grams — so
+    // the caller can fold both into the totals alongside the add-ons. Weight is
+    // base + delta, not a sum of components: custom.gymbuild_items does not
+    // claim to model every single thing in a package (the FF-BYOG-500 items sum
+    // to ~1,032 lb against a 1,152 lb package weight), so summing components
+    // would understate freight. Starting from the package's own weight and
+    // adjusting stays correct however complete the item list is.
     function populateSwaps() {
       var items = Array.from(document.querySelectorAll('[data-gymbuild-item]'));
       var swapped = items.filter(function (item) {
@@ -661,19 +710,27 @@
       if (!swapped.length) {
         noSwapsEl.hidden = false;
         customizationsRow.hidden = true;
-        return 0;
+        return { priceCents: 0, weightGrams: 0 };
       }
 
       noSwapsEl.hidden = true;
 
       var totalDeltaCents = 0;
+      var totalDeltaGrams = 0;
 
       swapped.forEach(function (item) {
         var currentPrice = parseInt(item.dataset.itemPrice, 10) || 0;
+        var currentQty = parseInt(item.dataset.itemQty, 10) || 1;
         var originalPrice = parseInt(item.dataset.originalPrice, 10) || 0;
-        var qty = parseInt(item.dataset.itemQty, 10) || 1;
-        var deltaCents = (currentPrice - originalPrice) * qty;
+        var originalQty = parseInt(item.dataset.originalQty, 10) || 1;
+        var currentWeight = parseFloat(item.dataset.itemWeight) || 0;
+        var originalWeight = parseFloat(item.dataset.originalWeight) || 0;
+
+        // Quantity applies on both sides: an alternative option carries its own
+        // quantity and may not match the default's.
+        var deltaCents = (currentPrice * currentQty) - (originalPrice * originalQty);
         totalDeltaCents += deltaCents;
+        totalDeltaGrams += (currentWeight * currentQty) - (originalWeight * originalQty);
 
         var deltaClass = deltaCents > 0 ? 'is-increase' : (deltaCents < 0 ? 'is-decrease' : '');
 
@@ -691,12 +748,13 @@
 
       customizationsRow.hidden = false;
       customizationsPriceEl.textContent = formatDelta(totalDeltaCents);
-      return totalDeltaCents;
+      return { priceCents: totalDeltaCents, weightGrams: totalDeltaGrams };
     }
 
     // Add-ons are toggled on the PDP's own carousel (product-add-ons-quote),
     // outside this modal — the DOM there is the single source of truth, read
-    // fresh each time this modal opens. Returns their total in cents.
+    // fresh each time this modal opens. Returns their totals: price in cents
+    // and weight in grams.
     function populateAddOns() {
       var selected = Array.from(
         document.querySelectorAll('product-add-ons-quote [data-addon-state="selected"]')
@@ -707,16 +765,18 @@
       if (!selected.length) {
         noAddonsEl.hidden = false;
         addonsRow.hidden = true;
-        return 0;
+        return { priceCents: 0, weightGrams: 0 };
       }
 
       noAddonsEl.hidden = true;
 
       var totalCents = 0;
+      var totalGrams = 0;
 
       selected.forEach(function (toggle) {
         var priceCents = parseInt(toggle.dataset.addonPriceCents, 10) || 0;
         totalCents += priceCents;
+        totalGrams += parseFloat(toggle.dataset.addonWeight) || 0;
 
         var row = document.createElement('div');
         row.className = 'gymbuild-quote-review-modal__swap-item';
@@ -732,13 +792,22 @@
 
       addonsRow.hidden = false;
       addonsPriceEl.textContent = formatDelta(totalCents);
-      return totalCents;
+      return { priceCents: totalCents, weightGrams: totalGrams };
     }
 
     function populateReview() {
-      var swapsDeltaCents = populateSwaps();
-      var addOnsTotalCents = populateAddOns();
-      subtotalEl.textContent = formatMoney(basePriceCents + swapsDeltaCents + addOnsTotalCents);
+      var swaps = populateSwaps();
+      var addOns = populateAddOns();
+
+      subtotalEl.textContent = formatMoney(
+        basePriceCents + swaps.priceCents + addOns.priceCents
+      );
+
+      if (weightEl) {
+        weightEl.textContent = formatWeight(
+          baseWeightGrams + swaps.weightGrams + addOns.weightGrams
+        );
+      }
     }
 
     // Nothing is submitted anywhere yet, and this form has no action, so an

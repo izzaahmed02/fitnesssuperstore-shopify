@@ -24,40 +24,42 @@
   opens this popup, not this internal action) — everything is visual-only,
   nothing submits or mutates a cart.
 
-  PLACEHOLDER DATA REMOVED (2026-09-03): the "Package Inclusions"
-  tabs/grid below were populated from the same real add_on_product
-  blocks used by the Include-in-Quote carousel further down this page
-  (product-add-ons-quote.liquid) — chosen only because they're real,
-  already-live products, NOT because their categories ("Mats", "Storage
-  Racks", "Other Accessories") match Figma's actual package-inclusion
-  categories (Selectorized, Plate Loaded, Treadmills, etc.). Per
-  explicit direction, that data source is now emptied below
-  (gymbuild_addon_blocks = empty) so nothing placeholder renders while
-  the real variant-metafield -> metaobject data model is being built
-  (see CLAUDE.md's "Data Wiring Notes" section for the wiring plan).
+  DATA SOURCE (Phase 2, wired 2026-09-21) — the "Package Inclusions"
+  tabs/grid below read the real metaobject-backed model. Nothing here is
+  placeholder any more; the earlier add_on_product stand-in (grouped by a
+  fabricated "Mats"/"Storage Racks"/"Other Accessories" taxonomy) was
+  removed on 2026-09-03 and must NOT be restored.
 
-  Do NOT delete the markup/JS below this point when wiring the real
-  data later — per that wiring plan, only the gymbuild_addon_blocks
-  assignment needs to change (to a loop over
-  current_variant.metafields.custom.<field>.value once that field
-  exists); every data-item-*/data-item-pool attribute this markup
-  emits, and all the swap-view JS below, stay exactly as they are.
+    current_variant.metafields.custom.gymbuild_items  (list of gymbuild_item)
+      gymbuild_item.category             -> gymbuild_category { name }
+      gymbuild_item.default_option       -> gymbuild_option { variant, quantity }
+      gymbuild_item.alternative_options  -> list of gymbuild_option
+
+  Tab labels come from gymbuild_category.name; tab ORDER is the order each
+  category first appears in the variant's item list (there is deliberately
+  no sort field). Prices, weights, SKUs, titles and images are all read
+  live off the referenced product variant — never stored in the metaobjects
+  and never hard-coded here. See gymbuild-data-model.md (what the types are)
+  and gymbuild-data-population.md (every GID, and the interim flooring
+  caveat: FF-RIT24-Middle currently stands in for the full tile count).
+
+  Because the size cards navigate to variant.url, this lookup re-scopes per
+  package size on its own — no client-side state is needed for size changes.
+
+  TEXT FIELDS ARE READ VIA A capture BLOCK, not `.value`: rendering a
+  metaobject text/integer field always yields its raw value, which keeps
+  handleize/plus/escape working on a real string regardless of how the
+  field drop coerces. Reference fields use the documented `.value`.
 
   SWAP INTERACTION (Figma node 4544:92078): clicking "Swap" on an included
   card switches the drawer body + header into a "Swap to:" sub-view (same
   drawer, no new modal — toggled via the .is-swap-view class on
   .gymbuild-customize-drawer__content), showing alternatives with a price
-  delta (+/- $X). "Back to build" returns to the main tabs/grid. This
-  logic is untouched and will work again as soon as
-  gymbuild_addon_blocks yields real data.
+  delta (+/- $X). "Back to build" returns to the main tabs/grid.
 {% endcomment -%}
 
 {%- liquid
-  # TEMPORARY PLACEHOLDER DATA REMOVED (2026-09-03) - was:
-  #   section.blocks | where: 'type', 'add_on_product'
-  # Re-point this at the real metaobject-backed source once it exists;
-  # see the comment above and CLAUDE.md's "Data Wiring Notes".
-  assign gymbuild_addon_blocks = empty
+  assign gymbuild_items = current_variant.metafields.custom.gymbuild_items.value
 -%}
 
 <modal-dialog id="GymBuildCustomizeModal-{{ section.id }}" class="gymbuild-customize-drawer">
@@ -112,15 +114,20 @@
         </fieldset>
       {% endif %}
 
-      {% if gymbuild_addon_blocks.size > 0 %}
+      {% if gymbuild_items != blank %}
         <div class="gymbuild-customize-drawer__tabs" role="tablist" aria-label="Package inclusion categories">
           {%- liquid
             assign rendered_tabs = ''
             assign tab_index = 0
           -%}
-          {% for block in gymbuild_addon_blocks %}
+          {% for gb_item in gymbuild_items %}
             {%- liquid
-              assign tab_heading = block.settings.tab_heading | default: 'Included'
+              capture tab_heading
+                echo gb_item.category.value.name
+              endcapture
+              if tab_heading == blank
+                assign tab_heading = 'Included'
+              endif
               assign tab_key = tab_heading | handleize
 
               capture tab_token
@@ -157,9 +164,14 @@
             assign panel_index = 0
           -%}
 
-          {% for block in gymbuild_addon_blocks %}
+          {% for gb_item in gymbuild_items %}
             {%- liquid
-              assign panel_heading = block.settings.tab_heading | default: 'Included'
+              capture panel_heading
+                echo gb_item.category.value.name
+              endcapture
+              if panel_heading == blank
+                assign panel_heading = 'Included'
+              endif
               assign panel_key = panel_heading | handleize
 
               capture panel_token
@@ -180,40 +192,118 @@
               >
                 <p class="gymbuild-customize-drawer__panel-heading">Package Inclusions:</p>
                 <div class="gymbuild-customize-drawer__grid">
-                  {% for card_block in gymbuild_addon_blocks %}
+                  {% for card_item in gymbuild_items %}
                     {%- liquid
-                      assign card_tab_heading = card_block.settings.tab_heading | default: 'Included'
+                      capture card_tab_heading
+                        echo card_item.category.value.name
+                      endcapture
+                      if card_tab_heading == blank
+                        assign card_tab_heading = 'Included'
+                      endif
                       assign card_tab_key = card_tab_heading | handleize
-                      assign inclusion_product = card_block.settings.product
+
+                      assign inclusion_option = card_item.default_option.value
+                      assign inclusion_variant = inclusion_option.variant.value
                     -%}
 
-                    {% if card_tab_key == panel_key and inclusion_product != blank %}
+                    {% if card_tab_key == panel_key and inclusion_variant != blank %}
                       {%- liquid
-                        assign inclusion_title = card_block.settings.custom_title | default: inclusion_product.title
-                        assign inclusion_variant = inclusion_product.selected_or_first_available_variant
-                        assign inclusion_image_url = inclusion_product.featured_image | image_url: width: 300
-                        # No real per-item quantity field exists yet — placeholder until
-                        # a metaobject/metafield source is wired in (see CLAUDE.md's
-                        # "Data Wiring Notes"). Kept as one variable so data-item-qty,
-                        # data-original-qty, and the pool JSON's "qty" below all move
-                        # together when a real source replaces this.
-                        assign inclusion_qty = 1
+                        # Quantity comes off gymbuild_option.quantity, read via capture
+                        # (see the snippet header) so it is a real string before | plus.
+                        # Floor at 1: the definition enforces min 1, so a 0 here can only
+                        # mean the field failed to resolve, and falling back to 1 degrades
+                        # to the pre-Phase-2 behaviour instead of zeroing a line out of
+                        # the subtotal entirely.
+                        capture inclusion_qty_raw
+                          echo inclusion_option.quantity
+                        endcapture
+                        assign inclusion_qty = inclusion_qty_raw | plus: 0
+                        if inclusion_qty < 1
+                          assign inclusion_qty = 1
+                        endif
 
+                        # gymbuild_option references a VARIANT, so title / sku / price /
+                        # weight all come off the real variant record. Most French Fitness
+                        # products are single-variant ("Default Title"), where the product
+                        # title alone is the customer-facing name; only append the variant
+                        # title when it actually distinguishes something (FF-RIT24
+                        # "Middle", or FF-MSS-48-3T Single Compact 3-Tier).
+                        assign inclusion_title = inclusion_variant.product.title
+                        unless inclusion_variant.title == 'Default Title'
+                          assign inclusion_title = inclusion_title | append: ' - ' | append: inclusion_variant.title
+                        endunless
+
+                        # Most referenced variants carry no variant-level image, so fall
+                        # back to the parent product's featured image.
+                        assign inclusion_image = inclusion_variant.featured_image
+                        if inclusion_image == blank
+                          assign inclusion_image = inclusion_variant.product.featured_image
+                        endif
+                        assign inclusion_image_url = inclusion_image | image_url: width: 300
+
+                        assign alternative_options = card_item.alternative_options.value
+
+                        # alternative_count is incremented inside the pool capture below
+                        # rather than read off a .count property, so the Swap button's
+                        # enabled state is driven by what was actually emitted. The old
+                        # check was a string test for a comma in the pool JSON, which
+                        # matched EVERY pool (each entry has commas between its own
+                        # fields), so the button rendered enabled on non-swappable items
+                        # and then did nothing when clicked.
+                        assign alternative_count = 0
+
+                        # data-item-pool carries the default FIRST, then every alternative.
+                        # price is in cents and weight is the variant's shipping weight in
+                        # GRAMS (variant.weight), both kept raw so the JS can do unit-free
+                        # math. Both are per ONE unit - multiply by qty at read time.
                         capture inclusion_pool_json
-                          echo '['
-                          assign pool_first = true
-                          for pool_block in gymbuild_addon_blocks
-                            assign pool_tab_key = pool_block.settings.tab_heading | default: 'Included' | handleize
-                            if pool_tab_key == card_tab_key and pool_block.settings.product != blank
-                              assign pool_product = pool_block.settings.product
-                              assign pool_variant = pool_product.selected_or_first_available_variant
-                              assign pool_title = pool_block.settings.custom_title | default: pool_product.title
-                              assign pool_image_url = pool_product.featured_image | image_url: width: 300
-                              unless pool_first
-                                echo ','
+                          echo '[{"id":'
+                          echo inclusion_variant.id | json
+                          echo ',"product_id":'
+                          echo inclusion_variant.product.id | json
+                          echo ',"sku":'
+                          echo inclusion_variant.sku | json
+                          echo ',"title":'
+                          echo inclusion_title | json
+                          echo ',"image":'
+                          echo inclusion_image_url | json
+                          echo ',"price":'
+                          echo inclusion_variant.price
+                          echo ',"qty":'
+                          echo inclusion_qty
+                          echo ',"weight":'
+                          echo inclusion_variant.weight
+                          echo '}'
+
+                          for pool_option in alternative_options
+                            assign pool_variant = pool_option.variant.value
+
+                            if pool_variant != blank
+                              capture pool_qty_raw
+                                echo pool_option.quantity
+                              endcapture
+                              assign pool_qty = pool_qty_raw | plus: 0
+                              if pool_qty < 1
+                                assign pool_qty = 1
+                              endif
+
+                              assign pool_title = pool_variant.product.title
+                              unless pool_variant.title == 'Default Title'
+                                assign pool_title = pool_title | append: ' - ' | append: pool_variant.title
                               endunless
-                              echo '{"id":'
+
+                              assign pool_image = pool_variant.featured_image
+                              if pool_image == blank
+                                assign pool_image = pool_variant.product.featured_image
+                              endif
+                              assign pool_image_url = pool_image | image_url: width: 300
+
+                              echo ',{"id":'
                               echo pool_variant.id | json
+                              echo ',"product_id":'
+                              echo pool_variant.product.id | json
+                              echo ',"sku":'
+                              echo pool_variant.sku | json
                               echo ',"title":'
                               echo pool_title | json
                               echo ',"image":'
@@ -221,9 +311,12 @@
                               echo ',"price":'
                               echo pool_variant.price
                               echo ',"qty":'
-                              echo inclusion_qty
+                              echo pool_qty
+                              echo ',"weight":'
+                              echo pool_variant.weight
                               echo '}'
-                              assign pool_first = false
+
+                              assign alternative_count = alternative_count | plus: 1
                             endif
                           endfor
                           echo ']'
@@ -233,24 +326,30 @@
                         class="gymbuild-customize-drawer__card"
                         data-gymbuild-item
                         data-item-id="{{ inclusion_variant.id }}"
+                        data-item-product-id="{{ inclusion_variant.product.id }}"
+                        data-item-sku="{{ inclusion_variant.sku | escape }}"
                         data-item-title="{{ inclusion_title | escape }}"
                         data-item-image="{{ inclusion_image_url }}"
                         data-item-price="{{ inclusion_variant.price }}"
                         data-item-qty="{{ inclusion_qty }}"
+                        data-item-weight="{{ inclusion_variant.weight }}"
                         data-item-pool="{{ inclusion_pool_json | escape }}"
                         data-original-id="{{ inclusion_variant.id }}"
+                        data-original-product-id="{{ inclusion_variant.product.id }}"
+                        data-original-sku="{{ inclusion_variant.sku | escape }}"
                         data-original-title="{{ inclusion_title | escape }}"
                         data-original-image="{{ inclusion_image_url }}"
                         data-original-price="{{ inclusion_variant.price }}"
                         data-original-qty="{{ inclusion_qty }}"
+                        data-original-weight="{{ inclusion_variant.weight }}"
                       >
                         <div class="gymbuild-customize-drawer__card-image-wrap">
-                          {% if inclusion_product.featured_image %}
+                          {% if inclusion_image %}
                             {%- liquid
-                              assign inclusion_image_alt = inclusion_product.featured_image.alt | default: inclusion_product.title | escape
+                              assign inclusion_image_alt = inclusion_image.alt | default: inclusion_title | escape
                             -%}
                             {{
-                              inclusion_product.featured_image
+                              inclusion_image
                               | image_url: width: 300
                               | image_tag:
                                 loading: 'lazy',
@@ -265,9 +364,9 @@
                         </div>
 
                         <p class="gymbuild-customize-drawer__card-title">{{ inclusion_title }}</p>
-                        <p class="gymbuild-customize-drawer__card-count">1 item</p>
+                        <p class="gymbuild-customize-drawer__card-count" data-gymbuild-item-count>{{ inclusion_qty }} {{ inclusion_qty | pluralize: 'item', 'items' }}</p>
 
-                        <button type="button" class="gymbuild-customize-drawer__swap-btn" data-gymbuild-swap-btn{% if inclusion_pool_json contains ',' %}{% else %} disabled{% endif %}>
+                        <button type="button" class="gymbuild-customize-drawer__swap-btn" data-gymbuild-swap-btn{% if alternative_count == 0 %} disabled{% endif %}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <path d="M4 12a8 8 0 0 1 13.66-5.66M20 12a8 8 0 0 1-13.66 5.66" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M17 3v4h-4M7 21v-4h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -685,6 +784,12 @@
     overflow: hidden;
   }
 
+  .gymbuild-customize-drawer__swap-card-count {
+    margin: 4px 10px 0;
+    font-size: 11px;
+    color: #808080;
+  }
+
   .gymbuild-customize-drawer__swap-card-delta {
     margin: 6px 10px 0;
     font-size: 13px;
@@ -823,13 +928,22 @@
       return total;
     }
 
+    function formatCount(qty) {
+      return qty + (qty === 1 ? ' item' : ' items');
+    }
+
+    // Quantity is read on BOTH sides of the subtraction, not once: a
+    // gymbuild_option carries its own quantity, so an alternative may ship a
+    // different count than the default it replaces. Multiplying a per-unit
+    // price delta by a single qty would silently misprice those swaps.
     function swapDeltaTotalCents() {
       var total = 0;
       modal.querySelectorAll('[data-gymbuild-item]').forEach(function (card) {
         var currentPrice = parseInt(card.dataset.itemPrice, 10) || 0;
+        var currentQty = parseInt(card.dataset.itemQty, 10) || 1;
         var originalPrice = parseInt(card.dataset.originalPrice, 10) || 0;
-        var qty = parseInt(card.dataset.itemQty, 10) || 1;
-        total += (currentPrice - originalPrice) * qty;
+        var originalQty = parseInt(card.dataset.originalQty, 10) || 1;
+        total += (currentPrice * currentQty) - (originalPrice * originalQty);
       });
       return total;
     }
@@ -856,6 +970,8 @@
 
       var currentId = card.dataset.itemId;
       var currentPriceCents = parseInt(card.dataset.itemPrice, 10) || 0;
+      var currentQty = parseInt(card.dataset.itemQty, 10) || 1;
+      var currentLineCents = currentPriceCents * currentQty;
       var alternates = pool.filter(function (p) {
         return String(p.id) !== String(currentId);
       });
@@ -869,14 +985,17 @@
           '<img class="gymbuild-customize-drawer__swap-current-image" src="' + card.dataset.itemImage + '" alt="" loading="lazy">' +
           '<div class="gymbuild-customize-drawer__swap-current-info">' +
           '<p class="gymbuild-customize-drawer__swap-current-title">' + card.dataset.itemTitle + '</p>' +
-          '<p class="gymbuild-customize-drawer__swap-current-count">1 item</p>' +
+          '<p class="gymbuild-customize-drawer__swap-current-count">' + formatCount(currentQty) + '</p>' +
           '</div>';
       }
 
       if (swapGridEl) {
         swapGridEl.innerHTML = '';
         alternates.forEach(function (alt) {
-          var deltaCents = alt.price - currentPriceCents;
+          var altQty = parseInt(alt.qty, 10) || 1;
+          // Line-level, not per-unit: the alternative's own quantity may differ
+          // from the current one, so compare (price x qty) on each side.
+          var deltaCents = (alt.price * altQty) - currentLineCents;
           var deltaClass = deltaCents > 0 ? 'is-increase' : (deltaCents < 0 ? 'is-decrease' : '');
 
           var btn = document.createElement('button');
@@ -891,6 +1010,7 @@
             '<img class="gymbuild-customize-drawer__swap-card-image" src="' + alt.image + '" alt="" loading="lazy">' +
             '</div>' +
             '<p class="gymbuild-customize-drawer__swap-card-title">' + alt.title + '</p>' +
+            '<p class="gymbuild-customize-drawer__swap-card-count">' + formatCount(altQty) + '</p>' +
             '<p class="gymbuild-customize-drawer__swap-card-delta ' + deltaClass + '">' + formatDelta(deltaCents) + '</p>';
 
           btn.addEventListener('click', function () {
@@ -909,14 +1029,28 @@
 
       var image = activeCard.querySelector('.gymbuild-customize-drawer__card-image');
       var title = activeCard.querySelector('.gymbuild-customize-drawer__card-title');
+      var count = activeCard.querySelector('[data-gymbuild-item-count]');
+      var altQty = parseInt(alt.qty, 10) || 1;
 
-      if (image) image.setAttribute('src', alt.image);
+      if (image) {
+        // image_tag renders a srcset/sizes pair, and the browser prefers those
+        // over src — swapping src alone would leave the previous product's
+        // image on screen. Drop both so the new src is what actually loads.
+        image.removeAttribute('srcset');
+        image.removeAttribute('sizes');
+        image.setAttribute('src', alt.image);
+      }
       if (title) title.textContent = alt.title;
+      if (count) count.textContent = formatCount(altQty);
 
       activeCard.dataset.itemId = alt.id;
+      activeCard.dataset.itemProductId = alt.product_id;
+      activeCard.dataset.itemSku = alt.sku || '';
       activeCard.dataset.itemTitle = alt.title;
       activeCard.dataset.itemImage = alt.image;
       activeCard.dataset.itemPrice = alt.price;
+      activeCard.dataset.itemQty = altQty;
+      activeCard.dataset.itemWeight = alt.weight;
 
       recalcSubtotal();
 

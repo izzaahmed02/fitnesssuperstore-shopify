@@ -10,7 +10,7 @@
   cart/add.js form submission. No cart mutation happens anywhere in this
   file — that's intentional per CLAUDE.md P0 ("Add to Cart ... disabled in
   every state"). The toggle button carries data-addon-* attributes (product
-  id, variant id, SKU, price, title, image) so a future quote-payload
+  id, variant id, SKU, price, weight, title, image) so a future quote-payload
   builder can read selected state directly off the DOM without needing any
   markup changes here.
 {% endcomment -%}
@@ -201,6 +201,16 @@
                                   so the subtotal math reads this one instead.
                                 {% endcomment %}
                                 data-addon-price-cents="{{ addon_price }}"
+                                {% comment %}
+                                  Shipping weight in GRAMS (variant.weight), kept raw
+                                  and unit-free for the same reason as the cents above.
+                                  The quote-review popup folds this into the quoted
+                                  package weight; without it, toggling an add-on moved
+                                  the subtotal but not the weight, and weight drives
+                                  freight. Mirrors data-item-weight on the inclusion
+                                  cards. Add-ons are always quantity 1.
+                                {% endcomment %}
+                                data-addon-weight="{{ add_on_variant.weight }}"
                                 data-addon-title="{{ add_on_title | escape }}"
                                 data-addon-image="{{ addon_image_url }}"
                                 data-default-label="{{ add_on_button_label | escape }}"
