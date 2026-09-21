@@ -804,6 +804,13 @@
     color: #12693a;
   }
 
+  /* Zero delta — informational, so it reads as a statement about the swap
+     rather than as a price. Muted and not bold, unlike +/- amounts. */
+  .gymbuild-customize-drawer__swap-card-delta.is-neutral {
+    color: #808080;
+    font-weight: 400;
+  }
+
   .gymbuild-customize-drawer__footer {
     flex: 0 0 auto;
     border-top: 1px solid #edeff3;
@@ -906,8 +913,14 @@
       });
     }
 
+    // A zero delta is a real, common outcome, not an absence of data: whole
+    // categories are priced flat, so every alternative costs exactly what the
+    // default costs (all seven Selectorized (Pin Loaded) items on the 1,000 and
+    // 1,500 sq ft packages are like this). Returning '' left those swap cards
+    // with no price line at all, which reads as broken rather than as
+    // "swapping this changes nothing". Say so explicitly instead.
     function formatDelta(deltaCents) {
-      if (deltaCents === 0) return '';
+      if (deltaCents === 0) return 'No price change';
       var sign = deltaCents > 0 ? '+ ' : '- ';
       return sign + formatMoney(Math.abs(deltaCents));
     }
@@ -996,7 +1009,7 @@
           // Line-level, not per-unit: the alternative's own quantity may differ
           // from the current one, so compare (price x qty) on each side.
           var deltaCents = (alt.price * altQty) - currentLineCents;
-          var deltaClass = deltaCents > 0 ? 'is-increase' : (deltaCents < 0 ? 'is-decrease' : '');
+          var deltaClass = deltaCents > 0 ? 'is-increase' : (deltaCents < 0 ? 'is-decrease' : 'is-neutral');
 
           var btn = document.createElement('button');
           btn.type = 'button';

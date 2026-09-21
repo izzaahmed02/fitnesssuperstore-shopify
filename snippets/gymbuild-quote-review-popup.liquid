@@ -502,6 +502,13 @@
     color: #12693a;
   }
 
+  /* Zero delta — informational, not a price. Muted and not bold, so a
+     price-neutral swap does not read like a charge. */
+  .gymbuild-quote-review-modal__swap-item-delta.is-neutral {
+    color: #808080;
+    font-weight: 400;
+  }
+
   .gymbuild-quote-review-modal__delivery {
     margin-bottom: 18px;
   }
@@ -687,7 +694,13 @@
       });
     }
 
+    // Zero had no case here at all: `deltaCents > 0 ? '+ ' : '- '` made it
+    // negative, so a price-neutral swap rendered as "- $0.00" on its own row
+    // AND on the Customizations line. Whole categories are priced flat (every
+    // Selectorized (Pin Loaded) alternative costs exactly what its default
+    // costs), so this is a common outcome, not an edge case.
     function formatDelta(deltaCents) {
+      if (deltaCents === 0) return 'No price change';
       var sign = deltaCents > 0 ? '+ ' : '- ';
       return sign + formatMoney(Math.abs(deltaCents));
     }
@@ -732,7 +745,7 @@
         totalDeltaCents += deltaCents;
         totalDeltaGrams += (currentWeight * currentQty) - (originalWeight * originalQty);
 
-        var deltaClass = deltaCents > 0 ? 'is-increase' : (deltaCents < 0 ? 'is-decrease' : '');
+        var deltaClass = deltaCents > 0 ? 'is-increase' : (deltaCents < 0 ? 'is-decrease' : 'is-neutral');
 
         var row = document.createElement('div');
         row.className = 'gymbuild-quote-review-modal__swap-item';
