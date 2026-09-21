@@ -1,37 +1,138 @@
-{% style %}
+{%- comment -%}
+  Breadcrumb navigation for page, blog and article templates.
 
+  Desktop keeps the full hierarchy. Mobile shows Home and the immediate parent
+  in one compact 44px row: intermediate ancestors are hidden visually and the
+  current page stays in the accessibility tree without repeating the title that
+  already renders as the H1 below.
+
+  Same treatment shipped for the PDP nav in snippets/metaobjects-breadcrumbs.liquid
+  (PR #819), reusing its .breadcrumb-segment / .breadcrumb-current class names so
+  the desktop colour and spacing corrections already in assets/custom.css apply
+  here too.
+
+  Compaction only runs when all three hold:
+
+    1. There are at least three crumbs. Most page.* templates configure just
+       Home + current; hiding the current crumb there would leave "Home" alone
+       on the row, so those keep every crumb visible and only gain the
+       single-row / ellipsis treatment.
+    2. The immediate parent carries a label, so there is something to show.
+    3. The current crumb does not navigate anywhere - blog and article
+       templates give it an empty url, so it renders as a plain span. A crumb
+       that is a real link must stay visible, otherwise mobile keyboard focus
+       would land on a clipped element.
+{%- endcomment -%}
+
+{%- assign crumb_count = section.blocks.size -%}
+{%- assign parent_index = crumb_count | minus: 2 -%}
+{%- assign last_index = crumb_count | minus: 1 -%}
+{%- assign parent_title = section.blocks[parent_index].settings.title | strip -%}
+{%- assign current_url = section.blocks[last_index].settings.url | strip -%}
+
+{%- assign current_links = true -%}
+{%- if current_url == blank or current_url == '#' -%}
+  {%- assign current_links = false -%}
+{%- endif -%}
+
+{%- assign compact_mobile = false -%}
+{%- if crumb_count >= 3 and parent_title != blank and current_links == false -%}
+  {%- assign compact_mobile = true -%}
+{%- endif -%}
+
+{% style %}
   #shopify-section-{{ section.id }} {
     background-color: {{ section.settings.bg }};
+  }
 
+  @media screen and (max-width: 749px) {
+    /* The base rule sets flex-wrap:wrap, so a long trailing label wraps out of
+       the row. Keep one line and let the segments absorb the overflow. */
+    .page-breadcrumbs .custom-breadcrumbs__navigation {
+      align-items: center;
+      display: flex;
+      flex-wrap: nowrap;
+      min-height: 44px;
+      min-width: 0;
+      overflow: hidden;
+      padding: 8px 0;
+      white-space: nowrap;
+    }
+
+    /* Home never truncates; only the trailing label absorbs it. */
+    .page-breadcrumbs .breadcrumb-home {
+      flex-shrink: 0;
+    }
+
+    .page-breadcrumbs .breadcrumb-segment--parent,
+    .page-breadcrumbs .breadcrumb-current {
+      align-items: center;
+      display: flex;
+      min-width: 0;
+    }
+
+    /* The base rule declares white-space:normal on every breadcrumb link, which
+       beats the nowrap inherited from the row, so a long label wrapped instead
+       of truncating. Declaring it on the link is what lets the segment's
+       overflow:hidden / text-overflow:ellipsis engage. */
+    .page-breadcrumbs .breadcrumb-segment--parent a,
+    .page-breadcrumbs .breadcrumb-current a,
+    .page-breadcrumbs .breadcrumb-current > span {
+      display: block;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Compact mode only: drop the intermediate crumbs and take the current page
+       out of the visual row while keeping it for assistive technology. */
+    .page-breadcrumbs--compact .breadcrumb-segment--ancestor {
+      display: none;
+    }
+
+    .page-breadcrumbs--compact .breadcrumb-current {
+      border: 0;
+      clip: rect(0 0 0 0);
+      clip-path: inset(50%);
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      padding: 0;
+      position: absolute;
+      white-space: nowrap;
+      width: 1px;
+    }
   }
 {% endstyle %}
-<div class="customBreadcrumbs">
-<div class="custom-breadcrumbs">
+
+<nav class="customBreadcrumbs page-breadcrumbs{% if compact_mobile %} page-breadcrumbs--compact{% endif %}" aria-label="Breadcrumb">
+  <div class="custom-breadcrumbs">
     <div class="custom-breadcrumbs__wrapper">
       <div class="custom-breadcrumbs__navigation">
         {% for block in section.blocks %}
-          <a {% unless block.settings.url == '#'%} href="{{ block.settings.url }}"{% endunless %}>{{ block.settings.title }}</a>
-          {% unless forloop.last %}
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg">
-              <path
-                fill-rule="evenodd"
-                clip-rule="evenodd"
-                d="M6.31051 3.64645C6.50577 3.45118 6.82235 3.45118 7.01762 3.64645L11.0176 7.64645C11.2129 7.84171 11.2129 8.15829 11.0176 8.35355L7.01762 12.3536C6.82235 12.5488 6.50577 12.5488 6.31051 12.3536C6.11525 12.1583 6.11525 11.8417 6.31051 11.6464L9.95696 8L6.31051 4.35355C6.11525 4.15829 6.11525 3.84171 6.31051 3.64645Z"
-                fill="#DCDFE5" />
-            </svg>
-
-          {% endunless %}
+          {%- if forloop.first -%}
+            <a class="breadcrumb-home"{% unless block.settings.url == '#' %} href="{{ block.settings.url }}"{% endunless %}>{{ block.settings.title }}</a>
+          {%- elsif forloop.last -%}
+            <span class="breadcrumb-current">
+              {% render 'icon-arrow-right-breadcrumbs' %}
+              {%- if current_links -%}
+                <a aria-current="page" href="{{ block.settings.url }}">{{ block.settings.title }}</a>
+              {%- else -%}
+                <span aria-current="page">{{ block.settings.title }}</span>
+              {%- endif -%}
+            </span>
+          {%- else -%}
+            <span class="breadcrumb-segment{% if forloop.index0 == parent_index %} breadcrumb-segment--parent{% else %} breadcrumb-segment--ancestor{% endif %}">
+              {% render 'icon-arrow-right-breadcrumbs' %}
+              <a{% unless block.settings.url == '#' %} href="{{ block.settings.url }}"{% endunless %}>{{ block.settings.title }}</a>
+            </span>
+          {%- endif -%}
         {% endfor %}
       </div>
     </div>
-
-</div>
-</div>
+  </div>
+</nav>
 
 {% schema %}
   {
