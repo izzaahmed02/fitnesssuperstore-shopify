@@ -862,10 +862,6 @@
     gap: 0;
     overflow-x: auto;
     scrollbar-width: none;
-    /* Figma I4539:88551;841:35237 "Highlight": a 4px #e5e5e5 track
-       running the full tab strip, with the active tab's segment
-       painted #f1592a. */
-    border-bottom: 4px solid var(--gb-line);
     margin-bottom: 12px;
   }
 
@@ -878,9 +874,9 @@
     appearance: none;
     border: 0;
     background: transparent;
-    /* Figma: label inset 12px, 52px tall above the 4px highlight. */
-    padding: 16px 12px;
-    min-height: 52px;
+    /* Figma: label inset 12px; 52px label area + 4px highlight = 56px. */
+    padding: 16px 12px 20px;
+    min-height: 56px;
     min-width: max-content;
     font-family: var(--font-body-family, Lato, sans-serif);
     font-size: 14px;
@@ -891,14 +887,21 @@
     cursor: pointer;
   }
 
+  /* Figma I4539:88551;841:35237 "Highlight": every tab instance owns a
+     4px segment — #e5e5e5 normally, #f1592a on the active tab — and the
+     segments together form the track under the strip. Built per-tab
+     rather than as a border-bottom on the scroller because the strip is
+     overflow-x:auto, which clips anything drawn outside a tab's own box
+     (an earlier border-bottom + bottom:-4px version painted the active
+     segment correctly but it was invisible, clipped by that scroller). */
   .gymbuild-customize-drawer__tab::after {
     content: "";
     position: absolute;
     left: 0;
     right: 0;
-    bottom: -4px;
+    bottom: 0;
     height: 4px;
-    background: transparent;
+    background: var(--gb-line);
     border-radius: 6px;
   }
 
