@@ -1056,3 +1056,44 @@ unkeyed, and `id == item_group_id` is the only safe test.
   Current: `PP-MY5-MB` draft, unpublished, in neither serving primary;
   `PP-My5` on `9878568403260` serving one row in googleshoppingfs at
   4,871.25 USD.
+
+## 22 Sept, evening: the lane moved to Split #1, and the FF premise was confirmed twice
+
+Tim split the thread. The controlling record is now *Google feed offer-ID
+corrections — 114 numeric IDs to SKU (woolytech mapping) — Split #1*, and
+the re-derivation ruling supersedes every expected set published here. The
+9 September baseline is retired as a before-state.
+
+Yusra's read-back reached the same conclusion as the source analysis from a
+different direction: the `googleshoppingfrenchfitness` Item ID rule ends in
+`default( SKU, Product ID )`, and the current generated file — 969 rows —
+carries zero numeric ids, with all eleven of the 18 September list now
+SKU-keyed, StudioWall dropped, and the `10247596147004` composite branch
+untouched. The app exposes no edit time for the rule, so the change cannot
+be dated. The French Fitness after-state therefore arrives with the
+regeneration rather than from a run step.
+
+**The conclusion does not extend to the twin.** Both readings are of the
+serving primary. `zKEuwAFD3p` carried 19 numeric ids in Qash's 21 September
+table, the FF-MSS ten-up among them, and nobody has read back *its* Item ID
+rule. Paused, it asserts nothing, so there is nothing to do now — but the
+keep/retire ruling turns on that rule, so it gets read back in the
+post-regeneration inventory instead of being assumed to match.
+
+### Open, and all behind one upload
+
+Qash owes the regenerated files with timestamps by **Wednesday 23 September,
+12:00 PM Pacific**. Behind it: the re-derived expected sets, the
+post-regeneration four-source inventory, the FS run, Merchant Center
+verification, the FF remainder, and Thursday's under-$100 evidence.
+
+Two things changed about the mechanics:
+
+- **StudioWall's verification point moved.** All four fetches are paused, so
+  no scheduled fetch is coming. The row's absence is confirmed against
+  Qash's first regenerated FF file, in the re-base post.
+- **The woolytech daily generation schedule is still active**, landing
+  between 08:30 and 09:30. Pausing it is step zero of Qash's window. It
+  matters in this lane too: the byte-for-byte chain from Tim's PASS to the
+  fetch re-enable only holds if nothing generates in between, so the
+  schedule gets confirmed off before the fetch is re-enabled.
