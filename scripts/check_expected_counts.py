@@ -201,6 +201,17 @@ def check(manifest, expected, matched, id_diffs=None):
             if unexplained:
                 failures.append(f"{feed}: {unexplained} unexplained rows in the id diff. "
                                 "Unexplained must be zero before anyone repoints.")
+            # Tim 2026-09-22: discontinued SKUs leave every feed output. Their drop is
+            # coded dropped:lifecycle_discontinued and is correct; one still emitting
+            # is a discontinued product serving as a live offer, which fails.
+            emitted = counts.get("emitted:lifecycle_excluded", 0)
+            if emitted:
+                failures.append(f"{feed}: {emitted} discontinued SKUs on "
+                                "feeds/lifecycle-exclusions.csv are still emitted.")
+            lifecycle_drops = counts.get("dropped:lifecycle_discontinued", 0)
+            if lifecycle_drops:
+                notes.append(f"{feed}: {lifecycle_drops} discontinued SKUs dropped as expected "
+                             "(lifecycle exclusion, not a count anomaly)")
             want = adds.get(feed) or {}
             floor = want.get("min_new_offers")
             if floor is not None and new_offers < floor:

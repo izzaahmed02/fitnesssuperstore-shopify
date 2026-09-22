@@ -40,6 +40,7 @@ EXCLUSION_CODES = [
     ("not published", "dropped:not_published_online"),
     ("third party", "dropped:third_party_flag"),
     ("duplicate", "dropped:duplicate_sku"),
+    ("discontinued template", "dropped:lifecycle_discontinued"),
 ]
 
 
@@ -105,7 +106,36 @@ def load_exclusions(path):
     return reasons
 
 
-def classify(old, new, exclusions):
+def load_lifecycle(path):
+    """{sku or product id} from feeds/lifecycle-exclusions.csv, comments stripped.
+
+    Tim, 2026-09-22: discontinued products leave every feed output, and their
+    disappearance must register as correct, not as a count anomaly. An UNLISTED
+    product is never read by the generator at all, so nothing lands in
+    excluded_rows.csv for it; this roster is what explains the drop.
+    """
+    if not path:
+        return set()
+    p = pathlib.Path(path)
+    if not p.exists():
+        raise SystemExit(f"no lifecycle roster at {p}")
+    lines = [l for l in p.read_text(encoding="utf-8-sig").splitlines()
+             if not l.lstrip().startswith("#")]
+    keys = set()
+    for row in csv.DictReader(lines):
+        for field in ("sku", "product_id"):
+            value = (row.get(field) or "").strip()
+            if value:
+                keys.add(value)
+    return keys
+
+
+def lifecycle_hit(offer_id, sku, lifecycle):
+    return bool(lifecycle) and (sku in lifecycle or offer_id in lifecycle
+                                or offer_id.split("-", 1)[0] in lifecycle)
+
+
+def classify(old, new, exclusions, lifecycle=frozenset()):
     """Every id on either side gets exactly one row and one reason code."""
     old_by_sku = collections.defaultdict(list)
     for oid, rec in old.items():
@@ -154,11 +184,24 @@ def classify(old, new, exclusions):
                          "serving legacy row wins while the combined-listing HOLD is in force"))
             continue
         hit = exclusions.get(oid) or exclusions.get(sku)
+        if not hit and lifecycle_hit(oid, sku, lifecycle):
+            hit = ("dropped:lifecycle_discontinued",
+                   "on feeds/lifecycle-exclusions.csv; discontinued, excluded from every feed")
         if hit:
             code, note = hit
         else:
             code, note = "dropped:unexplained", "no exclusion logged and the SKU is absent from the new feed"
         rows.append((code, oid, "", sku, rec["price"], rec["title"], note))
+
+    # A lifecycle-excluded SKU that is still in the generated feed is the opposite
+    # failure: a discontinued product serving as a live offer. Checked across the
+    # whole new feed, because an unchanged row never shows up in the diff above.
+    for nid in sorted(new):
+        if lifecycle_hit(nid, new[nid]["sku"], lifecycle):
+            rec = new[nid]
+            rows.append(("emitted:lifecycle_excluded", "", nid, rec["sku"], rec["price"],
+                         rec["title"], "discontinued per feeds/lifecycle-exclusions.csv "
+                         "but still emitted; check status and template in Shopify"))
 
     for oid in sorted(set(old) & set(new)):
         o, n = old[oid], new[oid]
@@ -176,11 +219,13 @@ def main():
     parser.add_argument("--new", required=True, help="the generated feed")
     parser.add_argument("--excluded", help="the generator's excluded_rows.csv, which supplies drop reasons")
     parser.add_argument("--out", help="write the full reason-coded diff here")
+    parser.add_argument("--lifecycle", help="feeds/lifecycle-exclusions.csv: discontinued SKUs "
+                                            "whose drop is expected and whose presence fails")
     args = parser.parse_args()
 
     old, new = index(sniff_read(args.old)), index(sniff_read(args.new))
     exclusions = load_exclusions(args.excluded)
-    rows = classify(old, new, exclusions)
+    rows = classify(old, new, exclusions, load_lifecycle(args.lifecycle))
     counts = collections.Counter(r[0] for r in rows)
 
     print(f"old  {args.old}: {len(old)} offers")
@@ -205,6 +250,11 @@ def main():
                 writer.writerow([code, oid, nid, sku, "" if price is None else f"{price}", title, note])
         print(f"\nwrote {out}")
 
+    emitted = [r for r in rows if r[0] == "emitted:lifecycle_excluded"]
+    if emitted:
+        print(f"\n{len(emitted)} DISCONTINUED rows still emitted. These must be zero:")
+        for code, oid, nid, sku, price, title, note in emitted:
+            print(f"  {nid}  {sku}  {title[:60]}")
     unexplained = [r for r in rows if r[0].endswith("unexplained")]
     if unexplained:
         print(f"\n{len(unexplained)} UNEXPLAINED rows. These must be zero before the repoint:")
@@ -212,6 +262,8 @@ def main():
             print(f"  {code}  {oid or nid}  {sku}  {title[:60]}")
         if len(unexplained) > 25:
             print(f"  ... and {len(unexplained) - 25} more (see --out)")
+        return 1
+    if emitted:
         return 1
     print("\nEvery add and every drop carries a reason code.")
     return 0
