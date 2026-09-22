@@ -1097,3 +1097,30 @@ Two things changed about the mechanics:
   matters in this lane too: the byte-for-byte chain from Tim's PASS to the
   fetch re-enable only holds if nothing generates in between, so the
   schedule gets confirmed off before the fetch is re-enabled.
+
+## PP-MY5: the publication window, from the Shopify event log
+
+Tim asked whether either Power Plate SKU ever synced in while the Matte
+Black listing was published to Google & YouTube. The product's own event
+log answers it, all times Pacific:
+
+| when | what |
+|---|---|
+| 18 Sep 06:50 | product `10491685667132` created |
+| 20 Sep **10:07** | variant last edited — SKU `PP-MY5-MB` from here on |
+| 20 Sep **10:11** | Larianne includes it on Google & YouTube, Facebook & Instagram, TikTok |
+| 20 Sep 15:00 | Google's routine fetch of all four primaries (22:00 PDT per Merchant Center) |
+| 21 Sep **06:00** | excluded from Google & YouTube, Facebook & Instagram, TikTok |
+| 21 Sep 15:51 | status active → draft, excluded from every remaining channel |
+
+Two things follow. The listing was published to Google & YouTube for about
+twenty hours, and the 20 September fetch — the copy Google is serving while
+the sources are paused — falls inside that window. And the variant has
+carried `PP-MY5-MB` since four minutes *before* the channel publication, so
+the case-clashing `PP-MY5` never existed on a product published to Google.
+The defect class Tim named did not fire here.
+
+The file-level evidence already on the record covers the four File (URL)
+primaries: neither SKU appears in either serving primary as of that same
+fetch, which is exactly the fetch inside the window. The Google & YouTube
+channel is a separate ingestion path and is not covered by that evidence.
