@@ -123,27 +123,59 @@
 
       <div class="gymbuild-customize-drawer__main-view">
       {% if product.variants.size > 1 %}
-        <fieldset class="gymbuild-customize-drawer__size-cards" role="radiogroup" aria-label="{{ product.options_with_values.first.name }}">
-          <legend class="visually-hidden">{{ product.options_with_values.first.name }}</legend>
-          {% for variant in product.variants %}
-            <label class="gymbuild-customize-drawer__size-card{% if variant.id == current_variant.id %} is-selected{% endif %}{% unless variant.available %} is-soldout{% endunless %}">
-              <input
-                type="radio"
-                class="gymbuild-customize-drawer__size-card-input"
-                name="GymBuildCustomizeSize-{{ section.id }}"
-                value="{{ variant.id }}"
-                data-variant-url="{{ variant.url }}"
-                {% if variant.id == current_variant.id %}checked{% endif %}
-                {% unless variant.available %}disabled{% endunless %}
-              >
-              <span class="gymbuild-customize-drawer__size-card-title">{{ variant.title }}</span>
-              {%- if variant.metafields.custom.size_description != blank -%}
-                <span class="gymbuild-customize-drawer__size-card-desc">{{ variant.metafields.custom.size_description }}</span>
-              {%- endif -%}
-              <span class="gymbuild-customize-drawer__size-card-price">Starting at {{ variant.price | money }}</span>
-            </label>
-          {% endfor %}
-        </fieldset>
+        {%- comment -%}
+          Figma 4539:88524 (desktop) / 3679:110550 (mobile). Desktop shows
+          all three cards in a 3-up grid; mobile shows only the selected
+          card plus a "Show Other Room Sizes" disclosure (Figma 3694:76997).
+          Both states are the same markup — the collapse is CSS + the
+          toggle below, so no card is ever removed from the DOM and the
+          radio group stays intact for keyboard and screen-reader users.
+        {%- endcomment -%}
+        <div class="gymbuild-customize-drawer__sizes" data-gymbuild-sizes>
+          <fieldset id="GymBuildSizeCards-{{ section.id }}" class="gymbuild-customize-drawer__size-cards" role="radiogroup" aria-label="{{ product.options_with_values.first.name }}">
+            <legend class="visually-hidden">{{ product.options_with_values.first.name }}</legend>
+            {% for variant in product.variants %}
+              <label class="gymbuild-customize-drawer__size-card{% if variant.id == current_variant.id %} is-selected{% endif %}{% unless variant.available %} is-soldout{% endunless %}">
+                <input
+                  type="radio"
+                  class="gymbuild-customize-drawer__size-card-input"
+                  name="GymBuildCustomizeSize-{{ section.id }}"
+                  value="{{ variant.id }}"
+                  data-variant-url="{{ variant.url }}"
+                  {% if variant.id == current_variant.id %}checked{% endif %}
+                  {% unless variant.available %}disabled{% endunless %}
+                >
+                <span class="gymbuild-customize-drawer__size-card-head">
+                  {%- comment -%}
+                    Figma 4539:88529 "radiobuttons": an 18px ring with a
+                    10px #d83d0e dot when selected. Purely decorative —
+                    the real control is the visually-hidden input above,
+                    so this carries aria-hidden.
+                  {%- endcomment -%}
+                  <span class="gymbuild-customize-drawer__size-card-radio" aria-hidden="true"></span>
+                  <span class="gymbuild-customize-drawer__size-card-title">{{ variant.title }}</span>
+                </span>
+                {%- if variant.metafields.custom.size_description != blank -%}
+                  <span class="gymbuild-customize-drawer__size-card-desc">{{ variant.metafields.custom.size_description }}</span>
+                {%- endif -%}
+                <span class="gymbuild-customize-drawer__size-card-price">Starting at {{ variant.price | money }}</span>
+              </label>
+            {% endfor %}
+          </fieldset>
+
+          <button
+            type="button"
+            class="gymbuild-customize-drawer__sizes-toggle"
+            data-gymbuild-sizes-toggle
+            aria-expanded="false"
+            aria-controls="GymBuildSizeCards-{{ section.id }}"
+          >
+            <span data-gymbuild-sizes-toggle-label>Show Other Room Sizes</span>
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+              <path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
       {% endif %}
 
       {% if gymbuild_items != blank %}
@@ -434,6 +466,28 @@
         <span class="gymbuild-customize-drawer__footer-price" data-gymbuild-subtotal>{{ current_variant.price | money }}</span>
       </div>
       <button type="button" class="gymbuild-customize-drawer__submit" data-gymbuild-open-review>Request Quote Review</button>
+
+      {%- comment -%}
+        Figma 4539:88797 "Link" (desktop, one centred line) and
+        3679:110934 (mobile, stacked into two centred lines) — same
+        content, so one block with a CSS-only difference.
+
+        The destination is the sitewide RoomPlanner URL already used at
+        sections/main-product-ab-test-asjads-pdp.liquid:1386,
+        sections/main-collection-intro.liquid:77 and
+        sections/we-offer-blocks.liquid — not a new or invented link.
+        This is a plain outbound link: no cart, no checkout, no quote
+        state, so it does not affect the QUOTE-ONLY rule.
+      {%- endcomment -%}
+      <p class="gymbuild-customize-drawer__planner">
+        <span>Want to see how this fits in your actual room?</span>
+        <a
+          class="gymbuild-customize-drawer__planner-link"
+          href="https://fitnesssuperstore.roomplanner.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >Open in Gym Designer</a>
+      </p>
     </div>
   </div>
 </modal-dialog>
@@ -473,14 +527,62 @@
   }
   /* TEMPORARY DEV BANNER — DELETE THIS WHOLE BLOCK (CSS END) */
 
+  /* ==================================================================
+     DESIGN TOKENS — extracted live from Figma 2026-09-22.
+     Source file: 34fqeNagCYjPbKXBDe3C7g ("Local Fitness Superstore -
+     A_B test - New Pages"), same node ids as the previously recorded
+     file XBaAGVhSupd0fvIcXd28qw.
+       Desktop drawer : node 4539:88518  (704 x 1024, inside 4539:86140)
+       Swap sub-view  : node 4544:94821  (inside 4544:92078)
+       Mobile sheet   : node 3679:110546 (375 wide)
+
+     That Figma file has NO variable collections and NO shared colour or
+     text styles (get_variables and get_styles both return empty), so
+     these tokens are transcribed from the nodes' own fill, radius and
+     text-style values rather than from named Figma variables.
+
+     Figma's tab labels use "SF Pro Text" — an Apple system font that
+     this theme does not load and that is not a Fitness Superstore brand
+     font. Mapped to the theme body font at the same size and weight.
+     Every other family in the frame is Oswald or Lato, both already
+     loaded by the theme.
+     ================================================================== */
   .gymbuild-customize-drawer {
+    /* Neutrals */
+    --gb-ink: #23232b;
+    --gb-ink-strong: #000000;
+    --gb-ink-soft: #4f4f55;
+    --gb-muted: #808080;
+    /* Oranges — Figma uses three distinct values; kept faithful. */
+    --gb-accent: #d83d0e;        /* buttons, prices, links, radio */
+    --gb-accent-bright: #f1592a; /* active tab underline, footer price */
+    --gb-accent-border: #ca4b23; /* selected size-card border */
+    /* Lines and surfaces */
+    --gb-line: #e5e5e5;          /* dividers, unselected size card */
+    --gb-line-card: #edeff3;     /* inclusion card border */
+    --gb-line-btn: #d3d9e5;      /* swap button border */
+    --gb-surface: #ffffff;
+    --gb-image-bg: #faf9f9;
+    /* Geometry */
+    --gb-gutter: 24px;
+    --gb-radius-card: 12px;
+    --gb-radius-size-card: 8px;
+    --gb-radius-btn: 8px;
+
     box-sizing: border-box;
     position: fixed;
     inset: 0;
     opacity: 0;
     visibility: hidden;
     z-index: -1;
-    background: rgba(35, 35, 43, 0.4);
+    /* Figma 4539:88517 "back": #000000 at 50% opacity. */
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .gymbuild-customize-drawer *,
+  .gymbuild-customize-drawer *::before,
+  .gymbuild-customize-drawer *::after {
+    box-sizing: border-box;
   }
 
   .gymbuild-customize-drawer[open] {
@@ -495,40 +597,45 @@
     top: 0;
     right: 0;
     height: 100%;
-    /* Figma node 4539:86140: drawer frame is 704px of a 1440px reference
-       viewport (x=736, width=704) — ~48.9%, i.e. half the screen. */
-    width: 50%;
-    background: #fff;
+    /* Figma: drawer is 704px at x=736 in a 1440px frame. Fixed at 704px
+       so it matches the design at and above 1440px, and falls back to
+       the viewport width on narrower screens. */
+    width: 704px;
+    max-width: 100%;
+    background: var(--gb-surface);
     display: flex;
     flex-direction: column;
     transform: translateX(100%);
     transition: transform 280ms ease;
   }
 
-  @media screen and (max-width: 749px) {
-    .gymbuild-customize-drawer__content {
-      width: 100%;
-    }
-  }
-
   .gymbuild-customize-drawer[open] .gymbuild-customize-drawer__content {
     transform: translateX(0);
   }
+
+  /* ---------- Header (Figma 4539:88520, 704x84) ---------- */
 
   .gymbuild-customize-drawer__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 24px;
-    border-bottom: 1px solid #edeff3;
+    gap: 16px;
+    /* 24px all round; the 36px title box makes the header 84px tall. */
+    padding: var(--gb-gutter);
     flex: 0 0 auto;
   }
 
   .gymbuild-customize-drawer__title {
-    font-size: 22px;
-    line-height: 28px;
-    font-weight: 700;
-    color: #23232b;
+    /* Figma 4539:88521: Oswald SemiBold 600, 28/36, #23232b, sentence
+       case. The theme's global heading rule uppercases h2, so
+       text-transform has to be reset explicitly here. */
+    font-family: Oswald, var(--font-heading-family, sans-serif);
+    font-size: 28px;
+    line-height: 36px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--gb-ink);
     margin: 0;
   }
 
@@ -541,9 +648,11 @@
     background: transparent;
     padding: 0;
     cursor: pointer;
+    font-family: Lato, var(--font-body-family, sans-serif);
     font-size: 16px;
+    line-height: 24px;
     font-weight: 700;
-    color: #23232b;
+    color: var(--gb-ink);
   }
 
   .gymbuild-customize-drawer__content.is-swap-view .gymbuild-customize-drawer__back {
@@ -558,10 +667,16 @@
     appearance: none;
     border: 0;
     background: transparent;
-    padding: 4px;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    color: #23232b;
+    color: var(--gb-ink);
     line-height: 0;
+    flex: 0 0 auto;
   }
 
   /* icon-close.liquid hardcodes fill="#F2F2F2" (built for a dark
@@ -569,13 +684,24 @@
      Override just here rather than editing the shared snippet, which
      is used in 18+ other places across the theme. */
   .gymbuild-customize-drawer__close .icon-close path {
-    fill: #23232b;
+    fill: var(--gb-ink-strong);
   }
+
+  /* Figma I4539:88522;273:42768 "Icon": 13.5px glyph in a 24px box. */
+  .gymbuild-customize-drawer__close svg {
+    width: 13.5px;
+    height: 13.5px;
+  }
+
+  /* ---------- Scroll body (Figma 4539:88523 "Container") ---------- */
 
   .gymbuild-customize-drawer__body {
     flex: 1 1 auto;
     overflow-y: auto;
-    padding: 20px 24px;
+    /* Figma: content inset 24px. Top padding is 0 because the header
+       already contributes its own 24px below the title. */
+    padding: var(--gb-gutter);
+    padding-top: 0;
   }
 
   .gymbuild-customize-drawer__swap-view {
@@ -590,13 +716,21 @@
     display: block;
   }
 
+  /* ---------- Size cards (Figma 4539:88524, 656x156, 3 x 213.33) ---------- */
+
+  .gymbuild-customize-drawer__sizes {
+    margin: 0 0 var(--gb-gutter);
+  }
+
   .gymbuild-customize-drawer__size-cards {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin: 0 0 20px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* Figma: 3 x 213.333 + 2 x 8 = 656. */
+    gap: 8px;
+    margin: 0;
     border: 0;
     padding: 0;
+    min-width: 0;
   }
 
   .gymbuild-customize-drawer__size-card-input {
@@ -608,18 +742,15 @@
   .gymbuild-customize-drawer__size-card {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    border: 1px solid #e5e5e5;
-    border-radius: 8px;
+    border: 1px solid var(--gb-line);
+    border-radius: var(--gb-radius-size-card);
     padding: 12px;
     cursor: pointer;
-    background: #fff;
+    background: var(--gb-surface);
   }
 
   .gymbuild-customize-drawer__size-card.is-selected {
-    border-color: #d83d0e;
-    border-width: 2px;
-    padding: 11px;
+    border-color: var(--gb-accent-border);
   }
 
   .gymbuild-customize-drawer__size-card.is-soldout {
@@ -627,31 +758,119 @@
     cursor: not-allowed;
   }
 
+  /* Radio and label row (Figma 4539:88528 "Size Text", 24px tall) */
+  .gymbuild-customize-drawer__size-card-head {
+    display: flex;
+    align-items: center;
+    /* Figma: 18px radio ends at x+18, label starts at x+26. */
+    gap: 8px;
+    min-height: 24px;
+  }
+
+  .gymbuild-customize-drawer__size-card-radio {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid var(--gb-line-btn);
+    background: var(--gb-surface);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .gymbuild-customize-drawer__size-card.is-selected .gymbuild-customize-drawer__size-card-radio {
+    border-color: var(--gb-accent);
+  }
+
+  /* Figma I4539:88529;116:15816 "choose": 10px dot, #d83d0e. */
+  .gymbuild-customize-drawer__size-card.is-selected .gymbuild-customize-drawer__size-card-radio::after {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--gb-accent);
+  }
+
   .gymbuild-customize-drawer__size-card-title {
-    font-size: 14px;
+    /* Figma 4539:88530: Lato Bold 700, 16/24, #000000. */
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 16px;
+    line-height: 24px;
     font-weight: 700;
-    color: #23232b;
+    color: var(--gb-ink-strong);
   }
 
   .gymbuild-customize-drawer__size-card-desc {
-    font-size: 11px;
-    line-height: 16px;
-    color: #808080;
+    /* Figma 4539:88531: Lato Regular 400, 12/18, #808080.
+       Renders only when the variant metafield custom.size_description is
+       populated. It is currently empty on all three FF-BYOG variants, so
+       this line is legitimately absent in the live preview. */
+    margin-top: 4px;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 12px;
+    line-height: 18px;
+    font-weight: 400;
+    color: var(--gb-muted);
   }
 
   .gymbuild-customize-drawer__size-card-price {
-    font-size: 13px;
+    /* Figma 4539:88532: Lato Bold 700, 14/20, #d83d0e. Pinned to the
+       card bottom so the three prices align when the descriptions
+       differ in length. */
+    margin-top: auto;
+    padding-top: 12px;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 14px;
+    line-height: 20px;
     font-weight: 700;
-    color: #d83d0e;
+    color: var(--gb-accent);
   }
+
+  /* Mobile-only disclosure (Figma 3694:76997) — see the media query. */
+  .gymbuild-customize-drawer__sizes-toggle {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    margin-top: 8px;
+    cursor: pointer;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 700;
+    color: var(--gb-accent);
+  }
+
+  .gymbuild-customize-drawer__sizes-toggle svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 180ms ease;
+  }
+
+  .gymbuild-customize-drawer__sizes-toggle[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+  }
+
+  /* ---------- Tabs (Figma 4539:88550, 656x56) ---------- */
 
   .gymbuild-customize-drawer__tabs {
     display: flex;
     gap: 0;
-    border-bottom: 1px solid #e6e1df;
     overflow-x: auto;
-    scrollbar-width: thin;
-    margin-bottom: 16px;
+    scrollbar-width: none;
+    /* Figma I4539:88551;841:35237 "Highlight": a 4px #e5e5e5 track
+       running the full tab strip, with the active tab's segment
+       painted #f1592a. */
+    border-bottom: 4px solid var(--gb-line);
+    margin-bottom: 12px;
+  }
+
+  .gymbuild-customize-drawer__tabs::-webkit-scrollbar {
+    display: none;
   }
 
   .gymbuild-customize-drawer__tab {
@@ -659,12 +878,16 @@
     appearance: none;
     border: 0;
     background: transparent;
-    padding: 12px 14px;
+    /* Figma: label inset 12px, 52px tall above the 4px highlight. */
+    padding: 16px 12px;
+    min-height: 52px;
     min-width: max-content;
-    font: inherit;
-    font-size: 13px;
-    font-weight: 700;
-    color: #23232b;
+    font-family: var(--font-body-family, Lato, sans-serif);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--gb-ink-strong);
     cursor: pointer;
   }
 
@@ -673,88 +896,123 @@
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 0;
-    height: 3px;
+    bottom: -4px;
+    height: 4px;
     background: transparent;
-    border-radius: 999px;
+    border-radius: 6px;
   }
 
   .gymbuild-customize-drawer__tab.is-active::after {
-    background: #ef3b12;
+    background: var(--gb-accent-bright);
   }
 
   .gymbuild-customize-drawer__panel-heading {
-    font-size: 15px;
+    /* Figma 4539:88557: Lato Bold 700, 18/24, #000000. */
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 18px;
+    line-height: 24px;
     font-weight: 700;
-    color: #23232b;
+    color: var(--gb-ink-strong);
     margin: 0 0 12px;
   }
 
-  .gymbuild-customize-drawer__grid {
+  /* ---------- Inclusion cards (Figma 4539:88559, 210.67x340) ---------- */
+
+  .gymbuild-customize-drawer__grid,
+  .gymbuild-customize-drawer__swap-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* Figma: 3 x 210.667 + 2 x 12 = 656. */
     gap: 12px;
   }
 
-  .gymbuild-customize-drawer__card {
+  .gymbuild-customize-drawer__card,
+  .gymbuild-customize-drawer__swap-card {
     display: flex;
     flex-direction: column;
     height: 100%;
     min-width: 0;
-    background: #fff;
-    border: 1px solid #eee9e7;
-    border-radius: 10px;
+    background: var(--gb-surface);
+    border: 1px solid var(--gb-line-card);
+    border-radius: var(--gb-radius-card);
     overflow: hidden;
-    padding-bottom: 10px;
+    /* Figma: the swap button sits 12px above the card's bottom edge. */
+    padding-bottom: 12px;
   }
 
-  .gymbuild-customize-drawer__card-image-wrap {
+  .gymbuild-customize-drawer__swap-card {
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+  }
+
+  .gymbuild-customize-drawer__card-image-wrap,
+  .gymbuild-customize-drawer__swap-card-image-wrap {
     width: 100%;
-    aspect-ratio: 1 / 1;
+    /* Figma 4539:88560 "image big": 210 x 200. */
+    aspect-ratio: 210 / 200;
     overflow: hidden;
-    background: #faf9f9;
+    background: var(--gb-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  .gymbuild-customize-drawer__card-image {
+  .gymbuild-customize-drawer__card-image,
+  .gymbuild-customize-drawer__swap-card-image {
     box-sizing: border-box;
     width: 100%;
     height: 100%;
     object-fit: contain;
     display: block;
-    padding: 8px;
+    /* Figma 4539:88568 "image": 168x168 inside the 210x200 area. */
+    padding: 12px 21px;
   }
 
-  .gymbuild-customize-drawer__card-title {
-    margin: 8px 10px 0;
-    font-size: 12px;
-    line-height: 1.3;
+  .gymbuild-customize-drawer__card-title,
+  .gymbuild-customize-drawer__swap-card-title {
+    /* Figma 4539:88577: Lato Bold 700, 14/22, #23232b, clamped to 2
+       lines (the Figma text box is 44px tall). */
+    margin: 0 12px;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 14px;
+    line-height: 22px;
     font-weight: 700;
-    color: #23232b;
-    min-height: 31px;
+    color: var(--gb-ink);
+    min-height: 44px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
 
-  .gymbuild-customize-drawer__card-count {
-    margin: 4px 10px 8px;
-    font-size: 11px;
-    color: #808080;
+  .gymbuild-customize-drawer__card-count,
+  .gymbuild-customize-drawer__swap-card-count {
+    /* Figma 4539:88578: Lato Regular 400, 14/20, #808080. */
+    margin: 4px 12px 0;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+    color: var(--gb-muted);
   }
 
   .gymbuild-customize-drawer__swap-btn {
-    margin: 0 10px;
+    /* Figma 4539:88587 "Simple button": 186.67x40, radius 8,
+       1px #d3d9e5 border on #ffffff, 8px above the card bottom. */
+    margin: 8px 12px 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    min-height: 34px;
-    border: 1px solid #d3d9e5;
-    border-radius: 6px;
-    background: #fff;
-    color: #23232b;
-    font-size: 12px;
+    gap: 8px;
+    min-height: 40px;
+    border: 1px solid var(--gb-line-btn);
+    border-radius: var(--gb-radius-btn);
+    background: var(--gb-surface);
+    color: var(--gb-ink);
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 14px;
+    line-height: 20px;
     font-weight: 700;
     cursor: pointer;
   }
@@ -764,12 +1022,14 @@
     cursor: not-allowed;
   }
 
+  /* ---------- Swap sub-view "currently selected" panel ---------- */
+
   .gymbuild-customize-drawer__swap-current {
     display: flex;
     align-items: center;
     gap: 14px;
-    border: 1px solid #eee9e7;
-    border-radius: 10px;
+    border: 1px solid var(--gb-line-card);
+    border-radius: var(--gb-radius-card);
     padding: 12px;
     margin-bottom: 20px;
   }
@@ -778,7 +1038,7 @@
     width: 56px;
     height: 56px;
     object-fit: contain;
-    background: #faf9f9;
+    background: var(--gb-image-bg);
     border-radius: 6px;
     flex: 0 0 auto;
   }
@@ -789,81 +1049,32 @@
 
   .gymbuild-customize-drawer__swap-current-title {
     margin: 0;
+    font-family: Lato, var(--font-body-family, sans-serif);
     font-size: 14px;
+    line-height: 22px;
     font-weight: 700;
-    color: #23232b;
+    color: var(--gb-ink);
   }
 
   .gymbuild-customize-drawer__swap-current-count {
     margin: 2px 0 0;
-    font-size: 12px;
-    color: #808080;
-  }
-
-  .gymbuild-customize-drawer__swap-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-  }
-
-  .gymbuild-customize-drawer__swap-card {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-width: 0;
-    background: #fff;
-    border: 1px solid #eee9e7;
-    border-radius: 10px;
-    overflow: hidden;
-    padding: 0 0 10px;
-    cursor: pointer;
-    text-align: left;
-    font: inherit;
-  }
-
-  .gymbuild-customize-drawer__swap-card-image-wrap {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    overflow: hidden;
-    background: #faf9f9;
-  }
-
-  .gymbuild-customize-drawer__swap-card-image {
-    box-sizing: border-box;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    display: block;
-    padding: 8px;
-  }
-
-  .gymbuild-customize-drawer__swap-card-title {
-    margin: 8px 10px 0;
-    font-size: 12px;
-    line-height: 1.3;
-    font-weight: 700;
-    color: #23232b;
-    min-height: 31px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .gymbuild-customize-drawer__swap-card-count {
-    margin: 4px 10px 0;
-    font-size: 11px;
-    color: #808080;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+    color: var(--gb-muted);
   }
 
   .gymbuild-customize-drawer__swap-card-delta {
-    margin: 6px 10px 0;
-    font-size: 13px;
+    margin: 6px 12px 0;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 14px;
+    line-height: 20px;
     font-weight: 700;
   }
 
   .gymbuild-customize-drawer__swap-card-delta.is-increase {
-    color: #d83d0e;
+    color: var(--gb-accent);
   }
 
   .gymbuild-customize-drawer__swap-card-delta.is-decrease {
@@ -873,56 +1084,154 @@
   /* Zero delta — informational, so it reads as a statement about the swap
      rather than as a price. Muted and not bold, unlike +/- amounts. */
   .gymbuild-customize-drawer__swap-card-delta.is-neutral {
-    color: #808080;
+    color: var(--gb-muted);
     font-weight: 400;
   }
 
+  /* ---------- Footer (Figma 4539:88773, 704x214) ---------- */
+
   .gymbuild-customize-drawer__footer {
     flex: 0 0 auto;
-    border-top: 1px solid #edeff3;
-    padding: 16px 24px 20px;
+    /* Figma 4539:88772 "divider": 1px #e5e5e5 across the full width. */
+    border-top: 1px solid var(--gb-line);
+    padding: var(--gb-gutter);
+    background: var(--gb-surface);
   }
 
   .gymbuild-customize-drawer__footer-row {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    margin-bottom: 14px;
+    gap: 16px;
+    /* Figma: total row bottom to button top = 20px. */
+    margin-bottom: 20px;
   }
 
   .gymbuild-customize-drawer__footer-label {
-    font-size: 15px;
+    /* Figma 4539:88780: Lato Bold 700, 18/24, #000000. */
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 18px;
+    line-height: 24px;
     font-weight: 700;
-    color: #23232b;
+    color: var(--gb-ink-strong);
   }
 
   .gymbuild-customize-drawer__footer-price {
+    /* Figma 4539:88781: Lato Bold 700, 20/26, #f1592a. */
+    font-family: Lato, var(--font-body-family, sans-serif);
     font-size: 20px;
+    line-height: 26px;
     font-weight: 700;
-    color: #f1592a;
+    color: var(--gb-accent-bright);
+    white-space: nowrap;
   }
 
   .gymbuild-customize-drawer__submit {
+    /* Figma 4539:88787: 656x48, radius 8, #d83d0e, Lato Bold 16/24. */
     width: 100%;
     min-height: 48px;
     border: 0;
-    border-radius: 8px;
-    background: #d83d0e;
-    color: #fff;
+    border-radius: var(--gb-radius-btn);
+    background: var(--gb-accent);
+    color: var(--gb-surface);
+    font-family: Lato, var(--font-body-family, sans-serif);
     font-size: 16px;
+    line-height: 24px;
     font-weight: 700;
     cursor: pointer;
   }
 
-  @media screen and (max-width: 576px) {
+  /* "Want to see how this fits in your actual room? Open in Gym
+     Designer" — Figma 4539:88797 "Link", 656x24, 24px below the button.
+     Destination is the sitewide RoomPlanner URL already used by
+     sections/main-product-ab-test-asjads-pdp.liquid:1386,
+     sections/main-collection-intro.liquid:77 and
+     sections/we-offer-blocks.liquid — not a new or invented link. */
+  .gymbuild-customize-drawer__planner {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: var(--gb-gutter) 0 0;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+    color: var(--gb-ink-soft);
+    text-align: center;
+  }
+
+  .gymbuild-customize-drawer__planner-link {
+    font-weight: 700;
+    color: var(--gb-accent);
+    text-decoration: none;
+  }
+
+  .gymbuild-customize-drawer__planner-link:hover,
+  .gymbuild-customize-drawer__planner-link:focus-visible {
+    text-decoration: underline;
+  }
+
+  /* ==================================================================
+     Mobile sheet — Figma node 3679:110546 (375 wide).
+     Differences from desktop, all taken from that frame:
+       - full-width sheet, 16px side gutters (not 24px)
+       - title 24/34 (not 28/36)
+       - only the SELECTED size card shows, with a "Show Other Room
+         Sizes" disclosure beneath it (Figma 3694:76997)
+       - inclusion cards in 2 columns (not 3)
+       - the planner line stacks into two centred rows
+     ================================================================== */
+  @media screen and (max-width: 749px) {
+    .gymbuild-customize-drawer {
+      --gb-gutter: 16px;
+    }
+
+    .gymbuild-customize-drawer__content {
+      width: 100%;
+    }
+
+    .gymbuild-customize-drawer__header {
+      padding: var(--gb-gutter);
+      padding-bottom: 20px;
+    }
+
+    .gymbuild-customize-drawer__title {
+      font-size: 24px;
+      line-height: 34px;
+    }
+
+    /* Figma 3679:110551: the selected card spans the full width. */
     .gymbuild-customize-drawer__size-cards {
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: minmax(0, 1fr);
       gap: 8px;
+    }
+
+    .gymbuild-customize-drawer__sizes-toggle {
+      display: inline-flex;
+    }
+
+    /* Collapsed by default: every card except the selected one is
+       hidden. The toggle adds .is-expanded to reveal the rest. */
+    .gymbuild-customize-drawer__sizes:not(.is-expanded)
+      .gymbuild-customize-drawer__size-card:not(.is-selected) {
+      display: none;
+    }
+
+    .gymbuild-customize-drawer__size-card-price {
+      padding-top: 8px;
     }
 
     .gymbuild-customize-drawer__grid,
     .gymbuild-customize-drawer__swap-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* Figma 3679:110934: text on one line, link centred beneath it. */
+    .gymbuild-customize-drawer__planner {
+      flex-direction: column;
+      gap: 2px;
     }
   }
 </style>
@@ -931,6 +1240,28 @@
   (function () {
     var modal = document.getElementById('GymBuildCustomizeModal-{{ section.id }}');
     if (!modal) return;
+
+    /* ------------------------------------------------------------------
+       Mobile "Show Other Room Sizes" disclosure (Figma 3694:76997).
+       The collapse itself is CSS and only applies under 750px, so this
+       handler just flips the state; on desktop the toggle is
+       display:none and never reachable. Labels swap between "Show" and
+       "Hide" to match the chevron direction.
+       ------------------------------------------------------------------ */
+    var sizesWrap = modal.querySelector('[data-gymbuild-sizes]');
+    var sizesToggle = modal.querySelector('[data-gymbuild-sizes-toggle]');
+
+    if (sizesWrap && sizesToggle) {
+      sizesToggle.addEventListener('click', function () {
+        var expanded = sizesWrap.classList.toggle('is-expanded');
+        sizesToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+
+        var label = sizesToggle.querySelector('[data-gymbuild-sizes-toggle-label]');
+        if (label) {
+          label.textContent = expanded ? 'Hide Other Room Sizes' : 'Show Other Room Sizes';
+        }
+      });
+    }
 
     var sizeRadios = modal.querySelectorAll('input[name="GymBuildCustomizeSize-{{ section.id }}"]');
     sizeRadios.forEach(function (radio) {
