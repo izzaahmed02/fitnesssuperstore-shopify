@@ -34,12 +34,33 @@ require(theme, "window.clearTimeout(timer);", 'layout/theme.liquid')
 require(theme, "}, { once: true });", 'layout/theme.liquid')
 
 # 4) Product page should preload its LCP image.
-# #812 split this into two branches: bounded PDP templates preload product.media.first,
-# everything else preloads product.featured_media. Assert the outer guard and both
-# branches so either one going missing still fails.
-require(head_meta, "{% if template contains 'product' and product %}", 'snippets/head-meta.liquid')
-require(head_meta, "{% elsif product.featured_media %}", 'snippets/head-meta.liquid')
-require(head_meta, "{% assign initial_media = product.media.first %}", 'snippets/head-meta.liquid')
+# #812 split this into two branches: bounded PDP templates (combined-listings,
+# variants, variants-pulley, gift_cards) preload product.media.first at two
+# breakpoints, everything else preloads product.featured_media.
+# Assert markup unique to each preload <link>, not just the branch conditions --
+# a condition can survive while its <link> is deleted, and the outer guard string
+# also appears in the canonical-link block further down the file.
+require(head_meta, '{% assign initial_media = product.media.first %}', 'snippets/head-meta.liquid')
+# bounded-template preloads, mobile then desktop
+require(head_meta, 'imagesizes="(max-width: 768px) 100vw, 800px"', 'snippets/head-meta.liquid')
+require(
+    head_meta,
+    'imagesizes="(min-width: 1290px) 580px, (min-width: 990px) calc(100vw - 710px), 100vw"',
+    'snippets/head-meta.liquid',
+)
+# featured-media preload
+require(head_meta, '{% elsif product.featured_media %}', 'snippets/head-meta.liquid')
+require(
+    head_meta,
+    'href="{{ product.featured_media.preview_image | image_url: width: 1440 }}"',
+    'snippets/head-meta.liquid',
+)
+require(
+    head_meta,
+    'imagesizes="(min-width: 1200px) 34vw, (min-width: 990px) 38vw, 100vw"',
+    'snippets/head-meta.liquid',
+)
+# every preload above must keep LCP priority
 require(head_meta, 'fetchpriority="high"', 'snippets/head-meta.liquid')
 
 # 5) jQuery should not be render-blocking.
