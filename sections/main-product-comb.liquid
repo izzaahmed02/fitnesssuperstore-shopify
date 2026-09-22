@@ -420,12 +420,24 @@
                     {% if first_media.media_type == 'image' %}
                       <div class="image-skeleton-wrapper">
                         <img
-                          src="{{ preview | image_url: width: 800 }}"
+                          src="{{ preview | image_url: width: 580 }}"
+                          srcset="
+                            {{ preview | image_url: width: 280 }} 280w,
+                            {{ preview | image_url: width: 320 }} 320w,
+                            {{ preview | image_url: width: 480 }} 480w,
+                            {{ preview | image_url: width: 490 }} 490w,
+                            {{ preview | image_url: width: 580 }} 580w,
+                            {{ preview | image_url: width: 800 }} 800w,
+                            {{ preview | image_url: width: 980 }} 980w,
+                            {{ preview | image_url: width: 1160 }} 1160w
+                          "
+                          sizes="(min-width: 1290px) 580px, (min-width: 990px) calc(100vw - 710px), 100vw"
                           alt="{{ first_media.alt | escape }}"
                           class="main-product-image"
                           width="{{ preview.width }}"
                           height="{{ preview.height }}"
                           loading="eager"
+                          fetchpriority="high"
                           onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
                         >
                       </div>
@@ -449,9 +461,9 @@
                   "media_type": {{ model.media_type | json }},
                   "alt": {{ model.alt | json }},
                   "preview_image": {
-                    "src": {{ model.preview_image | image_url: width: 800 | json }},
-                    "srcset": "{{ model.preview_image | image_url: width: 800 }} 800w, {{ model.preview_image | image_url: width: 1200 }} 1200w, {{ model.preview_image | image_url: width: 1600 }} 1600w, {{ model.preview_image | image_url: width: 2048 }} 2048w",
-                    "sizes": "(min-width: 990px) 800px, 100vw",
+                    "src": {{ model.preview_image | image_url: width: 580 | json }},
+                    "srcset": "{{ model.preview_image | image_url: width: 280 }} 280w, {{ model.preview_image | image_url: width: 320 }} 320w, {{ model.preview_image | image_url: width: 480 }} 480w, {{ model.preview_image | image_url: width: 490 }} 490w, {{ model.preview_image | image_url: width: 580 }} 580w, {{ model.preview_image | image_url: width: 800 }} 800w, {{ model.preview_image | image_url: width: 980 }} 980w, {{ model.preview_image | image_url: width: 1160 }} 1160w",
+                    "sizes": "(min-width: 1290px) 580px, (min-width: 990px) calc(100vw - 710px), 100vw",
                     "width": {{ model.preview_image.width | json }},
                     "height": {{ model.preview_image.height | json }}
                   },
@@ -464,9 +476,9 @@
                   "media_type": {{ media.media_type | json }},
                   "alt": {{ media.alt | json }},
                   "preview_image": {
-                    "src": {{ media.preview_image | image_url: width: 800 | json }},
-                    "srcset": "{{ media.preview_image | image_url: width: 800 }} 800w, {{ media.preview_image | image_url: width: 1200 }} 1200w, {{ media.preview_image | image_url: width: 1600 }} 1600w, {{ media.preview_image | image_url: width: 2048 }} 2048w",
-                    "sizes": "(min-width: 990px) 800px, 100vw",
+                    "src": {{ media.preview_image | image_url: width: 580 | json }},
+                    "srcset": "{{ media.preview_image | image_url: width: 280 }} 280w, {{ media.preview_image | image_url: width: 320 }} 320w, {{ media.preview_image | image_url: width: 480 }} 480w, {{ media.preview_image | image_url: width: 490 }} 490w, {{ media.preview_image | image_url: width: 580 }} 580w, {{ media.preview_image | image_url: width: 800 }} 800w, {{ media.preview_image | image_url: width: 980 }} 980w, {{ media.preview_image | image_url: width: 1160 }} 1160w",
+                    "sizes": "(min-width: 1290px) 580px, (min-width: 990px) calc(100vw - 710px), 100vw",
                     "width": {{ media.preview_image.width | json }},
                     "height": {{ media.preview_image.height | json }}
                   }
@@ -512,11 +524,16 @@
                         {% assign is_first = forloop.first %}
 
                         <img
-                          src="{{ media.preview_image | image_url: width: 480 }}"
+                          src="{{ media.preview_image | image_url: width: 580 }}"
                           srcset="
+                            {{ media.preview_image | image_url: width: 280 }} 280w,
                             {{ media.preview_image | image_url: width: 320 }} 320w,
                             {{ media.preview_image | image_url: width: 480 }} 480w,
-                            {{ media.preview_image | image_url: width: 800 }} 800w
+                            {{ media.preview_image | image_url: width: 490 }} 490w,
+                            {{ media.preview_image | image_url: width: 580 }} 580w,
+                            {{ media.preview_image | image_url: width: 800 }} 800w,
+                            {{ media.preview_image | image_url: width: 980 }} 980w,
+                            {{ media.preview_image | image_url: width: 1160 }} 1160w
                           "
                           sizes="(max-width: 768px) 100vw, 800px"
                           alt="{{ media.alt | escape }}"
