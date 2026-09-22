@@ -15,7 +15,8 @@
 
   Contact and financing links remain available as controlled fallbacks. Optional
   internal_links_1 entries on the above-the-fold metaobject are rendered only
-  when both link text and URL are present.
+  when both link text and URL are present, and never duplicate a destination
+  that is already rendered.
 
   No price, Add to Cart, Buy Now, Notify Me or quick-add control is rendered
   here, so the discontinued page keeps no purchase path.
@@ -60,15 +61,31 @@
       %}
     {%- endif -%}
 
+    {%- comment -%}
+      Support links de-duplicate against the controlled Contact and Financing
+      fallbacks and against each other, so a metaobject that also stores those
+      URLs in internal_links_1 never renders the same destination twice.
+    {%- endcomment -%}
+    {%- assign rendered_link_urls = '/pages/contact|/pages/financing' | split: '|' -%}
+
     <nav class="discontinued-replacement__actions" aria-label="Discontinued product support options">
       <a class="discontinued-replacement__action-link" href="/pages/contact">Contact us</a>
       <a class="discontinued-replacement__action-link" href="/pages/financing">Explore financing</a>
 
       {%- for internal_link in internal_links -%}
         {%- if internal_link.text != blank and internal_link.url != blank -%}
-          <a class="discontinued-replacement__action-link" href="{{ internal_link.url }}">
-            {{- internal_link.text | escape -}}
-          </a>
+          {%- liquid
+            assign link_url = internal_link.url | replace: request.origin, '' | replace: shop.url, ''
+            assign link_url = link_url | split: '?' | first | split: '#' | first | downcase
+            assign link_url = link_url | split: '/' | join: '/'
+          -%}
+          {%- unless rendered_link_urls contains link_url -%}
+            <a class="discontinued-replacement__action-link" href="{{ internal_link.url }}">
+              {{- internal_link.text | escape -}}
+            </a>
+            {%- assign current_link_url = link_url | split: '|' -%}
+            {%- assign rendered_link_urls = rendered_link_urls | concat: current_link_url -%}
+          {%- endunless -%}
         {%- endif -%}
       {%- endfor -%}
     </nav>
