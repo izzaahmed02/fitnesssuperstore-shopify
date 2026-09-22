@@ -1,0 +1,53 @@
+name: PDP AI Master harness tests
+
+# Runs the export harness test suite so the guarantees we report to the
+# business are verified by CI rather than asserted in an email.
+#
+# This workflow does NOT run the export itself. It needs no Shopify
+# credential and makes no network calls - the suite runs entirely against a
+# synthetic fixture. No scheduled export job is approved, and none is
+# defined here.
+
+on:
+  push:
+    paths:
+      - 'scripts/pdp_ai_master/**'
+      - '.github/workflows/pdp-ai-master-tests.yml'
+  pull_request:
+    paths:
+      - 'scripts/pdp_ai_master/**'
+      - '.github/workflows/pdp-ai-master-tests.yml'
+
+jobs:
+  harness-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run harness test suite
+        run: python3 scripts/pdp_ai_master/tests/test_export.py
+
+      - name: Confirm no write path exists in the query documents
+        # Belt-and-braces on top of the suite's own guardrail checks. Scans
+        # only the GraphQL documents, with comment lines stripped, since the
+        # scope note legitimately discusses mutations in prose.
+        # guardrails.py is excluded by design - it contains the denylist.
+        run: |
+          set -euo pipefail
+          found=0
+          for f in scripts/pdp_ai_master/queries/*.graphql; do
+            if grep -v '^[[:space:]]*#' "$f" \
+                | grep -niE 'mutation|productUpdate|metafieldsSet|inventorySet'; then
+              echo "::error file=$f::write operation found in a query document"
+              found=1
+            fi
+          done
+          if [ "$found" -ne 0 ]; then exit 1; fi
+          echo "No write path in any query document."
