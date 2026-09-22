@@ -1000,3 +1000,59 @@ ACTIVE, so the product type is the only thing keeping it out.
 Collection `513321435452` now reports **918** products, down from the 919 on
 the thread. Consistent with StudioWall having left, and independent of the
 feed pull.
+
+## 22 Sept: the French Fitness expected set was built on the wrong file
+
+Qash's 22 Sept file-level pull of all four sources (freight thread) reads:
+
+| file | rows | unique ids | numeric ids | Merchant Center "products" |
+|---|---|---|---|---|
+| `fjrqrrUe8y` | 1,539 | 1,537 | 103 | 1,537 |
+| `KAbgU5az6y` | 1,539 | 1,539 | 3 | 100 |
+| `zKEuwAFD3p` | 969 | 960 | 19 | 10 |
+| `X1oGs9U_kX` | 969 | 969 | 0 | 969 |
+
+The serving French Fitness primary, `X1oGs9U_kX`, carries **969 unique ids
+over 969 rows and zero numeric ids**. It is already fully SKU-keyed. The
+numeric ids this workstream has been chasing — the FF-MSS ten-up, FF-X12,
+the two Rack & Rig junction bars — sit on `zKEuwAFD3p`, the twin that
+Merchant Center processes down to 10 products.
+
+**The working file is the twin.** `live_ff_now.tsv` holds 969 rows, 960
+unique ids and 9 duplicate ids; `X1oGs9U_kX` has no duplicates at all, so
+the file cannot be it. Every French Fitness figure this repo has published —
+the 18/19 fallback rows, the 960 → 969 offer move, the FF-MSS ten-way — was
+measured on a source that serves ten products.
+
+Fitness Superstore is unaffected. `live_fs.tsv` holds 1,537 rows, 1,535
+unique ids and 2 duplicate ids, which is the shape of `fjrqrrUe8y`, not of
+the duplicate-free `KAbgU5az6y`. It is the serving primary, twelve days
+stale: 1,537 → 1,539 rows and 98 → 103 fallback rows since 9 September. The
+expected set re-bases rather than moves.
+
+One cross-check falls out of the table and is worth keeping. `KAbgU5az6y`
+is the fully SKU-keyed Fitness Superstore mirror, and it still reports
+**three** numeric ids — the Precor 9.31 / 9.33 / 9.35 treadmills, whose
+variant SKUs are `931`, `933` and `935`. An independent file confirms what
+the 98-versus-101 correction argued: numeric-looking is not the same as
+unkeyed, and `id == item_group_id` is the only safe test.
+
+### Answers owed on the thread
+
+- **URL token.** `KAbgU5az6y`, with a **g**. Qash pulled the file directly
+  from that URL; the `q` in the inventory table was a transcription error.
+- **Collection reconciliation.** `French Fitness - Meta Feeds` reads **918**
+  products, matching Tim's read exactly: match-all, nine rules — Type =
+  Product Index, Price > $99.00, Title not containing "Sq Ft Gym", Tag not
+  Other Machine Attachments / Aluminum Pulley Upgrade / REMOVE FROM FEEDS /
+  discontinued, Weight < 650 lb, Vendor = French Fitness — published to two
+  channels, Facebook & Instagram and Shopify GraphiQL App, not the Online
+  Store. No diff to post. The twin file holds 916 distinct products against
+  that 918; the gap is StudioWall leaving and WMR20 and FFT-DCC joining
+  since the 12 September copy, and the re-base settles it against the
+  serving primary instead.
+- **PP-MY5.** State changed after the inventory was written: Larianne set
+  `10491685667132` to draft and unpublished it on 21 September at 15:56 PT.
+  Current: `PP-MY5-MB` draft, unpublished, in neither serving primary;
+  `PP-My5` on `9878568403260` serving one row in googleshoppingfs at
+  4,871.25 USD.
