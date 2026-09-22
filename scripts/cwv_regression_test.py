@@ -33,8 +33,13 @@ require(theme, "function waitForGorgiasLoaded(timeoutMs)", 'layout/theme.liquid'
 require(theme, "window.clearTimeout(timer);", 'layout/theme.liquid')
 require(theme, "}, { once: true });", 'layout/theme.liquid')
 
-# 4) Product page should preload featured media for better LCP.
-require(head_meta, "{% if template contains 'product' and product and product.featured_media %}", 'snippets/head-meta.liquid')
+# 4) Product page should preload its LCP image.
+# #812 split this into two branches: bounded PDP templates preload product.media.first,
+# everything else preloads product.featured_media. Assert the outer guard and both
+# branches so either one going missing still fails.
+require(head_meta, "{% if template contains 'product' and product %}", 'snippets/head-meta.liquid')
+require(head_meta, "{% elsif product.featured_media %}", 'snippets/head-meta.liquid')
+require(head_meta, "{% assign initial_media = product.media.first %}", 'snippets/head-meta.liquid')
 require(head_meta, 'fetchpriority="high"', 'snippets/head-meta.liquid')
 
 # 5) jQuery should not be render-blocking.
