@@ -12,9 +12,10 @@ separate upload. Three independent transforms plus one report:
 
 2. googleshoppingfs duplicate ids 9878900179260 and 9878898540860. Each id
    carries two rows: the standard offer and an open-box (`-OOB`) offer at a
-   lower sale price. `--dedupe-mode drop-oob` keeps the standard row and drops
-   the open-box one; `--dedupe-mode rekey-oob` keeps both by re-keying the
-   open-box row composite-style. See docs/feed-missing-shipping-fix.md.
+   lower sale price. `--dedupe-mode rekey-oob` (the default, per Tim's Sept 19
+   ruling) keeps both by re-keying the open-box row composite-style;
+   `--dedupe-mode drop-oob` keeps the standard row and drops the open-box one.
+   See docs/feed-missing-shipping-fix.md.
 
 3. `shipping` region strings, for the ids that have an exact-SKU sibling
    already carrying shipping in the same feed. Copied verbatim from that
@@ -28,7 +29,8 @@ Usage:
     python3 scripts/feed_missing_shipping_fix.py \
         --ff  googleshoppingfrenchfitness.tsv \
         --fs  googleshoppingfs.tsv \
-        --out-dir out/
+        --out-dir out/ \
+        --dedupe-mode rekey-oob
 """
 
 import argparse
@@ -224,7 +226,7 @@ def main(argv=None):
     parser.add_argument("--out-dir", default="out",
                         help="where corrected feeds and the worklist are written")
     parser.add_argument("--dedupe-mode", choices=("drop-oob", "rekey-oob"),
-                        default="drop-oob",
+                        default="rekey-oob",
                         help="how to make the two googleshoppingfs duplicate ids unique")
     args = parser.parse_args(argv)
 

@@ -124,20 +124,20 @@ price, both keyed on the same bare product id.
 | `9878898540860` | `ST-8RDE-16-ATSC` | 10,999 |
 | `9878898540860` | `ST-8RDE-16-ATSC-OOB` | 8,799 |
 
-Default `--dedupe-mode drop-oob` does what was asked — keeps the standard row,
-drops the open-box one — and both ids become unique.
+**The repoint ships `--dedupe-mode rekey-oob`** (Tim's Sept 19 ruling, on the
+offer-ID thread, cross-posted to this one). It is the script default. The
+open-box row is re-keyed composite-style, the same fix as Monster, so the id is
+unique and the open-box offer keeps serving on its own SKU offer, consistent
+with the Monday offer-ID run giving the OOB SKUs their own offers.
 
-`--dedupe-mode rekey-oob` is the alternative: re-key the open-box row
-composite-style, the same fix as Monster, so the id is unique and the open-box
-offer keeps serving. Dropping the row removes a live discounted offer from
-Shopping, which is a merchandising call rather than a data cleanup, so the
-alternative is here ready to run if that is not the intent.
+`--dedupe-mode drop-oob` keeps the standard row and drops the open-box one. It
+is no longer the default and is not used for the repoint.
 
 ## Result
 
 | | FF feed | FS feed |
 | --- | --- | --- |
-| Rows in / out | 966 / 966 | 1,541 / 1,539 |
+| Rows in / out | 966 / 966 | 1,541 / 1,541 |
 | Duplicate ids before / after | 1 / 0 | 2 / 0 |
 | Blank `shipping` before / after | 55 / 50 | 0 / 0 |
 
