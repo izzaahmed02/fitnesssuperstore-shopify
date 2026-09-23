@@ -95,18 +95,23 @@
       } catch (e) {}
     }
 
-    // "New Request" — restore the form in the same card, no page reload.
-    // Capture phase so it wins over any theme click handler on the button.
+    // "New Request" — reload a fresh, empty form.
+    // The confirmation is a full server render (native submit + reload), and the
+    // conversion block above strips ?contact_posted from the URL, so the success
+    // anchor would otherwise point at the current URL and only scroll. Force a
+    // reload of the page WITHOUT the success flag so the default form renders.
+    // Capture phase so it wins over any theme click handler on the control.
     document.addEventListener('click', function (e) {
       var nr = e.target.closest('[data-sr-new-request]');
       if (!nr) return;
       e.preventDefault();
-      var card = nr.closest('[data-sr-form-card]');
-      if (card && window.__srFormHTML) {
-        card.innerHTML = window.__srFormHTML;
-        var f = card.querySelector('form');
-        var first = f && f.querySelector('input:not([type="hidden"]), select, textarea');
-        if (first) { try { first.focus(); } catch (e) {} }
+      var path = window.location.pathname;
+      if (/[?&]contact_posted=true/.test(window.location.search)) {
+        // Flag still present (replaceState did not run): navigate to the clean path.
+        window.location.href = path;
+      } else {
+        // Flag already stripped on load: reload the current (clean) URL for a fresh form.
+        window.location.reload();
       }
     }, true);
 
