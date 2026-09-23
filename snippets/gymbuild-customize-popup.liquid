@@ -407,6 +407,8 @@
                         data-original-qty="{{ inclusion_qty }}"
                         data-original-weight="{{ inclusion_variant.weight }}"
                       >
+                        {%- comment -%} TEMPORARY TEST-PRODUCT BADGE — DELETE THIS LINE {%- endcomment -%}
+                        <span class="gymbuild-test-badge">Test product only</span>
                         <div class="gymbuild-customize-drawer__card-image-wrap">
                           {% if inclusion_image %}
                             {%- liquid
@@ -526,6 +528,62 @@
     font-weight: 700;
   }
   /* TEMPORARY DEV BANNER — DELETE THIS WHOLE BLOCK (CSS END) */
+
+  /* ==================================================================
+     TEMPORARY TEST-PRODUCT BADGE — DELETE THIS WHOLE BLOCK (CSS START)
+     Added 2026-09-23. A thin strip overlaid on the top edge of every
+     product-bearing card in this popup — the "Package Inclusions" grid
+     cards, the swap sub-view's alternate cards, and the swap sub-view's
+     "currently selected" thumbnail — flagging that the product shown is
+     real but the package composition is unapproved test data (same
+     reasoning as the .gymbuild-dev-banner copy above).
+
+     To remove: delete this whole CSS block, then in this file's markup
+     delete every element/line marked "TEMPORARY TEST-PRODUCT BADGE"
+     (search for that exact marker) — one <span class="gymbuild-test-badge">
+     in the Liquid card markup, one in the swap-alternate-card JS, and the
+     wrapper + span in the swap-current JS. Nothing else references
+     .gymbuild-test-badge or .gymbuild-customize-drawer__swap-current-image-wrap.
+     ================================================================== */
+  .gymbuild-customize-drawer__card,
+  .gymbuild-customize-drawer__swap-card {
+    position: relative;
+  }
+
+  .gymbuild-customize-drawer__swap-current-image-wrap {
+    position: relative;
+    flex: 0 0 auto;
+    line-height: 0;
+  }
+
+  .gymbuild-test-badge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    padding: 2px 6px;
+    background: #d83d0e;
+    color: #fff;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 700;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .gymbuild-test-badge--small {
+    font-size: 7px;
+    line-height: 10px;
+    padding: 1px 2px;
+    letter-spacing: 0;
+  }
+  /* TEMPORARY TEST-PRODUCT BADGE — DELETE THIS WHOLE BLOCK (CSS END) */
 
   /* ==================================================================
      DESIGN TOKENS — extracted live from Figma 2026-09-22.
@@ -1398,7 +1456,11 @@
 
       if (swapCurrentEl) {
         swapCurrentEl.innerHTML =
+          // TEMPORARY TEST-PRODUCT BADGE — DELETE THIS WRAPPER + SPAN, keep the <img> unwrapped
+          '<div class="gymbuild-customize-drawer__swap-current-image-wrap">' +
           '<img class="gymbuild-customize-drawer__swap-current-image" src="' + card.dataset.itemImage + '" alt="" loading="lazy">' +
+          '<span class="gymbuild-test-badge gymbuild-test-badge--small">Test</span>' +
+          '</div>' +
           '<div class="gymbuild-customize-drawer__swap-current-info">' +
           '<p class="gymbuild-customize-drawer__swap-current-title">' + card.dataset.itemTitle + '</p>' +
           '<p class="gymbuild-customize-drawer__swap-current-count">' + formatCount(currentQty) + '</p>' +
@@ -1422,6 +1484,8 @@
           btn.dataset.altImage = alt.image;
           btn.dataset.altPrice = alt.price;
           btn.innerHTML =
+            // TEMPORARY TEST-PRODUCT BADGE — DELETE THIS LINE
+            '<span class="gymbuild-test-badge">Test product only</span>' +
             '<div class="gymbuild-customize-drawer__swap-card-image-wrap">' +
             '<img class="gymbuild-customize-drawer__swap-card-image" src="' + alt.image + '" alt="" loading="lazy">' +
             '</div>' +
