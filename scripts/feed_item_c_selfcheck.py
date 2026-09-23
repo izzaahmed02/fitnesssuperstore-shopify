@@ -19,6 +19,11 @@ Split #1, Sept 21-22) or a named addition to it:
     hex          every in-scope FF hex cohort row at or above the captured
                  checkout quote for its zone (Iqra/Saliha's table)
     territory    reports whether the output carries any US Territories entry
+    malformed    rows missing id / title / price / link / image_link (the 14
+                 split entries Microsoft rejected on 7 cardio products)
+    id-counts    per file: rows, unique ids, duplicate ids, numeric ids,
+                 id == item_group_id (Ilsaa's reconciliation input)
+    symmetry     FF and FS files carry the same region-key set
 
 Usage:
     python3 scripts/feed_item_c_selfcheck.py \
@@ -60,6 +65,13 @@ MUST_BE_ABSENT = ("E420T", "FF-STW-WB-3")
 # out on Sept 19 (quotes kept as evidence only).
 HEX_PREFIX = "FF-RCHD"
 HEX_EXCLUDED = {"FF-RCHD2-5", "FF-RCHD5", "FF-RCHD7-5", "FF-RCHD10", "FF-RCHD12-5"}
+
+# The 7 products Microsoft rejected for split/malformed entries (Sep 23).
+MALFORMED_WATCH = ("SM200", "Woodway Curve", "LX8000", "Integrity",
+                   "i22.9", "c966i")
+REQUIRED_FIELDS = ("id", "title", "price", "link", "image_link")
+
+csv.field_size_limit(sys.maxsize)
 
 SEGMENT = re.compile(r"^\s*([A-Z]{2})?:([^:]*):([^:]*):(.*)$")
 
@@ -153,6 +165,7 @@ def check_feed(path, fieldnames, rows, free_ship_ids, report):
     report.note("=== " + file_header(path, rows))
 
     blank, regional, free_ship, ca_stale, ca_off = [], [], [], [], []
+    malformed, paid_region_on_free = [], []
     availability, duplicates, variant = [], [], []
     by_id = defaultdict(int)
     groups = defaultdict(list)
@@ -161,6 +174,11 @@ def check_feed(path, fieldnames, rows, free_ship_ids, report):
         feed_id = (row.get("id") or "").strip()
         label = f"{feed_id} ({sku_of(row)})"
         by_id[feed_id] += 1
+        missing = [f for f in REQUIRED_FIELDS if f in fieldnames
+                   and not (row.get(f) or "").strip()]
+        if missing:
+            title = (row.get("title") or "")[:50]
+            malformed.append(f"{label} {title!r}: missing {','.join(missing)}")
         segments = parse_shipping(row.get("shipping"))
 
         if not segments or any(price is None for _, _, price in segments):
@@ -174,6 +192,9 @@ def check_feed(path, fieldnames, rows, free_ship_ids, report):
             nonzero = [f"{c}:{r or '*'}={p}" for c, r, p in segments if p != 0]
             if nonzero:
                 free_ship.append(f"{label}: {' '.join(nonzero)}")
+        elif national_price(segments) == 0 and any(p for _, _, p in segments):
+            paid = [f"{c}:{r}={p:g}" for c, r, p in segments if p]
+            paid_region_on_free.append(f"{label}: US 0 but {' '.join(paid)}")
         elif ca is not None and ca != 0:
             if ca == STALE_CA:
                 ca_stale.append(f"{label}: US:CA {ca:g}")
@@ -208,12 +229,23 @@ def check_feed(path, fieldnames, rows, free_ship_ids, report):
     retired = [c for c in RETIRED_COLUMNS if c in fieldnames
                and any((r.get(c) or "").strip() for r in rows)]
 
+    numeric = sum(1 for i in by_id if i.isdigit())
+    same_as_group = sum(1 for r in rows if (r.get("id") or "").strip()
+                        and r.get("id") == r.get("item_group_id"))
+    report.note(f"INFO  id counts: rows={len(rows)} unique={len(by_id)} "
+                f"duplicate_ids={sum(1 for c in by_id.values() if c > 1)} "
+                f"numeric_ids={numeric} id==item_group_id={same_as_group}")
+    report.result("malformed rows (missing required field)", malformed)
+    watched = [m for m in malformed if any(w in m for w in MALFORMED_WATCH)]
+    if malformed:
+        report.note(f"        of which on the 7 Microsoft-rejected cardio products: {len(watched)}")
     report.result("blank shipping", blank)
     report.result("regional breakdown (US:CA present)", regional)
     if free_ship_ids:
         report.result("free-ship $0.00 in every region", free_ship)
     else:
-        report.note("SKIP  free-ship $0.00: no --free-ship-ids list given")
+        report.note("SKIP  free-ship $0.00 by id list: no --free-ship-ids given")
+    report.result("free-ship row ($0 national) with a paid region", paid_region_on_free)
     report.result("stale CA $149 constant", ca_stale)
     report.result("CA value off the 199/249/349 tiers (review)", ca_off, warn=True)
     report.result("tax attribute", tax)
@@ -221,6 +253,31 @@ def check_feed(path, fieldnames, rows, free_ship_ids, report):
     report.result("availability values", availability)
     report.result("duplicate ids", duplicates)
     report.result("variant shipping scales with weight", variant)
+
+
+def region_keys(rows):
+    keys = set()
+    for row in rows:
+        for country, region, _ in parse_shipping(row.get("shipping")):
+            keys.add(f"{country}:{region or '*'}")
+    return keys
+
+
+def check_symmetry(files, report):
+    ff = [(p, rows) for p, rows in files if any(sku_of(r).startswith("FF-") for r in rows[:50])]
+    fs = [(p, rows) for p, rows in files if (p, rows) not in ff]
+    report.note("")
+    report.note("=== Region-key symmetry (FF vs FS)")
+    for path, rows in files:
+        report.note(f"INFO  {os.path.basename(path)}: {' '.join(sorted(region_keys(rows)))}")
+    if not ff or not fs:
+        report.note("SKIP  need at least one FF and one FS file")
+        return
+    ff_keys = set.union(*(region_keys(r) for _, r in ff))
+    fs_keys = set.union(*(region_keys(r) for _, r in fs))
+    diff = [f"FF only: {k}" for k in sorted(ff_keys - fs_keys)] + \
+           [f"FS only: {k}" for k in sorted(fs_keys - ff_keys)]
+    report.result("FF and FS carry the same region set", diff)
 
 
 def check_catalog(all_rows, report):
@@ -276,6 +333,14 @@ def check_hex(ff_rows, quotes, report):
         report.result("hex cohort present in FF file", ["no FF-RCHD rows found"])
         return
 
+    composite = [f"{r.get('id')} -> {sku_of(r)}" for r in cohort
+                 if (r.get("id") or "") != sku_of(r)]
+    if composite:
+        report.note(f"INFO  {len(composite)} cohort rows composite-keyed, id -> SKU map:")
+        for line in composite:
+            report.note(f"        {line}")
+    else:
+        report.note("INFO  every cohort row is SKU-keyed (id == SKU)")
     misses, no_quote, listing = [], [], []
     for row in sorted(cohort, key=lambda r: weight_of(r) or 0):
         sku = sku_of(row)
@@ -327,14 +392,16 @@ def main(argv=None):
 
     report = Report()
     report.note(f"Item C self-check, run {datetime.now(timezone.utc):%Y-%m-%d %H:%M:%S} UTC")
-    all_rows, ff_rows = [], []
+    all_rows, ff_rows, files = [], [], []
     for path in args.feed:
         fieldnames, rows = read_feed(path)
         check_feed(path, fieldnames, rows, free_ship_ids, report)
         all_rows.extend(rows)
+        files.append((path, rows))
         if any(sku_of(r).startswith("FF-") for r in rows):
             ff_rows.extend(rows)
 
+    check_symmetry(files, report)
     check_catalog(all_rows, report)
     check_territories(all_rows, report)
     check_hex(ff_rows, quotes, report)
