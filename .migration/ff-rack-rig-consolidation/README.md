@@ -334,3 +334,158 @@ Rollback via the same batched-mutation path, writing only `help_text`.
 Group C is **74** records overall; **58** were outstanding at the point Tim assigned
 execution (16 had been applied in the earlier phase). Both numbers are correct and
 refer to different baselines.
+
+## Source 6 — `specs_features` sweep, completed 2026-09-23
+
+Opened by Yusra's rendered crawl (2026-09-22): 24 PDPs still rendered a link to
+`/collections/french-fitness-pre-configured-rigs` from the Features block, reached
+via `product.metafields.custom.features_specs`. This metaobject type was never part
+of Groups A–E, so it is a sixth source, not a miss inside existing scope.
+
+**Result: 24 of 24 records applied, 0 errors.** Every `metaobjectUpdate` returned
+`userErrors: []`.
+
+### Whole-type data-level scan (not just the 24)
+
+Scanned **all 4,554 records** across **all 23 fields** of the type — every field the
+definition declares, not only the ones the PDP template renders — for **all five**
+approved source handles.
+
+| | |
+|---|---|
+| Records scanned | 4,554 |
+| Fields scanned per record | 23 (all) |
+| Records with an obsolete anchor | 24 |
+| Obsolete anchors found | 24 |
+
+Anchors by source handle:
+
+| Source handle | Anchors |
+|---|---|
+| `french-fitness-pre-configured-rigs` | 24 |
+| `french-fitness-rack-rig-systems` | 0 |
+| `french-fitness-rig-frame-pieces-customize-your-rig` | 0 |
+| `french-fitness-rig-attachments-accessories` | 0 |
+| `french-fitness-racks-w-rig-rack-attachment-compatibility` | 0 |
+
+Anchors by field — **the crawl-derived diagnosis was incomplete**:
+
+| Field | Anchors |
+|---|---|
+| `features` | 22 |
+| `tech_specs` | **2** |
+
+Two of the 24 sit in `tech_specs`, not `features`. Same 24 records either way, but it
+confirms the sweep had to be data-level: a field the template renders differently, or
+not at all, does not surface in a crawl.
+
+A second, wider pass looked for the bare handle strings anywhere in any field, not
+only inside `/collections/` hrefs. Same 24 records, same 24 occurrences — no other
+form (query strings, plain text, alternate hosts) exists in this type.
+
+All 24 are **absolute** URLs (`https://www.fitnesssuperstore.com/collections/…`), not
+relative. The swap preserved the absolute form and changed only the handle; absolute
+→ relative normalisation was **not** done, as that is a second change and was not
+authorised.
+
+### Change rule
+
+Link text was already generic on every one of the 24 (`Rig & Rack Pre-Configured
+Rigs`), so no label edit was needed. The only edit is the handle inside the URL:
+
+```
+https://www.fitnesssuperstore.com/collections/french-fitness-pre-configured-rigs
+                                          ->  /collections/pre-configured-rigs
+```
+
+Validated mechanically before submission: for all 24 fields the diff against the live
+value is exactly one deletion of the literal `french-fitness-`, nothing else, and
+every resulting value still parses as valid rich-text JSON.
+
+### Verification (independent post-apply re-read)
+
+Fresh whole-type export taken after the writes, diffed against the pre-edit export:
+
+- **0** records anywhere in the type carry any of the five source handles in any field
+- exactly **24** records changed — the intended set, matched exactly by ID
+- fields changed: `features` 22, `tech_specs` 2 — nothing else
+- all **4,530** other records byte-identical to pre-run
+- all 24 now resolve to the approved generic destination
+
+### Guardrails re-verified 2026-09-23
+
+All five source collections still published to the Online Store. `urlRedirects`
+matching `/collections/french-fitness` returns **0**. Final unpublish and the five
+one-hop 301s remain HOLD / NOT AUTHORIZED.
+
+Collection pair counts now match on all five, including the Rig Attachments pair
+after reindex: **119/119, 16/16, 31/31, 57/57, 13/13**.
+
+### July 18 pattern — tested and ruled out
+
+Tim asked whether the partially-corrected state matches the 2026-07-18 find-replace
+incident. It does not.
+
+`updatedAt` on the 24, pre-edit: 2025-10-26 (13), 2026-03-10 (7), 2025-12-31 (1),
+2026-02-05 (1), 2026-03-03 (1), 2026-06-22 (1). **None on 2026-07-18.** The newest
+write to any of the 24 predates the incident by over three weeks.
+
+Across the entire 4,554-record type, exactly **one** record carries a 2026-07-18
+timestamp — `french-fitness-ff-asr-pack-accessory-package-w-rack-new` at 10:34:16Z —
+and it is not one of the 24, and sits outside the 19:15–19:17Z incident window.
+
+The 2025-10-26 cluster is 13 records written within 19 seconds (19:37:09–19:37:28Z):
+a bulk authoring pass. Both generic and branded collections have coexisted as
+duplicate pairs since long before this migration, so a record authored then could
+carry one of each with no corrective event involved. This is **inconsistent original
+authoring, not a botched find-replace**.
+
+### Rollback
+
+- `source6-specs-features/specs_features_ROLLBACK.jsonl` — 24 records, pre-edit values
+- `source6-specs-features/specs_features_BEFORE_2026-09-23.jsonl.gz` — full pre-edit
+  whole-type export (4,554 records, all fields)
+- `source6-specs-features/specs_features_AFTER_2026-09-23.jsonl.gz` — post-edit export
+- `source6-specs-features/applied_batch_Q00.gql` — the exact mutation submitted
+
+## Group C write attribution — reconciliation closed 2026-09-23
+
+Tim flagged a 34-record gap: his 2026-09-09 verification and the v2 rollback workbook
+showed 58 records / 123 obsolete anchors; my closeout report cited a pre-run export
+showing 24 records / 50 anchors, and "exactly 24 records changed".
+
+**Tim's September 9 figure was correct. Mine was mislabelled. There is no third-party
+writer.**
+
+The export I described as "pre-run" was taken at **2026-09-10 11:04:00Z** — not before
+the operation, but **partway through it**. 34 records had already been written earlier
+that same morning, by me, in the same session.
+
+Reconstructed from the retained session snapshots of the whole type:
+
+| Snapshot (2026-09-10) | Records with an old handle | Anchors |
+|---|---|---|
+| 08:01Z — session start, nothing applied yet | **58** | **123** |
+| 10:51Z — after batch group 1 | 31 | 70 |
+| 11:04Z — after batch group 2 (the export I called "pre-run") | 24 | 50 |
+| 11:15Z — after batch group 3, final | 0 | 0 |
+
+The 08:01Z snapshot reproduces Tim's 58 / 123 exactly, and so does
+`optionhelp58_ROLLBACK.jsonl`, which holds the true pre-migration values: 58 records,
+123 anchors.
+
+Attribution for all 58, including the 34 in question:
+
+- **Actor:** Izza (izza@fitnesssuperstore.com)
+- **Tool:** Shopify Admin GraphQL API, batched `metaobjectUpdate`, via the migration session
+- **Time:** 2026-09-10, between 08:01Z and 11:15Z — 34 records before the 11:04Z export, 24 after
+- **Session batch files retained:** 10 batches covering the first 34, 3 covering the last 24
+
+`updatedAt` on all 58 immediately before the session: 2026-05-01 (54), 2026-06-06 (3),
+2026-06-14 (1). Nothing between 2026-09-09 and the run. No unattributed write occurred.
+
+**Reporting error, stated plainly:** I labelled a mid-run export as a pre-run baseline,
+and reported "exactly 24 records changed" — true of the final batch, not of the
+operation, which changed 58. The end state was never in question and is unchanged:
+58 of 58 applied, 0 errors, 0 residual references. The corrective is procedural — take
+the baseline export before the first write, and cite it by timestamp.
