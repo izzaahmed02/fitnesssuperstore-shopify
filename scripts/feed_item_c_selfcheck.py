@@ -191,6 +191,16 @@ def check_feed(path, fieldnames, rows, free_ship_ids, report):
         if count > 1:
             duplicates.append(f"{feed_id} x{count}")
 
+    # Id-convention counts, Ilsaa's Sept 22 ask, so the re-derivation
+    # reconciles against numbers emitted at generation time.
+    id_is_group = sum(1 for r in rows
+                      if (r.get("id") or "").strip()
+                      and (r.get("id") or "").strip() == (r.get("item_group_id") or "").strip())
+    numeric_ids = sum(1 for i in by_id if i.isdigit())
+    report.note(f"ids   rows={len(rows)}  unique={len(by_id)}  "
+                f"duplicate_ids={len(duplicates)}  id_equals_item_group_id={id_is_group}  "
+                f"numeric_ids={numeric_ids}")
+
     for group, members in groups.items():
         members = [m for m in members if m[0] is not None and m[1] is not None]
         members.sort(key=lambda m: m[0])
