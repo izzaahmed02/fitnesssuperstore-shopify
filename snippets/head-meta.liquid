@@ -57,7 +57,12 @@
 {% assign url_parts = canonical_url | split: '?' %}
 {% if url_parts.size > 1 %}
   {% assign query = url_parts[1] %}
-  {% if query contains 'page=' %}
+  {%- comment -%}
+    T-008: paginated collection URLs are indexable and self-canonicalising,
+    so they are excluded here. Every other paginated page type keeps the
+    previous noindex behaviour unchanged.
+  {%- endcomment -%}
+  {% if query contains 'page=' and request.page_type != 'collection' %}
     <meta name="robots" content="noindex,follow">
   {% endif %}
 {% endif %}
@@ -101,7 +106,15 @@
   {% endif %}
 
 {% elsif template == 'collection' %}
-  <link rel="canonical" href="{{ collection.url | prepend: base_url }}">
+  {%- comment -%}
+    T-008: page 1 keeps the bare collection URL; page 2 and beyond
+    self-reference with their own ?page=n instead of pointing back at page 1.
+  {%- endcomment -%}
+  {% if current_page > 1 %}
+    <link rel="canonical" href="{{ collection.url | prepend: base_url }}?page={{ current_page }}">
+  {% else %}
+    <link rel="canonical" href="{{ collection.url | prepend: base_url }}">
+  {% endif %}
 
 {% elsif request.page_type == 'index' or template == 'index' %}
   <link rel="canonical" href="{{ base_url }}">
