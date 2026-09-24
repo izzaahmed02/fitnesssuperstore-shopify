@@ -1609,7 +1609,98 @@
   window.product = {{ product | json }}
 </script>
 
-<script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
+{% comment %}
+  GymBuild-only replacement for assets/main-product-custom.js (2026-09-24).
+  That shared script's pay-later timer threw "Cannot read properties of null
+  (reading 'setAttribute')" ~10x/sec forever here, because this quote-only
+  PDP deliberately has no <square-placement> / Affirm markup (P0 audit #5).
+  The only features this PDP used from it were the "(More Info)" help modal
+  and the body.modal-open scroll lock, reproduced below with the same
+  behaviour. The shared file itself is untouched (4 other PDPs use it).
+  Rollback: delete this script block and restore
+  <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
+{% endcomment %}
+<script>
+  (function () {
+    function lookupHelpContent(key) {
+      var source = document.querySelector('#option-help-content-source [data-help-key="' + CSS.escape(key) + '"]');
+      return source ? source.innerHTML : null;
+    }
+
+    function observeModalVisibility(modals) {
+      var observer = new MutationObserver(function () {
+        var anyModalOpen = Array.prototype.some.call(modals, function (modal) {
+          var style = window.getComputedStyle(modal);
+          return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+        });
+        document.body.classList.toggle('modal-open', anyModalOpen);
+      });
+
+      modals.forEach(function (modal) {
+        observer.observe(modal, { attributes: true, attributeFilter: ['style', 'class'], subtree: false });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      var modalWrapper = document.querySelector('.modal-wrapper');
+      var container = document.getElementById('dynamic-product-content');
+      var closeIcon = document.getElementById('icon-close-template');
+
+      observeModalVisibility(document.querySelectorAll('.modal-wrapper'));
+
+      if (!modalWrapper || !container) return;
+
+      document.querySelectorAll('.metainfo-wrapper .more-info').forEach(function (element) {
+        element.addEventListener('click', function (event) {
+          event.preventDefault();
+          event.stopPropagation();
+
+          var currentProduct = window.product;
+          var field = element.dataset.customfield;
+          if (!currentProduct || !field) return;
+
+          if (field === 'Condition' && currentProduct.title.includes('Remanufactured')) {
+            window.open('/pages/remanufactured-gym-equipment', '_blank');
+            return;
+          }
+
+          var candidateKeys = [];
+          if (field === 'Warranty' || field === 'Shipping') {
+            candidateKeys.push(currentProduct.vendor + ' ' + field + ' Custom Field');
+            if (field === 'Warranty' && currentProduct.title.includes('Remanufactured')) {
+              candidateKeys.push('Warranty Remanufactured Custom Field');
+            }
+          } else {
+            candidateKeys.push(field + ' Custom Field');
+          }
+
+          var html = null;
+          for (var i = 0; i < candidateKeys.length && !html; i++) {
+            html = lookupHelpContent(candidateKeys[i]);
+          }
+          if (!html) return;
+
+          container.style.width = 'auto';
+          container.innerHTML = html + '<span class="modal-close">' + (closeIcon ? closeIcon.innerHTML : '') + '</span>';
+          modalWrapper.style.display = 'flex';
+
+          container.querySelector('.modal-close').addEventListener('click', function () {
+            modalWrapper.style.display = 'none';
+            container.innerHTML = '';
+          });
+        });
+      });
+
+      modalWrapper.addEventListener('click', function () {
+        modalWrapper.style.display = 'none';
+      });
+
+      container.addEventListener('click', function (event) {
+        event.stopPropagation();
+      });
+    });
+  })();
+</script>
 {% unless hide_product_options %}
   <script src="{{'product-custom-options.js' | asset_url }}" defer></script>
 {% endunless %}
