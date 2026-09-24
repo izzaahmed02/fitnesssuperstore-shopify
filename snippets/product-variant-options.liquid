@@ -100,6 +100,68 @@
       {{ value -}}
       {{ label_unavailable }}
     </label>
+  {%- elsif picker_type == 'color_name_swatch' -%}
+    {%- liquid
+      assign value_lc = value | downcase
+      assign is_custom_color = false
+      assign dot_background = '#CCCCCC'
+      if value_lc contains 'custom'
+        assign is_custom_color = true
+      else
+        assign color_map = 'black:#000000,white:#FFFFFF,red:#660F0A,green:#008000,blue:#3E77AA,yellow:#EEB241,gray:#808080,grey:#808080,silver:#E5E5E5,orange:#FFA500,purple:#800080,pink:#FFC0CB,navy:#000080,teal:#008080,maroon:#800000,burgundy:#800020' | split: ','
+        assign color_text = value_lc | split: ' w/' | first | split: '(' | first
+        assign dot_colors = ''
+        assign color_parts = color_text | split: '/'
+        for part in color_parts
+          assign part_color = '#CCCCCC'
+          for pair in color_map
+            assign pair_bits = pair | split: ':'
+            if part contains pair_bits[0]
+              assign part_color = pair_bits[1]
+              break
+            endif
+          endfor
+          assign dot_colors = dot_colors | append: part_color | append: ','
+        endfor
+        assign dot_colors = dot_colors | split: ','
+        if dot_colors.size > 1
+          assign dot_background = 'linear-gradient(to right, ' | append: dot_colors.first | append: ' 50%, ' | append: dot_colors.last | append: ' 50%)'
+        elsif dot_colors.size == 1
+          assign dot_background = dot_colors.first
+        endif
+      endif
+    -%}
+    <input
+      type="radio"
+      id="{{ input_id }}"
+      name="{{ input_name }}"
+      value="{{ value | escape }}"
+      aria-label="{{ option.name | escape }}: {{ value | escape }}"
+      form="{{ product_form_id }}"
+      {% if value.selected %}
+        checked
+      {% endif %}
+      {% if option_disabled %}
+        class="disabled"
+      {% endif %}
+      {{ input_dataset }}
+    >
+    <label
+      for="{{ input_id }}"
+      class="color-name-swatch{% if is_custom_color %} color-name-swatch--custom{% endif %}"
+      title="{{ value | escape }}"
+      {% unless is_custom_color %}
+        style="background: {{ dot_background }};"
+      {% endunless %}
+    >
+      {%- if is_custom_color -%}
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+          <path d="M1 7H7M13 7H7M7 7V1M7 7V13" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      {%- endif -%}
+      <span class="visually-hidden">{{ value | escape }}</span>
+      {{ label_unavailable }}
+    </label>
   {%- elsif picker_type == 'dropdown' or picker_type == 'swatch_dropdown' -%}
     <option
       id="{{ input_id }}"
