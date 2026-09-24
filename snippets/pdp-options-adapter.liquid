@@ -1,0 +1,20 @@
+
+{%- liquid
+  assign adapter_title = product_option.product_option_title | downcase
+  assign adapter_needle = installation_match | downcase | strip
+
+  assign adapter_visible = false
+  if adapter_title == 'weight stack' or adapter_title contains 'aluminum pulley' or adapter_title contains 'pulley upgrade'
+    assign adapter_visible = true
+  endif
+
+  if adapter_visible or product_option.mandatory or product_option.product_option_sets_default.value.id
+    echo 'needed '
+  endif
+  if adapter_visible
+    echo 'visible '
+  endif
+  if adapter_needle != blank and adapter_title contains adapter_needle
+    echo 'install '
+  endif
+-%}
