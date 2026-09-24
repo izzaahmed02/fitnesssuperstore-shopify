@@ -1710,7 +1710,15 @@
 {% endif %}
 
 {% render 'option-help-content' %}
-<script src="{{ 'old-custom.js' | asset_url }}" defer="defer"></script>
+{% comment %}
+  assets/old-custom.js is no longer loaded here (2026-09-24). Its 100ms poll
+  for Avis options (.avpoptions-container__v2) never stopped on this PDP,
+  which has no Avis options, and nothing else here uses it now that the
+  More Info modal is handled by the inline script above. The shared file is
+  untouched. Keep option-help-content: the inline script reads it.
+  Rollback: restore
+  <script src="{{ 'old-custom.js' | asset_url }}" defer="defer"></script>
+{% endcomment %}
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
