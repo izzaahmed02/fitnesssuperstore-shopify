@@ -1,0 +1,105 @@
+# Widened monitoring trigger for the raw-host checkout cluster (Sept 8 ruling,
+# "Deliverability" thread).
+#
+# Read-only: one paginated abandonedCheckouts query per run. Nothing here
+# writes to Shopify or Klaviyo, changes a rule, or touches flow SnYN8Q.
+#
+# Where flags surface:
+#   1. an open GitHub issue titled "Cluster monitor: flagged raw-host checkouts"
+#      (GitHub emails every watcher on each new comment), with emails masked;
+#   2. the run summary; and
+#   3. the flags.csv artifact (full detail, 30-day retention).
+# Checkouts already listed on the issue are not reported again.
+#
+# Schedules only run from the default branch, so nothing fires until this file
+# is merged, and that merge waits on Tim's written GO. Run it once via
+# "Run workflow" first: the preflight step names a missing read_orders or
+# read_customers scope in seconds.
+
+name: Cluster Monitor
+
+on:
+  workflow_dispatch:
+    inputs:
+      hours:
+        description: 'Window length in hours (ignored when since is set)'
+        default: '3'
+      since:
+        description: 'Optional window start, ISO-8601 UTC, for a replay'
+        default: ''
+  schedule:
+    - cron: '17 * * * *'   # hourly; each run looks back 3h and skips ids already reported
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: cluster-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    env:
+      ISSUE_TITLE: 'Cluster monitor: flagged raw-host checkouts'
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Collect ids already reported on the open issue
+        run: |
+          set -euo pipefail
+          number=$(gh issue list --state open --search "\"$ISSUE_TITLE\" in:title" \
+            --json number --jq '.[0].number // empty')
+          echo "ISSUE_NUMBER=$number" >> "$GITHUB_ENV"
+          if [ -n "$number" ]; then
+            gh issue view "$number" --comments --json body,comments \
+              --jq '.body, (.comments[].body)' > already_reported.txt
+          else
+            : > already_reported.txt
+          fi
+
+      - name: Run the monitor
+        env:
+          SHOPIFY_SHOP: ${{ secrets.SHOPIFY_SHOP }}
+          SHOPIFY_ADMIN_TOKEN: ${{ secrets.SHOPIFY_ADMIN_TOKEN }}
+          HOURS: ${{ inputs.hours || '3' }}
+          SINCE: ${{ inputs.since || '' }}
+        run: |
+          set -euo pipefail
+          args=(--hours "$HOURS" --already-reported already_reported.txt --out out)
+          if [ -n "$SINCE" ]; then args+=(--since "$SINCE"); fi
+          python3 scripts/cluster_monitor/cluster_monitor.py "${args[@]}"
+          cat out/summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Post new flags to the issue
+        run: |
+          set -euo pipefail
+          flags=$(python3 -c "import json; r=json.load(open('out/report.json')); print(r['flag_count'] + r['review_count'])")
+          if [ "$flags" = "0" ]; then
+            echo "No new flags."
+            exit 0
+          fi
+          { cat out/summary.md; echo; echo "Run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} (flags.csv artifact has full detail)"; } > body.md
+          if [ -n "$ISSUE_NUMBER" ]; then
+            gh issue comment "$ISSUE_NUMBER" --body-file body.md
+          else
+            gh issue create --title "$ISSUE_TITLE" --body-file body.md
+          fi
+
+      - name: Upload flags for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cluster-monitor
+          path: out/
+          if-no-files-found: ignore
+          retention-days: 30
