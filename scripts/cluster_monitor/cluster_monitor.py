@@ -18,7 +18,8 @@ Each flag is also tagged WATCHED (every SKU already in the watched set) or NEW
 SKU. Per the September 7 ruling, a new SKU/host combination reopens the gate.
 
 A checkout missing a field the rule needs (host, customer, customer creation
-time, line items) routes to REVIEW. It is never silently passed or flagged.
+time, order count, line items, or a line's SKU or quantity) routes to REVIEW.
+It is never silently passed, assumed zero, or flagged.
 
 Checkouts that match the cluster on a watched SKU and email shape or persona but
 sit on the www host are counted separately as "outside the ruled definition".
@@ -131,7 +132,12 @@ def normalize(node):
         "first_name": ((customer or {}).get("firstName") or "").strip().lower(),
         "last_name": ((customer or {}).get("lastName") or "").strip().lower(),
         "customer_created_at": parse_time((customer or {}).get("createdAt")),
-        "orders": int((customer or {}).get("numberOfOrders") or 0),
+        # None, never 0, when Shopify omits it: an unknown count routes to REVIEW.
+        "orders": (
+            int(customer["numberOfOrders"])
+            if customer and customer.get("numberOfOrders") not in (None, "")
+            else None
+        ),
         "has_customer": customer is not None,
         "lines": [
             {"sku": (item.get("sku") or "").strip(), "quantity": item.get("quantity")}
@@ -167,10 +173,15 @@ def missing_fields(record):
         missing.append("host")
     if not record["has_customer"] or not record["email"]:
         missing.append("customer")
-    elif not record["customer_created_at"]:
-        missing.append("customer.createdAt")
+    else:
+        if not record["customer_created_at"]:
+            missing.append("customer.createdAt")
+        if record["orders"] is None:
+            missing.append("customer.numberOfOrders")
     if not record["lines"]:
         missing.append("lineItems")
+    elif any(not line["sku"] or line["quantity"] is None for line in record["lines"]):
+        missing.append("lineItems.sku/quantity")
     return missing
 
 
@@ -239,7 +250,7 @@ def evaluate(records, since=None, until=None, already_reported=()):
     return result
 
 
-def summary_markdown(result, since, until):
+def summary_markdown(result, since, until, aggregate_only=False):
     flagged = result["flagged"]
     new = [f for f in flagged if f["new_skus"]]
     lines = [
@@ -255,6 +266,8 @@ def summary_markdown(result, since, until):
         f"- www-host matches outside the ruled definition (not flagged): "
         f"{len(result['outside_ruled_definition'])}",
     ]
+    if aggregate_only:
+        return "\n".join(lines) + "\n"
     if flagged:
         lines += [
             "",
@@ -368,6 +381,11 @@ def main(argv=None):
     parser.add_argument("--already-reported", help="text file; checkout ids found in it are skipped")
     parser.add_argument("--out", default="out", help="directory for report.json, flags.csv, summary.md")
     parser.add_argument("--preflight-only", action="store_true")
+    parser.add_argument(
+        "--aggregate-only",
+        action="store_true",
+        help="counts only: no per-checkout rows and no flags.csv (for any public destination)",
+    )
     args = parser.parse_args(argv)
 
     now = datetime.now(timezone.utc)
@@ -392,10 +410,11 @@ def main(argv=None):
     result = evaluate([normalize(n) for n in nodes], since, until, already)
 
     os.makedirs(args.out, exist_ok=True)
-    summary = summary_markdown(result, since, until)
+    summary = summary_markdown(result, since, until, args.aggregate_only)
     with open(os.path.join(args.out, "summary.md"), "w") as handle:
         handle.write(summary)
-    write_csv(result, os.path.join(args.out, "flags.csv"))
+    if not args.aggregate_only:
+        write_csv(result, os.path.join(args.out, "flags.csv"))
     with open(os.path.join(args.out, "report.json"), "w") as handle:
         json.dump(
             {

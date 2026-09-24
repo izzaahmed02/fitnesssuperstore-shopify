@@ -149,6 +149,19 @@ class RuleTests(unittest.TestCase):
         self.assertEqual(result["flagged"], [])
         self.assertIn("host", result["review"][0]["missing"])
 
+    def test_unknown_order_count_routes_to_review_not_zero(self):
+        node = checkout("2026-09-16T01:00:00Z", email="mark.harris15@example.test")
+        node["customer"]["numberOfOrders"] = None
+        result = run([node])
+        self.assertEqual(result["flagged"], [])
+        self.assertEqual(result["review"][0]["missing"], ["customer.numberOfOrders"])
+
+    def test_missing_sku_or_quantity_routes_to_review(self):
+        for sku, qty in (("", 1), ("FF-RCHD2-5", None)):
+            result = run([checkout("2026-09-16T01:00:00Z", lines=((sku, qty),))])
+            self.assertEqual(result["flagged"], [])
+            self.assertEqual(result["review"][0]["missing"], ["lineItems.sku/quantity"])
+
     def test_context_before_the_window_is_not_reported_but_feeds_the_burst(self):
         email = "burst@example.test"
         old = "2025-01-01T00:00:00Z"
@@ -195,6 +208,24 @@ class OutputTests(unittest.TestCase):
             self.assertNotIn("recover", text)
         self.assertEqual(report["flag_count"], 1)
         self.assertEqual(report["reason_counts"]["email_shape"], 1)
+
+
+    def test_aggregate_only_writes_counts_and_nothing_customer_level(self):
+        node = checkout("2026-09-16T01:00:00Z", email="mark.harris15@example.test")
+        checkout_id = node["id"].rsplit("/", 1)[-1]
+        with tempfile.TemporaryDirectory() as out:
+            path = os.path.join(out, "in.jsonl")
+            with open(path, "w") as handle:
+                handle.write(json.dumps(node) + "\n")
+            monitor.main(["--input-jsonl", path, "--since", "2026-09-16T00:00:00Z",
+                          "--until", "2026-09-17T00:00:00Z", "--out", out, "--aggregate-only"])
+            summary = open(os.path.join(out, "summary.md")).read()
+            report = open(os.path.join(out, "report.json")).read()
+            self.assertFalse(os.path.exists(os.path.join(out, "flags.csv")))
+        self.assertIn("flagged (raw host): **1**", summary)
+        for text in (summary, report):
+            self.assertNotIn(checkout_id, text)
+            self.assertNotIn("example.test", text)
 
 
 class ReaderTests(unittest.TestCase):

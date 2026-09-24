@@ -4,12 +4,10 @@
 # Read-only: one paginated abandonedCheckouts query per run. Nothing here
 # writes to Shopify or Klaviyo, changes a rule, or touches flow SnYN8Q.
 #
-# Where flags surface:
-#   1. an open GitHub issue titled "Cluster monitor: flagged raw-host checkouts"
-#      (GitHub emails every watcher on each new comment), with emails masked;
-#   2. the run summary; and
-#   3. the flags.csv artifact (full detail, 30-day retention).
-# Checkouts already listed on the issue are not reported again.
+# This repository is public, so everything this workflow writes to GitHub is
+# aggregate counts only (--aggregate-only): no checkout ids, no emails, and no
+# customer-level artifact. Per-checkout detail belongs in a private,
+# company-controlled destination and is not produced here.
 #
 # Schedules only run from the default branch, so nothing fires until this file
 # is merged, and that merge waits on Tim's written GO. Run it once via
@@ -28,7 +26,7 @@ on:
         description: 'Optional window start, ISO-8601 UTC, for a replay'
         default: ''
   schedule:
-    - cron: '17 * * * *'   # hourly; each run looks back 3h and skips ids already reported
+    - cron: '17 * * * *'   # hourly, 3-hour lookback; counts may overlap between runs
 
 permissions:
   contents: read
@@ -54,18 +52,12 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Collect ids already reported on the open issue
+      - name: Find the open alert issue
         run: |
           set -euo pipefail
           number=$(gh issue list --state open --search "\"$ISSUE_TITLE\" in:title" \
             --json number --jq '.[0].number // empty')
           echo "ISSUE_NUMBER=$number" >> "$GITHUB_ENV"
-          if [ -n "$number" ]; then
-            gh issue view "$number" --comments --json body,comments \
-              --jq '.body, (.comments[].body)' > already_reported.txt
-          else
-            : > already_reported.txt
-          fi
 
       - name: Run the monitor
         env:
@@ -75,7 +67,7 @@ jobs:
           SINCE: ${{ inputs.since || '' }}
         run: |
           set -euo pipefail
-          args=(--hours "$HOURS" --already-reported already_reported.txt --out out)
+          args=(--hours "$HOURS" --aggregate-only --out out)
           if [ -n "$SINCE" ]; then args+=(--since "$SINCE"); fi
           python3 scripts/cluster_monitor/cluster_monitor.py "${args[@]}"
           cat out/summary.md >> "$GITHUB_STEP_SUMMARY"
@@ -88,18 +80,9 @@ jobs:
             echo "No new flags."
             exit 0
           fi
-          { cat out/summary.md; echo; echo "Run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} (flags.csv artifact has full detail)"; } > body.md
+          { cat out/summary.md; echo; echo "Run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"; } > body.md
           if [ -n "$ISSUE_NUMBER" ]; then
             gh issue comment "$ISSUE_NUMBER" --body-file body.md
           else
             gh issue create --title "$ISSUE_TITLE" --body-file body.md
           fi
-
-      - name: Upload flags for review
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cluster-monitor
-          path: out/
-          if-no-files-found: ignore
-          retention-days: 30
