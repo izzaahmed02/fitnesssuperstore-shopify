@@ -33,6 +33,11 @@ Usage:
         [--hex-quotes hex_quotes.csv] \
         [--report out/item_c_report.txt]
 
+California: per Tim's Sep 23 4:50 PM PT ruling the $149 CA correction is
+NOT in this run's scope, so the CA checks report as WARN by default and do
+not fail the run. Pass --ca-strict once the CA correction change-set runs.
+The free-ship check likewise ignores the CA segment unless --ca-strict.
+
 --hex-quotes is a CSV with columns sku,dallas,seattle,la (the highest option
 per zone, as captured). Without it the hex check lists the cohort rows and
 their feed values so the comparison can be run by hand.
@@ -160,7 +165,7 @@ def file_header(path, rows):
             f"mtime={mtime:%Y-%m-%d %H:%M:%S} UTC  sha256={digest}")
 
 
-def check_feed(path, fieldnames, rows, free_ship_ids, report):
+def check_feed(path, fieldnames, rows, free_ship_ids, report, ca_strict=False):
     report.note("")
     report.note("=== " + file_header(path, rows))
 
@@ -188,12 +193,13 @@ def check_feed(path, fieldnames, rows, free_ship_ids, report):
             regional.append(f"{label}: no US:CA entry ({row.get('shipping')})")
 
         ca = zone_price(segments, "CA")
+        scoped = [(c, r, p) for c, r, p in segments if ca_strict or r != "CA"]
         if feed_id in free_ship_ids:
-            nonzero = [f"{c}:{r or '*'}={p}" for c, r, p in segments if p != 0]
+            nonzero = [f"{c}:{r or '*'}={p}" for c, r, p in scoped if p != 0]
             if nonzero:
                 free_ship.append(f"{label}: {' '.join(nonzero)}")
-        elif national_price(segments) == 0 and any(p for _, _, p in segments):
-            paid = [f"{c}:{r}={p:g}" for c, r, p in segments if p]
+        elif national_price(segments) == 0 and any(p for _, _, p in scoped):
+            paid = [f"{c}:{r}={p:g}" for c, r, p in scoped if p]
             paid_region_on_free.append(f"{label}: US 0 but {' '.join(paid)}")
         elif ca is not None and ca != 0:
             if ca == STALE_CA:
@@ -246,7 +252,8 @@ def check_feed(path, fieldnames, rows, free_ship_ids, report):
     else:
         report.note("SKIP  free-ship $0.00 by id list: no --free-ship-ids given")
     report.result("free-ship row ($0 national) with a paid region", paid_region_on_free)
-    report.result("stale CA $149 constant", ca_stale)
+    report.result("stale CA $149 constant" + ("" if ca_strict else " (out of scope, report only)"),
+                  ca_stale, warn=not ca_strict)
     report.result("CA value off the 199/249/349 tiers (review)", ca_off, warn=True)
     report.result("tax attribute", tax)
     report.result("retired processing_time columns", retired)
@@ -381,6 +388,8 @@ def main(argv=None):
                         help="a regenerated source file; pass once per source")
     parser.add_argument("--free-ship-ids", help="file with one free-shipping id per line")
     parser.add_argument("--hex-quotes", help="CSV sku,dallas,seattle,la")
+    parser.add_argument("--ca-strict", action="store_true",
+                        help="fail on CA values (the $149 correction change-set)")
     parser.add_argument("--report", help="also write the report here")
     args = parser.parse_args(argv)
 
@@ -395,7 +404,7 @@ def main(argv=None):
     all_rows, ff_rows, files = [], [], []
     for path in args.feed:
         fieldnames, rows = read_feed(path)
-        check_feed(path, fieldnames, rows, free_ship_ids, report)
+        check_feed(path, fieldnames, rows, free_ship_ids, report, args.ca_strict)
         all_rows.extend(rows)
         files.append((path, rows))
         if any(sku_of(r).startswith("FF-") for r in rows):
