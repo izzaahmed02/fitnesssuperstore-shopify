@@ -1,0 +1,38 @@
+{% doc %}
+  Promo-context line under the price on Power Plate flash sale PDPs.
+  Power Plate authorization: Sep 23 through Oct 4, 2026, 25% on Pro8, MOVE
+  Black / Red / Wood Finish and the MOVE Stability Bar + Power Shield.
+  @param {product} product - Current product.
+  @param {boolean} [hide_on_mobile] - Desktop-layout copy; hidden below 990px so one line shows.
+{% enddoc %}
+{%- liquid
+  assign pp_flash_ids = '10198076096828,9878581674300,9878582460732,9878583869756,9878560309564' | split: ','
+  assign pp_flash_product_id = product.id | append: ''
+  assign pp_flash_now = 'now' | date: '%s' | plus: 0
+  assign pp_flash_start = '2026-09-23T00:00:00-07:00' | date: '%s' | plus: 0
+  assign pp_flash_end = '2026-10-04T23:59:59-07:00' | date: '%s' | plus: 0
+  assign pp_flash_variant = product.selected_or_first_available_variant
+  assign pp_flash_active = false
+  if pp_flash_ids contains pp_flash_product_id
+    if pp_flash_now >= pp_flash_start and pp_flash_now <= pp_flash_end
+      if pp_flash_variant.compare_at_price > pp_flash_variant.price
+        assign pp_flash_active = true
+      endif
+    endif
+  endif
+-%}
+{%- if pp_flash_active -%}
+  <p class="pp-flash-note{% if hide_on_mobile %} pp-flash-note--desktop{% endif %}">Power Plate flash sale — ends Oct 4</p>
+{%- endif -%}
+{% stylesheet %}
+  .pp-flash-note {
+    margin: 0 0 16px;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 700;
+    color: #D83D0E;
+  }
+  @media (max-width: 989.98px) {
+    .pp-flash-note--desktop { display: none; }
+  }
+{% endstylesheet %}
