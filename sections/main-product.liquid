@@ -201,6 +201,21 @@
     >
   {%- endif -%}
   {% assign variant_images = product.images | where: 'attached_to_variant?', true | map: 'src' %}
+  {%- comment -%}
+    One retail reference per PDP. The permanent "As high as" line and its
+    "You save" amount step aside while a campaign card already shows its own
+    struck price, so the page never carries two struck prices.
+  {%- endcomment -%}
+  {%- capture pdp_campaign_card -%}{%- render 'labor-day-sale-note', product: product -%}{%- endcapture -%}
+  {%- liquid
+    assign pdp_show_retail = false
+    if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
+      assign pdp_show_retail = true
+    endif
+    if pdp_campaign_card contains 'labor-day-sale-card__was'
+      assign pdp_show_retail = false
+    endif
+  -%}
 
 
   {% comment %} pdp-page-width main-container {% endcomment %}
@@ -223,7 +238,7 @@
 
 
                 <div>
-                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
+                  {% if pdp_show_retail %}
                     <span class="pr_custom_compare_price"
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
@@ -244,8 +259,7 @@
                         price_class: 'price--large'
                       -%}
 
-                      {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
-                      %}
+                      {% if pdp_show_retail %}
                         <span class="you-save"
                           >You save
                           {{
@@ -870,7 +884,7 @@
 
                 <div class="product__price-row">
                 <div class="product__prices hidden lg:block">
-                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
+                  {% if pdp_show_retail %}
                     <span class="pr_custom_compare_price"
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
@@ -891,8 +905,7 @@
                         price_class: 'price--large'
                       -%}
 
-                      {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
-                      %}
+                      {% if pdp_show_retail %}
                         <span class="you-save"
                           >You save
                           {{
