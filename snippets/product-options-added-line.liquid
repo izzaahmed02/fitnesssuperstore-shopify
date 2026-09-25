@@ -41,4 +41,32 @@
     <span class="options-added-line__label">Options added:</span>
     <span class="options-added-line__value" data-options-added-value data-currency="{{ cart.currency.symbol }}">+{{ 0 | money }}</span>
   </div>
+
+  {%- comment -%}
+    Installation and paid extended-warranty services owned by National Gym
+    Service LLC are not collected in the Fitness Superstore checkout. This block
+    stays hidden until such an option is actually selected, and it exists so a
+    deferred charge can never be mistaken for a free service. It is populated by
+    product-custom-options.js from the same shop metafield the Cart Transform
+    function reads.
+  {%- endcomment -%}
+  {%- render 'ngs-allowlist-data' -%}
+  <div
+    id="Ngs-Due-{{ section_id }}"
+    class="ngs-due-line"
+    role="status"
+    aria-live="polite"
+    data-ngs-due-line
+    hidden
+  >
+    <div class="ngs-due-line__row">
+      <span class="ngs-due-line__label">Billed separately by National Gym Service:</span>
+      <span class="ngs-due-line__value" data-ngs-due-value data-currency="{{ cart.currency.symbol }}">{{ 0 | money }}</span>
+    </div>
+    <p class="ngs-due-line__note" data-ngs-due-note>
+      Not charged today. National Gym Service LLC will contact you after your
+      order to arrange payment for this service. Your installation is scheduled,
+      and a paid extended warranty starts, once that payment is confirmed.
+    </p>
+  </div>
 {%- endif -%}
