@@ -8,13 +8,14 @@
   value links to the child product it belongs to (value.product_url), which is
   where the standard variant picker sends the customer anyway.
 
-  Only single-option combined listings qualify. Multi-option families (the hex
-  dumbbell parents) keep the standard variant picker, because one link per value
-  cannot express a combination of several options.
+  Whether a product qualifies is decided by combined-listing-selector-applies.liquid
+  (single-option families whose values link to sibling products). Multi-option
+  families (the hex dumbbell parents) keep the standard variant picker, because
+  one link per value cannot express a combination of several options.
 
-  The active value is the one whose child URL is the page being viewed. On the
-  parent PDP none of the child URLs match, so the value Shopify marks as selected
-  is used instead.
+  The active value is the one Shopify marks as selected for the page being viewed.
+  Values without a product_url belong to the current product and fall back to
+  their variant URL.
 
   The section renders this in both the mobile and desktop title slots, and skips
   the standard variant picker when combined_listing_selector_applies is true (see
@@ -24,24 +25,10 @@
     product - {Object} the product to render the selector for (required)
 {%- endcomment -%}
 
-{%- liquid
-  assign cl_option = null
-  if product.combined_listing != blank and product.options_with_values.size == 1
-    assign cl_option = product.options_with_values.first
-  endif
--%}
+{%- capture cl_applies -%}{%- render 'combined-listing-selector-applies', product: product -%}{%- endcapture -%}
 
-{%- if cl_option != blank and cl_option.values.size > 1 -%}
-  {%- liquid
-    assign current_url = product.url | split: '?' | first
-    assign on_child_url = false
-    for value in cl_option.values
-      assign value_base_url = value.product_url | split: '?' | first
-      if value_base_url == current_url
-        assign on_child_url = true
-      endif
-    endfor
-  -%}
+{%- if cl_applies == 'true' -%}
+  {%- assign cl_option = product.options_with_values.first -%}
 
   {%- style -%}
     .finish-selector{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:0 0 20px;}
@@ -53,19 +40,8 @@
   <div class="finish-selector" role="group" aria-label="Choose {{ cl_option.name | escape }}">
     <span class="finish-selector__label">{{ cl_option.name | escape }}:</span>
     {%- for value in cl_option.values -%}
-      {%- liquid
-        assign value_url = value.product_url | default: value.variant.url
-        assign value_base_url = value_url | split: '?' | first
-        if on_child_url
-          assign is_active = false
-          if value_base_url == current_url
-            assign is_active = true
-          endif
-        else
-          assign is_active = value.selected
-        endif
-      -%}
-      {%- if is_active -%}
+      {%- assign value_url = value.product_url | default: value.variant.url -%}
+      {%- if value.selected -%}
         <span class="finish-selector__option is-active" aria-current="true">{{ value.name | escape }}</span>
       {%- elsif value_url != blank -%}
         <a class="finish-selector__option" href="{{ value_url }}">{{ value.name | escape }}</a>

@@ -1,0 +1,37 @@
+{%- comment -%}
+  Outputs "true" when the product should show its options as the near-title
+  combined-listing selector (combined-listing-selector.liquid), otherwise "false".
+
+  Liquid has no property that reports whether a product is a combined listing
+  parent or child, so this branches on product_option_value.product_url, which
+  Shopify documents as the signal for combined-listing navigation: it is only
+  populated for option values that belong to a sibling product. The selector
+  applies to single-option families (e.g. Turf Grade) where at least one value
+  points to a different product than the one being viewed. Multi-option
+  families (the hex dumbbell parents) keep the standard variant picker.
+
+  Usage:
+    {%- capture applies -%}{%- render 'combined-listing-selector-applies', product: product -%}{%- endcapture -%}
+
+  Accepts:
+    product - {Object} the product to check (required)
+{%- endcomment -%}
+{%- liquid
+  assign applies = false
+  if product.options_with_values.size == 1
+    assign cl_option = product.options_with_values.first
+    if cl_option.values.size > 1
+      assign current_url = product.url | split: '?' | first
+      for value in cl_option.values
+        if value.product_url != blank
+          assign value_base_url = value.product_url | split: '?' | first
+          if value_base_url != current_url
+            assign applies = true
+            break
+          endif
+        endif
+      endfor
+    endif
+  endif
+  echo applies
+-%}

@@ -178,11 +178,16 @@
     {% assign is_gift_cards_template = true %}
   {% endif %}
 
+  {%- comment -%}
+    Single-option combined listings show their options as the near-title link
+    selector (combined-listing-selector.liquid) instead of the standard picker.
+  {%- endcomment -%}
+  {%- capture combined_listing_selector_check -%}
+    {%- render 'combined-listing-selector-applies', product: product -%}
+  {%- endcapture -%}
   {%- liquid
-    # Single-option combined listings show their options as the near-title link
-    # selector (combined-listing-selector.liquid) instead of the standard picker.
     assign combined_listing_selector_applies = false
-    if product.combined_listing != blank and product.options_with_values.size == 1 and product.options_with_values.first.values.size > 1
+    if combined_listing_selector_check == 'true'
       assign combined_listing_selector_applies = true
     endif
   -%}
