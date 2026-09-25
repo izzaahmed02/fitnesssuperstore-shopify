@@ -370,37 +370,82 @@ class ProductGallery extends HTMLElement {
       }
 
       const isLandscape = imgWidth > imgHeight;
+
+      // The zoom fixes below (hover-time lens re-measure, scroll re-sync,
+      // container-space lens positioning, scroll-listener cleanup) are scoped
+      // to the new PDP template only; every other PDP keeps the original
+      // behavior byte-for-byte.
+      const isPdpNew = !!this.closest('.pdp-new');
+
+      // Legacy path (non-pdp-new): lens scale is snapshotted once at image
+      // load, exactly as before.
       const scaleX = zoomImg.naturalWidth / img.clientWidth;
       const scaleY = zoomImg.naturalHeight / img.clientHeight;
 
-      requestAnimationFrame(() => {
-        const prevDisplay = zoomResult.style.display;
-        const prevVisibility = zoomResult.style.visibility;
-        zoomResult.style.visibility = 'hidden';
-        zoomResult.style.display = 'block';
-
-        const zoomW = zoomResult.offsetWidth;
-        const zoomH = zoomResult.offsetHeight;
-
-        zoomResult.style.display = prevDisplay;
-        zoomResult.style.visibility = prevVisibility;
-
+      // Measure the zoom panel even while it is display:none (hover not
+      // started yet) by flashing it on invisibly for one layout read.
+      const measureZoomPanel = () => {
+        let zoomW = zoomResult.offsetWidth;
+        let zoomH = zoomResult.offsetHeight;
         if (!zoomW || !zoomH) {
-          console.warn('initZoom: Zoom result width or height is zero. Skipping further setup.');
-          return;
+          const prevDisplay = zoomResult.style.display;
+          const prevVisibility = zoomResult.style.visibility;
+          zoomResult.style.visibility = 'hidden';
+          zoomResult.style.display = 'block';
+          zoomW = zoomResult.offsetWidth;
+          zoomH = zoomResult.offsetHeight;
+          zoomResult.style.display = prevDisplay;
+          zoomResult.style.visibility = prevVisibility;
+        }
+        return { zoomW, zoomH };
+      };
+
+      // Size the lens from the CURRENT image + panel geometry. Called on every
+      // mouseenter (not just once at image load): on first paint the layout is
+      // often not settled yet (async CSS, buy-box column, responsive image
+      // sizing), so a load-time snapshot leaves the lens/panel mapping offset
+      // from the pointer until a window resize forces a re-init.
+      const sizeLens = () => {
+        const { zoomW, zoomH } = measureZoomPanel();
+        if (!zoomW || !zoomH || !img.clientWidth || !img.clientHeight) {
+          console.warn('initZoom: Zoom result width or height is zero. Skipping lens sizing.');
+          return false;
         }
 
-        const lensW = zoomW / scaleX;
-        const lensH = zoomH / scaleY;
+        const curScaleX = zoomImg.naturalWidth / img.clientWidth;
+        const curScaleY = zoomImg.naturalHeight / img.clientHeight;
 
-        lens.style.width = `${Math.min(lensW, img.clientWidth)}px`;
-        lens.style.height = `${Math.min(lensH, img.clientHeight)}px`;
+        lens.style.width = `${Math.min(zoomW / curScaleX, img.clientWidth)}px`;
+        lens.style.height = `${Math.min(zoomH / curScaleY, img.clientHeight)}px`;
+        return true;
+      };
+
+      requestAnimationFrame(() => {
+        if (isPdpNew) {
+          if (!sizeLens()) {
+            return;
+          }
+        } else {
+          const { zoomW, zoomH } = measureZoomPanel();
+          if (!zoomW || !zoomH) {
+            console.warn('initZoom: Zoom result width or height is zero. Skipping further setup.');
+            return;
+          }
+          lens.style.width = `${Math.min(zoomW / scaleX, img.clientWidth)}px`;
+          lens.style.height = `${Math.min(zoomH / scaleY, img.clientHeight)}px`;
+        }
 
 
         const announcementBarSection = document.querySelector('.announcement-bar-section');
         const headerWrapper = document.querySelector('.header-wrapper');
 
         const updateZoomTop = () => {
+          // Media switches rebuild the main container; drop this listener once
+          // the container it was created for leaves the DOM.
+          if (isPdpNew && !container.isConnected) {
+            window.removeEventListener('scroll', updateZoomTop);
+            return;
+          }
           const threshold = (announcementBarSection?.offsetHeight || 0) + (headerWrapper?.offsetHeight || 0);
           document.documentElement.style.setProperty('--header-height', `${threshold}px`);
 
@@ -412,6 +457,25 @@ class ProductGallery extends HTMLElement {
             zoomResult.style.height = '';
           }
 
+          // Scrolling moves the image under a stationary pointer without
+          // firing any mouseenter/mouseleave, so an open zoom would otherwise
+          // stay stuck (panel covering the buy box, lens frozen at a stale
+          // spot). Re-sync the lens to the pointer while it is still over the
+          // image, and close the zoom the moment it no longer is.
+          if (isPdpNew && zoomResult.style.display === 'block') {
+            const rect = img.getBoundingClientRect();
+            const inside =
+              this.lastMouseX > rect.left &&
+              this.lastMouseX < rect.right &&
+              this.lastMouseY > rect.top &&
+              this.lastMouseY < rect.bottom;
+            if (inside) {
+              moveLens({ clientX: this.lastMouseX, clientY: this.lastMouseY });
+            } else {
+              zoomResult.style.display = 'none';
+              lens.style.display = 'none';
+            }
+          }
         };
 
         window.removeEventListener('scroll', updateZoomTop);
@@ -433,8 +497,19 @@ class ProductGallery extends HTMLElement {
           left = Math.max(0, Math.min(left, img.clientWidth - lens.offsetWidth));
           top = Math.max(0, Math.min(top, img.clientHeight - lens.offsetHeight));
 
-          lens.style.left = `${left}px`;
-          lens.style.top = `${top}px`;
+          // left/top are in IMAGE space, but the lens is absolutely positioned
+          // inside the container (a square padding-top:100% box the image is
+          // centered in). Add the image's offset within the container so the
+          // lens sits under the pointer even when the image doesn't fill the
+          // container. (pdp-new only; other PDPs keep image-space positioning.)
+          if (isPdpNew) {
+            const contRect = container.getBoundingClientRect();
+            lens.style.left = `${rect.left - contRect.left + left}px`;
+            lens.style.top = `${rect.top - contRect.top + top}px`;
+          } else {
+            lens.style.left = `${left}px`;
+            lens.style.top = `${top}px`;
+          }
 
           const scaleX = zoomImg.naturalWidth / img.clientWidth;
           const scaleY = zoomImg.naturalHeight / img.clientHeight;
@@ -450,6 +525,9 @@ class ProductGallery extends HTMLElement {
       container.removeEventListener('mouseenter', this._handleZoomMouseEnter);
       this._handleZoomMouseEnter = () => {
 
+        // Re-measure on every hover so the lens/panel mapping tracks any
+        // layout change since load (settled CSS, column shifts, etc.).
+        if (isPdpNew) sizeLens();
         zoomResult.style.display = 'block';
         lens.style.display = 'block';
       };
@@ -477,6 +555,7 @@ class ProductGallery extends HTMLElement {
         const inside = this.lastMouseX > rect.left && this.lastMouseX < rect.right && this.lastMouseY > rect.top && this.lastMouseY < rect.bottom;
         if (inside) {
 
+          if (isPdpNew) sizeLens();
           zoomResult.style.display = 'block';
           lens.style.display = 'block';
           moveLens({ clientX: this.lastMouseX, clientY: this.lastMouseY });
