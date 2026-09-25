@@ -65,6 +65,13 @@
   if combined_listing_parent != blank
     assign is_combined_listing_child = true
   endif
+
+  # Single-option combined listings show their options as the near-title link
+  # selector (combined-listing-selector.liquid) instead of the standard picker.
+  assign combined_listing_selector_applies = false
+  if product.combined_listing != blank and product.options_with_values.size == 1 and product.options_with_values.first.values.size > 1
+    assign combined_listing_selector_applies = true
+  endif
 -%}
 <product-info
   id="MainProduct-{{ section.id }}"
@@ -215,6 +222,9 @@
                 </div>
                 {%- if product.metafields.custom.product_color != blank -%}
                   {% render 'finish-selector', product: product %}
+                {%- endif -%}
+                {%- if combined_listing_selector_applies -%}
+                  {% render 'combined-listing-selector', product: product %}
                 {%- endif -%}
 
               {% when 'price' %}
@@ -864,6 +874,11 @@
                 </div>
                 {%- if product.metafields.custom.product_color != blank -%}
                   {% render 'finish-selector', product: product %}
+                {%- endif -%}
+                {%- if combined_listing_selector_applies -%}
+                  <div class="hidden lg:block">
+                    {% render 'combined-listing-selector', product: product %}
+                  </div>
                 {%- endif -%}
               {% when 'price' %}
 
@@ -1698,7 +1713,9 @@
                 %}
 
               {%- when 'variant_picker' -%}
-                {% render 'product-variant-picker', product: product, block: block, product_form_id: product_form_id %}
+                {%- unless combined_listing_selector_applies -%}
+                  {% render 'product-variant-picker', product: product, block: block, product_form_id: product_form_id %}
+                {%- endunless -%}
               {%- when 'buy_buttons' -%}
                 {%- render 'buy-buttons',
                   block: block,
