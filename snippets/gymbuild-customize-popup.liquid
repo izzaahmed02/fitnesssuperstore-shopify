@@ -1,0 +1,1563 @@
+{%- comment %}
+  "Customize this build" popup for the GymBuild PDP
+  (sections/main-product-ab-test-asjads-pdp.liquid only).
+  Figma: file XBaAGVhSupd0fvIcXd28qw, node 4539:86140.
+
+  Opened via a <modal-opener data-modal="#GymBuildCustomizeModal-{{ section.id }}">
+  wrapped around the existing "Customize this build" button in the main
+  section file. Reuses Dawn's <modal-dialog> custom element
+  (assets/global.js) for open/close/focus-trap/ESC/backdrop-click — no new
+  JS needed for that part.
+
+  IMPORTANT: <modal-dialog>'s connectedCallback moves this element to be a
+  direct child of <body> at runtime. That means none of its CSS can rely on
+  #shopify-section-{{ section.id }} scoping (it won't be nested under the
+  section wrapper by the time it's shown) — every rule below is a plain,
+  globally-scoped .gymbuild-customize-drawer* class instead, same approach
+  section-main-product.css already uses for .product-popup-modal.
+
+  P0 (see CLAUDE.md, this popup is the original target of the Hard P0
+  Rules): footer says "Estimated equipment subtotal" (never "Total"), no
+  "shipping calculated at checkout" copy. Per explicit direction, the
+  submit button keeps Figma's "Request Quote Review" label rather than
+  "View selected build" (that label is for the PDP-level entry point that
+  opens this popup, not this internal action) — everything is visual-only,
+  nothing submits or mutates a cart.
+
+  DATA SOURCE (Phase 2, wired 2026-09-21) — the "Package Inclusions"
+  tabs/grid below read the real metaobject-backed model. Nothing here is
+  placeholder any more; the earlier add_on_product stand-in (grouped by a
+  fabricated "Mats"/"Storage Racks"/"Other Accessories" taxonomy) was
+  removed on 2026-09-03 and must NOT be restored.
+
+    current_variant.metafields.custom.gymbuild_items  (list of gymbuild_item)
+      gymbuild_item.category             -> gymbuild_category { name }
+      gymbuild_item.default_option       -> gymbuild_option { variant, quantity }
+      gymbuild_item.alternative_options  -> list of gymbuild_option
+
+  Tab labels come from gymbuild_category.name; tab ORDER is the order each
+  category first appears in the variant's item list (there is deliberately
+  no sort field). Prices, weights, SKUs, titles and images are all read
+  live off the referenced product variant — never stored in the metaobjects
+  and never hard-coded here. See gymbuild-data-model.md (what the types are)
+  and gymbuild-data-population.md (every GID, and the interim flooring
+  caveat: FF-RIT24-Middle currently stands in for the full tile count).
+
+  Because the size cards navigate to variant.url, this lookup re-scopes per
+  package size on its own — no client-side state is needed for size changes.
+
+  TEXT FIELDS ARE READ VIA A capture BLOCK, not `.value`: rendering a
+  metaobject text/integer field always yields its raw value, which keeps
+  handleize/plus/escape working on a real string regardless of how the
+  field drop coerces. Reference fields use the documented `.value`.
+
+  SWAP INTERACTION (Figma node 4544:92078): clicking "Swap" on an included
+  card switches the drawer body + header into a "Swap to:" sub-view (same
+  drawer, no new modal — toggled via the .is-swap-view class on
+  .gymbuild-customize-drawer__content), showing alternatives with a price
+  delta (+/- $X). "Back to build" returns to the main tabs/grid.
+{% endcomment -%}
+
+{%- liquid
+  assign gymbuild_items = current_variant.metafields.custom.gymbuild_items.value
+-%}
+
+<modal-dialog id="GymBuildCustomizeModal-{{ section.id }}" class="gymbuild-customize-drawer">
+  <div
+    role="dialog"
+    aria-label="Customize this build"
+    aria-modal="true"
+    class="gymbuild-customize-drawer__content"
+    tabindex="-1"
+  >
+    <div class="gymbuild-customize-drawer__header">
+      <h2 class="gymbuild-customize-drawer__title">Customize this build</h2>
+      <button type="button" class="gymbuild-customize-drawer__back" data-gymbuild-back>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Back to build
+      </button>
+      <button
+        type="button"
+        id="ModalClose-GymBuildCustomize-{{ section.id }}"
+        class="gymbuild-customize-drawer__close"
+        aria-label="{{ 'accessibility.close' | t }}"
+      >
+        {% render 'icon-close' %}
+      </button>
+    </div>
+
+    <div class="gymbuild-customize-drawer__body">
+      {%- comment -%}
+        ==================================================================
+        TEMPORARY DEV BANNER — DELETE THIS WHOLE BLOCK (markup START)
+        ------------------------------------------------------------------
+        Added 2026-09-21 while the GymBuild build tool is unapproved. It
+        sits directly inside __body, OUTSIDE __main-view and __swap-view,
+        so it stays visible in the swap sub-view too.
+
+        To remove: delete from this comment to the matching "markup END"
+        marker below, then delete the matching CSS block in this file's style
+        block (search for the same TEMPORARY DEV BANNER marker). The
+        same pair exists in gymbuild-quote-review-popup.liquid — remove
+        both. Nothing else references .gymbuild-dev-banner.
+
+        Copy is deliberately narrow: it says the numbers are provisional.
+        It does NOT call the products fake — they are real French Fitness
+        products at real prices. What is provisional is the package
+        composition (e.g. flooring is still the FF-RIT24-Middle interim
+        stand-in) and the fact that none of it is approved yet. This is
+        new customer-facing copy and needs human review per CLAUDE.md
+        non-negotiable #7.
+        ==================================================================
+      {%- endcomment -%}
+      <div class="gymbuild-dev-banner" role="status">
+        <span class="gymbuild-dev-banner__icon">{% render 'icon-alert' %}</span>
+        <span>
+          <strong>Under development — for testing only.</strong>
+          Package contents, prices and weights shown here are provisional and not final.
+        </span>
+      </div>
+      {%- comment -%} TEMPORARY DEV BANNER — DELETE THIS WHOLE BLOCK (markup END) {%- endcomment -%}
+
+      <div class="gymbuild-customize-drawer__main-view">
+      {% if product.variants.size > 1 %}
+        {%- comment -%}
+          Figma 4539:88524 (desktop) / 3679:110550 (mobile). Desktop shows
+          all three cards in a 3-up grid; mobile shows only the selected
+          card plus a "Show Other Room Sizes" disclosure (Figma 3694:76997).
+          Both states are the same markup — the collapse is CSS + the
+          toggle below, so no card is ever removed from the DOM and the
+          radio group stays intact for keyboard and screen-reader users.
+        {%- endcomment -%}
+        <div class="gymbuild-customize-drawer__sizes" data-gymbuild-sizes>
+          <fieldset id="GymBuildSizeCards-{{ section.id }}" class="gymbuild-customize-drawer__size-cards" role="radiogroup" aria-label="{{ product.options_with_values.first.name }}">
+            <legend class="visually-hidden">{{ product.options_with_values.first.name }}</legend>
+            {% for variant in product.variants %}
+              <label class="gymbuild-customize-drawer__size-card{% if variant.id == current_variant.id %} is-selected{% endif %}{% unless variant.available %} is-soldout{% endunless %}">
+                <input
+                  type="radio"
+                  class="gymbuild-customize-drawer__size-card-input"
+                  name="GymBuildCustomizeSize-{{ section.id }}"
+                  value="{{ variant.id }}"
+                  data-variant-url="{{ variant.url }}"
+                  {% if variant.id == current_variant.id %}checked{% endif %}
+                  {% unless variant.available %}disabled{% endunless %}
+                >
+                <span class="gymbuild-customize-drawer__size-card-head">
+                  {%- comment -%}
+                    Figma 4539:88529 "radiobuttons": an 18px ring with a
+                    10px #d83d0e dot when selected. Purely decorative —
+                    the real control is the visually-hidden input above,
+                    so this carries aria-hidden.
+                  {%- endcomment -%}
+                  <span class="gymbuild-customize-drawer__size-card-radio" aria-hidden="true"></span>
+                  <span class="gymbuild-customize-drawer__size-card-title">{{ variant.title }}</span>
+                </span>
+                {%- if variant.metafields.custom.size_description != blank -%}
+                  <span class="gymbuild-customize-drawer__size-card-desc">{{ variant.metafields.custom.size_description }}</span>
+                {%- endif -%}
+                <span class="gymbuild-customize-drawer__size-card-price">Starting at {{ variant.price | money }}</span>
+              </label>
+            {% endfor %}
+          </fieldset>
+
+          <button
+            type="button"
+            class="gymbuild-customize-drawer__sizes-toggle"
+            data-gymbuild-sizes-toggle
+            aria-expanded="false"
+            aria-controls="GymBuildSizeCards-{{ section.id }}"
+          >
+            <span data-gymbuild-sizes-toggle-label>Show Other Room Sizes</span>
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+              <path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      {% endif %}
+
+      {% if gymbuild_items != blank %}
+        <div class="gymbuild-customize-drawer__tabs" role="tablist" aria-label="Package inclusion categories">
+          {%- liquid
+            assign rendered_tabs = ''
+            assign tab_index = 0
+          -%}
+          {% for gb_item in gymbuild_items %}
+            {%- liquid
+              capture tab_heading
+                echo gb_item.category.value.name
+              endcapture
+              if tab_heading == blank
+                assign tab_heading = 'Included'
+              endif
+              assign tab_key = tab_heading | handleize
+
+              capture tab_token
+                echo '|'
+                echo tab_key
+                echo '|'
+              endcapture
+            -%}
+
+            {% unless rendered_tabs contains tab_token %}
+              <button
+                type="button"
+                class="gymbuild-customize-drawer__tab{% if tab_index == 0 %} is-active{% endif %}"
+                role="tab"
+                aria-selected="{% if tab_index == 0 %}true{% else %}false{% endif %}"
+                aria-controls="GymBuildInclusionsPanel-{{ section.id }}-{{ tab_key }}"
+                id="GymBuildInclusionsTab-{{ section.id }}-{{ tab_key }}"
+                data-tab="{{ tab_key }}"
+              >
+                {{ tab_heading }}
+              </button>
+
+              {%- liquid
+                assign rendered_tabs = rendered_tabs | append: tab_token
+                assign tab_index = tab_index | plus: 1
+              -%}
+            {% endunless %}
+          {% endfor %}
+        </div>
+
+        <div class="gymbuild-customize-drawer__panels">
+          {%- liquid
+            assign rendered_panels = ''
+            assign panel_index = 0
+          -%}
+
+          {% for gb_item in gymbuild_items %}
+            {%- liquid
+              capture panel_heading
+                echo gb_item.category.value.name
+              endcapture
+              if panel_heading == blank
+                assign panel_heading = 'Included'
+              endif
+              assign panel_key = panel_heading | handleize
+
+              capture panel_token
+                echo '|'
+                echo panel_key
+                echo '|'
+              endcapture
+            -%}
+
+            {% unless rendered_panels contains panel_token %}
+              <div
+                class="gymbuild-customize-drawer__panel{% if panel_index == 0 %} is-active{% endif %}"
+                id="GymBuildInclusionsPanel-{{ section.id }}-{{ panel_key }}"
+                role="tabpanel"
+                aria-labelledby="GymBuildInclusionsTab-{{ section.id }}-{{ panel_key }}"
+                data-panel="{{ panel_key }}"
+                {% unless panel_index == 0 %}hidden{% endunless %}
+              >
+                <p class="gymbuild-customize-drawer__panel-heading">Package Inclusions:</p>
+                <div class="gymbuild-customize-drawer__grid">
+                  {% for card_item in gymbuild_items %}
+                    {%- liquid
+                      capture card_tab_heading
+                        echo card_item.category.value.name
+                      endcapture
+                      if card_tab_heading == blank
+                        assign card_tab_heading = 'Included'
+                      endif
+                      assign card_tab_key = card_tab_heading | handleize
+
+                      assign inclusion_option = card_item.default_option.value
+                      assign inclusion_variant = inclusion_option.variant.value
+                    -%}
+
+                    {% if card_tab_key == panel_key and inclusion_variant != blank %}
+                      {%- liquid
+                        # Quantity comes off gymbuild_option.quantity, read via capture
+                        # (see the snippet header) so it is a real string before | plus.
+                        # Floor at 1: the definition enforces min 1, so a 0 here can only
+                        # mean the field failed to resolve, and falling back to 1 degrades
+                        # to the pre-Phase-2 behaviour instead of zeroing a line out of
+                        # the subtotal entirely.
+                        capture inclusion_qty_raw
+                          echo inclusion_option.quantity
+                        endcapture
+                        assign inclusion_qty = inclusion_qty_raw | plus: 0
+                        if inclusion_qty < 1
+                          assign inclusion_qty = 1
+                        endif
+
+                        # gymbuild_option references a VARIANT, so title / sku / price /
+                        # weight all come off the real variant record. Most French Fitness
+                        # products are single-variant ("Default Title"), where the product
+                        # title alone is the customer-facing name; only append the variant
+                        # title when it actually distinguishes something (FF-RIT24
+                        # "Middle", or FF-MSS-48-3T Single Compact 3-Tier).
+                        assign inclusion_title = inclusion_variant.product.title
+                        unless inclusion_variant.title == 'Default Title'
+                          assign inclusion_title = inclusion_title | append: ' - ' | append: inclusion_variant.title
+                        endunless
+
+                        # Most referenced variants carry no variant-level image, so fall
+                        # back to the parent product's featured image.
+                        assign inclusion_image = inclusion_variant.featured_image
+                        if inclusion_image == blank
+                          assign inclusion_image = inclusion_variant.product.featured_image
+                        endif
+                        assign inclusion_image_url = inclusion_image | image_url: width: 300
+
+                        assign alternative_options = card_item.alternative_options.value
+
+                        # alternative_count is incremented inside the pool capture below
+                        # rather than read off a .count property, so the Swap button's
+                        # enabled state is driven by what was actually emitted. The old
+                        # check was a string test for a comma in the pool JSON, which
+                        # matched EVERY pool (each entry has commas between its own
+                        # fields), so the button rendered enabled on non-swappable items
+                        # and then did nothing when clicked.
+                        assign alternative_count = 0
+
+                        # data-item-pool carries the default FIRST, then every alternative.
+                        # price is in cents and weight is the variant's shipping weight in
+                        # GRAMS (variant.weight), both kept raw so the JS can do unit-free
+                        # math. Both are per ONE unit - multiply by qty at read time.
+                        capture inclusion_pool_json
+                          echo '[{"id":'
+                          echo inclusion_variant.id | json
+                          echo ',"product_id":'
+                          echo inclusion_variant.product.id | json
+                          echo ',"sku":'
+                          echo inclusion_variant.sku | json
+                          echo ',"title":'
+                          echo inclusion_title | json
+                          echo ',"image":'
+                          echo inclusion_image_url | json
+                          echo ',"price":'
+                          echo inclusion_variant.price
+                          echo ',"qty":'
+                          echo inclusion_qty
+                          echo ',"weight":'
+                          echo inclusion_variant.weight
+                          echo '}'
+
+                          for pool_option in alternative_options
+                            assign pool_variant = pool_option.variant.value
+
+                            if pool_variant != blank
+                              capture pool_qty_raw
+                                echo pool_option.quantity
+                              endcapture
+                              assign pool_qty = pool_qty_raw | plus: 0
+                              if pool_qty < 1
+                                assign pool_qty = 1
+                              endif
+
+                              assign pool_title = pool_variant.product.title
+                              unless pool_variant.title == 'Default Title'
+                                assign pool_title = pool_title | append: ' - ' | append: pool_variant.title
+                              endunless
+
+                              assign pool_image = pool_variant.featured_image
+                              if pool_image == blank
+                                assign pool_image = pool_variant.product.featured_image
+                              endif
+                              assign pool_image_url = pool_image | image_url: width: 300
+
+                              echo ',{"id":'
+                              echo pool_variant.id | json
+                              echo ',"product_id":'
+                              echo pool_variant.product.id | json
+                              echo ',"sku":'
+                              echo pool_variant.sku | json
+                              echo ',"title":'
+                              echo pool_title | json
+                              echo ',"image":'
+                              echo pool_image_url | json
+                              echo ',"price":'
+                              echo pool_variant.price
+                              echo ',"qty":'
+                              echo pool_qty
+                              echo ',"weight":'
+                              echo pool_variant.weight
+                              echo '}'
+
+                              assign alternative_count = alternative_count | plus: 1
+                            endif
+                          endfor
+                          echo ']'
+                        endcapture
+                      -%}
+                      <div
+                        class="gymbuild-customize-drawer__card"
+                        data-gymbuild-item
+                        data-item-id="{{ inclusion_variant.id }}"
+                        data-item-product-id="{{ inclusion_variant.product.id }}"
+                        data-item-sku="{{ inclusion_variant.sku | escape }}"
+                        data-item-title="{{ inclusion_title | escape }}"
+                        data-item-image="{{ inclusion_image_url }}"
+                        data-item-price="{{ inclusion_variant.price }}"
+                        data-item-qty="{{ inclusion_qty }}"
+                        data-item-weight="{{ inclusion_variant.weight }}"
+                        data-item-pool="{{ inclusion_pool_json | escape }}"
+                        data-original-id="{{ inclusion_variant.id }}"
+                        data-original-product-id="{{ inclusion_variant.product.id }}"
+                        data-original-sku="{{ inclusion_variant.sku | escape }}"
+                        data-original-title="{{ inclusion_title | escape }}"
+                        data-original-image="{{ inclusion_image_url }}"
+                        data-original-price="{{ inclusion_variant.price }}"
+                        data-original-qty="{{ inclusion_qty }}"
+                        data-original-weight="{{ inclusion_variant.weight }}"
+                      >
+                        {%- comment -%} TEMPORARY TEST-PRODUCT BADGE — DELETE THIS LINE {%- endcomment -%}
+                        <span class="gymbuild-test-badge">Test product only</span>
+                        <div class="gymbuild-customize-drawer__card-image-wrap">
+                          {% if inclusion_image %}
+                            {%- liquid
+                              assign inclusion_image_alt = inclusion_image.alt | default: inclusion_title | escape
+                            -%}
+                            {{
+                              inclusion_image
+                              | image_url: width: 300
+                              | image_tag:
+                                loading: 'lazy',
+                                widths: '150, 220, 300',
+                                sizes: '150px',
+                                alt: inclusion_image_alt,
+                                class: 'gymbuild-customize-drawer__card-image'
+                            }}
+                          {% else %}
+                            {{ 'product-1' | placeholder_svg_tag: 'gymbuild-customize-drawer__card-image placeholder-svg' }}
+                          {% endif %}
+                        </div>
+
+                        <p class="gymbuild-customize-drawer__card-title">{{ inclusion_title }}</p>
+                        <p class="gymbuild-customize-drawer__card-count" data-gymbuild-item-count>{{ inclusion_qty }} {{ inclusion_qty | pluralize: 'item', 'items' }}</p>
+
+                        <button type="button" class="gymbuild-customize-drawer__swap-btn" data-gymbuild-swap-btn{% if alternative_count == 0 %} disabled{% endif %}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M4 12a8 8 0 0 1 13.66-5.66M20 12a8 8 0 0 1-13.66 5.66" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M17 3v4h-4M7 21v-4h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                          Swap
+                        </button>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+
+              {%- liquid
+                assign rendered_panels = rendered_panels | append: panel_token
+                assign panel_index = panel_index | plus: 1
+              -%}
+            {% endunless %}
+          {% endfor %}
+        </div>
+      {% endif %}
+      </div>
+
+      <div class="gymbuild-customize-drawer__swap-view">
+        <div class="gymbuild-customize-drawer__swap-current" data-gymbuild-swap-current></div>
+        <p class="gymbuild-customize-drawer__panel-heading">Swap to:</p>
+        <div class="gymbuild-customize-drawer__swap-grid" data-gymbuild-swap-grid></div>
+      </div>
+    </div>
+
+    <div class="gymbuild-customize-drawer__footer" data-base-price="{{ current_variant.price }}">
+      <div class="gymbuild-customize-drawer__footer-row">
+        <span class="gymbuild-customize-drawer__footer-label">Estimated equipment subtotal</span>
+        <span class="gymbuild-customize-drawer__footer-price" data-gymbuild-subtotal>{{ current_variant.price | money }}</span>
+      </div>
+      <button type="button" class="gymbuild-customize-drawer__submit" data-gymbuild-open-review>Request Quote Review</button>
+
+      {%- comment -%}
+        Figma 4539:88797 "Link" (desktop, one centred line) and
+        3679:110934 (mobile, stacked into two centred lines) — same
+        content, so one block with a CSS-only difference.
+
+        The destination is the sitewide RoomPlanner URL already used at
+        sections/main-product-ab-test-asjads-pdp.liquid:1386,
+        sections/main-collection-intro.liquid:77 and
+        sections/we-offer-blocks.liquid — not a new or invented link.
+        This is a plain outbound link: no cart, no checkout, no quote
+        state, so it does not affect the QUOTE-ONLY rule.
+      {%- endcomment -%}
+      <p class="gymbuild-customize-drawer__planner">
+        <span>Want to see how this fits in your actual room?</span>
+        <a
+          class="gymbuild-customize-drawer__planner-link"
+          href="https://fitnesssuperstore.roomplanner.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >Open in Gym Designer</a>
+      </p>
+    </div>
+  </div>
+</modal-dialog>
+
+<style>
+  /* ==================================================================
+     TEMPORARY DEV BANNER — DELETE THIS WHOLE BLOCK (CSS START)
+     Added 2026-09-21. Pairs with the .gymbuild-dev-banner markup above;
+     delete both together. Duplicated verbatim in
+     gymbuild-quote-review-popup.liquid because each popup carries its own
+     style block — keep them identical while they exist.
+     ================================================================== */
+  .gymbuild-dev-banner {
+    box-sizing: border-box;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0 0 20px;
+    padding: 12px 14px;
+    border: 1px solid #f3c9b8;
+    border-left: 4px solid #d83d0e;
+    border-radius: 6px;
+    background: #fdf2ee;
+    font-size: 13px;
+    line-height: 1.45;
+    color: #23232b;
+  }
+
+  .gymbuild-dev-banner__icon {
+    flex: 0 0 auto;
+    line-height: 0;
+    margin-top: 1px;
+  }
+
+  .gymbuild-dev-banner strong {
+    font-weight: 700;
+  }
+  /* TEMPORARY DEV BANNER — DELETE THIS WHOLE BLOCK (CSS END) */
+
+  /* ==================================================================
+     TEMPORARY TEST-PRODUCT BADGE — DELETE THIS WHOLE BLOCK (CSS START)
+     Added 2026-09-23. A thin strip overlaid on the top edge of every
+     product-bearing card in this popup — the "Package Inclusions" grid
+     cards, the swap sub-view's alternate cards, and the swap sub-view's
+     "currently selected" thumbnail — flagging that the product shown is
+     real but the package composition is unapproved test data (same
+     reasoning as the .gymbuild-dev-banner copy above).
+
+     To remove: delete this whole CSS block, then in this file's markup
+     delete every element/line marked "TEMPORARY TEST-PRODUCT BADGE"
+     (search for that exact marker) — one <span class="gymbuild-test-badge">
+     in the Liquid card markup, one in the swap-alternate-card JS, and the
+     wrapper + span in the swap-current JS. Nothing else references
+     .gymbuild-test-badge or .gymbuild-customize-drawer__swap-current-image-wrap.
+     ================================================================== */
+  .gymbuild-customize-drawer__card,
+  .gymbuild-customize-drawer__swap-card {
+    position: relative;
+  }
+
+  .gymbuild-customize-drawer__swap-current-image-wrap {
+    position: relative;
+    flex: 0 0 auto;
+    line-height: 0;
+  }
+
+  .gymbuild-test-badge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    padding: 2px 6px;
+    background: #d83d0e;
+    color: #fff;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 700;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .gymbuild-test-badge--small {
+    font-size: 7px;
+    line-height: 10px;
+    padding: 1px 2px;
+    letter-spacing: 0;
+  }
+  /* TEMPORARY TEST-PRODUCT BADGE — DELETE THIS WHOLE BLOCK (CSS END) */
+
+  /* ==================================================================
+     DESIGN TOKENS — extracted live from Figma 2026-09-22.
+     Source file: 34fqeNagCYjPbKXBDe3C7g ("Local Fitness Superstore -
+     A_B test - New Pages"), same node ids as the previously recorded
+     file XBaAGVhSupd0fvIcXd28qw.
+       Desktop drawer : node 4539:88518  (704 x 1024, inside 4539:86140)
+       Swap sub-view  : node 4544:94821  (inside 4544:92078)
+       Mobile sheet   : node 3679:110546 (375 wide)
+
+     That Figma file has NO variable collections and NO shared colour or
+     text styles (get_variables and get_styles both return empty), so
+     these tokens are transcribed from the nodes' own fill, radius and
+     text-style values rather than from named Figma variables.
+
+     Figma's tab labels use "SF Pro Text" — an Apple system font that
+     this theme does not load and that is not a Fitness Superstore brand
+     font. Mapped to the theme body font at the same size and weight.
+     Every other family in the frame is Oswald or Lato, both already
+     loaded by the theme.
+     ================================================================== */
+  .gymbuild-customize-drawer {
+    /* Neutrals */
+    --gb-ink: #23232b;
+    --gb-ink-strong: #000000;
+    --gb-ink-soft: #4f4f55;
+    --gb-muted: #808080;
+    /* Oranges — Figma uses three distinct values; kept faithful. */
+    --gb-accent: #d83d0e;        /* buttons, prices, links, radio */
+    --gb-accent-bright: #f1592a; /* active tab underline, footer price */
+    --gb-accent-border: #ca4b23; /* selected size-card border */
+    /* Lines and surfaces */
+    --gb-line: #e5e5e5;          /* dividers, unselected size card */
+    --gb-line-card: #edeff3;     /* inclusion card border */
+    --gb-line-btn: #d3d9e5;      /* swap button border */
+    --gb-surface: #ffffff;
+    --gb-image-bg: #faf9f9;
+    /* Geometry */
+    --gb-gutter: 24px;
+    --gb-radius-card: 12px;
+    --gb-radius-size-card: 8px;
+    --gb-radius-btn: 8px;
+
+    box-sizing: border-box;
+    position: fixed;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    z-index: -1;
+    /* Figma 4539:88517 "back": #000000 at 50% opacity. */
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .gymbuild-customize-drawer *,
+  .gymbuild-customize-drawer *::before,
+  .gymbuild-customize-drawer *::after {
+    box-sizing: border-box;
+  }
+
+  .gymbuild-customize-drawer[open] {
+    opacity: 1;
+    visibility: visible;
+    z-index: 101;
+  }
+
+  .gymbuild-customize-drawer__content {
+    box-sizing: border-box;
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    /* Figma: drawer is 704px at x=736 in a 1440px frame. Fixed at 704px
+       so it matches the design at and above 1440px, and falls back to
+       the viewport width on narrower screens. */
+    width: 704px;
+    max-width: 100%;
+    background: var(--gb-surface);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 280ms ease;
+  }
+
+  .gymbuild-customize-drawer[open] .gymbuild-customize-drawer__content {
+    transform: translateX(0);
+  }
+
+  /* ---------- Header (Figma 4539:88520, 704x84) ---------- */
+
+  .gymbuild-customize-drawer__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    /* 24px all round; the 36px title box makes the header 84px tall. */
+    padding: var(--gb-gutter);
+    flex: 0 0 auto;
+  }
+
+  .gymbuild-customize-drawer__title {
+    /* Figma 4539:88521: Oswald SemiBold 600, 28/36, #23232b, sentence
+       case. The theme's global heading rule uppercases h2, so
+       text-transform has to be reset explicitly here. */
+    font-family: Oswald, var(--font-heading-family, sans-serif);
+    font-size: 28px;
+    line-height: 36px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--gb-ink);
+    margin: 0;
+  }
+
+  .gymbuild-customize-drawer__back {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 700;
+    color: var(--gb-ink);
+  }
+
+  .gymbuild-customize-drawer__content.is-swap-view .gymbuild-customize-drawer__back {
+    display: inline-flex;
+  }
+
+  .gymbuild-customize-drawer__content.is-swap-view .gymbuild-customize-drawer__title {
+    display: none;
+  }
+
+  .gymbuild-customize-drawer__close {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--gb-ink);
+    line-height: 0;
+    flex: 0 0 auto;
+  }
+
+  /* icon-close.liquid hardcodes fill="#F2F2F2" (built for a dark
+     background) — nearly invisible on this drawer's white background.
+     Override just here rather than editing the shared snippet, which
+     is used in 18+ other places across the theme. */
+  .gymbuild-customize-drawer__close .icon-close path {
+    fill: var(--gb-ink-strong);
+  }
+
+  /* Figma I4539:88522;273:42768 "Icon": 13.5px glyph in a 24px box. */
+  .gymbuild-customize-drawer__close svg {
+    width: 13.5px;
+    height: 13.5px;
+  }
+
+  /* ---------- Scroll body (Figma 4539:88523 "Container") ---------- */
+
+  .gymbuild-customize-drawer__body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    /* Figma: content inset 24px. Top padding is 0 because the header
+       already contributes its own 24px below the title. */
+    padding: var(--gb-gutter);
+    padding-top: 0;
+  }
+
+  .gymbuild-customize-drawer__swap-view {
+    display: none;
+  }
+
+  .gymbuild-customize-drawer__content.is-swap-view .gymbuild-customize-drawer__main-view {
+    display: none;
+  }
+
+  .gymbuild-customize-drawer__content.is-swap-view .gymbuild-customize-drawer__swap-view {
+    display: block;
+  }
+
+  /* ---------- Size cards (Figma 4539:88524, 656x156, 3 x 213.33) ---------- */
+
+  .gymbuild-customize-drawer__sizes {
+    margin: 0 0 var(--gb-gutter);
+  }
+
+  .gymbuild-customize-drawer__size-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* Figma: 3 x 213.333 + 2 x 8 = 656. */
+    gap: 8px;
+    margin: 0;
+    border: 0;
+    padding: 0;
+    min-width: 0;
+  }
+
+  .gymbuild-customize-drawer__size-card-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .gymbuild-customize-drawer__size-card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--gb-line);
+    border-radius: var(--gb-radius-size-card);
+    padding: 12px;
+    cursor: pointer;
+    background: var(--gb-surface);
+  }
+
+  .gymbuild-customize-drawer__size-card.is-selected {
+    border-color: var(--gb-accent-border);
+  }
+
+  .gymbuild-customize-drawer__size-card.is-soldout {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Radio and label row (Figma 4539:88528 "Size Text", 24px tall) */
+  .gymbuild-customize-drawer__size-card-head {
+    display: flex;
+    align-items: center;
+    /* Figma: 18px radio ends at x+18, label starts at x+26. */
+    gap: 8px;
+    min-height: 24px;
+  }
+
+  .gymbuild-customize-drawer__size-card-radio {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid var(--gb-line-btn);
+    background: var(--gb-surface);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .gymbuild-customize-drawer__size-card.is-selected .gymbuild-customize-drawer__size-card-radio {
+    border-color: var(--gb-accent);
+  }
+
+  /* Figma I4539:88529;116:15816 "choose": 10px dot, #d83d0e. */
+  .gymbuild-customize-drawer__size-card.is-selected .gymbuild-customize-drawer__size-card-radio::after {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--gb-accent);
+  }
+
+  .gymbuild-customize-drawer__size-card-title {
+    /* Figma 4539:88530: Lato Bold 700, 16/24, #000000. */
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 700;
+    color: var(--gb-ink-strong);
+  }
+
+  .gymbuild-customize-drawer__size-card-desc {
+    /* Figma 4539:88531: Lato Regular 400, 12/18, #808080.
+       Renders only when the variant metafield custom.size_description is
+       populated. It is currently empty on all three FF-BYOG variants, so
+       this line is legitimately absent in the live preview. */
+    margin-top: 4px;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 12px;
+    line-height: 18px;
+    font-weight: 400;
+    color: var(--gb-muted);
+  }
+
+  .gymbuild-customize-drawer__size-card-price {
+    /* Figma 4539:88532: Lato Bold 700, 14/20, #d83d0e. Pinned to the
+       card bottom so the three prices align when the descriptions
+       differ in length. */
+    margin-top: auto;
+    padding-top: 12px;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 700;
+    color: var(--gb-accent);
+  }
+
+  /* Mobile-only disclosure (Figma 3694:76997) — see the media query. */
+  .gymbuild-customize-drawer__sizes-toggle {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    margin-top: 8px;
+    cursor: pointer;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 700;
+    color: var(--gb-accent);
+  }
+
+  .gymbuild-customize-drawer__sizes-toggle svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 180ms ease;
+  }
+
+  .gymbuild-customize-drawer__sizes-toggle[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+  }
+
+  /* ---------- Tabs (Figma 4539:88550, 656x56) ---------- */
+
+  .gymbuild-customize-drawer__tabs {
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-bottom: 12px;
+  }
+
+  .gymbuild-customize-drawer__tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .gymbuild-customize-drawer__tab {
+    position: relative;
+    appearance: none;
+    border: 0;
+    background: transparent;
+    /* Figma: label inset 12px; 52px label area + 4px highlight = 56px. */
+    padding: 16px 12px 20px;
+    min-height: 56px;
+    min-width: max-content;
+    font-family: var(--font-body-family, Lato, sans-serif);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--gb-ink-strong);
+    cursor: pointer;
+  }
+
+  /* Figma I4539:88551;841:35237 "Highlight": every tab instance owns a
+     4px segment — #e5e5e5 normally, #f1592a on the active tab — and the
+     segments together form the track under the strip. Built per-tab
+     rather than as a border-bottom on the scroller because the strip is
+     overflow-x:auto, which clips anything drawn outside a tab's own box
+     (an earlier border-bottom + bottom:-4px version painted the active
+     segment correctly but it was invisible, clipped by that scroller). */
+  .gymbuild-customize-drawer__tab::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 4px;
+    background: var(--gb-line);
+    border-radius: 6px;
+  }
+
+  .gymbuild-customize-drawer__tab.is-active::after {
+    background: var(--gb-accent-bright);
+  }
+
+  .gymbuild-customize-drawer__panel-heading {
+    /* Figma 4539:88557: Lato Bold 700, 18/24, #000000. */
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 18px;
+    line-height: 24px;
+    font-weight: 700;
+    color: var(--gb-ink-strong);
+    margin: 0 0 12px;
+  }
+
+  /* ---------- Inclusion cards (Figma 4539:88559, 210.67x340) ---------- */
+
+  .gymbuild-customize-drawer__grid,
+  .gymbuild-customize-drawer__swap-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* Figma: 3 x 210.667 + 2 x 12 = 656. */
+    gap: 12px;
+  }
+
+  .gymbuild-customize-drawer__card,
+  .gymbuild-customize-drawer__swap-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-width: 0;
+    background: var(--gb-surface);
+    border: 1px solid var(--gb-line-card);
+    border-radius: var(--gb-radius-card);
+    overflow: hidden;
+    /* Figma: the swap button sits 12px above the card's bottom edge. */
+    padding-bottom: 12px;
+  }
+
+  .gymbuild-customize-drawer__swap-card {
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+  }
+
+  .gymbuild-customize-drawer__card-image-wrap,
+  .gymbuild-customize-drawer__swap-card-image-wrap {
+    width: 100%;
+    /* Figma 4539:88560 "image big": 210 x 200. */
+    aspect-ratio: 210 / 200;
+    overflow: hidden;
+    background: var(--gb-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .gymbuild-customize-drawer__card-image,
+  .gymbuild-customize-drawer__swap-card-image {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    /* Figma 4539:88568 "image": 168x168 inside the 210x200 area. */
+    padding: 12px 21px;
+  }
+
+  .gymbuild-customize-drawer__card-title,
+  .gymbuild-customize-drawer__swap-card-title {
+    /* Figma 4539:88577: Lato Bold 700, 14/22, #23232b, clamped to 2
+       lines (the Figma text box is 44px tall). */
+    margin: 0 12px;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 700;
+    color: var(--gb-ink);
+    min-height: 44px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .gymbuild-customize-drawer__card-count,
+  .gymbuild-customize-drawer__swap-card-count {
+    /* Figma 4539:88578: Lato Regular 400, 14/20, #808080. */
+    margin: 4px 12px 0;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+    color: var(--gb-muted);
+  }
+
+  .gymbuild-customize-drawer__swap-btn {
+    /* Figma 4539:88587 "Simple button": 186.67x40, radius 8,
+       1px #d3d9e5 border on #ffffff, 8px above the card bottom. */
+    margin: 8px 12px 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 40px;
+    border: 1px solid var(--gb-line-btn);
+    border-radius: var(--gb-radius-btn);
+    background: var(--gb-surface);
+    color: var(--gb-ink);
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .gymbuild-customize-drawer__swap-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* ---------- Swap sub-view "currently selected" panel ---------- */
+
+  .gymbuild-customize-drawer__swap-current {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border: 1px solid var(--gb-line-card);
+    border-radius: var(--gb-radius-card);
+    padding: 12px;
+    margin-bottom: 20px;
+  }
+
+  .gymbuild-customize-drawer__swap-current-image {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    background: var(--gb-image-bg);
+    border-radius: 6px;
+    flex: 0 0 auto;
+  }
+
+  .gymbuild-customize-drawer__swap-current-info {
+    min-width: 0;
+  }
+
+  .gymbuild-customize-drawer__swap-current-title {
+    margin: 0;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 700;
+    color: var(--gb-ink);
+  }
+
+  .gymbuild-customize-drawer__swap-current-count {
+    margin: 2px 0 0;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+    color: var(--gb-muted);
+  }
+
+  .gymbuild-customize-drawer__swap-card-delta {
+    margin: 6px 12px 0;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 700;
+  }
+
+  .gymbuild-customize-drawer__swap-card-delta.is-increase {
+    color: var(--gb-accent);
+  }
+
+  .gymbuild-customize-drawer__swap-card-delta.is-decrease {
+    color: #12693a;
+  }
+
+  /* Zero delta — informational, so it reads as a statement about the swap
+     rather than as a price. Muted and not bold, unlike +/- amounts. */
+  .gymbuild-customize-drawer__swap-card-delta.is-neutral {
+    color: var(--gb-muted);
+    font-weight: 400;
+  }
+
+  /* ---------- Footer (Figma 4539:88773, 704x214) ---------- */
+
+  .gymbuild-customize-drawer__footer {
+    flex: 0 0 auto;
+    /* Figma 4539:88772 "divider": 1px #e5e5e5 across the full width. */
+    border-top: 1px solid var(--gb-line);
+    padding: var(--gb-gutter);
+    background: var(--gb-surface);
+  }
+
+  .gymbuild-customize-drawer__footer-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    /* Figma: total row bottom to button top = 20px. */
+    margin-bottom: 20px;
+  }
+
+  .gymbuild-customize-drawer__footer-label {
+    /* Figma 4539:88780: Lato Bold 700, 18/24, #000000. */
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 18px;
+    line-height: 24px;
+    font-weight: 700;
+    color: var(--gb-ink-strong);
+  }
+
+  .gymbuild-customize-drawer__footer-price {
+    /* Figma 4539:88781: Lato Bold 700, 20/26, #f1592a. */
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 20px;
+    line-height: 26px;
+    font-weight: 700;
+    color: var(--gb-accent-bright);
+    white-space: nowrap;
+  }
+
+  .gymbuild-customize-drawer__submit {
+    /* Figma 4539:88787: 656x48, radius 8, #d83d0e, Lato Bold 16/24. */
+    width: 100%;
+    min-height: 48px;
+    border: 0;
+    border-radius: var(--gb-radius-btn);
+    background: var(--gb-accent);
+    color: var(--gb-surface);
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* "Want to see how this fits in your actual room? Open in Gym
+     Designer" — Figma 4539:88797 "Link", 656x24, 24px below the button.
+     Destination is the sitewide RoomPlanner URL already used by
+     sections/main-product-ab-test-asjads-pdp.liquid:1386,
+     sections/main-collection-intro.liquid:77 and
+     sections/we-offer-blocks.liquid — not a new or invented link. */
+  .gymbuild-customize-drawer__planner {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: var(--gb-gutter) 0 0;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+    color: var(--gb-ink-soft);
+    text-align: center;
+  }
+
+  .gymbuild-customize-drawer__planner-link {
+    font-weight: 700;
+    color: var(--gb-accent);
+    text-decoration: none;
+  }
+
+  .gymbuild-customize-drawer__planner-link:hover,
+  .gymbuild-customize-drawer__planner-link:focus-visible {
+    text-decoration: underline;
+  }
+
+  /* ==================================================================
+     Mobile sheet — Figma node 3679:110546 (375 wide).
+     Differences from desktop, all taken from that frame:
+       - full-width sheet, 16px side gutters (not 24px)
+       - title 24/34 (not 28/36)
+       - only the SELECTED size card shows, with a "Show Other Room
+         Sizes" disclosure beneath it (Figma 3694:76997)
+       - inclusion cards in 2 columns (not 3)
+       - the planner line stacks into two centred rows
+     ================================================================== */
+  @media screen and (max-width: 749px) {
+    .gymbuild-customize-drawer {
+      --gb-gutter: 16px;
+    }
+
+    .gymbuild-customize-drawer__content {
+      width: 100%;
+    }
+
+    .gymbuild-customize-drawer__header {
+      padding: var(--gb-gutter);
+      padding-bottom: 20px;
+    }
+
+    .gymbuild-customize-drawer__title {
+      font-size: 24px;
+      line-height: 34px;
+    }
+
+    /* Figma 3679:110551: the selected card spans the full width. */
+    .gymbuild-customize-drawer__size-cards {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .gymbuild-customize-drawer__sizes-toggle {
+      display: inline-flex;
+    }
+
+    /* Collapsed by default: every card except the selected one is
+       hidden. The toggle adds .is-expanded to reveal the rest. */
+    .gymbuild-customize-drawer__sizes:not(.is-expanded)
+      .gymbuild-customize-drawer__size-card:not(.is-selected) {
+      display: none;
+    }
+
+    .gymbuild-customize-drawer__size-card-price {
+      padding-top: 8px;
+    }
+
+    .gymbuild-customize-drawer__grid,
+    .gymbuild-customize-drawer__swap-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* Figma 3679:110934: text on one line, link centred beneath it.
+       align-items does the centring here — once the flex direction is
+       column, justify-content works on the vertical axis instead. */
+    .gymbuild-customize-drawer__planner {
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var modal = document.getElementById('GymBuildCustomizeModal-{{ section.id }}');
+    if (!modal) return;
+
+    /* ------------------------------------------------------------------
+       Mobile "Show Other Room Sizes" disclosure (Figma 3694:76997).
+       The collapse itself is CSS and only applies under 750px, so this
+       handler just flips the state; on desktop the toggle is
+       display:none and never reachable. Labels swap between "Show" and
+       "Hide" to match the chevron direction.
+       ------------------------------------------------------------------ */
+    var sizesWrap = modal.querySelector('[data-gymbuild-sizes]');
+    var sizesToggle = modal.querySelector('[data-gymbuild-sizes-toggle]');
+
+    if (sizesWrap && sizesToggle) {
+      sizesToggle.addEventListener('click', function () {
+        var expanded = sizesWrap.classList.toggle('is-expanded');
+        sizesToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+
+        var label = sizesToggle.querySelector('[data-gymbuild-sizes-toggle-label]');
+        if (label) {
+          label.textContent = expanded ? 'Hide Other Room Sizes' : 'Show Other Room Sizes';
+        }
+      });
+    }
+
+    var sizeRadios = modal.querySelectorAll('input[name="GymBuildCustomizeSize-{{ section.id }}"]');
+    sizeRadios.forEach(function (radio) {
+      radio.addEventListener('change', function () {
+        if (radio.checked && radio.dataset.variantUrl) {
+          window.location.href = radio.dataset.variantUrl;
+        }
+      });
+    });
+
+    var tabs = Array.from(modal.querySelectorAll('[data-tab]'));
+    var panels = Array.from(modal.querySelectorAll('[data-panel]'));
+
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        tabs.forEach(function (t) {
+          var isActive = t === tab;
+          t.classList.toggle('is-active', isActive);
+          t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+
+        panels.forEach(function (panel) {
+          var isActive = panel.dataset.panel === tab.dataset.tab;
+          panel.classList.toggle('is-active', isActive);
+          panel.hidden = !isActive;
+        });
+      });
+    });
+
+    // "Swap to:" sub-view — same drawer, no new modal. See snippet's top
+    // comment (Figma node 4544:92078) for the visual-only/TEMPORARY-data
+    // caveats around this.
+    var content = modal.querySelector('.gymbuild-customize-drawer__content');
+    var footer = modal.querySelector('.gymbuild-customize-drawer__footer');
+    var subtotalEl = modal.querySelector('[data-gymbuild-subtotal]');
+    var swapCurrentEl = modal.querySelector('[data-gymbuild-swap-current]');
+    var swapGridEl = modal.querySelector('[data-gymbuild-swap-grid]');
+    var backBtn = modal.querySelector('[data-gymbuild-back]');
+    var basePriceCents = footer ? parseInt(footer.dataset.basePrice, 10) || 0 : 0;
+    var activeCard = null;
+
+    function formatMoney(cents) {
+      return '$' + (cents / 100).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    // A zero delta is a real, common outcome, not an absence of data: whole
+    // categories are priced flat, so every alternative costs exactly what the
+    // default costs (all seven Selectorized (Pin Loaded) items on the 1,000 and
+    // 1,500 sq ft packages are like this). Returning '' left those swap cards
+    // with no price line at all, which reads as broken rather than as
+    // "swapping this changes nothing". Say so explicitly instead.
+    function formatDelta(deltaCents) {
+      if (deltaCents === 0) return 'No price change';
+      var sign = deltaCents > 0 ? '+ ' : '- ';
+      return sign + formatMoney(Math.abs(deltaCents));
+    }
+
+    // The subtotal is recomputed from the DOM on every change instead of
+    // being kept as a running counter. The add-ons carousel sits outside
+    // this drawer and can be toggled while the drawer is closed, so an
+    // incremental total would drift out of sync with it. This reads the
+    // same two sources the quote-review popup reads, so both surfaces
+    // always agree.
+    function selectedAddOnsTotalCents() {
+      var total = 0;
+      document
+        .querySelectorAll('product-add-ons-quote [data-addon-state="selected"]')
+        .forEach(function (btn) {
+          total += parseInt(btn.dataset.addonPriceCents, 10) || 0;
+        });
+      return total;
+    }
+
+    function formatCount(qty) {
+      return qty + (qty === 1 ? ' item' : ' items');
+    }
+
+    // Quantity is read on BOTH sides of the subtraction, not once: a
+    // gymbuild_option carries its own quantity, so an alternative may ship a
+    // different count than the default it replaces. Multiplying a per-unit
+    // price delta by a single qty would silently misprice those swaps.
+    function swapDeltaTotalCents() {
+      var total = 0;
+      modal.querySelectorAll('[data-gymbuild-item]').forEach(function (card) {
+        var currentPrice = parseInt(card.dataset.itemPrice, 10) || 0;
+        var currentQty = parseInt(card.dataset.itemQty, 10) || 1;
+        var originalPrice = parseInt(card.dataset.originalPrice, 10) || 0;
+        var originalQty = parseInt(card.dataset.originalQty, 10) || 1;
+        total += (currentPrice * currentQty) - (originalPrice * originalQty);
+      });
+      return total;
+    }
+
+    function recalcSubtotal() {
+      if (!subtotalEl) return;
+      subtotalEl.textContent = formatMoney(
+        basePriceCents + swapDeltaTotalCents() + selectedAddOnsTotalCents()
+      );
+    }
+
+    function showMainView() {
+      content.classList.remove('is-swap-view');
+      activeCard = null;
+    }
+
+    function showSwapView(card) {
+      var pool;
+      try {
+        pool = JSON.parse(card.dataset.itemPool || '[]');
+      } catch (e) {
+        pool = [];
+      }
+
+      var currentId = card.dataset.itemId;
+      var currentPriceCents = parseInt(card.dataset.itemPrice, 10) || 0;
+      var currentQty = parseInt(card.dataset.itemQty, 10) || 1;
+      var currentLineCents = currentPriceCents * currentQty;
+      var alternates = pool.filter(function (p) {
+        return String(p.id) !== String(currentId);
+      });
+
+      if (!alternates.length) return;
+
+      activeCard = card;
+
+      if (swapCurrentEl) {
+        swapCurrentEl.innerHTML =
+          // TEMPORARY TEST-PRODUCT BADGE — DELETE THIS WRAPPER + SPAN, keep the <img> unwrapped
+          '<div class="gymbuild-customize-drawer__swap-current-image-wrap">' +
+          '<img class="gymbuild-customize-drawer__swap-current-image" src="' + card.dataset.itemImage + '" alt="" loading="lazy">' +
+          '<span class="gymbuild-test-badge gymbuild-test-badge--small">Test</span>' +
+          '</div>' +
+          '<div class="gymbuild-customize-drawer__swap-current-info">' +
+          '<p class="gymbuild-customize-drawer__swap-current-title">' + card.dataset.itemTitle + '</p>' +
+          '<p class="gymbuild-customize-drawer__swap-current-count">' + formatCount(currentQty) + '</p>' +
+          '</div>';
+      }
+
+      if (swapGridEl) {
+        swapGridEl.innerHTML = '';
+        alternates.forEach(function (alt) {
+          var altQty = parseInt(alt.qty, 10) || 1;
+          // Line-level, not per-unit: the alternative's own quantity may differ
+          // from the current one, so compare (price x qty) on each side.
+          var deltaCents = (alt.price * altQty) - currentLineCents;
+          var deltaClass = deltaCents > 0 ? 'is-increase' : (deltaCents < 0 ? 'is-decrease' : 'is-neutral');
+
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'gymbuild-customize-drawer__swap-card';
+          btn.dataset.altId = alt.id;
+          btn.dataset.altTitle = alt.title;
+          btn.dataset.altImage = alt.image;
+          btn.dataset.altPrice = alt.price;
+          btn.innerHTML =
+            // TEMPORARY TEST-PRODUCT BADGE — DELETE THIS LINE
+            '<span class="gymbuild-test-badge">Test product only</span>' +
+            '<div class="gymbuild-customize-drawer__swap-card-image-wrap">' +
+            '<img class="gymbuild-customize-drawer__swap-card-image" src="' + alt.image + '" alt="" loading="lazy">' +
+            '</div>' +
+            '<p class="gymbuild-customize-drawer__swap-card-title">' + alt.title + '</p>' +
+            '<p class="gymbuild-customize-drawer__swap-card-count">' + formatCount(altQty) + '</p>' +
+            '<p class="gymbuild-customize-drawer__swap-card-delta ' + deltaClass + '">' + formatDelta(deltaCents) + '</p>';
+
+          btn.addEventListener('click', function () {
+            selectAlternate(alt);
+          });
+
+          swapGridEl.appendChild(btn);
+        });
+      }
+
+      content.classList.add('is-swap-view');
+    }
+
+    function selectAlternate(alt) {
+      if (!activeCard) return;
+
+      var image = activeCard.querySelector('.gymbuild-customize-drawer__card-image');
+      var title = activeCard.querySelector('.gymbuild-customize-drawer__card-title');
+      var count = activeCard.querySelector('[data-gymbuild-item-count]');
+      var altQty = parseInt(alt.qty, 10) || 1;
+
+      if (image) {
+        // image_tag renders a srcset/sizes pair, and the browser prefers those
+        // over src — swapping src alone would leave the previous product's
+        // image on screen. Drop both so the new src is what actually loads.
+        image.removeAttribute('srcset');
+        image.removeAttribute('sizes');
+        image.setAttribute('src', alt.image);
+      }
+      if (title) title.textContent = alt.title;
+      if (count) count.textContent = formatCount(altQty);
+
+      activeCard.dataset.itemId = alt.id;
+      activeCard.dataset.itemProductId = alt.product_id;
+      activeCard.dataset.itemSku = alt.sku || '';
+      activeCard.dataset.itemTitle = alt.title;
+      activeCard.dataset.itemImage = alt.image;
+      activeCard.dataset.itemPrice = alt.price;
+      activeCard.dataset.itemQty = altQty;
+      activeCard.dataset.itemWeight = alt.weight;
+
+      recalcSubtotal();
+
+      showMainView();
+    }
+
+    modal.querySelectorAll('[data-gymbuild-swap-btn]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var card = btn.closest('[data-gymbuild-item]');
+        if (card) showSwapView(card);
+      });
+    });
+
+    if (backBtn) {
+      backBtn.addEventListener('click', showMainView);
+    }
+
+    // Add-ons are toggled out on the PDP, behind this drawer's overlay, so
+    // refresh the footer whenever the drawer is about to be opened.
+    // Delegated on document for the same reason the quote-review popup's
+    // trigger listener is: the opener may be parsed after this script runs.
+    document.addEventListener('click', function (event) {
+      if (event.target.closest('[data-modal="#GymBuildCustomizeModal-{{ section.id }}"]')) {
+        recalcSubtotal();
+      }
+    });
+
+    recalcSubtotal();
+  })();
+</script>
