@@ -4,6 +4,8 @@
   @param {product} product - Current product.
   @param {string} [section_id] - Section identifier used by variant refresh.
   @param {boolean} [hide_on_mobile] - Hide the desktop-layout copy on mobile.
+  @param {variant} [variant] - Variant to price; defaults to selected_or_first_available_variant.
+  @param {string} [layout] - 'card' renders the compact homepage product-card price.
 {% enddoc %}
 {% comment %}
   Reuses the existing LaborDaySaleCard update targets and card CSS.
@@ -23,7 +25,7 @@
       assign september_active = true
     endif
   endif
-  assign september_variant = product.selected_or_first_available_variant
+  assign september_variant = variant | default: product.selected_or_first_available_variant
   assign september_available = false
   if september_variant != blank and september_variant.available
     assign september_available = true
@@ -34,7 +36,17 @@
     endif
   endif
 -%}
-{%- if september_active -%}
+{%- if september_active and layout == 'card' -%}
+  {%- if september_available -%}
+    {%- assign september_price = september_variant.price -%}
+    {%- assign september_cart_price = september_price | times: 0.9 | round -%}
+    <div class="september-card-price" data-september-overstock-2026>
+      <span class="september-card-price__badge">September overstock sale</span>
+      <span class="september-card-price__now"><span class="visually-hidden">Price after discount </span>{{ september_cart_price | money }} in cart</span>
+      <span class="september-card-price__was"><span class="visually-hidden">Regular price </span>{{ september_price | money }}</span>
+    </div>
+  {%- endif -%}
+{%- elsif september_active -%}
   <div
     {% if section_id != blank %}id="LaborDaySaleCard{% if hide_on_mobile %}-Desktop{% endif %}-{{ section_id }}"{% endif %}
     class="campaign-sale-container{% if hide_on_mobile %} hide-on-mobile{% endif %}"
