@@ -16,6 +16,11 @@
 
 {%- assign ngs_options = shop.metafields.fs_bundle.ngs_allowlist.value.options -%}
 <!-- NGSPROBE rendered=1 optcount={{ ngs_options.size }} items={{ cart.item_count }} -->
+{%- for item in cart.items -%}
+<!-- NGSPROBE-ITEM keys={% for pr in item.properties %}[{{ pr.first }}]{% endfor %} -->
+<!-- NGSPROBE-FO len={% for pr in item.properties %}{% if pr.first == '_functionOperation' %}{{ pr.last | size }}{% endif %}{% endfor %} -->
+<!-- NGSPROBE-FO-SNIP {% for pr in item.properties %}{% if pr.first == '_functionOperation' %}{{ pr.last | strip_html | truncate: 220 }}{% endif %}{% endfor %} -->
+{%- endfor -%}
 
 {%- if ngs_options.size > 0 and cart.item_count > 0 -%}
   {%- assign ngs_total_cents = 0 -%}
