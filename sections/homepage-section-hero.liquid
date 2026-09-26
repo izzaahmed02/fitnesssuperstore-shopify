@@ -2,19 +2,21 @@
 
 <div class="hero-section">
   <div class="image-wrapper">
+    {%- if section.settings.background_image != blank -%}
     <picture>
       {%- comment -%} Serve WebP first with PNG/JPEG fallback {%- endcomment -%}
       <source srcset="{{ section.settings.background_image | image_url: width: 1000, format: 'webp' }}" type="image/webp">
-      <img 
-        src="{{ section.settings.background_image | image_url: width: 1000 }}" 
-        alt="{{ section.settings.title_text | escape }}" 
+      <img
+        src="{{ section.settings.background_image | image_url: width: 1000 }}"
+        alt="{{ section.settings.title_text | escape }}"
         class="hero-bg"
-        loading="eager" 
+        loading="eager"
         fetchpriority="high"
-        width="1030"
-        height="auto"
+        width="{{ section.settings.background_image.width }}"
+        height="{{ section.settings.background_image.height }}"
       >
     </picture>
+    {%- endif -%}
 
     <div class="overlay"></div> 
 
@@ -44,6 +46,9 @@
 
       <div class="title">
         <h1>{{ section.settings.title_text }}</h1>
+        {%- if section.settings.subtitle_text != blank -%}
+          <p class="heroSubtitle">{{ section.settings.subtitle_text }}</p>
+        {%- endif -%}
         <p class="copyText">{{ section.settings.copy_text }}</p>
       </div>
 
@@ -249,6 +254,62 @@ padding: 24px;
     text-align: center;
     }
   }
+  /* Compact hero (Tim, Sept 27): real HTML H1 in title case plus a smaller
+     supporting line. Sizes in rem (1rem = 10px):
+     >=990px H1 3.8/4.4rem, 750-989px 3.2/3.8rem, <750px 2.8/3.4rem;
+     supporting line 1.8rem >=750px, 1.6rem below.
+     The old per-width title min-heights reserved space for the six-line
+     uppercase headline; the shorter headline no longer needs them. */
+  .homepageHeroSection .content {
+    gap: 16px;
+  }
+
+  .homepageHeroSection .title {
+    gap: 8px;
+    min-height: 0;
+  }
+
+  .homepageHeroSection .title h1 {
+    font-size: 3.8rem;
+    line-height: 4.4rem;
+    text-transform: none;
+  }
+
+  .homepageHeroSection .heroSubtitle {
+    margin: 0;
+    color: #fff;
+    font-family: 'Oswald';
+    font-weight: 500;
+    font-size: 1.8rem;
+    line-height: 2.4rem;
+  }
+
+  @media screen and (max-width: 989px) {
+    .homepageHeroSection .title h1 {
+      font-size: 3.2rem;
+      line-height: 3.8rem;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .homepageHeroSection .content {
+      gap: 12px;
+    }
+
+    .homepageHeroSection .title h1 {
+      font-size: 2.8rem;
+      line-height: 3.4rem;
+      text-transform: none;
+    }
+
+    .homepageHeroSection .heroSubtitle {
+      font-size: 1.6rem;
+      line-height: 2.2rem;
+      text-align: center;
+      width: 100%;
+    }
+  }
+
 </style>
 
 
@@ -274,6 +335,12 @@ padding: 24px;
       "id": "title_text",
       "label": "Title Text",
       "default": "Elevate Your Fitness. Buy Top Quality Gym Equipment."
+    },
+    {
+      "type": "text",
+      "id": "subtitle_text",
+      "label": "Supporting line",
+      "info": "Smaller line under the headline"
     },
      {
       "type": "text",

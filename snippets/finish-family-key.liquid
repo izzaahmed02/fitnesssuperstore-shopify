@@ -3,6 +3,9 @@
   identical across every finish of the same model, so two products can be
   compared to see whether they are the same machine in a different finish.
 
+  When custom.combined_listing_family is populated, that explicit key is used.
+  Otherwise, the snippet falls back to the title-normalisation rules below.
+
   Two things are dropped from the title, both read from the product's own
   metafields - nothing about any specific finish is written into this snippet:
 
@@ -23,9 +26,13 @@
     product - {Object} the product to build the key for (required)
 {%- endcomment -%}
 {%- liquid
+  assign explicit_family = product.metafields.custom.combined_listing_family.value
   assign color = product.metafields.custom.product_color.value
   assign code = product.metafields.custom.product_code.value
 
+  if explicit_family != blank
+    assign key = explicit_family
+  else
   assign key = ' ' | append: product.title | append: ' '
 
   if color != blank
@@ -40,6 +47,7 @@
       assign key = key | replace: series_word, ' '
     endif
   endif
+  endif
 
-  echo key | downcase | split: ' ' | join: ' '
+  echo key | strip | downcase | split: ' ' | join: ' '
 -%}
