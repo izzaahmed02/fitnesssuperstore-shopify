@@ -846,23 +846,74 @@ if (!customElements.get('product-customization-options')) {
 
       // Method to update price when options are selected (increase/decrease)
 
+      // Reads the National Gym Service allowlist published by
+      // snippets/ngs-allowlist-data.liquid. Same shop metafield the Cart
+      // Transform reads, so the displayed split and the charged split cannot
+      // disagree. Parsed once per page and cached; any failure yields an empty
+      // map, which means every option is totalled exactly as it is today.
+      ngsAllowlist() {
+        if (ProductCustomizationOptions.ngsMap === undefined) {
+          const map = new Map();
+          try {
+            const tag = document.querySelector('[data-ngs-allowlist]');
+            if (tag) {
+              const parsed = JSON.parse(tag.textContent);
+              (parsed.options || []).forEach((entry) => {
+                if (entry && entry.id) map.set(String(entry.id), entry.mode);
+              });
+            }
+          } catch (e) {
+            // Leave the map empty: charge and display as today.
+          }
+          ProductCustomizationOptions.ngsMap = map;
+        }
+        return ProductCustomizationOptions.ngsMap;
+      }
+
+      // "defer" carries an approved amount we can show. "quote_required" is
+      // NGS-owned but has no approved automated amount, so it must be shown as
+      // a quote and never as a dollar figure.
+      ngsModeFor(variantId) {
+        if (!variantId) return null;
+        return this.ngsAllowlist().get(String(variantId).trim()) || null;
+      }
+
       updatePrice() {
         let priceAdjustment = 0;
+        // Amounts owed to National Gym Service. Kept out of priceAdjustment so
+        // the headline product price only ever reflects what Fitness Superstore
+        // actually collects at checkout.
+        let ngsDeferred = 0;
+        let ngsQuoteRequired = false;
         const activeOptions = this.querySelectorAll('[data-customization-option]:checked, [data-select-option], [data-quantity-option-input]');
         if (activeOptions.length === 0) return;
         activeOptions.forEach((option) => {
           const value = option.value;
+          let amount = 0;
+          let variantId = null;
           if (value.includes(':::')) {
+            variantId = value.split(':::')[0];
             const quantityInput = this.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
             if (quantityInput) {
-              priceAdjustment += Number(value.split(':::')[1]) * Number(quantityInput.value);
+              amount = Number(value.split(':::')[1]) * Number(quantityInput.value);
             } else {
-              priceAdjustment += Number(value.split(':::')[1]);
+              amount = Number(value.split(':::')[1]);
             }
           } else {
             if (option.dataset?.quantityOptionVariantPrice) {
-              priceAdjustment += Number(value) * Number(option.dataset?.quantityOptionVariantPrice);
+              variantId = option.dataset?.quantityOptionVariant;
+              amount = Number(value) * Number(option.dataset?.quantityOptionVariantPrice);
+            } else {
+              variantId = value;
             }
+          }
+          const ngsMode = this.ngsModeFor(variantId);
+          if (ngsMode === 'quote_required') {
+            ngsQuoteRequired = true;
+          } else if (ngsMode === 'defer') {
+            ngsDeferred += amount;
+          } else {
+            priceAdjustment += amount;
           }
         });
 
@@ -872,12 +923,77 @@ if (!customElements.get('product-customization-options')) {
             const colorVariant = (input.dataset?.variant || '').trim();
             const colorPrice = input.dataset?.price;
             if (colorVariant !== '' && colorPrice !== '') {
+              // Colour options are physical product attributes and are never
+              // NGS services, so they always stay in the TJF total.
               priceAdjustment += Number(colorPrice || 0);
             }
           });
         }
 
+        this.renderNgsDue(ngsDeferred, ngsQuoteRequired);
         this.priceHelper(priceAdjustment);
+      }
+
+      // Shows what National Gym Service will bill, separately from the amount
+      // payable to Fitness Superstore today. Hidden entirely when no NGS
+      // service is selected.
+      // Per Tim, 2026-09-26: when a National Gym Service item is present the
+      // running total and the grand total must both say whose money it is, so
+      // the customer can tell the two apart. The qualifier is only added while
+      // an NGS item is actually selected; with none, the labels read exactly as
+      // they always have. Originals are captured on first use so toggling back
+      // restores the theme's own wording rather than a hardcoded guess.
+      setBilledTodayLabels(show) {
+        const QUALIFIER = ' (Billed Today by Fitness Superstore)';
+        const targets = [
+          ...document.querySelectorAll('.options-added-line__label'),
+          ...document.querySelectorAll('.product_price_with_options-heading'),
+        ];
+        targets.forEach((el) => {
+          if (el.dataset.ngsOriginalLabel === undefined) {
+            el.dataset.ngsOriginalLabel = el.textContent.trim();
+          }
+          const original = el.dataset.ngsOriginalLabel;
+          if (!show) {
+            el.textContent = original;
+            return;
+          }
+          // "Options added:" keeps its trailing colon after the qualifier.
+          if (original.endsWith(':')) {
+            el.textContent = original.slice(0, -1) + QUALIFIER + ':';
+          } else {
+            el.textContent = original + QUALIFIER;
+          }
+        });
+      }
+
+      renderNgsDue(ngsDeferred, ngsQuoteRequired) {
+        const blocks = document.querySelectorAll('[data-ngs-due-line]');
+        const amount0 = Number(ngsDeferred) || 0;
+        this.setBilledTodayLabels(amount0 > 0 || ngsQuoteRequired);
+        if (blocks.length === 0) return;
+        const amount = Number(ngsDeferred) || 0;
+        const show = amount > 0 || ngsQuoteRequired;
+        blocks.forEach((block) => {
+          block.hidden = !show;
+          if (!show) return;
+          const valueEl = block.querySelector('[data-ngs-due-value]');
+          if (!valueEl) return;
+          const currency = valueEl.dataset.currency || '$';
+          if (amount > 0 && ngsQuoteRequired) {
+            valueEl.innerText = `${currency}${amount.toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })} + quote`;
+          } else if (ngsQuoteRequired) {
+            valueEl.innerText = 'Quote required';
+          } else {
+            valueEl.innerText = `${currency}${amount.toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`;
+          }
+        });
       }
 
       // Helper to create corect price HTML
