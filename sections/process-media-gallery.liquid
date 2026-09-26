@@ -1,0 +1,576 @@
+{%- liquid
+  assign overview_video = section.settings.overview_video
+  assign overview_external_video = section.settings.overview_external_video
+  assign has_overview_video = false
+
+  if overview_video != blank or overview_external_video != blank
+    assign has_overview_video = true
+  endif
+
+  assign media_count = section.blocks.size
+  if has_overview_video
+    assign media_count = media_count | plus: 1
+  endif
+-%}
+
+{%- if media_count > 0 -%}
+  <section
+    id="ProcessMedia-{{ section.id }}"
+    class="process-media-gallery"
+    aria-labelledby="ProcessMediaHeading-{{ section.id }}"
+  >
+    <div class="page-width">
+      <div class="process-media-gallery__header">
+        <div>
+          {%- if section.settings.heading != blank -%}
+            <h2 id="ProcessMediaHeading-{{ section.id }}" class="process-media-gallery__heading">
+              {{ section.settings.heading | escape }}
+            </h2>
+          {%- endif -%}
+          {%- if section.settings.description != blank -%}
+            <div class="process-media-gallery__description rte">{{ section.settings.description }}</div>
+          {%- endif -%}
+        </div>
+
+        {%- if media_count > 1 -%}
+          <div class="process-media-gallery__controls" aria-label="Process gallery controls">
+            <button
+              class="process-media-gallery__arrow"
+              type="button"
+              data-process-previous
+              aria-label="Previous process media"
+            >
+              <span aria-hidden="true">&#8592;</span>
+            </button>
+            <button
+              class="process-media-gallery__arrow"
+              type="button"
+              data-process-next
+              aria-label="Next process media"
+            >
+              <span aria-hidden="true">&#8594;</span>
+            </button>
+          </div>
+        {%- endif -%}
+      </div>
+
+      <div class="process-media-gallery__track" data-process-track tabindex="0">
+        {%- if has_overview_video -%}
+          <article class="process-media-gallery__slide">
+            <div class="process-media-gallery__media">
+              {%- if overview_video != blank -%}
+                <video
+                  class="process-media-gallery__video"
+                  controls
+                  muted
+                  playsinline
+                  preload="metadata"
+                  data-desktop-autoplay
+                  {% if section.settings.overview_poster != blank %}
+                    poster="{{ section.settings.overview_poster | image_url: width: 1200 }}"
+                  {% endif %}
+                  aria-label="{{ section.settings.overview_alt | default: section.settings.overview_caption | strip_html | escape }}"
+                >
+                  {%- for source in overview_video.sources -%}
+                    <source src="{{ source.url }}" type="{{ source.mime_type }}">
+                  {%- endfor -%}
+                </video>
+              {%- elsif section.settings.overview_poster != blank -%}
+                <a
+                  class="process-media-gallery__external-video"
+                  href="{{ overview_external_video }}"
+                  aria-label="Play {{ section.settings.overview_alt | default: section.settings.overview_caption | strip_html | escape }}"
+                >
+                  {{
+                    section.settings.overview_poster
+                    | image_url: width: 1200
+                    | image_tag:
+                      class: 'process-media-gallery__image',
+                      widths: '480, 720, 960, 1200',
+                      sizes: '(min-width: 990px) 24vw, (min-width: 750px) 34vw, 76vw',
+                      loading: 'eager',
+                      alt: section.settings.overview_alt
+                  }}
+                  <span class="process-media-gallery__play" aria-hidden="true">&#9658;</span>
+                </a>
+              {%- endif -%}
+            </div>
+            {%- if section.settings.overview_caption != blank -%}
+              <div class="process-media-gallery__caption rte">{{ section.settings.overview_caption }}</div>
+            {%- endif -%}
+          </article>
+        {%- endif -%}
+
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign slide_position = forloop.index
+            if has_overview_video
+              assign slide_position = slide_position | plus: 1
+            endif
+
+            assign media_loading = 'lazy'
+            if slide_position <= 2
+              assign media_loading = 'eager'
+            endif
+          -%}
+
+          {%- case block.type -%}
+            {%- when 'image' -%}
+              {%- if block.settings.image != blank -%}
+                {%- liquid
+                  assign image_alt = block.settings.alt_text
+                  if image_alt == blank
+                    assign image_alt = block.settings.image.alt
+                  endif
+                  if image_alt == blank
+                    assign image_alt = block.settings.caption | strip_html
+                  endif
+                -%}
+                <article class="process-media-gallery__slide" {{ block.shopify_attributes }}>
+                  <div class="process-media-gallery__media">
+                    {{
+                      block.settings.image
+                      | image_url: width: 1400
+                      | image_tag:
+                        class: 'process-media-gallery__image',
+                        widths: '480, 720, 960, 1200, 1400',
+                        sizes: '(min-width: 990px) 24vw, (min-width: 750px) 34vw, 76vw',
+                        loading: media_loading,
+                        alt: image_alt
+                    }}
+                  </div>
+                  {%- if block.settings.caption != blank -%}
+                    <div class="process-media-gallery__caption rte">{{ block.settings.caption }}</div>
+                  {%- endif -%}
+                </article>
+              {%- endif -%}
+
+            {%- when 'video' -%}
+              {%- if block.settings.video != blank or block.settings.video_url != blank -%}
+                <article class="process-media-gallery__slide" {{ block.shopify_attributes }}>
+                  <div class="process-media-gallery__media">
+                    {%- if block.settings.video != blank -%}
+                      <video
+                        class="process-media-gallery__video"
+                        controls
+                        playsinline
+                        preload="none"
+                        {% if block.settings.poster != blank %}
+                          poster="{{ block.settings.poster | image_url: width: 1200 }}"
+                        {% endif %}
+                        aria-label="{{ block.settings.alt_text | default: block.settings.caption | strip_html | escape }}"
+                      >
+                        {%- for source in block.settings.video.sources -%}
+                          <source src="{{ source.url }}" type="{{ source.mime_type }}">
+                        {%- endfor -%}
+                      </video>
+                    {%- elsif block.settings.video_url != blank -%}
+                      <video
+                        class="process-media-gallery__video"
+                        controls
+                        playsinline
+                        preload="none"
+                        {% if block.settings.poster != blank %}
+                          poster="{{ block.settings.poster | image_url: width: 1200 }}"
+                        {% endif %}
+                        aria-label="{{ block.settings.alt_text | default: block.settings.caption | strip_html | escape }}"
+                      >
+                        <source src="{{ block.settings.video_url | escape }}" type="video/mp4">
+                      </video>
+                    {%- endif -%}
+                  </div>
+                  {%- if block.settings.caption != blank -%}
+                    <div class="process-media-gallery__caption rte">{{ block.settings.caption }}</div>
+                  {%- endif -%}
+                </article>
+              {%- endif -%}
+          {%- endcase -%}
+        {%- endfor -%}
+      </div>
+
+      {%- if section.settings.full_process_url != blank and section.settings.full_process_label != blank -%}
+      <div class="process-media-gallery__cta-wrap">
+  <a class="process-media-gallery__cta" href="{{ section.settings.full_process_url }}">
+    <span>{{ section.settings.full_process_label | escape }}</span>
+    <span aria-hidden="true">&rarr;</span>
+  </a>
+</div>
+      {%- endif -%}
+    </div>
+  </section>
+
+  {%- style -%}
+    #ProcessMedia-{{ section.id }} {
+      padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+      padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+      background: {{ section.settings.background_color }};
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 2rem;
+      margin-bottom: 2.4rem;
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__heading {
+      margin: 0;
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__description {
+      max-width: 72rem;
+      margin-top: 0.8rem;
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__controls {
+      display: flex;
+      flex: 0 0 auto;
+      gap: 0.8rem;
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__arrow {
+      display: grid;
+      width: 4.4rem;
+      height: 4.4rem;
+      padding: 0;
+      place-items: center;
+      border: 0.1rem solid rgba(var(--color-foreground), 0.24);
+      border-radius: 50%;
+      background: rgb(var(--color-background));
+      color: rgb(var(--color-foreground));
+      cursor: pointer;
+      font: inherit;
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__arrow:disabled {
+      cursor: default;
+      opacity: 0.35;
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__track {
+      display: flex;
+      gap: 1.6rem;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-behavior: smooth;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__track::-webkit-scrollbar {
+      display: none;
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__slide {
+      flex: 0 0 76%;
+      overflow: hidden;
+      border: 0.1rem solid rgba(var(--color-foreground), 0.14);
+      border-radius: 0.8rem;
+      background: rgb(var(--color-background));
+      scroll-snap-align: start;
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__media {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 1 / 1;
+      background: rgba(var(--color-foreground), 0.06);
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__image,
+    #ProcessMedia-{{ section.id }} .process-media-gallery__video,
+    #ProcessMedia-{{ section.id }} .process-media-gallery__external-video {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__image {
+      object-fit: cover;
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__video {
+      background: #000;
+      object-fit: contain;
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__external-video {
+      position: relative;
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__play {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      display: grid;
+      width: 5.6rem;
+      height: 5.6rem;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.72);
+      color: #fff;
+      transform: translate(-50%, -50%);
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__caption {
+      min-height: 6.4rem;
+      padding: 1.2rem 1.4rem;
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__caption > :first-child {
+      margin-top: 0;
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__caption > :last-child {
+      margin-bottom: 0;
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__cta-wrap {
+      margin-top: 2.4rem;
+      text-align: center;
+    }
+
+    @media screen and (min-width: 750px) {
+      #ProcessMedia-{{ section.id }} {
+        padding-top: {{ section.settings.padding_top }}px;
+        padding-bottom: {{ section.settings.padding_bottom }}px;
+      }
+
+      #ProcessMedia-{{ section.id }} .process-media-gallery__slide {
+        flex-basis: 34%;
+      }
+    }
+
+    @media screen and (min-width: 990px) {
+      #ProcessMedia-{{ section.id }} .process-media-gallery__slide {
+        flex-basis: calc(25% - 1.2rem);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #ProcessMedia-{{ section.id }} .process-media-gallery__track {
+        scroll-behavior: auto;
+      }
+    }
+
+    #ProcessMedia-{{ section.id }} .process-media-gallery__cta-wrap {
+  margin-top: 1.4rem;
+  text-align: left;
+}
+
+#ProcessMedia-{{ section.id }} .process-media-gallery__cta {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 4.8rem;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--primary-orange, #d83d0e);
+  font-size: 1.3rem;
+  font-weight: 500;
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+#ProcessMedia-{{ section.id }} .process-media-gallery__cta:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.3rem;
+}
+  {%- endstyle -%}
+
+  <script>
+    (() => {
+      const section = document.getElementById('ProcessMedia-{{ section.id }}');
+      if (!section || section.dataset.processMediaInitialized === 'true') return;
+      section.dataset.processMediaInitialized = 'true';
+
+      const track = section.querySelector('[data-process-track]');
+      const previousButton = section.querySelector('[data-process-previous]');
+      const nextButton = section.querySelector('[data-process-next]');
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const updateControls = () => {
+        if (!track || !previousButton || !nextButton) return;
+        const end = track.scrollWidth - track.clientWidth;
+        previousButton.disabled = track.scrollLeft <= 2;
+        nextButton.disabled = track.scrollLeft >= end - 2;
+      };
+
+      const scrollTrack = (direction) => {
+        const slide = track && track.querySelector('.process-media-gallery__slide');
+        if (!track || !slide) return;
+        const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+        track.scrollBy({
+          left: direction * (slide.getBoundingClientRect().width + gap),
+          behavior: reducedMotion ? 'auto' : 'smooth'
+        });
+      };
+
+      previousButton?.addEventListener('click', () => scrollTrack(-1));
+      nextButton?.addEventListener('click', () => scrollTrack(1));
+      track?.addEventListener('scroll', updateControls, { passive: true });
+      window.addEventListener('resize', updateControls, { passive: true });
+      updateControls();
+
+      const overview = section.querySelector('[data-desktop-autoplay]');
+      const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      const canAutoplay = window.matchMedia('(min-width: 750px)').matches && !connection?.saveData && !reducedMotion;
+
+      if (overview && canAutoplay) {
+        overview.muted = true;
+        overview.play().catch(() => {});
+      }
+    })();
+  </script>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Process media gallery",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Inside our remanufacturing process"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Description"
+    },
+    {
+      "type": "video",
+      "id": "overview_video",
+      "label": "30-second overview video"
+    },
+    {
+      "type": "video_url",
+      "id": "overview_external_video",
+      "accept": ["youtube", "vimeo"],
+      "label": "External overview video",
+      "info": "Used only when no Shopify-hosted overview video is selected."
+    },
+    {
+      "type": "image_picker",
+      "id": "overview_poster",
+      "label": "Overview video poster"
+    },
+    {
+      "type": "text",
+      "id": "overview_alt",
+      "label": "Overview video accessible label"
+    },
+    {
+      "type": "richtext",
+      "id": "overview_caption",
+      "label": "Overview video caption"
+    },
+    {
+      "type": "text",
+      "id": "full_process_label",
+      "label": "Full process link label",
+      "default": "Watch the full process"
+    },
+    {
+      "type": "url",
+      "id": "full_process_url",
+      "label": "Full process video link"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 44
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 44
+    }
+  ],
+  "blocks": [
+    {
+      "type": "image",
+      "name": "Process image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "text",
+          "id": "alt_text",
+          "label": "Alt text",
+          "info": "Name the stage and machine type."
+        },
+        {
+          "type": "richtext",
+          "id": "caption",
+          "label": "Caption"
+        }
+      ]
+    },
+    {
+      "type": "video",
+      "name": "Process video",
+      "settings": [
+        {
+          "type": "video",
+          "id": "video",
+          "label": "Video"
+        },
+        {
+          "type": "url",
+          "id": "video_url",
+          "label": "Direct video link",
+          "info": "Used only when no Shopify-hosted video is selected."
+        },
+        {
+          "type": "image_picker",
+          "id": "poster",
+          "label": "Poster image"
+        },
+        {
+          "type": "text",
+          "id": "alt_text",
+          "label": "Accessible label"
+        },
+        {
+          "type": "richtext",
+          "id": "caption",
+          "label": "Caption"
+        }
+      ]
+    }
+  ],
+  "max_blocks": 20,
+  "presets": [
+    {
+      "name": "Process media gallery"
+    }
+  ]
+}
+{% endschema %}
