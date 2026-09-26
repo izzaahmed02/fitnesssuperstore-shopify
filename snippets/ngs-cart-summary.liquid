@@ -15,6 +15,7 @@
 {%- endcomment -%}
 
 {%- assign ngs_options = shop.metafields.fs_bundle.ngs_allowlist.value.options -%}
+<!-- NGSPROBE rendered=1 optcount={{ ngs_options.size }} items={{ cart.item_count }} -->
 
 {%- if ngs_options.size > 0 and cart.item_count > 0 -%}
   {%- assign ngs_total_cents = 0 -%}
@@ -30,7 +31,17 @@
     ids are fixed-length and unique, so one cannot be a substring of another.
   {%- endcomment -%}
   {%- for item in cart.items -%}
-    {%- assign selection = item.properties['_functionOperation'] -%}
+    {%- comment -%}
+      Read the private property by iterating, which is how the rest of this
+      theme reaches `_functionOperation` (see cart-drawer.liquid). Bracket
+      lookup by key is not reliable for underscore-prefixed properties.
+    {%- endcomment -%}
+    {%- assign selection = '' -%}
+    {%- for property in item.properties -%}
+      {%- if property.first == '_functionOperation' -%}
+        {%- assign selection = property.last -%}
+      {%- endif -%}
+    {%- endfor -%}
     {%- if selection != blank -%}
       {%- for entry in ngs_options -%}
         {%- assign entry_variant_id = entry.variantId | split: '/' | last -%}
@@ -43,6 +54,7 @@
     {%- endif -%}
   {%- endfor -%}
 
+  <!-- NGSPROBE total={{ ngs_total_cents }} matched={{ ngs_line_count }} -->
   {%- if ngs_line_count > 0 -%}
     {%- comment -%}
       Styles live with the snippet so the block looks the same in the drawer and
