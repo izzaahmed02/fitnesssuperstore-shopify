@@ -219,3 +219,28 @@ overriding it. If the panel is empty or missing, the source is not applying.
 Check three, not one, and make them representative rather than high-traffic:
 one with the Edited marker (`FFT-ACD`), one without (`FFT-LPSCR`), and one from
 the other series (`FFB-45DLLP`).
+
+### Resolved, 2026-09-26: all three re-checked clean
+
+Re-checked `FFT-LPSCR`, `FFB-45DLLP` and `FFT-ACD` in Merchant Center. All three
+show the approved title, `custom_label_3 = p1_hero`, and the correct
+`custom_label_4` (Tahoe Series, FFB Black Series, Tahoe Series). All Approved,
+Needs attention 0. There is no revert and no label drift.
+
+FFT-ACD included, which is the one that read wrong earlier. Its title and both
+labels are now correct, so the Edited marker is not overriding either.
+
+The earlier reading was real, not misread: that screenshot showed the old title
+with `New_FF` and lowercased `tahoe series`. All three products now show
+"Last update 3 hrs ago", so a feed run between the two checks restored them. The
+most likely account is a processing window after the `[US.MF]` primary
+re-registration during which the supplementals had not yet been applied and the
+primary's own values showed through.
+
+Two things to carry forward:
+
+- The Ads Product report **Title** column is not a serving check. It renders the
+  primary feed title. Do not use it to verify a supplemental again.
+- A single spot-check taken inside a feed processing window can look like a
+  regression. Confirm against a second SKU and re-check after the next feed run
+  before calling it one.
