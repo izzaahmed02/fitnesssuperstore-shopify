@@ -1,0 +1,159 @@
+{%- comment -%}
+  Local Inventory Ads feed (Google Merchant Center "local product inventory").
+
+  Replaces the manual upload fs_showroom_local_inventory.tsv with a stable
+  Shopify URL that Merchant Center can fetch on a schedule, per Tim's Sept 5
+  direction. Availability and quantity re-derive from live Shopify on every
+  fetch; offer membership comes from the generated allowlist (see below).
+
+  Bound to an alternate collection template, so the cohort is the collection in
+  the URL:
+
+    /collections/french-fitness-showroom-products?view=local-inventory-tsv
+
+  Four columns, tab-delimited, header row first:
+    id, store_code, availability, quantity
+
+  ID RULE (Tim's decision 2, supersedes item 4.2). Verified against the live
+  googleshoppingfs and googleshoppingfrenchfitness exports: MultiFeeds uses
+  three schemes, and a mismatched id processes as "Offer does not exist".
+    1. Multi-variant product -> "<product.id>-<variant.id>"      (45 rows today)
+    2. Single-variant carrying custom.old_legacy_product_code ->
+       that legacy code (FFT-CFDI is keyed FFA-CFDI)             (1 row today)
+    3. Otherwise -> variant.sku                                  (220 rows today)
+
+  ELIGIBILITY (Tim's decision 3). custom.processing_time_filter is PRIMARY:
+  "Ships in 2 weeks or less" is eligible; "2-5 weeks", "5 weeks or more" and
+  "Out of Stock" are not. When the filter is missing, fall back to the
+  three-metafield cascade, most-specific-first, parsing the MAXIMUM stated lead
+  time at 10 business days or less. Missing both = not eligible.
+
+  AVAILABILITY (Tim's decision 4). Eligible rows publish on_display_to_order,
+  never in_stock - these are showroom display units that ship to the customer.
+  Not eligible publishes out_of_stock.
+
+  QUANTITY (Tim's decision 5). 1 eligible / 0 not. Shopify's stored numbers are
+  orderability placeholders (9,989 / 449,511 / negatives), never shelf counts,
+  and must never publish.
+
+  MEMBERSHIP (Tim's decision 6). A row is emitted only for an offer ID present
+  in snippets/local-inventory-offer-allowlist.liquid. 154 variants in the
+  showroom collection have no primary offer and are excluded.
+{%- endcomment -%}
+
+{%- assign TAB = '	' -%}
+{%- assign NL = '
+' -%}
+
+{%- comment -%} Merchant Center store code. Do not change without Tim's GO. {%- endcomment -%}
+{%- assign STORE_CODE = 'FSS1' -%}
+
+{%- comment -%} Two weeks, in business days, for the fallback gate only. {%- endcomment -%}
+{%- assign MAX_LEAD_BUSINESS_DAYS = 10 -%}
+
+{%- assign ELIGIBLE_FILTER = 'ships in 2 weeks or less' -%}
+
+{%- comment -%}
+  Offer IDs the primary Google feeds carry. render has an isolated scope, so the
+  snippet outputs the list and we capture it here.
+{%- endcomment -%}
+{%- capture PRIMARY_OFFER_IDS -%}{%- render 'local-inventory-offer-allowlist' -%}{%- endcapture -%}
+{%- assign PRIMARY_OFFER_IDS = PRIMARY_OFFER_IDS | strip -%}
+
+{%- capture feed -%}
+id{{ TAB }}store_code{{ TAB }}availability{{ TAB }}quantity
+{%- assign seen_offers = '|' -%}
+{%- paginate collection.products by 1000 -%}
+  {%- for product in collection.products -%}
+    {%- for variant in product.variants -%}
+
+      {%- assign sku = variant.sku | strip -%}
+      {%- if sku == blank -%}
+        {%- continue -%}
+      {%- endif -%}
+
+      {%- comment -%} Offer ID, per the three-part ID RULE above. {%- endcomment -%}
+      {%- if product.variants.size > 1 -%}
+        {%- assign offer_id = product.id | append: '-' | append: variant.id -%}
+      {%- else -%}
+        {%- assign legacy_code = variant.metafields.custom.old_legacy_product_code.value | first | strip -%}
+        {%- if legacy_code != blank -%}
+          {%- assign offer_id = legacy_code -%}
+        {%- else -%}
+          {%- assign offer_id = sku -%}
+        {%- endif -%}
+      {%- endif -%}
+
+      {%- comment -%} Skip anything the primary feed does not carry. {%- endcomment -%}
+      {%- assign offer_key = '|' | append: offer_id | append: '|' -%}
+      {%- unless PRIMARY_OFFER_IDS contains offer_key -%}
+        {%- continue -%}
+      {%- endunless -%}
+
+      {%- if seen_offers contains offer_key -%}
+        {%- continue -%}
+      {%- endif -%}
+      {%- assign seen_offers = seen_offers | append: offer_id | append: '|' -%}
+
+      {%- comment -%} Eligibility: structured filter first, cascade only if absent. {%- endcomment -%}
+      {%- assign pt_filter = product.metafields.custom.processing_time_filter | downcase | strip -%}
+      {%- assign eligible = false -%}
+
+      {%- if pt_filter != blank -%}
+        {%- if pt_filter == ELIGIBLE_FILTER -%}
+          {%- assign eligible = true -%}
+        {%- endif -%}
+      {%- else -%}
+        {%- assign lead_raw = variant.metafields.custom.processing_time_long_variant -%}
+        {%- if lead_raw == blank -%}
+          {%- assign lead_raw = product.metafields.custom.processing_time_long -%}
+        {%- endif -%}
+        {%- if lead_raw == blank -%}
+          {%- assign lead_raw = product.metafields.custom.processing_time -%}
+        {%- endif -%}
+        {%- assign lead = lead_raw | downcase | strip -%}
+
+        {%- comment -%}
+          Parse the MAXIMUM stated lead time. "3-7 Business Days" yields 7, not
+          3. Weeks convert at 5 business days. Blank or unparseable stays -1,
+          which never qualifies.
+        {%- endcomment -%}
+        {%- assign lead_days = -1 -%}
+        {%- if lead contains 'business day' -%}
+          {%- assign lead_token = lead | split: 'business day' | first | strip | split: ' ' | last | split: '-' | last | strip -%}
+          {%- assign lead_number = lead_token | times: 1 -%}
+          {%- if lead_number > 0 -%}
+            {%- assign lead_days = lead_number -%}
+          {%- endif -%}
+        {%- elsif lead contains 'week' -%}
+          {%- assign lead_token = lead | split: 'week' | first | strip | split: ' ' | last | split: '-' | last | strip -%}
+          {%- assign lead_number = lead_token | times: 1 -%}
+          {%- if lead_number > 0 -%}
+            {%- assign lead_days = lead_number | times: 5 -%}
+          {%- endif -%}
+        {%- endif -%}
+
+        {%- if lead_days > 0 and lead_days <= MAX_LEAD_BUSINESS_DAYS -%}
+          {%- assign eligible = true -%}
+        {%- endif -%}
+        {%- if lead contains 'restock' -%}
+          {%- assign eligible = false -%}
+        {%- endif -%}
+      {%- endif -%}
+
+      {%- if eligible -%}
+        {%- assign availability = 'on_display_to_order' -%}
+        {%- assign quantity = 1 -%}
+      {%- else -%}
+        {%- assign availability = 'out_of_stock' -%}
+        {%- assign quantity = 0 -%}
+      {%- endif -%}
+
+      {{- NL -}}{{- offer_id -}}{{- TAB -}}{{- STORE_CODE -}}{{- TAB -}}{{- availability -}}{{- TAB -}}{{- quantity -}}
+
+    {%- endfor -%}
+  {%- endfor -%}
+{%- endpaginate -%}
+{%- endcapture -%}
+{{- feed | strip -}}
+{{- NL -}}

@@ -296,6 +296,18 @@ if (!customElements.get('product-form-with-options')) {
         if (mandatoryFields.length === 0) return true;
         let errorCounter = 0;
         mandatoryFields.forEach((field) => {
+          // A conditional (tiered) option that does not apply to the current parent
+          // choice is hidden by syncConditionalVisibility(), which also clears its
+          // selection. Requiring it would block add to cart on a configuration the
+          // shopper has fully filled in - e.g. the 5 Stack PDPs render one Station
+          // Layout accordion per Stations Included tier, so whichever tier is not
+          // selected is always hidden and always empty. Only the options a shopper
+          // can actually see are mandatory.
+          const accordion = field.closest('[data-option-accordion]');
+          if (accordion && window.getComputedStyle(accordion).display === 'none') {
+            field.classList.remove('error');
+            return;
+          }
           if (field.dataset.selectedOptions === '') {
             field.classList.add('error');
             errorCounter += 1;

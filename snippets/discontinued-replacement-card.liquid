@@ -1,0 +1,109 @@
+{%- comment -%}
+  Renders one approved replacement product for the discontinued replacement
+  module.
+
+  The card is rendered from an explicit product reference only. It shows the
+  replacement image, exact product title, its PDP link and its current
+  source-controlled availability/lead-time language. It renders the product
+  whether or not it is available, and it never renders a price or any purchase
+  control, so the discontinued page it sits on keeps no purchase path.
+
+  Availability follows the same controlled precedence as
+  snippets/product-availability-badge.liquid: a backorder/pre-order product is
+  labelled before the general available/out-of-stock branch.
+
+  Lead time follows the same source precedence as the PDP and cart
+  (sections/main-product-variants.liquid, snippets/cart-drawer.liquid):
+  variant processing_time_long_variant, then product processing_time_long,
+  then product processing_time.
+
+  A referenced replacement that is itself on the discontinued template fails
+  closed: nothing at all is rendered for that reference — no card, product
+  link, image, status badge or lead-time line — so a customer is never sent
+  from one discontinued product to another, and a discontinued product is
+  never presented as merely out of stock. The originating page keeps its own
+  controlled header and introduction, and no substitute product is chosen.
+
+  Accepts:
+    - replacement: {Object} the referenced replacement product (required)
+    - intro: {Object} controlled rich-text introduction for this replacement (optional)
+{%- endcomment -%}
+
+{%- liquid
+  assign reference_is_discontinued = false
+  if replacement.template_suffix == 'discontinued'
+    assign reference_is_discontinued = true
+  endif
+-%}
+
+{%- if replacement != blank and reference_is_discontinued == false -%}
+  {%- liquid
+    assign replacement_variant = replacement.selected_or_first_available_variant
+    assign replacement_image = replacement.featured_media
+    assign image_alt = replacement_image.alt | default: replacement.title
+  -%}
+  {%- assign lead_time = replacement_variant.metafields.custom.processing_time_long_variant
+    | default: replacement.metafields.custom.processing_time_long
+    | default: replacement.metafields.custom.processing_time
+  -%}
+
+  <div class="discontinued-replacement__card">
+    {%- if intro.value != blank -%}
+      <div class="discontinued-replacement__card-intro rte">
+        {{ intro | metafield_tag }}
+      </div>
+    {%- endif -%}
+
+    <div class="discontinued-replacement__product">
+      <a
+        class="discontinued-replacement__media"
+        href="{{ replacement.url }}"
+        aria-label="{{ replacement.title | escape }}"
+        tabindex="-1"
+      >
+        {%- if replacement_image != blank -%}
+          <img
+            src="{{ replacement_image | image_url: width: 360 }}"
+            srcset="
+              {%- if replacement_image.width >= 165 -%}{{ replacement_image | image_url: width: 165 }} 165w,{%- endif -%}
+              {%- if replacement_image.width >= 360 -%}{{ replacement_image | image_url: width: 360 }} 360w,{%- endif -%}
+              {%- if replacement_image.width >= 533 -%}{{ replacement_image | image_url: width: 533 }} 533w,{%- endif -%}
+              {{ replacement_image | image_url }} {{ replacement_image.width }}w
+            "
+            sizes="(min-width: 750px) 200px, 40vw"
+            alt="{{ image_alt | escape }}"
+            width="{{ replacement_image.width }}"
+            height="{{ replacement_image.height }}"
+            loading="lazy"
+          >
+        {%- else -%}
+          {{ 'product-1' | placeholder_svg_tag: 'discontinued-replacement__placeholder' }}
+        {%- endif -%}
+      </a>
+
+      <div class="discontinued-replacement__details">
+        <a class="discontinued-replacement__title" href="{{ replacement.url }}">
+          {{- replacement.title | escape -}}
+        </a>
+
+        <div class="discontinued-replacement__status">
+          {%- if replacement.metafields.custom.backorder == true -%}
+            <span class="badge backorder-badge stock-badge">Available to Pre-Order</span>
+          {%- elsif replacement.available -%}
+            <span class="badge stock-badge in">Available to Order</span>
+          {%- else -%}
+            <span class="badge stock-badge out">Out of stock</span>
+          {%- endif -%}
+        </div>
+
+        {%- if lead_time != blank -%}
+          <p class="discontinued-replacement__lead-time">{{ lead_time | escape }}</p>
+        {%- endif -%}
+
+        <a class="discontinued-replacement__link" href="{{ replacement.url }}">
+          View product details
+        </a>
+      </div>
+    </div>
+  </div>
+{%- endif -%}

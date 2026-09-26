@@ -1,0 +1,712 @@
+{{ 'section-multicolumn.css' | asset_url | stylesheet_tag }}
+{{ 'component-slider.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+    /* Figma's mobile frames inset every section 24px top and bottom, regardless of the
+       desktop value — confirmed across nodes 4612:86181 (facility-types), 4612:86422
+       (space-traffic), 4612:88420 (equipment-zones), 5280:81995 (condition-options),
+       4612:86205 (form) and 4612:86666 (faq). Deriving it from the desktop setting
+       (x0.75) gave 60px and made every section ~72px too tall on mobile. The desktop
+       setting still governs from 750px up. */
+    .section-{{ section.id }}-padding {
+    padding-top: 24px;
+    padding-bottom: 24px;
+    }
+
+    #shopify-section-{{ section.id }} {
+    background-color: {{ section.settings.bg }};
+    }
+
+    /* The section background bleeds full-width via #shopify-section-{{ section.id }}
+       above (outside .page-width), so .page-width doesn't need max-width:100% — that
+       was overriding the theme's default centering (max-width: var(--page-width);
+       margin: 0 auto; in assets/base.css.liquid) and pinning the fixed-width card row
+       to the left edge instead of centering it. Figma node 5280:81925 confirms both
+       "Title" (heading+subheading) and "caR" (cards row) are exactly 1280px wide with
+       the same left/right edges — the site's generic --page-width var is 1380px, 100px
+       wider, which stretched the cards row past the heading's column instead of
+       matching it exactly, so use the literal Figma width here instead of the site
+       default. Side inset is 16px on mobile (Figma's mobile equivalent), 40px desktop. */
+    #shopify-section-{{ section.id }} .page-width {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding-left: 16px;
+    padding-right: 16px;
+    box-sizing: border-box;
+    }
+
+    @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .page-width {
+    padding-left: 40px;
+    padding-right: 40px;
+    }
+    }
+
+    /* Figma node 5280:81925 (1440px frame) — content is inset 80px each side for a
+       1280px column, which is what sizes the three cards at 418.67px
+       (3 x 418.67 + 2 x 12 gap = 1280). Capping .page-width at 1280px and then adding
+       40px padding left only 1200px, so the cards came out 392px and their images
+       with them. */
+    @media screen and (min-width: 990px) {
+    #shopify-section-{{ section.id }} .page-width {
+    max-width: 100%;
+    margin: 0;
+    padding-left: 80px;
+    padding-right: 80px;
+    }
+    }
+
+    #shopify-section-{{ section.id }} .multicolumn-card {
+    text-align: {{ section.settings.text_align }};
+    }
+
+    /* Figma node 5280:81962 "Title" — 12px gap between heading and subheading
+       (heading 50px + gap 12px + subheading 48px = 110px frame height, exact). */
+    #shopify-section-{{ section.id }} .multicolumn__subheading {
+    text-align: center;
+    max-width: 800px;
+    margin: 12px auto 0;
+    }
+
+    /* Figma node 5280:81962 "Title" — heading and subheading stack, centred, 12px
+       apart (50 + 12 + 48 = the 110px title frame). The 12px margin above was landing
+       as 22px because the theme's title wrapper adds its own gap and the heading a
+       bottom margin.
+
+       display: block is load-bearing, not cosmetic. .title-wrapper-with-link is one of
+       the theme's flex ROWS. Zeroing the gap alone left it a row, and the two only
+       looked stacked up to 1440px because the heading (523px) plus the 800px
+       subheading exceeded the 1280px column and wrapped. From about 1483px up they
+       fit on one line and rendered SIDE BY SIDE — visible on any screen wider than
+       1440. Forcing block flow makes the stack hold at every width. */
+    #shopify-section-{{ section.id }} .multicolumn__title.title-wrapper-with-link {
+    display: block;
+    text-align: center;
+    gap: 0;
+    }
+
+    #shopify-section-{{ section.id }} .multicolumn__title .title {
+    margin-bottom: 0;
+    }
+
+    /* Figma node 5280:81996/5280:81997 (mobile) — Oswald SemiBold 20px/26px; Lato Regular 14px/20px #4f4f55 */
+    #shopify-section-{{ section.id }} .title.h1 {
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 26px;
+    }
+
+    #shopify-section-{{ section.id }} .multicolumn__subheading {
+    font-family: 'Lato', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: #4f4f55;
+    }
+
+    #shopify-section-{{ section.id }} .multicolumn-card__info-title {
+    color: #000000;
+    }
+
+    /* Figma node 5280:81929 "info card" ("New") — the card image is 370.67x219px, a
+       landscape ~59% ratio, but the section's image_ratio setting is "portrait", whose
+       .media--portrait class forces a 125% (tall) box — that mismatch is what was
+       cropping/distorting the room photos into a vertical strip. There's no "landscape"
+       option in this schema's dropdown (only adapt/portrait/square/circle, matching
+       Dawn's stock multicolumn options), so rather than add a new schema option,
+       override .media--portrait's own ratio with the exact Figma value directly. Also
+       add the image's own 12px corner radius (was unset/square) and the 24px gap to the
+       text below (image/content are inset 24px on all sides inside the 24px-padded
+       card, so no extra side padding is needed — the card's own padding already
+       provides it). */
+    #shopify-section-{{ section.id }} .media--portrait {
+    padding-bottom: 59.1%;
+    }
+    #shopify-section-{{ section.id }} .multicolumn-card__image {
+    border-radius: 12px;
+    }
+    #shopify-section-{{ section.id }} .multicolumn-card__image-wrapper + .multicolumn-card__info {
+    margin-top: 24px;
+    }
+
+    /* Figma node 5280:81929 "Content" — 8px gap between the card title and paragraph,
+       not the theme's default 15px title margin + 16px sibling margin (collapsed to
+       16px). Zero the title's own margin so the sibling's margin-top is the only
+       source of the gap. */
+    #shopify-section-{{ section.id }} .multicolumn-card__info-title {
+    margin-bottom: 0;
+    }
+    #shopify-section-{{ section.id }} .multicolumn-card__info > :nth-child(2) {
+    margin-top: 8px;
+    }
+
+    /* Figma mobile node 5280:81971 "info card" — 343x425: a single full-width column
+       holding a 311x219 image, 20px to the content, then a 20/26 title and its body.
+       Four things were off against that:
+         - the theme's 15px mobile slider gutter (unused, swipe_on_mobile is off) left
+           the card 313px instead of 343px, and with it the image 281px instead of 311
+         - the row gap was the theme's 16px rather than Figma's 12px
+         - the image kept its desktop 59.1% ratio (219/370.67); at 311px wide the
+           mobile ratio is 219/311 = 70.4%, which is why it came out 166px tall
+           instead of 219px
+         - the title rendered at 18/24 rather than 20/26
+       These together made the section 99px SHORTER than the design, the only place on
+       the page that undershot rather than overshot. */
+    @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .multicolumn-list.grid {
+    gap: 12px;
+    padding-left: 0;
+    padding-right: 0;
+    }
+
+    #shopify-section-{{ section.id }} .media--portrait {
+    padding-bottom: 70.4%;
+    }
+
+    #shopify-section-{{ section.id }} .multicolumn-card__image-wrapper + .multicolumn-card__info {
+    margin-top: 20px;
+    }
+
+    #shopify-section-{{ section.id }} .multicolumn-card__info-title {
+    font-size: 20px;
+    line-height: 26px;
+    }
+    }
+
+    /* Figma node 5280:81963/5280:81964 (desktop) — Oswald SemiBold 38px/50px; Lato Regular 16px/24px */
+    @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .title.h1 {
+    font-size: 38px;
+    line-height: 50px;
+    }
+    #shopify-section-{{ section.id }} .multicolumn__subheading {
+    font-size: 16px;
+    line-height: 24px;
+    }
+
+    /* Figma node 5280:81925 — 28px gap between the heading block and the cards row. */
+    #shopify-section-{{ section.id }} .multicolumn__title {
+    margin-bottom: 0;
+    }
+    #shopify-section-{{ section.id }} .multicolumn__title + * {
+    margin-top: 28px;
+    }
+
+    /* Figma node 5280:81927 "caR" — 12px gap between the 3 cards (3 x 418.67px card +
+       2 x 12px gap = 1280px, confirmed exactly), not the theme's default 32px. As
+       documented in commercial-gym-buildouts-space-traffic.liquid, the theme also sizes
+       each card via calc(33.33% - var(--grid-desktop-horizontal-spacing) * 2/3), so the
+       width formula must be recomputed with the real 12px value too, or the row falls
+       short of the container width and the shortfall lands as dead space on the right. */
+    #shopify-section-{{ section.id }} .multicolumn-list.grid {
+    gap: 12px;
+    justify-content: center;
+    }
+    }
+    @media screen and (min-width: 990px) {
+    #shopify-section-{{ section.id }} .grid--3-col-desktop .grid__item {
+    width: calc(33.33% - 12px * 2 / 3);
+    max-width: calc(33.33% - 12px * 2 / 3);
+    }
+    }
+
+    #shopify-section-{{ section.id }} .multicolumn-card__info .rte {
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    color: #393940;
+    }
+
+    /* Figma node 5280:81965 — Lato Italic 14px/20px, #808080; 28px gap from the cards
+       row above (was 2rem/32px). */
+    #shopify-section-{{ section.id }} .space-traffic__disclaimer {
+    text-align: center;
+    /* Figma node 5280:81965 sets this line 1029px wide on a single 20px row. The 800px
+       cap used by the space-traffic disclaimer (whose line is only 766px) would wrap
+       this longer sentence onto a second row. */
+    max-width: none;
+    margin: 28px auto 0;
+    font-family: 'Lato', sans-serif;
+    font-style: italic;
+    font-size: 14px;
+    line-height: 20px;
+    color: #808080;
+    }
+
+    /* The richtext setting supplies the inner <p>; drop its default margins so the line
+       stays 20px tall with exactly 28px above it. */
+    #shopify-section-{{ section.id }} .space-traffic__disclaimer > p {
+    margin: 0;
+    }
+
+    /* Draw the card outline as an inset shadow rather than a border, so it takes no
+       layout space — Figma's 445px card height excludes the stroke, where a real
+       border added 1px top and bottom. */
+    #shopify-section-{{ section.id }} .multicolumn-list__item {
+    border: 0;
+    box-shadow: inset 0 0 0 1px #e5e5e5;
+    }
+
+    @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+    }
+
+    @media screen and (max-width: 750px) {
+    #shopify-section-{{ section.id }} .multicolumn-card {
+    text-align: start;
+    }
+    }
+
+    /* Mobile, Figma node 5280:81994 (375x1609). Kept LAST in this stylesheet so it wins
+       on source order against the unscoped disclaimer rule above, which it ties with on
+       specificity. The heading→cards gap is only set inside min-width:750px, so mobile
+       was inheriting the theme's own 3rem (30px) title-wrapper margin. */
+    @media screen and (max-width: 749px) {
+    /* Figma: "caR" starts 18178, heading block ends 18158 — 20px, not 30. */
+    #shopify-section-{{ section.id }} .multicolumn__title.title-wrapper-with-link {
+    margin-bottom: 20px;
+    }
+
+    /* Figma node 5280:82066 — 20px above the disclaimer on mobile ("caR" ends 19521,
+       paragraph starts 19541), where the desktop node uses 28px. */
+    #shopify-section-{{ section.id }} .space-traffic__disclaimer {
+    margin-top: 20px;
+    }
+    }
+{%- endstyle -%}
+
+{%- liquid
+    assign columns_mobile_int = section.settings.columns_mobile | plus: 0
+    assign show_mobile_slider = false
+    if section.settings.swipe_on_mobile and section.blocks.size > columns_mobile_int
+        assign show_mobile_slider = true
+    endif
+-%}
+
+<div class="multicolumn {% unless section.settings.background_style == 'none' and settings.text_boxes_border_thickness > 0 or settings.text_boxes_shadow_opacity > 0 %} background-{{ section.settings.background_style }}{% endunless %}{% if section.settings.title == blank %} no-heading{% endif %}">
+    <div class="page-width multicolumn-padding section-{{ section.id }}-padding isolate{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+    {% if settings.animations_reveal_on_scroll %}
+        data-cascade
+            {% endif %}>
+        {%- unless section.settings.title == blank -%}
+            <div class="title-wrapper-with-link title-wrapper--self-padded-mobile title-wrapper--no-top-margin multicolumn__title">
+                <h2 class="title inline-richtext {{ section.settings.heading_size }}">
+                    {{ section.settings.title }}
+                </h2>
+                {%- unless section.settings.subheading == blank -%}
+                    <div class="multicolumn__subheading rte">{{ section.settings.subheading }}</div>
+                {%- endunless -%}
+                {%- if section.settings.button_label != blank and show_mobile_slider -%}
+                    <a href="{{ section.settings.button_link }}" class="link underlined-link large-up-hide">
+                        {{- section.settings.button_label | escape -}}
+                    </a>
+                {%- endif -%}
+            </div>
+        {%- endunless -%}
+        <slider-component class="slider-mobile-gutter">
+            <ul
+                    class="multicolumn-list contains-content-container grid grid--{{ section.settings.columns_mobile }}-col-tablet-down grid--{{ section.settings.columns_desktop }}-col-desktop{% if show_mobile_slider %} slider slider--tablet grid--peek{% endif %}"
+                    id="Slider-{{ section.id }}"
+                    role="list">
+                {%- liquid
+                    assign highest_ratio = 0
+                    for block in section.blocks
+                        if block.settings.image.aspect_ratio > highest_ratio
+                            assign highest_ratio = block.settings.image.aspect_ratio
+                        endif
+                    endfor
+                -%}
+                {%- for block in section.blocks -%}
+                    {%- assign empty_column = '' -%}
+                    {%- if block.settings.image == blank
+                    and block.settings.title == blank
+                    and block.settings.text == blank
+                    -%}
+                        {%- assign empty_column = ' multicolumn-list__item--empty' -%}
+                    {%- endif -%}
+                    <li id="Slide-{{ section.id }}-{{ forloop.index }}"
+                        class="multicolumn-list__item grid__item{% if section.settings.swipe_on_mobile %} slider__slide{% endif %}{% if section.settings.column_alignment == 'center' %} center{% endif %}{{ empty_column }}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+                            {{ block.shopify_attributes }}
+                    {% if settings.animations_reveal_on_scroll %}
+                        data-cascade
+                        style="--animation-order: {{ forloop.index }};"
+                            {% endif %}>
+                        <div class="multicolumn-card content-container">
+                            {%- if block.settings.image != blank -%}
+                                {% if section.settings.image_ratio == 'adapt' or section.settings.image_ratio == 'circle' %}
+                                    {% assign spaced_image = true %}
+                                {% endif %}
+                                <div class="multicolumn-card__image-wrapper multicolumn-card__image-wrapper--{{ section.settings.image_width }}-width{% if section.settings.image_width != 'full' or spaced_image %} multicolumn-card-spacing{% endif %}">
+                                    <div
+                                            class="media media--transparent media--{{ section.settings.image_ratio }}"
+                                            {% if section.settings.image_ratio == 'adapt' %}
+                                                style="padding-bottom: {{ 1 | divided_by: highest_ratio | times: 100 }}%;"
+                                            {% endif %}
+                                    >
+                                        {%- liquid
+                                            assign number_of_columns = section.settings.columns_desktop
+                                            assign number_of_columns_mobile = section.settings.columns_mobile
+                                            assign grid_space_desktop = number_of_columns | minus: 1 | times: settings.spacing_grid_horizontal | plus: 100 | append: 'px'
+                                            assign grid_space_tablet = number_of_columns_mobile | minus: 1 | times: settings.spacing_grid_horizontal | plus: 100 | append: 'px'
+                                            assign grid_space_mobile = number_of_columns_mobile | minus: 1 | times: settings.spacing_grid_horizontal | divided_by: 2 | plus: 30 | append: 'px'
+                                            if section.settings.image_width == 'half'
+                                                assign image_width = 0.5
+                                            elsif section.settings.image_width == 'third'
+                                                assign image_width = 0.33
+                                            else
+                                                assign image_width = 1
+                                            endif
+                                        -%}
+                                        {% capture sizes %}
+                                            (min-width: {{ settings.page_width }}px) calc(({{ settings.page_width }}px - {{ grid_space_desktop }}) * {{ image_width }} /  {{ number_of_columns }}),
+                                            (min-width: 990px) calc((100vw - {{ grid_space_desktop }}) * {{ image_width }} / {{ number_of_columns }}),
+                                            (min-width: 750px) calc((100vw - {{ grid_space_tablet }}) * {{ image_width }} / {{ number_of_columns_mobile }}),
+                                            calc((100vw - {{ grid_space_mobile }}) * {{ image_width }} / {{ number_of_columns_mobile }})
+                                        {% endcapture %}
+                                        {{
+                                        block.settings.image
+                                        | image_url: width: 3200
+                                        | image_tag:
+                                        widths: '50, 75, 100, 150, 200, 300, 400, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750, 3000, 3200',
+                                        sizes: sizes,
+                                        class: 'multicolumn-card__image'
+                                        }}
+                                    </div>
+                                </div>
+                            {%- endif -%}
+                            <div class="multicolumn-card__info">
+                                {%- if block.settings.title != blank -%}
+                                    <p class="multicolumn-card__info-title">{{ block.settings.title }}</p>
+                                {%- endif -%}
+                                {%- if block.settings.text != blank -%}
+                                    <div class="rte">{{ block.settings.text }}</div>
+                                {%- endif -%}
+                            </div>
+                        </div>
+                    </li>
+                {%- endfor -%}
+            </ul>
+            {%- if show_mobile_slider -%}
+                <div class="slider-buttons large-up-hide">
+                    <button
+                            type="button"
+                            class="slider-button slider-button--prev"
+                            name="previous"
+                            aria-label="{{ 'general.slider.previous_slide' | t }}"
+                    >
+                        {% render 'icon-caret' %}
+                    </button>
+                    <div class="slider-counter caption">
+                        <span class="slider-counter--current">1</span>
+                        <span aria-hidden="true"> / </span>
+                        <span class="visually-hidden">{{ 'general.slider.of' | t }}</span>
+                        <span class="slider-counter--total">{{ section.blocks.size }}</span>
+                    </div>
+                    <button
+                            type="button"
+                            class="slider-button slider-button--next"
+                            name="next"
+                            aria-label="{{ 'general.slider.next_slide' | t }}"
+                    >
+                        {% render 'icon-caret' %}
+                    </button>
+                </div>
+            {%- endif -%}
+        </slider-component>
+        {%- unless section.settings.disclaimer == blank -%}
+            {%- comment -%}
+              A <div>, not a <p>: `disclaimer` is a richtext setting and emits its own
+              <p>. Nested inside a <p> that is invalid, so the browser closed this
+              element early — leaving it empty and ejecting the real text as an
+              unstyled sibling instead of the centred grey italic line in Figma node
+              5280:81965. Same fix as commercial-gym-buildouts-space-traffic.
+            {%- endcomment -%}
+            <div class="space-traffic__disclaimer">{{ section.settings.disclaimer }}</div>
+        {%- endunless -%}
+    </div>
+</div>
+
+{% schema %}
+{
+  "name": "CGB Condition Options",
+  "class": "section",
+  "tag": "section",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg",
+      "label": "Background color",
+      "default": "#fff"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "title",
+      "default": "New, Remanufactured or Mixed",
+      "label": "Heading"
+    },
+    {
+      "type": "richtext",
+      "id": "subheading",
+      "default": "<p>There is no single right answer. It depends on budget, expected traffic and how long the room needs to stay in service.</p>",
+      "label": "Subheading"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "options": [
+        {
+          "value": "h2",
+          "label": "t:sections.all.heading_size.options__1.label"
+        },
+        {
+          "value": "h1",
+          "label": "t:sections.all.heading_size.options__2.label"
+        },
+        {
+          "value": "h0",
+          "label": "t:sections.all.heading_size.options__3.label"
+        },
+        {
+          "value": "hxl",
+          "label": "t:sections.all.heading_size.options__4.label"
+        },
+        {
+          "value": "hxxl",
+          "label": "t:sections.all.heading_size.options__5.label"
+        }
+      ],
+      "default": "h1",
+      "label": "t:sections.all.heading_size.label"
+    },
+    {
+      "type": "select",
+      "id": "image_width",
+      "options": [
+        {
+          "value": "icon",
+          "label": "Icon width"
+        },
+        {
+          "value": "third",
+          "label": "t:sections.multicolumn.settings.image_width.options__1.label"
+        },
+        {
+          "value": "half",
+          "label": "t:sections.multicolumn.settings.image_width.options__2.label"
+        },
+        {
+          "value": "full",
+          "label": "t:sections.multicolumn.settings.image_width.options__3.label"
+        }
+      ],
+      "default": "full",
+      "label": "t:sections.multicolumn.settings.image_width.label"
+    },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "options": [
+        {
+          "value": "adapt",
+          "label": "t:sections.multicolumn.settings.image_ratio.options__1.label"
+        },
+        {
+          "value": "portrait",
+          "label": "t:sections.multicolumn.settings.image_ratio.options__2.label"
+        },
+        {
+          "value": "square",
+          "label": "t:sections.multicolumn.settings.image_ratio.options__3.label"
+        },
+        {
+          "value": "circle",
+          "label": "t:sections.multicolumn.settings.image_ratio.options__4.label"
+        }
+      ],
+      "default": "portrait",
+      "label": "t:sections.multicolumn.settings.image_ratio.label"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "default": 3,
+      "label": "t:sections.multicolumn.settings.columns_desktop.label"
+    },
+    {
+      "type": "select",
+      "id": "column_alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "t:sections.multicolumn.settings.column_alignment.options__1.label"
+        },
+        {
+          "value": "center",
+          "label": "t:sections.multicolumn.settings.column_alignment.options__2.label"
+        }
+      ],
+      "default": "left",
+      "label": "t:sections.multicolumn.settings.column_alignment.label"
+    },
+    {
+      "type": "select",
+      "id": "text_align",
+      "options": [
+        {
+          "label": "Left",
+          "value": "left"
+        },
+        {
+          "label": "Center",
+          "value": "center"
+        },
+        {
+          "label": "Right",
+          "value": "right"
+        }
+      ],
+      "default": "left",
+      "label": "Columns text alignment"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "t:sections.multicolumn.settings.button_label.label"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "t:sections.multicolumn.settings.button_link.label"
+    },
+    {
+      "type": "richtext",
+      "id": "disclaimer",
+      "default": "<p>Condition, coverage and availability are confirmed per item before you commit. No Best Value/Recommended badge. As Is is a separate, rare category and is never folded into Remanufactured.</p>",
+      "label": "Disclaimer text"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.multicolumn.settings.header_mobile.content"
+    },
+    {
+      "type": "select",
+      "id": "columns_mobile",
+      "options": [
+        {
+          "value": "1",
+          "label": "t:sections.multicolumn.settings.columns_mobile.options__1.label"
+        },
+        {
+          "value": "2",
+          "label": "t:sections.multicolumn.settings.columns_mobile.options__2.label"
+        }
+      ],
+      "default": "1",
+      "label": "t:sections.multicolumn.settings.columns_mobile.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "swipe_on_mobile",
+      "default": false,
+      "label": "t:sections.multicolumn.settings.swipe_on_mobile.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 56
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 56
+    }
+  ],
+  "blocks": [
+    {
+      "type": "column",
+      "name": "t:sections.multicolumn.blocks.column.name",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "t:sections.multicolumn.blocks.column.settings.image.label"
+        },
+        {
+          "type": "inline_richtext",
+          "id": "title",
+          "label": "t:sections.multicolumn.blocks.column.settings.title.label"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "t:sections.multicolumn.blocks.column.settings.text.label"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "CGB Condition Options",
+      "settings": {
+        "columns_desktop": 3,
+        "column_alignment": "left",
+        "text_align": "left"
+      },
+      "blocks": [
+        {
+          "type": "column",
+          "settings": {
+            "title": "New",
+            "text": "<p>Current production models with the manufacturer's factory finish and console technology. Straightforward for facilities that want the newest equipment and a uniform look across the floor.</p>"
+          }
+        },
+        {
+          "type": "column",
+          "settings": {
+            "title": "Remanufactured",
+            "text": "<p>Commercial-grade equipment restored for continued use, with condition and included work confirmed per item. A common route for facilities balancing equipment count and grade against the overall project budget.</p>"
+          }
+        },
+        {
+          "type": "column",
+          "settings": {
+            "title": "Mixed",
+            "text": "<p>Many rooms end up here. New where console technology and finish matter most, remanufactured where a piece simply needs to work and hold up under traffic. We can flag which pieces are worth which approach in your room.</p>"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

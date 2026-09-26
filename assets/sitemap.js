@@ -27,7 +27,12 @@ document.addEventListener("DOMContentLoaded", async function () {
 	 * @returns {Promise<Array>} List of products
 	 */
 	async function fetchProducts(page) {
-		const url = `/collections/products-tax-collection/products.json?limit=${perPage}&page=${page}&view=getProductsJSON`;
+		// Source the public HTML sitemap from the built-in "all" collection so it
+		// always reflects every live storefront product. Previously this read from
+		// the manual "products-tax-collection", which is maintained by an external
+		// weekly updater for tax overrides/discounts; whenever that job lagged, newly
+		// created products were silently dropped from the customer-facing sitemap.
+		const url = `/collections/all/products.json?limit=${perPage}&page=${page}&view=getProductsJSON`;
 		console.log(`Fetching products from page ${page}: ${url}`);
 
 		try {

@@ -1,0 +1,78 @@
+{%- comment -%}
+  PDP "Ships:" row value — crate/manual treatment.
+
+  Per Tim French, canonical Gmail thread "Re: Remove Blanket Wrap Packaging on
+  Most Products." (2026-09-03 → 2026-09-10).
+
+  RULE (data-driven, no hardcoded product mapping in the production path):
+  when custom.ships is exactly "New in Crate" AND a usable assembly manual
+  exists (custom.manual_link or custom.manual_file), the row renders the
+  approved sentence
+
+    Ships: New in Crate (Assembly Manual Link). Installation Options Available
+
+  where "Assembly Manual Link" is a real link to that model's manual, and the
+  representative packaging video + "Packaging details" disclosure are
+  suppressed for that product.
+
+  Any product that does not meet BOTH conditions keeps its stored ships value
+  and the existing PR #663 packaging-video behaviour untouched.
+
+  Callers: sections/main-product.liquid, main-product-comb.liquid and
+  main-product-variants.liquid — the three PDP templates that render the
+  packaging-video CTA. main-product-home-gym-packages.liquid is out of scope
+  for the ships wording: it never renders the packaging video/disclosure and
+  its products are not in the strength product line.
+{%- endcomment -%}
+{%- liquid
+  assign ships_value = product.metafields.custom.ships
+  assign ships_normalized = ships_value | strip_html | strip | downcase
+
+  # The manual can be either a url-type metafield (custom.manual_link) or a
+  # file_reference (custom.manual_file). Resolve both shapes to a plain URL
+  # string, treating a file/link drop and a raw string the same way.
+  assign manual_url = ''
+
+  assign manual_link_value = product.metafields.custom.manual_link.value
+  if manual_link_value != blank
+    if manual_link_value.url != blank
+      assign manual_url = manual_link_value.url
+    else
+      assign manual_url = manual_link_value
+    endif
+  endif
+
+  if manual_url == blank
+    assign manual_file_value = product.metafields.custom.manual_file.value
+    if manual_file_value != blank
+      if manual_file_value.url != blank
+        assign manual_url = manual_file_value.url
+      else
+        assign manual_url = manual_file_value
+      endif
+    endif
+  endif
+-%}
+
+{%- liquid
+  assign ships_is_crate = false
+  if ships_normalized == 'new in crate' or ships_normalized == 'new in crate.'
+    assign ships_is_crate = true
+  endif
+
+  assign is_crate_manual = false
+  if ships_is_crate and manual_url != blank
+    assign is_crate_manual = true
+  endif
+-%}
+{%- if is_crate_manual -%}
+  New in Crate (<a
+    class="ships-manual__link"
+    href="{{ manual_url | escape }}"
+    target="_blank"
+    rel="noopener noreferrer"
+  >Assembly Manual Link</a>). Installation Options Available
+{%- else -%}
+  {{ ships_value }}
+  {% render 'shipping-packaging-video-link', product: product %}
+{%- endif -%}

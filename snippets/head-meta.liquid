@@ -1,5 +1,4 @@
 <meta charset="utf-8">
-{% render 'optimization', postpone_loading: 'init' %}         
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="">
@@ -7,23 +6,63 @@
 {% assign base_url = shop.url | replace: 'http://', 'https://' %}
 {% assign https_canonical_url = canonical_url | replace_first: 'http://', 'https://' %}
 
-{% if template contains 'product' and product and product.featured_media %}
+{% assign bounded_pdp_template = false %}
+{% if template.suffix == 'combined-listings' or template.suffix == 'variants' or template.suffix == 'variants-pulley' or template.suffix == 'gift_cards' %}
+  {% assign bounded_pdp_template = true %}
+{% endif %}
+
+{% if template contains 'product' and product %}
   <link rel="preconnect" href="https://cdn.shopify.com" crossorigin>
-  <link
-    rel="preload"
-    as="image"
-    href="{{ product.featured_media.preview_image | image_url: width: 1440 }}"
-    imagesrcset="{{ product.featured_media.preview_image | image_url: width: 360 }} 360w, {{ product.featured_media.preview_image | image_url: width: 540 }} 540w, {{ product.featured_media.preview_image | image_url: width: 720 }} 720w, {{ product.featured_media.preview_image | image_url: width: 900 }} 900w, {{ product.featured_media.preview_image | image_url: width: 1080 }} 1080w, {{ product.featured_media.preview_image | image_url: width: 1440 }} 1440w"
-    imagesizes="(min-width: 1200px) 34vw, (min-width: 990px) 38vw, 100vw"
-    fetchpriority="high"
-  >
+
+  {% if bounded_pdp_template %}
+    {% assign initial_media = product.media.first %}
+    {% assign initial_model = product.media | where: 'media_type', 'model' | first %}
+
+    {% if initial_media and initial_media.media_type == 'image' %}
+      <link
+        rel="preload"
+        as="image"
+        media="(max-width: 989px)"
+        href="{{ initial_media.preview_image | image_url: width: 580 }}"
+        imagesrcset="{{ initial_media.preview_image | image_url: width: 280 }} 280w, {{ initial_media.preview_image | image_url: width: 320 }} 320w, {{ initial_media.preview_image | image_url: width: 480 }} 480w, {{ initial_media.preview_image | image_url: width: 490 }} 490w, {{ initial_media.preview_image | image_url: width: 580 }} 580w, {{ initial_media.preview_image | image_url: width: 800 }} 800w, {{ initial_media.preview_image | image_url: width: 980 }} 980w, {{ initial_media.preview_image | image_url: width: 1160 }} 1160w"
+        imagesizes="(max-width: 768px) 100vw, 800px"
+        fetchpriority="high"
+      >
+    {% endif %}
+
+    {% if initial_model == blank and initial_media and initial_media.media_type == 'image' %}
+      <link
+        rel="preload"
+        as="image"
+        media="(min-width: 990px)"
+        href="{{ initial_media.preview_image | image_url: width: 580 }}"
+        imagesrcset="{{ initial_media.preview_image | image_url: width: 280 }} 280w, {{ initial_media.preview_image | image_url: width: 320 }} 320w, {{ initial_media.preview_image | image_url: width: 480 }} 480w, {{ initial_media.preview_image | image_url: width: 490 }} 490w, {{ initial_media.preview_image | image_url: width: 580 }} 580w, {{ initial_media.preview_image | image_url: width: 800 }} 800w, {{ initial_media.preview_image | image_url: width: 980 }} 980w, {{ initial_media.preview_image | image_url: width: 1160 }} 1160w"
+        imagesizes="(min-width: 1290px) 580px, (min-width: 990px) calc(100vw - 710px), 100vw"
+        fetchpriority="high"
+      >
+    {% endif %}
+  {% elsif product.featured_media %}
+    <link
+      rel="preload"
+      as="image"
+      href="{{ product.featured_media.preview_image | image_url: width: 1440 }}"
+      imagesrcset="{{ product.featured_media.preview_image | image_url: width: 360 }} 360w, {{ product.featured_media.preview_image | image_url: width: 540 }} 540w, {{ product.featured_media.preview_image | image_url: width: 720 }} 720w, {{ product.featured_media.preview_image | image_url: width: 900 }} 900w, {{ product.featured_media.preview_image | image_url: width: 1080 }} 1080w, {{ product.featured_media.preview_image | image_url: width: 1440 }} 1440w"
+      imagesizes="(min-width: 1200px) 34vw, (min-width: 990px) 38vw, 100vw"
+      fetchpriority="high"
+    >
+  {% endif %}
 {% endif %}
 
 
 {% assign url_parts = canonical_url | split: '?' %}
 {% if url_parts.size > 1 %}
   {% assign query = url_parts[1] %}
-  {% if query contains 'page=' %}
+  {%- comment -%}
+    T-008: paginated collection URLs are indexable and self-canonicalising,
+    so they are excluded here. Every other paginated page type keeps the
+    previous noindex behaviour unchanged.
+  {%- endcomment -%}
+  {% if query contains 'page=' and request.page_type != 'collection' %}
     <meta name="robots" content="noindex,follow">
   {% endif %}
 {% endif %}
@@ -67,7 +106,15 @@
   {% endif %}
 
 {% elsif template == 'collection' %}
-  <link rel="canonical" href="{{ collection.url | prepend: base_url }}">
+  {%- comment -%}
+    T-008: page 1 keeps the bare collection URL; page 2 and beyond
+    self-reference with their own ?page=n instead of pointing back at page 1.
+  {%- endcomment -%}
+  {% if current_page > 1 %}
+    <link rel="canonical" href="{{ collection.url | prepend: base_url }}?page={{ current_page }}">
+  {% else %}
+    <link rel="canonical" href="{{ collection.url | prepend: base_url }}">
+  {% endif %}
 
 {% elsif request.page_type == 'index' or template == 'index' %}
   <link rel="canonical" href="{{ base_url }}">
@@ -77,7 +124,15 @@
 {% endif %}
 
 {%- if settings.favicon != blank -%}
-  <link rel="icon" href="{{ settings.favicon | image_url: width: 32 }}" type="image/png">
+  {%- comment -%}
+    Google Search only considers favicons that are square and a multiple of 48 px.
+    The previous 32 px-only output was below that threshold, so expose 96 px and
+    192 px renders of the same stable source file instead.
+    https://developers.google.com/search/docs/appearance/favicon-in-search
+  {%- endcomment -%}
+  <link rel="icon" href="{{ settings.favicon | image_url: width: 96, height: 96 }}" type="image/png" sizes="96x96">
+  <link rel="icon" href="{{ settings.favicon | image_url: width: 192, height: 192 }}" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="{{ settings.favicon | image_url: width: 180, height: 180 }}" sizes="180x180">
 {%- endif -%}
 
 {%- unless settings.type_header_font.system? and settings.type_body_font.system? -%}
