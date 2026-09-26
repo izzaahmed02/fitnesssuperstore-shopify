@@ -170,3 +170,52 @@ ID-diff live in the Phase 2 thread, the Oct 6 freeze-end items (April
 supplemental purge, title batch 2, the two cleanup items) wait for the freeze,
 and the YH Mobile p1_hero ad-group ladder is a separate Shopping change with
 standing approval. Nothing in this file touches any of them.
+
+
+## Correction, 2026-09-26: the FFT-ACD check was the wrong probe
+
+Tim reports the new titles are live in Merchant Center on a product he checked,
+against the finding that they had reverted. He is likely right, and the probe
+was badly chosen.
+
+What is still fact, re-tested and not a formatting artifact: in the Google Ads
+Product report all ten heroes carry their pre-retitle title, every one of them
+showing the old "Lifetime Frame Warranty" marker, and none of the distinctive
+new-title phrases appears in any of the 3,651 rows under either merchant, under
+dash- and case-insensitive normalisation.
+
+What that most likely means, which is not what was first concluded: the Ads
+Product report **Title** column renders the **primary feed** title rather than
+the supplemental-merged serving title. Under that reading the export says
+nothing about what Google actually serves, and the retitles are fine.
+
+Why the Merchant Center spot-check did not catch it: the SKU chosen was
+**FFT-ACD**, picked because it had by far the most impressions. FFT-ACD is the
+one product in the ten carrying the **Edited** marker, flagged on 2026-09-10 and
+still present. A manual Merchant Center edit takes precedence over every feed
+source, so FFT-ACD can legitimately show the old title while the other nine show
+the approved one. It was the single worst choice of probe in the set, and it was
+chosen for traffic rather than for being representative.
+
+Two things survive the correction and should not be dropped:
+
+1. **FFT-ACD's labels are wrong.** The item shows `custom_label_3 = New_FF` and
+   `custom_label_4 = tahoe series`, where v2 has `p1_hero` and `Tahoe Series`.
+   That is a separate attribute from the title and it is what the Product Lines
+   asset groups target. If the Edited marker is overriding labels as well as the
+   title, it is doing real harm on a p1_hero SKU.
+2. **The Edited marker is now demonstrably load-bearing**, not the housekeeping
+   item it was queued as. It is the reason a frozen SKU can diverge silently from
+   the feed, and it is exactly the divergence the Phase 2 cutover would inherit.
+
+### The probe that actually settles it
+
+Per SKU, in Merchant Center, expand **Raw data source attributes:
+hero_titles_supplemental.csv** on the product page. That panel shows what that
+one source contributes, independently of precedence. If it lists the approved
+`title`, the source is applying and any old title on the page is something
+overriding it. If the panel is empty or missing, the source is not applying.
+
+Check three, not one, and make them representative rather than high-traffic:
+one with the Edited marker (`FFT-ACD`), one without (`FFT-LPSCR`), and one from
+the other series (`FFB-45DLLP`).
