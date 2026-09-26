@@ -937,8 +937,40 @@ if (!customElements.get('product-customization-options')) {
       // Shows what National Gym Service will bill, separately from the amount
       // payable to Fitness Superstore today. Hidden entirely when no NGS
       // service is selected.
+      // Per Tim, 2026-09-26: when a National Gym Service item is present the
+      // running total and the grand total must both say whose money it is, so
+      // the customer can tell the two apart. The qualifier is only added while
+      // an NGS item is actually selected; with none, the labels read exactly as
+      // they always have. Originals are captured on first use so toggling back
+      // restores the theme's own wording rather than a hardcoded guess.
+      setBilledTodayLabels(show) {
+        const QUALIFIER = ' (Billed Today by Fitness Superstore)';
+        const targets = [
+          ...document.querySelectorAll('.options-added-line__label'),
+          ...document.querySelectorAll('.product_price_with_options-heading'),
+        ];
+        targets.forEach((el) => {
+          if (el.dataset.ngsOriginalLabel === undefined) {
+            el.dataset.ngsOriginalLabel = el.textContent.trim();
+          }
+          const original = el.dataset.ngsOriginalLabel;
+          if (!show) {
+            el.textContent = original;
+            return;
+          }
+          // "Options added:" keeps its trailing colon after the qualifier.
+          if (original.endsWith(':')) {
+            el.textContent = original.slice(0, -1) + QUALIFIER + ':';
+          } else {
+            el.textContent = original + QUALIFIER;
+          }
+        });
+      }
+
       renderNgsDue(ngsDeferred, ngsQuoteRequired) {
         const blocks = document.querySelectorAll('[data-ngs-due-line]');
+        const amount0 = Number(ngsDeferred) || 0;
+        this.setBilledTodayLabels(amount0 > 0 || ngsQuoteRequired);
         if (blocks.length === 0) return;
         const amount = Number(ngsDeferred) || 0;
         const show = amount > 0 || ngsQuoteRequired;

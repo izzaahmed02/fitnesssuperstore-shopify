@@ -1,0 +1,92 @@
+{%- comment -%}
+  Renders the "Due separately to National Gym Service" summary in the cart and
+  the cart drawer, and nothing at all when the cart holds no NGS service.
+
+  Why the amount is not taken from the cart line price. Once the Cart Transform
+  that defers these services is deployed, the NGS line sits in the cart at
+  $0.00, so summing line prices would report nothing owed. The amount owed is
+  therefore read from the same trusted `fs_bundle.ngs_allowlist` shop metafield
+  the function and the PDP read, which holds the approved amount per variant.
+  That also means this block shows the correct figure both before and after the
+  function is deployed.
+
+  Accepts:
+    - context: {String} 'drawer' or 'page', used only for the wrapper class.
+{%- endcomment -%}
+
+{%- assign ngs_options = shop.metafields.fs_bundle.ngs_allowlist.value.options -%}
+
+{%- if ngs_options.size > 0 and cart.item_count > 0 -%}
+  {%- assign ngs_total_cents = 0 -%}
+  {%- assign ngs_line_count = 0 -%}
+
+  {%- for item in cart.items -%}
+    {%- assign item_variant_id = item.variant.id | append: '' -%}
+    {%- for entry in ngs_options -%}
+      {%- assign entry_variant_id = entry.variantId | split: '/' | last -%}
+      {%- if entry_variant_id == item_variant_id -%}
+        {%- assign line_cents = entry.price | times: 100 | times: item.quantity -%}
+        {%- assign ngs_total_cents = ngs_total_cents | plus: line_cents -%}
+        {%- assign ngs_line_count = ngs_line_count | plus: 1 -%}
+        {%- break -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endfor -%}
+
+  {%- if ngs_line_count > 0 -%}
+    {%- comment -%}
+      Styles live with the snippet so the block looks the same in the drawer and
+      on the cart page without depending on which stylesheet either surface
+      happens to load. Matches the PDP block in .ngs-due-line.
+    {%- endcomment -%}
+    <style>
+      .ngs-cart-summary {
+        margin: 12px 0 0;
+        padding: 10px 12px;
+        background-color: #eef4fb;
+        border: 1px solid #b9d2ea;
+        border-radius: 8px;
+        font-family: 'Lato', sans-serif;
+        font-size: 14px;
+        line-height: 20px;
+        color: #23232b;
+        text-align: left;
+      }
+      .ngs-cart-summary__row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .ngs-cart-summary__label { font-weight: 700; }
+      .ngs-cart-summary__value {
+        font-weight: 700;
+        color: #1c4e80;
+        white-space: nowrap;
+      }
+      .ngs-cart-summary__note {
+        margin: 6px 0 0;
+        font-size: 13px;
+        line-height: 18px;
+        color: #4a4a55;
+      }
+    </style>
+    <div class="ngs-cart-summary ngs-cart-summary--{{ context | default: 'page' }}" data-ngs-cart-summary>
+      <div class="ngs-cart-summary__row">
+        <span class="ngs-cart-summary__label">Due separately to National Gym Service:</span>
+        <span class="ngs-cart-summary__value">{{ ngs_total_cents | money }}</span>
+      </div>
+      <p class="ngs-cart-summary__note">
+        {%- if ngs_line_count == 1 -%}
+          This service is
+        {%- else -%}
+          These {{ ngs_line_count }} services are
+        {%- endif -%}
+        not included in the amount billed today by Fitness Superstore. National
+        Gym Service LLC will contact you after your order to arrange payment.
+        Installation is scheduled, and a paid extended warranty starts, once
+        that payment is confirmed.
+      </p>
+    </div>
+  {%- endif -%}
+{%- endif -%}
