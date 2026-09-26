@@ -36,31 +36,51 @@ All ten products share an `updatedAt` of 2026-09-20T19:25:54Z, which is a bulk
 sync touch rather than ten separate edits; titles and prices are unchanged
 either side of it, so it does not confound the window.
 
-## Blocker: no Google Ads access
+## Access: granted 2026-09-21
 
-**This read cannot be produced from here.** Yusra has Merchant Center access,
-granted by Tim on 2026-09-09, but not Google Ads. Every one of the four exports
-below lives in the Ads account, not in Merchant Center, so none of them can be
-pulled without access being granted first.
+Tim granted Google Ads access on 2026-09-21 and it was accepted the same day, so
+the blocker recorded here previously is cleared. The exports are pullable.
 
-What is needed is **read only**, the lowest level that can still download
-reports. No campaign, budget, bid or targeting change is involved, and per
-standing policy no paid media change happens without Tim's written instruction
-regardless.
+Status: the window closed 2026-09-24 and the exports were due 2026-09-25. Tim
+chased on the 23rd and again on the 25th. This is overdue, not blocked.
 
-Granting it: Google Ads > Tools > Setup > **Access and security** > Users > the
-blue **+** > `yusra@fitnesssuperstore.com` > access level **Read only** > Send
-invitation. Accepting the emailed invite completes it.
+## Turning the exports into the read
 
-Timing: the window closes 2026-09-24 and the exports were promised for
-2026-09-25. Access needs to land before then for the read to be on time. If it
-does not, the alternative is that whoever holds the account pulls the four CSVs
-to the spec below and sends them over, and the prep work in this file still
-applies unchanged.
+`scripts/hero_retitle_ads_read.py` takes the four CSVs and produces the read,
+so the numbers do not have to be eyeballed out of four spreadsheets:
 
-Nothing else in this file is blocked. The window verification above was done
-against live Shopify and the repo, and the designed-count and search-term
-observations hold whoever pulls the exports.
+```
+python3 scripts/hero_retitle_ads_read.py \
+    --products products.csv \
+    --asset-groups asset_groups.csv \
+    --search-terms search_terms.csv \
+    --campaign campaign.csv
+```
+
+It handles the Google Ads export shape (title and date rows before the header,
+`--` for empty metrics, thousands separators, trailing Total rows), and every
+argument is optional so partial pulls still report.
+
+What it adds beyond the raw exports:
+
+- **Eligibility reconciled against the designed universe.** Served count against
+  Tim's expected 230, against the 277 series-labelled rows in the v2 lookup, and
+  against the old baseline of 33. Any shortfall is broken down per series so the
+  gap has a shape rather than a single number.
+- **All ten heroes checked for presence**, and named individually if any is
+  absent from the product report, with their per-SKU metrics.
+- **Asset groups against Tim's baselines**, Tahoe 23K and FFB 32K, as a percent
+  change, with Monster and FSR marked too small to read alone.
+- **The three watched search terms**, including which of `FFT-SLCLE` or
+  `FFT-PLCLE` the ambiguous phrase actually landed on.
+- **The budget question answered from lost impression share**, not from cost,
+  since a campaign can finish under its cap on total spend and still be
+  throttled on peak days.
+
+Tested against synthetic exports in the real Google Ads shape: a 231-of-277 pull
+(correctly reports the 46 gap and its per-series breakdown), a pull missing one
+hero (names `FFT-ACD`), a campaign with no budget-lost share (reports the cap as
+not binding), and a missing file (skipped, does not fail the run).
 
 ## The four exports
 
