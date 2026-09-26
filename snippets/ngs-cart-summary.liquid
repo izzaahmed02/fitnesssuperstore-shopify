@@ -20,17 +20,27 @@
   {%- assign ngs_total_cents = 0 -%}
   {%- assign ngs_line_count = 0 -%}
 
+  {%- comment -%}
+    The selected options are NOT separate cart lines. The Cart Transform
+    expands the bundle further down the funnel, so `cart.items` holds only the
+    parent variant, and the customer's choices live on that line's private
+    `_functionOperation` property as JSON. Liquid cannot parse JSON, but the
+    property does contain each selected variant's full GID, so a containment
+    test against the allowlist's variant ids is enough to identify them. The
+    ids are fixed-length and unique, so one cannot be a substring of another.
+  {%- endcomment -%}
   {%- for item in cart.items -%}
-    {%- assign item_variant_id = item.variant.id | append: '' -%}
-    {%- for entry in ngs_options -%}
-      {%- assign entry_variant_id = entry.variantId | split: '/' | last -%}
-      {%- if entry_variant_id == item_variant_id -%}
-        {%- assign line_cents = entry.price | times: 100 | times: item.quantity -%}
-        {%- assign ngs_total_cents = ngs_total_cents | plus: line_cents -%}
-        {%- assign ngs_line_count = ngs_line_count | plus: 1 -%}
-        {%- break -%}
-      {%- endif -%}
-    {%- endfor -%}
+    {%- assign selection = item.properties['_functionOperation'] -%}
+    {%- if selection != blank -%}
+      {%- for entry in ngs_options -%}
+        {%- assign entry_variant_id = entry.variantId | split: '/' | last -%}
+        {%- if selection contains entry_variant_id -%}
+          {%- assign line_cents = entry.price | times: 100 | times: item.quantity -%}
+          {%- assign ngs_total_cents = ngs_total_cents | plus: line_cents -%}
+          {%- assign ngs_line_count = ngs_line_count | plus: 1 -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endif -%}
   {%- endfor -%}
 
   {%- if ngs_line_count > 0 -%}
