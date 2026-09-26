@@ -2,64 +2,52 @@
   Renders the "Due separately to National Gym Service" summary in the cart and
   the cart drawer, and nothing at all when the cart holds no NGS service.
 
-  Why the amount is not taken from the cart line price. Once the Cart Transform
-  that defers these services is deployed, the NGS line sits in the cart at
-  $0.00, so summing line prices would report nothing owed. The amount owed is
-  therefore read from the same trusted `fs_bundle.ngs_allowlist` shop metafield
-  the function and the PDP read, which holds the approved amount per variant.
-  That also means this block shows the correct figure both before and after the
-  function is deployed.
+  Where the selections come from. The chosen options are NOT separate cart
+  lines. The Cart Transform expands the bundle further down the funnel, so
+  `cart.items` holds only the parent variant and the customer's choices live on
+  that line's private `_functionOperation` property. Shopify exposes that
+  property to Liquid already parsed, as an array of hashes with `variantId`,
+  `quantity` and `priceAdjustment`, so it can be walked directly. An earlier
+  revision treated it as a string and matched nothing.
+
+  Where the amount comes from. Not from the cart line price. Once the Cart
+  Transform that defers these services is deployed the NGS component sits at
+  $0.00, so reading line prices would report nothing owed. The amount is taken
+  from the same trusted `fs_bundle.ngs_allowlist` shop metafield the function
+  and the PDP read, which holds the approved amount per variant. The figure is
+  therefore correct both before and after that deployment, and a customer
+  cannot influence it by editing the posted payload.
 
   Accepts:
     - context: {String} 'drawer' or 'page', used only for the wrapper class.
 {%- endcomment -%}
 
 {%- assign ngs_options = shop.metafields.fs_bundle.ngs_allowlist.value.options -%}
-<!-- NGSPROBE rendered=1 optcount={{ ngs_options.size }} items={{ cart.item_count }} -->
-{%- for item in cart.items -%}
-<!-- NGSPROBE-ITEM keys={% for pr in item.properties %}[{{ pr.first }}]{% endfor %} -->
-<!-- NGSPROBE-FO len={% for pr in item.properties %}{% if pr.first == '_functionOperation' %}{{ pr.last | size }}{% endif %}{% endfor %} -->
-<!-- NGSPROBE-FO-SNIP {% for pr in item.properties %}{% if pr.first == '_functionOperation' %}{{ pr.last | strip_html | truncate: 220 }}{% endif %}{% endfor %} -->
-{%- endfor -%}
 
 {%- if ngs_options.size > 0 and cart.item_count > 0 -%}
   {%- assign ngs_total_cents = 0 -%}
   {%- assign ngs_line_count = 0 -%}
 
-  {%- comment -%}
-    The selected options are NOT separate cart lines. The Cart Transform
-    expands the bundle further down the funnel, so `cart.items` holds only the
-    parent variant, and the customer's choices live on that line's private
-    `_functionOperation` property as JSON. Liquid cannot parse JSON, but the
-    property does contain each selected variant's full GID, so a containment
-    test against the allowlist's variant ids is enough to identify them. The
-    ids are fixed-length and unique, so one cannot be a substring of another.
-  {%- endcomment -%}
   {%- for item in cart.items -%}
-    {%- comment -%}
-      Read the private property by iterating, which is how the rest of this
-      theme reaches `_functionOperation` (see cart-drawer.liquid). Bracket
-      lookup by key is not reliable for underscore-prefixed properties.
-    {%- endcomment -%}
-    {%- assign selection = '' -%}
     {%- for property in item.properties -%}
       {%- if property.first == '_functionOperation' -%}
-        {%- assign selection = property.last -%}
+        {%- for selection in property.last -%}
+          {%- assign selected_id = selection.variantId | split: '/' | last -%}
+          {%- for entry in ngs_options -%}
+            {%- assign entry_id = entry.variantId | split: '/' | last -%}
+            {%- if entry_id == selected_id -%}
+              {%- assign units = selection.quantity | default: 1 | times: item.quantity -%}
+              {%- assign line_cents = entry.price | times: 100 | times: units -%}
+              {%- assign ngs_total_cents = ngs_total_cents | plus: line_cents -%}
+              {%- assign ngs_line_count = ngs_line_count | plus: 1 -%}
+              {%- break -%}
+            {%- endif -%}
+          {%- endfor -%}
+        {%- endfor -%}
       {%- endif -%}
     {%- endfor -%}
-    {%- if selection != blank -%}
-      {%- for entry in ngs_options -%}
-        {%- assign entry_variant_id = entry.variantId | split: '/' | last -%}
-        {%- if selection contains entry_variant_id -%}
-          {%- assign line_cents = entry.price | times: 100 | times: item.quantity -%}
-          {%- assign ngs_total_cents = ngs_total_cents | plus: line_cents -%}
-          {%- assign ngs_line_count = ngs_line_count | plus: 1 -%}
-        {%- endif -%}
-      {%- endfor -%}
-    {%- endif -%}
   {%- endfor -%}
 
-  <!-- NGSPROBE total={{ ngs_total_cents }} matched={{ ngs_line_count }} -->
   {%- if ngs_line_count > 0 -%}
     {%- comment -%}
       Styles live with the snippet so the block looks the same in the drawer and
@@ -101,7 +89,7 @@
     <div class="ngs-cart-summary ngs-cart-summary--{{ context | default: 'page' }}" data-ngs-cart-summary>
       <div class="ngs-cart-summary__row">
         <span class="ngs-cart-summary__label">Due separately to National Gym Service:</span>
-        <span class="ngs-cart-summary__value">{{ ngs_total_cents | money }}</span>
+        <span class="ngs-cart-summary__value" data-ngs-cart-total>{{ ngs_total_cents | money }}</span>
       </div>
       <p class="ngs-cart-summary__note">
         {%- if ngs_line_count == 1 -%}
@@ -109,10 +97,10 @@
         {%- else -%}
           These {{ ngs_line_count }} services are
         {%- endif -%}
-        not included in the amount billed today by Fitness Superstore. National
-        Gym Service LLC will contact you after your order to arrange payment.
-        Installation is scheduled, and a paid extended warranty starts, once
-        that payment is confirmed.
+        not billed today by Fitness Superstore. National Gym Service LLC will
+        contact you after your order to arrange payment. Installation is
+        scheduled, and a paid extended warranty starts, once that payment is
+        confirmed.
       </p>
     </div>
   {%- endif -%}
