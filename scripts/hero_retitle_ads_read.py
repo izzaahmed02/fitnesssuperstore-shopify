@@ -215,7 +215,7 @@ def report_search_terms(path):
 def report_asset_groups(path):
     rows = read_ads_csv(path)
     cols = rows[0] if rows else {}
-    if "Asset group" not in cols:
+    if not any(c.lower() == "asset group" for c in cols):
         print("=" * 74)
         print("3. ASSET GROUPS  -  NOT SUPPLIED")
         print("=" * 74)
@@ -232,16 +232,21 @@ def report_asset_groups(path):
     print("=" * 74)
     print("3. ASSET GROUPS")
     print("=" * 74)
-    print(f"  {'asset group':<30}{'impr':>10}{'baseline':>10}{'change':>9}{'clicks':>8}{'conv':>7}")
+    print(f"  {'asset group':<30}{'impr':>9}{'baseline':>9}{'chg':>8}{'clicks':>7}{'cost':>9}{'conv':>6}{'value':>11}")
     for r in rows:
-        name = r.get("Asset group", "")
+        name = r.get("Asset Group") or r.get("Asset group") or ""
         if not name:
             continue
-        impr = num(r.get("Impressions", r.get("Impr.")))
+        state = (r.get("Asset group status") or "").strip()
+        impr = num(r.get("Impr.") or r.get("Impressions"))
+        conv = num(r.get("Conversions"))
+        val = num(r.get("Conv. value"))
+        cost = num(r.get("Cost"))
         base = next((v for k, v in ASSET_GROUP_BASELINES.items() if k in name.lower()), None)
         chg = f"{(impr-base)/base*100:+.0f}%" if base else ""
-        print(f"  {name[:29]:<30}{impr:>10,.0f}{(f'{base:,}' if base else ''):>10}"
-              f"{chg:>9}{num(r.get('Clicks')):>8,.0f}{num(r.get('Conversions')):>7,.1f}")
+        flag = "  <-- carries retitled heroes" if base else ("  PAUSED" if state == "PAUSED" else "")
+        print(f"  {name[:29]:<30}{impr:>9,.0f}{(f'{base:,}' if base else ''):>9}"
+              f"{chg:>8}{num(r.get('Clicks')):>7,.0f}{cost:>9,.2f}{conv:>6,.2f}{val:>11,.2f}{flag}")
     print()
 
 
@@ -257,12 +262,29 @@ def report_campaign(path):
         if "product lines" not in name.lower():
             continue
         cost = num(r.get("Cost"))
-        lost = num(r.get("Search lost IS (budget)") or r.get("Impr. share lost (budget)"))
+        budget = num(r.get("Budget"))
+        status = (r.get("Status") or "").strip()
+        reasons = (r.get("Status reasons") or "").strip()
+        days = 15  # 2026-09-10 to 2026-09-24 inclusive
         print(f"  {name}")
-        print(f"    cost over window          {cost:,.2f}")
-        print(f"    daily cap                 {CAMPAIGN_DAILY_CAP:,.2f}")
-        print(f"    impr share lost (budget)  {lost:.1f}%")
-        print("    -> cap IS binding" if lost > 0 else "    -> cap is not binding")
+        print(f"    status                    {status}")
+        if reasons:
+            print(f"    status reasons            {reasons}")
+        print(f"    daily budget              {budget:,.2f}"
+              + (f"   NOTE: Tim's email says {CAMPAIGN_DAILY_CAP:,.0f}"
+                 if budget and abs(budget - CAMPAIGN_DAILY_CAP) > 0.01 else ""))
+        print(f"    cost over {days} days        {cost:,.2f}   avg {cost/days:,.2f}/day")
+        print(f"    impressions               {num(r.get('Impr.')):,.0f}")
+        print(f"    clicks                    {num(r.get('Clicks')):,.0f}")
+        print(f"    conversions               {num(r.get('Conversions')):,.2f}")
+        print(f"    conv. value               {num(r.get('Conv. value')):,.2f}")
+        if cost:
+            print(f"    ROAS                      {num(r.get('Conv. value'))/cost:,.2f}x")
+        binding = "limited by budget" in reasons.lower() or "Limited" in status
+        print("\n    -> THE CAP IS BINDING." if binding else "\n    -> cap is not binding.")
+        if binding:
+            print("       Per Tim's Sep 15 email that triggers the Reman budget shift,")
+            print("       which is his decision, not ours.")
     print()
 
 
