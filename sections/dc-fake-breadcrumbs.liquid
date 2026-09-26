@@ -48,18 +48,82 @@
             white-space: normal;
         }
     }
+
+    /* Mobile: one compact 44px row instead of a wrapped multi-line block.
+       Matches the PDP treatment shipped in PR #819. When the section has a
+       middle crumb, that crumb is the immediate parent, so the current page
+       title - which the H1 below already shows - drops out of the visual row
+       and stays in the accessibility tree. With no middle crumb there is
+       nothing to fall back to, so the title stays visible and truncates. */
+    @media screen and (max-width: 749px) {
+        .fake-breadcrumbs__wrapper {
+            flex-wrap: nowrap;
+            min-width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        /* Only the collapsing case needs the 44px tap row. A Home + title pair
+           already fits one line, so leave its height alone. */
+        .fake-breadcrumbs--has-parent {
+            min-height: 44px;
+            padding-bottom: 0;
+        }
+
+        .fake-breadcrumbs__wrapper > .fake-breadcrumbs__url,
+        .fake-breadcrumbs__wrapper > .second-breadcrumb {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .fake-breadcrumbs__wrapper > .fake-breadcrumbs__home,
+        .fake-breadcrumbs__wrapper > .breadcrumb-icon {
+            flex-shrink: 0;
+        }
+
+        /* Visually hidden, still announced. */
+        .fake-breadcrumbs--has-parent .second-breadcrumb,
+        .fake-breadcrumbs--has-parent .breadcrumb-icon--current {
+            border: 0;
+            clip: rect(0 0 0 0);
+            clip-path: inset(50%);
+            height: 1px;
+            margin: -1px;
+            overflow: hidden;
+            padding: 0;
+            position: absolute;
+            white-space: nowrap;
+            width: 1px;
+        }
+    }
 </style>
 
+{%- comment -%}
+  When a middle ("first item") crumb is configured it is the immediate parent,
+  so mobile can collapse to Home > parent and hide the current page title.
+  Without it, Home is the only thing left, so nothing is hidden.
+
+  The current crumb is also only hidden when it has no url - every comparison
+  chart template leaves it blank, so it renders as a <p>. If it were a real
+  link, hiding it would leave mobile keyboard focus on a clipped element.
+{%- endcomment -%}
+{%- assign has_parent_crumb = false -%}
+{%- if section.settings.home_item_text != blank and section.settings.first_item_text != blank and section.settings.second_item_text != blank and section.settings.second_item_url == blank -%}
+  {%- assign has_parent_crumb = true -%}
+{%- endif -%}
+
 <section class="page-width-dc fake-breadcrumbs section-{{ section.id }}-padding">
-    <div class="fake-breadcrumbs__wrapper">
+    <div class="fake-breadcrumbs__wrapper{% if has_parent_crumb %} fake-breadcrumbs--has-parent{% endif %}">
 
         {% if section.settings.home_item_text != blank %}
         <{% if section.settings.home_item_url != blank %}a href="{{ section.settings.home_item_url }}" {% else %}p{% endif %}
-                class="fake-breadcrumbs__url">
+                class="fake-breadcrumbs__url fake-breadcrumbs__home">
             {{ section.settings.home_item_text }}
             </{% if section.settings.home_item_url != blank %}a{% else %}p{% endif %}>
 
-            <span class="breadcrumb-icon">
+            <span class="breadcrumb-icon{% unless section.settings.first_item_text != blank %} breadcrumb-icon--current{% endunless %}">
         {% render 'icon-breadcrumb-arrow' %}
       </span>
             {% endif %}
@@ -70,7 +134,7 @@
                 {{ section.settings.first_item_text }}
                 </{% if section.settings.first_item_url != blank %}a{% else %}p{% endif %}>
 
-                <span class="breadcrumb-icon">
+                <span class="breadcrumb-icon breadcrumb-icon--current">
         {% render 'icon-breadcrumb-arrow' %}
       </span>
                 {% endif %}
@@ -78,7 +142,7 @@
 
                 {% if section.settings.second_item_text != blank %}
                 <{% if section.settings.second_item_url != blank %}a href="{{ section.settings.second_item_url }}" {% else %}p{% endif %}
-                        class="fake-breadcrumbs__url second-breadcrumb">
+                        class="fake-breadcrumbs__url second-breadcrumb" aria-current="page">
                     {{ section.settings.second_item_text }}
                     </{% if section.settings.second_item_url != blank %}a{% else %}p{% endif %}>
                     {% endif %}

@@ -1,0 +1,48 @@
+{%- comment -%} Benicia Showroom — What to Expect {%- endcomment -%}
+{{ 'showroom-benicia.css' | asset_url | stylesheet_tag }}
+{%- assign s = section.settings -%}
+<section class="sr-page sr-section sr-expect">
+  <div class="sr-container sr-expect__grid">
+    <div class="sr-expect__media">
+      {%- if s.expect_image != blank -%}
+        <img src="{{ s.expect_image | image_url: width: 1000 }}"
+             srcset="{{ s.expect_image | image_url: width: 600 }} 600w, {{ s.expect_image | image_url: width: 1000 }} 1000w"
+             sizes="(min-width: 750px) 608px, 100vw"
+             width="1000" height="{{ 1000 | divided_by: s.expect_image.aspect_ratio | round }}"
+             alt="{{ s.expect_image_alt | default: 'Inside the Benicia showroom floor' | escape }}" loading="lazy">
+      {%- endif -%}
+    </div>
+    <div class="sr-expect__body">
+      <h2 class="sr-section__title">{{ s.expect_heading }}</h2>
+      <p class="sr-expect__lede">{{ s.expect_lede }}</p>
+      <ul class="sr-expect__list">
+        {%- for i in (1..7) -%}
+          {%- assign k = 'expect_point_' | append: i -%}
+          {%- if s[k] != blank -%}<li><span class="sr-dot"></span>{{ s[k] }}</li>{%- endif -%}
+        {%- endfor -%}
+      </ul>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Showroom What to Expect",
+  "tag": "section",
+  "class": "section section-showroom-expect",
+  "settings": [
+    { "type": "image_picker", "id": "expect_image", "label": "Image (no identifiable person)" },
+    { "type": "text", "id": "expect_image_alt", "label": "Image alt text", "default": "Inside the Benicia showroom floor" },
+    { "type": "text", "id": "expect_heading", "label": "Heading", "default": "What to Expect When You Visit" },
+    { "type": "text", "id": "expect_lede", "label": "Lede", "default": "This is an active warehouse, not a retail storefront." },
+    { "type": "text", "id": "expect_point_1", "label": "Point 1", "default": "Call ahead for a specific model" },
+    { "type": "text", "id": "expect_point_2", "label": "Point 2", "default": "Select equipment can be viewed or tested" },
+    { "type": "text", "id": "expect_point_3", "label": "Point 3", "default": "Inventory rotates as products arrive and sell" },
+    { "type": "text", "id": "expect_point_4", "label": "Point 4", "default": "Staff availability may vary for unscheduled visits" },
+    { "type": "text", "id": "expect_point_5", "label": "Point 5", "default": "537 Stone Road is operations only — not the public visitor location" },
+    { "type": "text", "id": "expect_point_6", "label": "Point 6", "default": "Assembly, delivery, installation, quotes, and financing can be discussed in person" },
+    { "type": "text", "id": "expect_point_7", "label": "Point 7" }
+  ],
+  "presets": [{ "name": "Showroom What to Expect" }]
+}
+{% endschema %}
