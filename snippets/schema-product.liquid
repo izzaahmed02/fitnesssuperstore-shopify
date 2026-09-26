@@ -3,6 +3,100 @@
 {%- assign fallback_logo_url = 'logo.png' | asset_url -%}
 {%- capture search_target -%}{{ request.origin }}/search?q={search_term_string}{%- endcapture -%}
 
+{%- comment -%}
+  AI channel / merchant-listing facts.
+
+  Governing rule for this whole block: a fact we do not hold is omitted, never replaced
+  with a confident default. An AI channel repeating an invented fact back to a customer
+  costs more than a missing field does.
+
+  Category
+    product.type is an internal bucket (Product Index) and must never be emitted. Shopify's
+    own taxonomy category is the value Shopify Catalog syndicates to ChatGPT / Copilot /
+    Gemini, so it leads. The merchandising metafields are the fallback for products the
+    taxonomy has not been set on.
+
+  Condition
+    Omitted when we hold no condition fact. Defaulting to NewCondition would assert
+    "this is new" about products we know nothing about.
+
+  GTIN
+    Validated as a string. Digits are checked by removing every digit character and
+    requiring an empty remainder - never by coercing to a number, because that silently
+    destroys leading zeroes and four well-formed GTINs in this catalogue begin with one.
+    Length selects the typed property (gtin8 / gtin12 / gtin13 / gtin14) so the identifier
+    format is declared rather than left for a consumer to infer.
+
+    A product-level identifier is emitted only for single-variant products. On a
+    multi-variant product an identifier belongs to one variant, so it is emitted on that
+    variant's Offer and nowhere else.
+
+  SKU
+    A top-level Product SKU is emitted only for a single-variant product, where it
+    unambiguously identifies the whole product, and it is carried on that product's sole
+    Offer as well. On a multi-variant product each SKU belongs to one variant, so the SKUs
+    stay on their matching Offers and the Product carries none.
+
+  MPN
+    Emitted only from the dedicated mpn metafield. It is never taken from the Shopify SKU,
+    which is our internal code, not a manufacturer-assigned part number. The SKU stays in
+    the sku field.
+
+  Typed metafields
+    Read through .value throughout, so the typed value is used rather than the metafield
+    object's string coercion.
+
+{%- endcomment -%}
+{%- liquid
+  assign schema_category = product.category.name | default: '' | strip
+  if schema_category == blank
+    assign category_main = product.metafields.custom.main_category.value | default: '' | strip
+    assign category_sub = product.metafields.custom.sub_category.value | default: '' | strip
+    if category_main != blank and category_sub != blank
+      assign schema_category = category_main | append: ' > ' | append: category_sub
+    elsif category_main != blank
+      assign schema_category = category_main
+    else
+      assign schema_category = category_sub
+    endif
+  endif
+
+  assign condition_state = product.metafields.custom.condition_state.value | default: '' | strip
+  assign condition_key = condition_state | downcase
+  assign schema_condition = ''
+  if condition_key contains 'as is'
+    assign schema_condition = 'UsedCondition'
+  elsif condition_key contains 'remanufactured'
+    assign schema_condition = 'RefurbishedCondition'
+  elsif condition_key contains 'new'
+    assign schema_condition = 'NewCondition'
+  endif
+
+  assign schema_mpn = product.metafields.custom.mpn.value | default: '' | strip
+  assign schema_color = product.metafields.custom.product_color.value | default: '' | strip
+  assign schema_coa = product.metafields.custom.country_of_assembly.value | default: '' | strip
+  assign schema_colp = product.metafields.custom.country_of_last_processing.value | default: '' | strip
+  assign schema_weight = product.metafields.custom.product_weight_lbs.value | default: '' | strip
+  assign schema_length = product.metafields.custom.length_in.value | default: '' | strip
+  assign schema_width = product.metafields.custom.width_in.value | default: '' | strip
+  assign schema_height = product.metafields.custom.height_in.value | default: '' | strip
+
+  assign fact_grade = product.metafields.custom.grade.value | default: '' | strip
+  assign fact_ships = product.metafields.custom.ships.value | default: '' | strip
+  assign fact_lead = product.metafields.custom.processing_time.value | default: '' | strip
+  assign fact_warranty = product.metafields.custom.warranty.value | default: '' | strip
+
+  assign product_sku = ''
+  if product.variants.size == 1
+    assign product_sku = product.selected_or_first_available_variant.sku | default: '' | strip
+  endif
+
+  assign product_gtin_raw = ''
+  if product.variants.size == 1
+    assign product_gtin_raw = product.selected_or_first_available_variant.barcode | default: product.metafields.custom.upc_code.value | default: '' | strip
+  endif
+-%}
+
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -29,9 +123,13 @@
       },
       {% endif %}
 
-      "audience": {{ product.metafields.custom.audience | default: 'Fitness enthusiasts and commercial gym users' | json }},
-      "category": {{ product.type | default: 'Fitness Equipment' | json }},
-      "description": {{ product.description | strip_html | strip_newlines | strip | replace: '&amp;', '&' | truncate: 500 | default: 'High-quality fitness equipment for home or commercial use.' | json }},
+      {% if schema_category != blank %}
+      "category": {{ schema_category | json }},
+      {% endif %}
+      {%- assign schema_description = product.description | strip_html | strip_newlines | strip | replace: '&amp;', '&' | truncate: 500 -%}
+      {% if schema_description != blank %}
+      "description": {{ schema_description | json }},
+      {% endif %}
       "image": [
         {% for image in product.images %}
           {%- assign product_image_url = image.src | img_url: 'master' | split: '?' | first -%}
@@ -50,14 +148,36 @@
         {% endfor %}
       ],
       "name": {{ product.title | json }},
-      "color": {{ product.metafields.custom.product_color | default: 'Not specified' | json }},
-      "countryOfAssembly": {{ product.metafields.custom.country_of_assembly | default: 'US' | json }},
-      "countryOfLastProcessing": {{ product.metafields.custom.country_of_last_processing | default: 'US' | json }},
-      "hasMeasurement": {
+      {% if schema_color != blank %}
+      "color": {{ schema_color | json }},
+      {% endif %}
+      {% if schema_coa != blank %}
+      "countryOfAssembly": {{ schema_coa | json }},
+      {% endif %}
+      {% if schema_colp != blank %}
+      "countryOfLastProcessing": {{ schema_colp | json }},
+      {% endif %}
+      {% if schema_length != blank %}
+      "depth": {
         "@type": "QuantitativeValue",
-        "@id": {{ request.origin | append: product.url | append: '#measurement' | json }},
-        "value": {{ 'Dimensions: ' | append: product.metafields.custom.length_in | append: ' inch length x ' | append: product.metafields.custom.width_in | append: ' inch width x ' | append: product.metafields.custom.height_in | append: ' inch height' | json }}
+        "value": {{ schema_length | json }},
+        "unitCode": "INH"
       },
+      {% endif %}
+      {% if schema_width != blank %}
+      "width": {
+        "@type": "QuantitativeValue",
+        "value": {{ schema_width | json }},
+        "unitCode": "INH"
+      },
+      {% endif %}
+      {% if schema_height != blank %}
+      "height": {
+        "@type": "QuantitativeValue",
+        "value": {{ schema_height | json }},
+        "unitCode": "INH"
+      },
+      {% endif %}
       "keywords": [
         {%- assign keyword_list = product.metafields.custom.keywords.value -%}
         {%- if keyword_list != blank -%}
@@ -80,17 +200,53 @@
         "@id": {{ request.origin | append: product.url | append: '#manufacturer' | json }},
         "name": {{ product.vendor | default: shop.name | json }}
       },
-      "weight": {{ product.metafields.custom.product_weight_lbs | default: 'Not specified' | json }},
-      "mpn": {{ product.selected_or_first_available_variant.sku | default: product.handle | json }},
-      "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% if product.metafields.custom.condition_state contains 'as is' or product.metafields.custom.condition_state contains 'As is' %}UsedCondition{% elsif product.metafields.custom.condition_state contains 'Remanufactured' %}RefurbishedCondition{% else %}{{ product.metafields.custom.condition_state }}Condition{% endif %}{% else %}NewCondition{% endif %}",
+      {% if schema_weight != blank %}
+      "weight": {
+        "@type": "QuantitativeValue",
+        "value": {{ schema_weight | json }},
+        "unitCode": "LBR"
+      },
+      {% endif %}
+      {% if schema_mpn != blank %}
+      "mpn": {{ schema_mpn | json }},
+      {% endif %}
+      {% render 'schema-gtin-property', value: product_gtin_raw %}
+      {% if schema_condition != blank %}
+      "itemCondition": "https://schema.org/{{ schema_condition }}",
+      {% endif %}
+
+      {%- comment -%}
+        The facts AI shopping agents ask for: who the machine is built for, how it ships,
+        how long it takes, and what the warranty is. Sourced from merchandising metafields
+        so the answer AI gives matches the PDP.
+      {%- endcomment -%}
+      {%- capture ai_props -%}
+        {%- if fact_grade != blank -%}{"@type":"PropertyValue","name":"Equipment Grade","value":{{ fact_grade | json }}},{%- endif -%}
+        {%- if condition_state != blank -%}{"@type":"PropertyValue","name":"Condition","value":{{ condition_state | json }}},{%- endif -%}
+        {%- if fact_ships != blank -%}{"@type":"PropertyValue","name":"Shipping Method","value":{{ fact_ships | json }}},{%- endif -%}
+        {%- if fact_lead != blank -%}{"@type":"PropertyValue","name":"Lead Time","value":{{ fact_lead | json }}},{%- endif -%}
+        {%- if fact_warranty != blank -%}{"@type":"PropertyValue","name":"Warranty","value":{{ fact_warranty | json }}},{%- endif -%}
+      {%- endcapture -%}
+      {%- assign ai_props = ai_props | strip -%}
+      {% if ai_props != blank %}
+      {%- assign ai_props_len = ai_props | size | minus: 1 -%}
+      "additionalProperty": [{{ ai_props | slice: 0, ai_props_len }}],
+      {% endif %}
 
       {% if product.has_only_default_variant %}
       "offers": {
         "@id": {{ request.origin | append: product.url | append: '?variant=' | append: product.selected_or_first_available_variant.id | append: '#offer' | json }},
         "@type": "Offer",
         "availability": "https://schema.org/{% if product.selected_or_first_available_variant.available %}InStock{% else %}OutOfStock{% endif %}",
+        {% if schema_condition != blank %}
+        "itemCondition": "https://schema.org/{{ schema_condition }}",
+        {% endif %}
         "price": {{ product.selected_or_first_available_variant.price | divided_by: 100.0 | json }},
         "priceCurrency": {{ shop.currency | default: 'USD' | json }},
+        {% if product_sku != blank %}
+        "sku": {{ product_sku | json }},
+        {% endif %}
+        {% render 'schema-gtin-property', value: product.selected_or_first_available_variant.barcode %}
 
         {% if product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
         "priceSpecification": [
@@ -181,8 +337,13 @@
             {% endif %}
 
             "url": {{ request.origin | append: product.url | append: '?variant=' | append: variant.id | json }},
-            "sku": {{ variant.sku | default: product.handle | json }},
-            "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% if product.metafields.custom.condition_state contains 'as is' or product.metafields.custom.condition_state contains 'As is' %}UsedCondition{% elsif product.metafields.custom.condition_state contains 'Remanufactured' %}RefurbishedCondition{% else %}{{ product.metafields.custom.condition_state }}Condition{% endif %}{% else %}NewCondition{% endif %}",
+            {% if variant.sku != blank %}
+            "sku": {{ variant.sku | json }},
+            {% endif %}
+            {% render 'schema-gtin-property', value: variant.barcode %}
+            {% if schema_condition != blank %}
+            "itemCondition": "https://schema.org/{{ schema_condition }}",
+            {% endif %}
             "offeredBy": {
               "@type": "Organization",
               "@id": {{ request.origin | append: '#seller' | json }},
@@ -229,7 +390,9 @@
       ],
       {% endif %}
 
-      "sku": {{ product.selected_or_first_available_variant.sku | default: product.handle | json }},
+      {% if product_sku != blank %}
+      "sku": {{ product_sku | json }},
+      {% endif %}
       "url": {{ request.origin | append: product.url | json }}
 
       {% if product.metafields.custom.seo_videos %}
