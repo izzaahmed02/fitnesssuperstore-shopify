@@ -42,10 +42,25 @@
           {% assign card_handle = block.settings.tab_handle | handleize %}
           {% if card_handle == handle %}
             {% assign product = block.settings.product %}
+            {% comment %} Optional variant pin: card price and links follow that one variant {% endcomment %}
+            {% assign card_variant = nil %}
+            {% if product != blank and block.settings.variant_id != blank %}
+              {% assign pinned_id = block.settings.variant_id | plus: 0 %}
+              {% for v in product.variants %}
+                {% if v.id == pinned_id %}{% assign card_variant = v %}{% endif %}
+              {% endfor %}
+            {% endif %}
+            {% if card_variant %}
+              {% assign card_url = card_variant.url %}
+              {% assign card_price = card_variant.price %}
+            {% else %}
+              {% assign card_url = product.url %}
+              {% assign card_price = product.price %}
+            {% endif %}
             <div class="category-card">
 
               
-              <a style="position:relative;" aria-label="View {{ product.title | default: block.settings.title | default: handle }}" href="{{ product.url | default: block.settings.link }}">
+              <a style="position:relative;" aria-label="View {{ product.title | default: block.settings.title | default: handle }}" href="{{ card_url | default: block.settings.link }}">
                 {% if product != blank %}
                   {% if product.featured_image %}
                     <img src="{{ product.featured_image | image_url: width: 300 }}" alt="{{ product.featured_image.alt | default: product.title }}" loading="lazy" decoding="async">
@@ -77,6 +92,9 @@
                   <div class="prodInfo">
                   
                   <h3>{{ product.title | truncate: 50, "..." }}</h3>
+                  {% if block.settings.spec_claim != blank %}
+                    <p class="card-spec-claim">{{ block.settings.spec_claim | escape }}</p>
+                  {% endif %}
 
                   
                   {% comment %} Display price {% endcomment %}
@@ -84,16 +102,16 @@
                     <div class="product-item__price-container">
       
       <div class="price-wrapper">
-        <span class="price-value">{{ product.price | money }}</span>
+        <span class="price-value">{{ card_price | money }}</span>
       </div>
-      {% if product.metafields.custom.retail_price != blank %}
+      {% if card_variant == nil and product.metafields.custom.retail_price != blank %}
         <div class="old-price-wrapper">
           {{ product.metafields.custom.retail_price | money }}
         </div>
       {% endif %}
     </div>
  
-    <a href="{{ product.url }}" class="shop-now-btn">
+    <a href="{{ card_url }}" class="shop-now-btn">
       Shop Now
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path fill-rule="evenodd" clip-rule="evenodd" d="M7.8017 4.46967C8.09459 4.17678 8.56947 4.17678 8.86236 4.46967L13.8624 9.46967C14.1553 9.76256 14.1553 10.2374 13.8624 10.5303L8.86236 15.5303C8.56947 15.8232 8.09459 15.8232 7.8017 15.5303C7.50881 15.2374 7.50881 14.7626 7.8017 14.4697L12.2714 10L7.8017 5.53033C7.50881 5.23744 7.50881 4.76256 7.8017 4.46967Z" fill="white"/>
@@ -177,6 +195,13 @@
   font-size: 12px;
 }
 
+.popular-eqpt .card-spec-claim {
+  margin: 4px 0 8px;
+  font-size: 14px;
+  line-height: 20px;
+  color: #4a4a55;
+}
+
 .product-price {
   margin: 8px 0;
   font-weight: 700;
@@ -200,6 +225,11 @@
   .category-tab-para {
     font-size: 12px;
     line-height: 19px;
+  }
+
+  .popular-eqpt .card-spec-claim {
+    font-size: 12px;
+    line-height: 18px;
   }
   
   .product-rating {
@@ -247,6 +277,18 @@
           "type": "product",
           "id": "product",
           "label": "Select Product"
+        },
+        {
+          "type": "text",
+          "id": "variant_id",
+          "label": "Variant ID (optional)",
+          "info": "Pins the card's price and links to one variant. Leave blank to use the product."
+        },
+        {
+          "type": "text",
+          "id": "spec_claim",
+          "label": "Card spec claim",
+          "info": "One line, must match the live PDP."
         },
         {
           "type": "image_picker",
