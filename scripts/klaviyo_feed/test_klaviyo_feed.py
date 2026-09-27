@@ -86,6 +86,40 @@ class BuilderTests(unittest.TestCase):
         # description is flattened to plain text with collapsed whitespace
         self.assertEqual(feed[0]["description"], "Hello world")
 
+    def test_description_drops_embedded_style_and_script(self):
+        # Shopify's plain-text description keeps <style>/<script> contents as
+        # text; the HTML is the source so the widget code never reaches Klaviyo.
+        html = (
+            "<p>Low-odor rubber &amp; grip.</p>\n<style>\n.message-box {\ndisplay: none;\n}\n"
+            "@media (max-width: 767px){ .apu-desktop{display:none;} }\n</style>\n"
+            "<p class=\"message-text\" onclick=\"showMessageBox()\">Smell?</p>\n"
+            "<SCRIPT type=\"text/javascript\">function showMessageBox() { return 1; }</SCRIPT>"
+        )
+        node, variant = product(
+            1, "SKU-1", "10.00",
+            description="Low-odor rubber & grip. .message-box { display: none; } Smell? function showMessageBox() { return 1; }",
+            descriptionHtml=html,
+        )
+        _, _, feed = self.build([node, variant])
+        self.assertEqual(feed[0]["description"], "Low-odor rubber & grip. Smell?")
+
+    def test_description_without_embedded_code_is_shopify_text_verbatim(self):
+        # Rows with no <style>/<script> keep Shopify's plain text exactly, so the
+        # fix cannot reflow the ~3,400 descriptions that never leaked.
+        node, variant = product(
+            1, "SKU-1", "10.00",
+            description="Cybex® Arc & more",
+            descriptionHtml="<p>Cybex<sup>®</sup> Arc &amp; more</p>",
+        )
+        _, _, feed = self.build([node, variant])
+        self.assertEqual(feed[0]["description"], "Cybex® Arc & more")
+
+    def test_description_falls_back_when_html_absent(self):
+        node, variant = product(1, "SKU-1", "10.00")
+        self.assertNotIn("descriptionHtml", node)
+        _, _, feed = self.build([node, variant])
+        self.assertEqual(feed[0]["description"], "Hello world")
+
     def test_feed_keys_are_exactly_the_mapped_keys(self):
         node, variant = product(1, "SKU-1", "10.00")
         _, _, feed = self.build([node, variant])
