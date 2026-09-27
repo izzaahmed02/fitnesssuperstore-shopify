@@ -117,6 +117,7 @@
 
 
   {{ 'custom-main-product-page.css' | asset_url | stylesheet_tag }}
+  {{ 'pdp-info-compact.css' | asset_url | stylesheet_tag }}
   {{ 'custom-product-gallery.css' | asset_url | stylesheet_tag }}
   {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
   <link rel="stylesheet" href="{{ 'paylater-modal.css' | asset_url }}" media="print" onload="this.media='all'">
@@ -220,21 +221,6 @@
                 <p class="affirm-as-low-as" data-page-type="product" data-amount="{{ product.price }}"></p>
 
 
-                {% assign campaign_text = '' %}
-
-                {% if product.title contains 'French Fitness' %}
-                  {% assign campaign_text = settings.sale_promo_ff %}
-                {% elsif product.title contains 'Remanufactured' %}
-                  {% assign campaign_text = settings.sale_promo_reman %}
-                {% else %}
-                  {% assign campaign_text = settings.sale_promo_default %}
-                {% endif %}
-
-                {% unless campaign_text == blank %}
-                  <div class="campaign-sale-container hide-on-mobile">
-                    <p>{{ campaign_text | escape }}</p>
-                  </div>
-                {% endunless %}
 
                 <div>
 {% comment %} GMC/MSRP compliance (2026-04): reference "retail price" ("As high as") display hidden — show actual selling price only. Do not re-enable without a verified/substantiated reference price.
@@ -276,6 +262,8 @@
                     </div>
                   {% endif %}
                 </div>
+
+                {% render 'labor-day-sale-note', product: product, section_id: section.id %}
             {%- endcase -%}
           {%- endfor -%}
         </div>
@@ -823,8 +811,7 @@
                       <div class="item__icon-wrap">{% render 'icon-box' %}</div>
                       <div class="item__text">
                         <span class="title">Ships:</span>
-                        {{ product.metafields.custom.ships }}
-                        {% render 'shipping-packaging-video-link', product: product %}
+                        {% render 'pdp-ships-value', product: product %}
                       </div>
                     </div>
                   {% endif %}
@@ -884,21 +871,6 @@
                 {%- endif -%}
               {% when 'price' %}
 
-{% assign campaign_text = '' %}
-
-{% if product.title contains 'French Fitness' %}
-  {% assign campaign_text = settings.sale_promo_ff %}
-{% elsif product.title contains 'Remanufactured' %}
-  {% assign campaign_text = settings.sale_promo_reman %}
-{% else %}
-  {% assign campaign_text = settings.sale_promo_default %}
-{% endif %}
-
-{% unless campaign_text == blank %}
-  <div class="campaign-sale-container hide-on-mobile">
-    <p>{{ campaign_text | escape }}</p>
-  </div>
-{% endunless %}
 
                 <div class="product__price-row">
                 <div class="product__prices hidden lg:block">
@@ -943,6 +915,8 @@
                 </div>
               {% render 'paylater-providers' %}
                 </div>
+
+                {% render 'labor-day-sale-note', product: product, section_id: section.id, hide_on_mobile: true %}
               {%- when 'tile_calculator' -%}
                 {% if block.settings.show_tile_calculator %}
                   <div class="product__tile-calculator">
@@ -1930,6 +1904,14 @@
                 {% render 'product-options', product: product %}  
             {%- endcase -%}
           {%- endfor -%}
+          {%- comment -%}
+            Controlled replacement content for discontinued products. Rendered
+            outside the block loop so it does not depend on which product blocks
+            a discontinued template happens to keep enabled.
+          {%- endcomment -%}
+          {%- if product.template_suffix == 'discontinued' -%}
+            {% render 'discontinued-replacement', product: product %}
+          {%- endif -%}
           <a href="{{ product.url }}" class="link product__view-details animate-arrow">
             {{ 'products.product.view_full_details' | t }}
             {% render 'icon-arrow' %}

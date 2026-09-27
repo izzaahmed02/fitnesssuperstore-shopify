@@ -31,7 +31,7 @@
           assign video_duration_seconds = video.duration_seconds.value | default: video.duration_seconds
 
           assign video_content_url = video.content_url.value | default: video.content_url | default: video.video_url.value | default: video.video_url
-          assign video_embed_url = video.embed_url.value | default: video.embed_url | default: video.video_url.value | default: video.video_url
+          assign video_embed_url = video.embed_url.value | default: video.embed_url
         -%}
         {
           "@type": "VideoObject",
@@ -47,7 +47,7 @@
             {% endif %}
           ],
           {% endif %}
-          "uploadDate": {{ video_upload_date | date: '%Y-%m-%dT%H:%M:%SZ' | json }},
+          "uploadDate": {{ video_upload_date | date: '%Y-%m-%dT%H:%M:%S%z' | json }},
           {% if video_duration_seconds != blank %}
           "duration": {{ 'PT' | append: video_duration_seconds | append: 'S' | json }},
           {% endif %}

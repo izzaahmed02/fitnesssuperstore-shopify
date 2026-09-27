@@ -1,0 +1,583 @@
+{{ 'section-multicolumn.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+    /* Figma's mobile frames inset every section 24px top and bottom, regardless of the
+       desktop value — confirmed across nodes 4612:86181 (facility-types), 4612:86422
+       (space-traffic), 4612:88420 (equipment-zones), 5280:81995 (condition-options),
+       4612:86205 (form) and 4612:86666 (faq). Deriving it from the desktop setting
+       (x0.75) gave 60px and made every section ~72px too tall on mobile. The desktop
+       setting still governs from 750px up. */
+    .section-{{ section.id }}-padding {
+    padding-top: 24px;
+    padding-bottom: 24px;
+    }
+
+    #shopify-section-{{ section.id }} {
+    background-color: {{ section.settings.bg }};
+    }
+
+    /* Full-width page requirement — override the theme's default contained .page-width
+       for this section only (does not affect .page-width elsewhere on the site).
+       Figma node 4612:86426 (mobile, 375px frame) insets content 16px for a 343px
+       column; the 40px here was leaving it 295px and wrapping the card copy onto extra
+       lines. 40px is restored from 750px up, and 80px from 990px (see below). */
+    #shopify-section-{{ section.id }} .page-width {
+    max-width: 100%;
+    margin: 0;
+    padding-left: 16px;
+    padding-right: 16px;
+    box-sizing: border-box;
+    }
+
+    @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .page-width {
+    padding-left: 40px;
+    padding-right: 40px;
+    }
+    }
+
+    /* Figma node 4598:83957 (1440px frame) — content is inset 80px each side for a
+       1280px column, which is what makes each of the two columns 626px wide
+       (626 + 28 gap + 626 = 1280). At the 40px inset they were coming out 666px. */
+    @media screen and (min-width: 990px) {
+    #shopify-section-{{ section.id }} .page-width {
+    padding-left: 80px;
+    padding-right: 80px;
+    }
+    }
+
+    /* Figma node 4685:81253 "Title" — heading (4685:81254) and subheading (4685:81255)
+       stack vertically, both centered. The shared `.title-wrapper-with-link` class this
+       markup also carries is a flex row (space-between) meant for a heading+link layout,
+       which was putting the heading and subheading side by side instead — override it
+       for this section only. */
+    #shopify-section-{{ section.id }} .multicolumn__title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 0;
+    }
+
+    /* Figma node 4685:81253 "Title" — 12px gap between heading and subheading, not 1.2rem */
+    #shopify-section-{{ section.id }} .equipment-zones__subheading {
+    text-align: center;
+    max-width: 800px;
+    margin: 12px auto 0;
+    }
+
+    /* Figma node 4685:81253 "Title" — 12px between heading and subheading (50 + 12 +
+       48 = the 110px title frame). The 12px margin above was landing as 22px because
+       the theme's title wrapper contributes its own gap and the heading a bottom
+       margin; zero both so the subheading's margin alone sets the distance. */
+    #shopify-section-{{ section.id }} .multicolumn__title.title-wrapper-with-link {
+    gap: 0;
+    }
+
+    #shopify-section-{{ section.id }} .multicolumn__title .title {
+    margin-bottom: 0;
+    }
+
+    /* Figma node 4612:88421/4612:88422 (mobile) — Oswald SemiBold 20px/26px; Lato Regular 14px/20px #4f4f55 */
+    #shopify-section-{{ section.id }} .title.h1 {
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 26px;
+    }
+
+    #shopify-section-{{ section.id }} .equipment-zones__subheading {
+    font-family: 'Lato', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: #4f4f55;
+    }
+
+    /* Figma node 4685:81254/4685:81255 (desktop) — Oswald SemiBold 38px/50px; Lato Regular 16px/24px */
+    @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .title.h1 {
+    font-size: 38px;
+    line-height: 50px;
+    }
+    #shopify-section-{{ section.id }} .equipment-zones__subheading {
+    font-size: 16px;
+    line-height: 24px;
+    }
+    }
+
+    /* Figma node 4598:83959 "What to Expect Container" — image and card column are each
+       626px of a 1280px container with a 28px gap between them (1280 - 626 - 626 = 28).
+       Also 28px from the Title block above (Title ends 14480, row 1 starts 14508) and
+       28px between row 1 and row 2 (row 1 ends 14994, row 2 starts 15022) — not the
+       previous 3rem (48px) top gap, and not the previous zero gap between rows. */
+    #shopify-section-{{ section.id }} .equipment-zones__group {
+    display: flex;
+    align-items: stretch;
+    gap: 28px;
+    margin-top: 28px;
+    }
+
+    #shopify-section-{{ section.id }} .equipment-zones__group--reverse {
+    flex-direction: row-reverse;
+    }
+
+    #shopify-section-{{ section.id }} .equipment-zones__group + .equipment-zones__group {
+    margin-top: 28px;
+    }
+
+    /* Figma node 4612:88424 (mobile) — 6.77px radius, ~343/253 aspect. Mobile stacks the
+       image and card column (see the max-width: 749px override below) in a COLUMN flex
+       container, so no flex-basis is set here: `flex: 1 1 0` (used on desktop, where the
+       row needs an even 50/50 split) forces an explicit 0 main size, and in a column
+       direction the main axis is height — that zeroed the image out completely on mobile
+       regardless of aspect-ratio, since an explicit flex-basis bypasses aspect-ratio-based
+       auto sizing entirely. Without a flex-basis here, height falls back to being computed
+       from aspect-ratio against the (stretched-to-full-width) cross size instead, which is
+       what actually renders the image on small screens. */
+    #shopify-section-{{ section.id }} .equipment-zones__image-wrapper {
+    position: relative;
+    border-radius: 7px;
+    overflow: hidden;
+    aspect-ratio: 343 / 253;
+    }
+
+    /* Figma node 4685:81257 (desktop) — 12px radius, even 50/50 split with the card column
+       via flex-basis: 0 (only meaningful here, where the row is horizontal — the main axis
+       is width). aspect-ratio is explicitly reset to auto: the mobile rule above sets
+       aspect-ratio: 343 / 253, and a media query doesn't clear a property it doesn't
+       redeclare, so without this the mobile ratio was still winning at desktop widths and
+       forcing the image taller than the card column (most visible on the 2-card row)
+       instead of letting align-items: stretch on .equipment-zones__group size it to match
+       the cards exactly. */
+    @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .equipment-zones__image-wrapper {
+    flex: 1 1 0;
+    border-radius: 12px;
+    aspect-ratio: auto;
+    }
+    }
+
+    /* Absolutely positioned so the <img> itself never factors into
+       .equipment-zones__image-wrapper's own auto height — otherwise the wrapper's
+       percentage height: 100% would fall back to the image's intrinsic aspect ratio
+       during layout and fight the stretch above. */
+    #shopify-section-{{ section.id }} .equipment-zones__image-wrapper img {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    }
+
+    #shopify-section-{{ section.id }} .equipment-zones__image-wrapper--empty {
+    background-color: rgba(var(--color-foreground), 0.05);
+    }
+
+    /* Figma "Benefit cards" — 12px gap between stacked cards. No flex-basis here for the
+       same reason as .equipment-zones__image-wrapper above — flex: 1 1 0 only makes sense
+       for the desktop row's 50/50 split (see the min-width: 750px rule below); on mobile,
+       where .equipment-zones__group is a column, it would zero this out too. */
+    #shopify-section-{{ section.id }} .equipment-zones__list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    }
+
+    @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .equipment-zones__list {
+    flex: 1 1 0;
+    }
+    }
+
+    /* Figma "Benefit cards" (desktop) — icon left, text right, 32px padding, 20px gap.
+       Mobile overrides both to a stacked icon-above-text layout with 16px padding — see
+       the max-width: 749px rule below. */
+    #shopify-section-{{ section.id }} .equipment-zones__card {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    /* Figma node 4598:83984 — 32px padding (icon inset 32 from the card's left and
+       top edges), a #e5e5e5 stroke rather than the theme's translucent foreground,
+       and the stroke drawn as an inset shadow so it takes no layout space: Figma's
+       146px card is 32 + 82 + 32 exactly, where a real border made it 148px. */
+    padding: 32px;
+    border: 0;
+    box-shadow: inset 0 0 0 1px #e5e5e5;
+    border-radius: 1.2rem;
+    background: rgb(var(--color-background));
+    }
+
+    #shopify-section-{{ section.id }} .equipment-zones__icon {
+    flex: none;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background-color: #fce6de;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    }
+
+    #shopify-section-{{ section.id }} .equipment-zones__icon svg {
+    width: 28px;
+    height: 28px;
+    }
+
+    /* Figma "Benefit cards" text — Lato Bold 20/26 #000000 title, Lato Regular 16/24 #393940 body */
+    #shopify-section-{{ section.id }} .equipment-zones__card-title {
+    margin: 0 0 8px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 26px;
+    color: #000000;
+    }
+
+    #shopify-section-{{ section.id }} .equipment-zones__card-text {
+    margin: 0;
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+    color: #393940;
+    }
+
+    /* The richtext setting supplies the inner <p>; drop its default margins so the
+       card's text block stays 82px (26 title + 8 + 48 body) and the card 146px. */
+    #shopify-section-{{ section.id }} .equipment-zones__card-text > p {
+    margin: 0;
+    }
+
+    @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.section_padding_top }}px;
+    padding-bottom: {{ section.settings.section_padding_bottom }}px;
+    }
+    }
+
+    @media screen and (max-width: 749px) {
+    /* Figma node 4612:86426 "What to Expect Container" (mobile) — 20px gap between the
+       image and the stacked card column, not the previous 2rem (32px). */
+    #shopify-section-{{ section.id }} .equipment-zones__group,
+    #shopify-section-{{ section.id }} .equipment-zones__group--reverse {
+    flex-direction: column;
+    gap: 20px;
+    }
+
+    /* Figma node 4612:86426 — on mobile every one of the four stacked blocks is 20px
+       apart, not the desktop 28px: heading ends 16290, image 1 starts 16310; image 1 ends
+       16563, cards 1 start 16583; cards 1 end 17311, image 2 starts 17331; image 2 ends
+       17584, cards 2 start 17604. The two 28px outer margins were the section's whole
+       +16px overshoot (24 + 138 + 20 + 253 + 20 + 728 + 20 + 253 + 20 + 408 + 24 = 1908).
+       The group + group selector is repeated verbatim so it ties with the base rule's
+       specificity and wins on source order. */
+    #shopify-section-{{ section.id }} .equipment-zones__group,
+    #shopify-section-{{ section.id }} .equipment-zones__group + .equipment-zones__group {
+    margin-top: 20px;
+    }
+
+    /* Figma node 4612:86431 "Benefit cards" (mobile) — icon above text (not
+       side by side), 16px padding on all sides instead of the desktop 32px.
+       align-items: stretch (overriding the shared flex-start) so the text block
+       fills the card's full width instead of shrinking to its own content width —
+       in a column direction, flex-start sizes cross-axis (width) items to their
+       intrinsic content size, which for a long paragraph is far wider than the
+       card and would overflow instead of wrapping. */
+    #shopify-section-{{ section.id }} .equipment-zones__card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+    }
+    }
+{%- endstyle -%}
+
+{%- liquid
+    assign zones = section.blocks
+    assign group_1_zones = zones | slice: 0, 3
+    assign group_2_zones = zones | slice: 3, 2
+-%}
+
+<div class="multicolumn{% if section.settings.title == blank %} no-heading{% endif %}">
+    <div class="page-width multicolumn-padding section-{{ section.id }}-padding isolate{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+    {% if settings.animations_reveal_on_scroll %}
+        data-cascade
+            {% endif %}>
+        {%- unless section.settings.title == blank -%}
+            <div class="title-wrapper-with-link title-wrapper--self-padded-mobile title-wrapper--no-top-margin multicolumn__title">
+                <h2 class="title inline-richtext {{ section.settings.heading_size }}">
+                    {{ section.settings.title }}
+                </h2>
+                {%- unless section.settings.subheading == blank -%}
+                    <div class="equipment-zones__subheading rte">{{ section.settings.subheading }}</div>
+                {%- endunless -%}
+            </div>
+        {%- endunless -%}
+
+        {%- for zone_group in (1..2) -%}
+            {%- if zone_group == 1 -%}
+                {%- assign group_zones = group_1_zones -%}
+                {%- assign group_image = section.settings.image_group_1 -%}
+            {%- else -%}
+                {%- assign group_zones = group_2_zones -%}
+                {%- assign group_image = section.settings.image_group_2 -%}
+            {%- endif -%}
+            {%- if group_zones.size > 0 -%}
+                <div class="equipment-zones__group{% if zone_group == 2 %} equipment-zones__group--reverse{% endif %}">
+                    <div class="equipment-zones__image-wrapper{% if group_image == blank %} equipment-zones__image-wrapper--empty{% endif %}">
+                        {%- if group_image != blank -%}
+                            {{ group_image | image_url: width: 1200 | image_tag: loading: 'lazy', widths: '400, 600, 800, 1000, 1200' }}
+                        {%- endif -%}
+                    </div>
+                    <div class="equipment-zones__list">
+                        {%- for block in group_zones -%}
+                            <div class="equipment-zones__card" {{ block.shopify_attributes }}>
+                                <span class="equipment-zones__icon">
+                                    {%- case block.settings.icon -%}
+                                        {%- when 'treadmill' -%}
+                                            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                                                <path d="M23.5565 24.4999H3.42033C2.7453 24.4999 2.37553 23.9415 2.33677 23.351C2.29902 22.7758 2.57532 22.1701 3.18947 22.0204L20.9397 17.6236C25.9059 16.4127 27.2579 24.4999 23.5565 24.4999Z" stroke="#F1592A" stroke-width="1.75" stroke-linejoin="round"/>
+                                                <path d="M22.1667 21H22.1772" stroke="#F1592A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M25.6667 2.33301C25.3159 3.38525 25.1037 4.83978 24.3053 5.63826C23.9158 6.02775 23.3726 6.20879 22.2864 6.57087L17.5 8.16634" stroke="#F1592A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M17.5 18.666L23.3333 6.41602" stroke="#F1592A" stroke-width="1.75" stroke-linejoin="round"/>
+                                                <path d="M7.00004 24.5L5.83337 25.6667" stroke="#F1592A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M21 24.5V25.6667" stroke="#F1592A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        {%- when 'weight-stack' -%}
+                                            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                                                <path d="M9.04167 13.416H18.9583C20.5834 13.416 21 13.8936 21 15.4577C21 17.0827 20.5224 17.4993 18.9583 17.4993H9.04167C7.41662 17.4993 7 17.0218 7 15.4577C7 13.8326 7.47758 13.416 9.04167 13.416Z" stroke="#F1592A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M9.04167 17.5H18.9583C20.5834 17.5 21 17.9776 21 19.5417C21 21.1667 20.5224 21.5833 18.9583 21.5833H9.04167C7.41662 21.5833 7 21.1058 7 19.5417C7 17.9166 7.47758 17.5 9.04167 17.5Z" stroke="#F1592A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M9.04167 21.583H18.9583C20.5834 21.583 21 22.0606 21 23.6247C21 25.2497 20.5224 25.6663 18.9583 25.6663H9.04167C7.41662 25.6663 7 25.1888 7 23.6247C7 21.9996 7.47758 21.583 9.04167 21.583Z" stroke="#F1592A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M25.6667 8.74968L24.7346 7.58444C24.0461 6.72388 23.7019 6.2936 23.2227 6.06331C22.821 5.87021 22.3687 5.83902 21.5834 5.83398M2.33341 8.74968L3.26561 7.58444C3.95406 6.72388 4.29828 6.2936 4.77743 6.06331C5.17919 5.87021 5.63148 5.83902 6.41675 5.83398M18.6667 5.83398L9.33341 5.83398" stroke="#F1592A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M18.6667 2.33301V13.4163M9.33337 2.33301V13.4163" stroke="#F1592A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        {%- when 'power-rack' -%}
+                                            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                                                <path d="M21 3.5V9.33333M7 3.5V9.33333" stroke="#F1592A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M23.9167 4.66699V6.41699M23.9167 6.41699V8.16699M23.9167 6.41699H25.6667M4.08337 4.66699V6.41699M4.08337 6.41699V8.16699M4.08337 6.41699H2.33337" stroke="#F1592A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M21 6.41699L7 6.41699" stroke="#F1592A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M8.48933 22.167H19.5108C20.9545 22.167 21.6764 22.167 21.9749 21.814C22.6523 21.0128 21.3545 19.9539 20.8809 19.4202C20.3473 18.8189 19.9569 18.667 19.1682 18.667H8.83185C8.04313 18.667 7.65282 18.8189 7.11921 19.4202C6.64558 19.9539 5.34775 21.0128 6.02522 21.814C6.32368 22.167 7.04556 22.167 8.48933 22.167Z" stroke="#F1592A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M10.5 9.33301V18.6663M17.5 9.33301V18.6663" stroke="#F1592A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M18.6667 22.167V24.5003M9.33337 22.167V24.5003" stroke="#F1592A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        {%- when 'kettlebell' -%}
+                                            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                                                <path d="M19.8338 10.4997C21.2472 7.16168 21.9572 6.00961 21.3849 4.74952C21.2096 4.36357 20.9581 4.01268 20.6438 3.71559C18.694 1.87215 9.30607 1.87215 7.35624 3.71559C7.04201 4.01268 6.79052 4.36357 6.61523 4.74952C6.0429 6.00961 6.75344 7.16168 8.16685 10.4997" stroke="#F1592A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M14.0001 9.33301C8.84542 9.33301 4.66675 13.5117 4.66675 18.6663C4.66675 20.8194 5.39579 22.8022 6.62048 24.3813C7.46024 25.4641 8.24101 25.6663 9.59137 25.6663H18.4088C19.7592 25.6663 20.5399 25.4641 21.3797 24.3813C22.6044 22.8022 23.3334 20.8194 23.3334 18.6663C23.3334 13.5117 19.1547 9.33301 14.0001 9.33301Z" stroke="#F1592A" stroke-width="1.75" stroke-linejoin="round"/>
+                                                <path d="M17.5 18.667H19.25M8.75 18.667H10.5" stroke="#F1592A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <circle cx="14" cy="18.667" r="3.5" stroke="#F1592A" stroke-width="1.75" stroke-linejoin="round"/>
+                                            </svg>
+                                        {%- when 'yoga-mat' -%}
+                                            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                                                <path d="M7.87492 15.7493C7.87492 15.2661 7.48317 14.8743 6.99992 14.8743C6.51667 14.8743 6.12492 15.2661 6.12492 15.7493H6.99992H7.87492ZM12.4333 14.9026L11.6253 15.2384L11.6253 15.2384L12.4333 14.9026ZM12.2394 17.5136L12.9358 18.0433L12.9358 18.0433L12.2394 17.5136ZM22.3668 20.1158L22.9856 20.7345V20.7345L22.3668 20.1158ZM24.0167 18.4658L23.398 17.8471H23.398L24.0167 18.4658ZM25.6666 16.3462L26.5415 16.3563V16.3563L25.6666 16.3462ZM25.3154 15.4982L24.7038 16.1241L24.7038 16.1241L25.3154 15.4982ZM20.2062 21.8996L20.5411 22.708V22.708L20.2062 21.8996ZM20.9999 14.291C20.5167 14.291 20.1249 14.6828 20.1249 15.166C20.1249 15.6493 20.5167 16.041 20.9999 16.041V15.166V14.291ZM9.91659 18.666V17.791C8.789 17.791 7.87492 16.8769 7.87492 15.7493H6.99992H6.12492C6.12492 17.8434 7.82251 19.541 9.91659 19.541V18.666ZM7.58325 22.166V21.291C5.16701 21.291 3.20825 19.3323 3.20825 16.916H2.33325H1.45825C1.45825 20.2988 4.20051 23.041 7.58325 23.041L7.58325 22.166ZM2.33325 16.916H3.20825C3.20825 14.4998 5.16701 12.541 7.58325 12.541V11.666V10.791C4.20051 10.791 1.45825 13.5333 1.45825 16.916H2.33325ZM7.58325 22.166L7.58325 23.041H17.4171V22.166V21.291H7.58325V22.166ZM7.58325 11.666V12.541C9.4037 12.541 10.9665 13.6531 11.6253 15.2384L12.4333 14.9026L13.2413 14.5668C12.3206 12.3514 10.1352 10.791 7.58325 10.791V11.666ZM12.2394 17.5136L11.543 16.9838C11.1686 17.476 10.5795 17.791 9.91659 17.791V18.666V19.541C11.1493 19.541 12.2447 18.9518 12.9358 18.0433L12.2394 17.5136ZM12.4333 14.9026L11.6253 15.2384C11.9036 15.9079 11.8551 16.5735 11.543 16.9838L12.2394 17.5136L12.9358 18.0433C13.7435 16.9815 13.6729 15.6053 13.2413 14.5668L12.4333 14.9026ZM22.3668 20.1158L22.9856 20.7345L24.6355 19.0846L24.0167 18.4658L23.398 17.8471L21.7481 19.497L22.3668 20.1158ZM24.0167 18.4658L24.6355 19.0846C25.1701 18.5499 25.6179 18.1035 25.926 17.7296C26.2145 17.3794 26.535 16.9185 26.5415 16.3563L25.6666 16.3462L24.7916 16.3361C24.7927 16.2492 24.8363 16.3 24.5754 16.6168C24.334 16.9098 23.9596 17.2856 23.398 17.8471L24.0167 18.4658ZM22.6499 15.166V16.041C23.4441 16.041 23.9745 16.042 24.3524 16.0785C24.7609 16.1179 24.766 16.1848 24.7038 16.1241L25.3154 15.4982L25.9269 14.8724C25.5247 14.4794 24.9722 14.3802 24.5206 14.3366C24.0383 14.29 23.4061 14.291 22.6499 14.291V15.166ZM25.6666 16.3462L26.5415 16.3563C26.548 15.7985 26.3259 15.2623 25.9269 14.8724L25.3154 15.4982L24.7038 16.1241C24.7608 16.1798 24.7926 16.2564 24.7916 16.3361L25.6666 16.3462ZM17.4171 22.166V23.041C18.7763 23.041 19.6997 23.0565 20.5411 22.708L20.2062 21.8996L19.8714 21.0912C19.4264 21.2755 18.9191 21.291 17.4171 21.291V22.166ZM22.3668 20.1158L21.7481 19.497C20.686 20.5591 20.3164 20.9069 19.8714 21.0912L20.2062 21.8996L20.5411 22.708C21.3825 22.3595 22.0244 21.6956 22.9856 20.7345L22.3668 20.1158ZM22.6499 15.166V14.291L20.9999 14.291V15.166V16.041H22.6499V15.166Z" fill="#F1592A"/>
+                                                <path d="M12.2501 17.4997L19.9746 12.2419C20.1927 12.0797 20.3873 11.8883 20.5525 11.6734C21.1176 10.9383 21.1064 9.91861 20.7482 9.06564C19.9511 7.16764 18.0596 5.83301 15.8531 5.83301C14.7638 5.83301 13.7513 6.15827 12.9093 6.716L4.66675 12.5422" stroke="#F1592A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                    {%- endcase -%}
+                                </span>
+                                <div>
+                                    {%- if block.settings.title != blank -%}
+                                        <p class="equipment-zones__card-title">{{ block.settings.title }}</p>
+                                    {%- endif -%}
+                                    {%- if block.settings.text != blank -%}
+                                        {%- comment -%}
+                                          A <div>, not a <p>: `text` is a richtext
+                                          setting and emits its own <p>. Nested inside
+                                          a <p> that is invalid, so the browser closed
+                                          this element early — leaving it empty and
+                                          ejecting the copy as an unstyled sibling that
+                                          lost its 16px/24px Lato and made every card
+                                          taller than Figma's 146px.
+                                        {%- endcomment -%}
+                                        <div class="equipment-zones__card-text">{{ block.settings.text }}</div>
+                                    {%- endif -%}
+                                </div>
+                            </div>
+                        {%- endfor -%}
+                    </div>
+                </div>
+            {%- endif -%}
+        {%- endfor -%}
+    </div>
+</div>
+
+{% schema %}
+{
+  "name": "CGB Equipment Zones",
+  "class": "section",
+  "tag": "section",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg",
+      "label": "Background color",
+      "default": "#fff"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "title",
+      "default": "Equipment Zones",
+      "label": "Heading"
+    },
+    {
+      "type": "richtext",
+      "id": "subheading",
+      "default": "<p>Most complete gyms are planned around a few core zones. Your specialist recommends specific options within each zone based on your space, users and budget. Tell us which zones you need and we will size them to your room.</p>",
+      "label": "Subheading"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "options": [
+        {
+          "value": "h2",
+          "label": "t:sections.all.heading_size.options__1.label"
+        },
+        {
+          "value": "h1",
+          "label": "t:sections.all.heading_size.options__2.label"
+        },
+        {
+          "value": "h0",
+          "label": "t:sections.all.heading_size.options__3.label"
+        },
+        {
+          "value": "hxl",
+          "label": "t:sections.all.heading_size.options__4.label"
+        },
+        {
+          "value": "hxxl",
+          "label": "t:sections.all.heading_size.options__5.label"
+        }
+      ],
+      "default": "h1",
+      "label": "t:sections.all.heading_size.label"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_group_1",
+      "label": "First group image",
+      "info": "Shown beside the first 3 zone cards (Cardio, Strength, Functional Trainers)."
+    },
+    {
+      "type": "image_picker",
+      "id": "image_group_2",
+      "label": "Second group image",
+      "info": "Shown beside the remaining zone cards (Free Weights, Flooring/Storage)."
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "section_padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "section_padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 80
+    }
+  ],
+  "blocks": [
+    {
+      "type": "zone",
+      "name": "Equipment zone",
+      "settings": [
+        {
+          "type": "select",
+          "id": "icon",
+          "label": "Icon",
+          "default": "treadmill",
+          "options": [
+            { "value": "treadmill", "label": "Treadmill (Cardio)" },
+            { "value": "weight-stack", "label": "Weight stack (Strength)" },
+            { "value": "power-rack", "label": "Power rack (Functional Trainers)" },
+            { "value": "kettlebell", "label": "Kettlebell (Free Weights)" },
+            { "value": "yoga-mat", "label": "Yoga mat (Flooring/Storage)" }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "CGB Equipment Zones",
+      "blocks": [
+        {
+          "type": "zone",
+          "settings": {
+            "icon": "treadmill",
+            "title": "Cardio",
+            "text": "<p>Treadmills, ellipticals, bikes, rowers, steppers and climbers, sized to expected peak-hour use.</p>"
+          }
+        },
+        {
+          "type": "zone",
+          "settings": {
+            "icon": "weight-stack",
+            "title": "Selectorized & Plate-Loaded Strength",
+            "text": "<p>Pin-loaded circuits for guided use, plate-loaded machines for stronger, more experienced users, and multi-stack or jungle gym systems that let several people train strength at once in a shared footprint.</p>"
+          }
+        },
+        {
+          "type": "zone",
+          "settings": {
+            "icon": "power-rack",
+            "title": "Functional Trainers, Racks & Rigs",
+            "text": "<p>Cable trainers, squat racks, half racks and rigs for barbell work and small group training.</p>"
+          }
+        },
+        {
+          "type": "zone",
+          "settings": {
+            "icon": "kettlebell",
+            "title": "Free Weights & Benches",
+            "text": "<p>Dumbbells, barbells, plates and adjustable or fixed benches with the racking to keep them in order.</p>"
+          }
+        },
+        {
+          "type": "zone",
+          "settings": {
+            "icon": "yoga-mat",
+            "title": "Flooring, Storage & Accessories",
+            "text": "<p>Rubber flooring, turf, weight storage, mirrors and the accessories that keep a floor usable.</p>"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

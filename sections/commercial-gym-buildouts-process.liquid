@@ -1,0 +1,432 @@
+{%- style -%}
+    /* Figma's mobile frames inset every section 24px top and bottom, regardless of the
+       desktop value — confirmed across nodes 4612:86181 (facility-types), 4612:86422
+       (space-traffic), 4612:88420 (equipment-zones), 5280:81995 (condition-options),
+       4612:86205 (form) and 4612:86666 (faq). Deriving it from the desktop setting
+       (x0.75) gave 60px and made every section ~72px too tall on mobile. The desktop
+       setting still governs from 750px up. */
+    .section-{{ section.id }}-padding {
+    padding-top: 24px;
+    padding-bottom: 24px;
+    }
+
+    #shopify-section-{{ section.id }} {
+    background-color: {{ section.settings.bg }};
+    }
+
+    /* The section background bleeds full-width via #shopify-section-{{ section.id }}
+       above (outside .page-width), so .page-width doesn't need max-width:100% — that
+       was overriding the theme's default centering and pinning the fixed-width step
+       row to the left edge instead of centering it (same bug already fixed in
+       commercial-gym-buildouts-space-traffic.liquid and
+       commercial-gym-buildouts-condition-options.liquid). Figma node 4606:84143
+       "benefits" is exactly 1280px wide, not the site's generic 1380px --page-width. */
+    #shopify-section-{{ section.id }} .page-width {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding-left: 16px;
+    padding-right: 16px;
+    box-sizing: border-box;
+    }
+
+    @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .page-width {
+    padding-left: 40px;
+    padding-right: 40px;
+    }
+    }
+
+    /* Figma node 4606:84138 (1440px frame) — content is inset 80px each side for the
+       1280px column the row rules below already assume ("4 x 311px card + 3 x 12px
+       gap = 1280px, exact"). Capping .page-width at 1280px and then adding 40px
+       padding left only 1200px, so the steps came out 291px rather than 311px. */
+    @media screen and (min-width: 990px) {
+    #shopify-section-{{ section.id }} .page-width {
+    max-width: 100%;
+    margin: 0;
+    padding-left: 80px;
+    padding-right: 80px;
+    }
+    }
+
+    /* The theme gives the heading wrapper a 30px bottom margin, which collapsed
+       against the row's own 28px top margin and won. Zero it so the 28px governs.
+
+       display: block guards against the wrapper's flex-ROW default: this section's
+       subheading is intentionally blank today (decision #9), but if copy is ever added
+       it would otherwise render beside the heading rather than beneath it on wide
+       screens — the bug that hit condition-options. */
+    #shopify-section-{{ section.id }} .multicolumn__title {
+    display: block;
+    text-align: center;
+    margin-bottom: 0;
+    }
+
+    #shopify-section-{{ section.id }} .process-steps__subheading {
+    text-align: center;
+    max-width: 800px;
+    margin: 12px auto 0;
+    }
+
+    /* Figma node 4612:88549 (mobile) — Oswald SemiBold 20px/26px */
+    #shopify-section-{{ section.id }} .title.h1 {
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 26px;
+    }
+
+    /* Figma node "What to Expect Title" (desktop) — Oswald SemiBold 38px/50px */
+    @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .title.h1 {
+    font-size: 38px;
+    line-height: 50px;
+    }
+    }
+
+    /* Figma node 4606:84143 "benefits" — 12px gap between the 4 step cards
+       (4 x 311px card + 3 x 12px gap = 1280px, exact), not the previous 3rem (48px).
+       28px gap from the heading above (matches the same heading→cards gap already
+       established in space-traffic/condition-options), not 4rem (64px). */
+    #shopify-section-{{ section.id }} .process-steps__row {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 28px;
+    }
+
+    /* Line passes through each circle's center. With 4 equal flex-basis columns and a
+       12px gap, each column is calc(25% - 9px) wide; the circle center sits 57px from
+       its own column's left edge (32px card inset + 25px, half the 50px circle) — a
+       fixed px offset that holds regardless of viewport width. Vertically, the circle
+       itself is inset 32px from the row's top edge (Figma: Icon at y=16387 vs. the
+       "benefits" row at y=16355 — confirmed identically across all 4 step cards), so
+       the line's own top must be 32px (card inset) + 25px (half the circle) = 57px,
+       not 25px measured from the row's bare top edge. */
+    #shopify-section-{{ section.id }} .process-steps__row::before {
+    content: '';
+    position: absolute;
+    top: 57px;
+    left: 57px;
+    right: calc(25% - 66px);
+    height: 4px;
+    background-color: #fce6de;
+    z-index: 0;
+    }
+
+    /* Figma node 4612:88594 (mobile) — each step is icon-left/text-right row, not stacked,
+       with a 20px gap between the icon and the text (only takes effect on mobile — the
+       750px+ rule below overrides both flex-direction and gap for desktop). */
+    #shopify-section-{{ section.id }} .process-steps__step {
+    position: relative;
+    z-index: 1;
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 20px;
+    }
+
+    /* Figma "Benefit cards" (desktop) — icon above title/text, inset 32px from the
+       card's (invisible — this card has no fill/border, unlike the other CGB card
+       sections) left/right/top edges, matching the same 32px unit used elsewhere.
+       The top inset is confirmed via the Icon's y-offset from the row: absolute
+       y=16387 vs. the "benefits" row at y=16355, identically across all 4 cards —
+       without it the icon (and the connector line, which centers on it) render
+       32px too high. */
+    @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .process-steps__step {
+    flex-direction: column;
+    gap: 0;
+    /* 32px on all four sides, bottom included: Figma's card is 290px tall and its
+       text frame ends 32px short of the bottom edge (text ends 16613, card ends
+       16645). Leaving the bottom at 0 made the row 258px and the section 496px
+       instead of Figma's 290px and 528px. */
+    padding: 32px;
+    }
+    }
+
+    /* Figma node 4606:84183 — number circle text is Lato Bold 20px */
+    #shopify-section-{{ section.id }} .process-steps__number {
+    flex: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #fce6de;
+    color: #f1592a;
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    }
+
+    /* Figma node 4606:84144 "Benefit cards" — 20px gap between the icon and the text
+       below it (icon bottom at local y=82, text top at y=102), not 1.6rem (25.6px). */
+    @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .process-steps__number {
+    margin-bottom: 20px;
+    }
+    }
+
+    /* Figma "Benefit cards" text — Lato Bold 20/26 #000000 title, Lato Regular 16/24
+       #393940 body; 8px gap between title and paragraph (matches the same title→text
+       gap already established in the space-traffic and condition-options sections),
+       not 0.6rem (9.6px). */
+    #shopify-section-{{ section.id }} .process-steps__title {
+    margin: 0 0 8px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 26px;
+    color: #000000;
+    }
+
+    #shopify-section-{{ section.id }} .process-steps__text {
+    margin: 0;
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+    color: #393940;
+    }
+
+    @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+    }
+
+    @media screen and (max-width: 749px) {
+    /* Figma "Benefit cards" (mobile) — 16px gap between the 4 stacked step rows,
+       not the previous 2.4rem (38.4px).
+
+       margin-top 20px is Figma node 4612:88547's heading→steps gap (heading block ends
+       19695, "benefits" starts 19715), where desktop uses 28px — the section's entire
+       +8px overshoot (24 + 26 + 20 + 550 + 24 = 644, with the 4 step heights
+       132/132/106/132 and their 16px gaps already matching exactly). */
+    #shopify-section-{{ section.id }} .process-steps__row {
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 20px;
+    }
+
+    /* The desktop horizontal connector line doesn't apply to the stacked mobile
+       layout — replaced by the vertical per-step connector below. */
+    #shopify-section-{{ section.id }} .process-steps__row::before {
+    display: none;
+    }
+
+    /* Figma node 4612:88630 "line" — a 4px vertical connector runs behind each
+       numbered circle, continuing down to the center of the next step's circle
+       (25px = half the 50px circle; 16px = the row gap above). Each step's own
+       height is driven by its (variable-length) title/text, so this is anchored
+       with a percentage height rather than a fixed px value: for an absolutely
+       positioned element, percentage height resolves against its positioned
+       ancestor's actual rendered height even when that ancestor's height is
+       auto/content-driven, so this reaches the next circle's center exactly
+       regardless of how the copy wraps. z-index: -1 keeps it behind this step's
+       own circle and text; the next step's circle (painted later in DOM order)
+       still renders on top of the segment where it overlaps. */
+    #shopify-section-{{ section.id }} .process-steps__step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    top: 25px;
+    left: 25px;
+    transform: translateX(-50%);
+    width: 4px;
+    height: calc(100% + 16px);
+    background-color: #fce6de;
+    }
+    }
+{%- endstyle -%}
+
+<div class="multicolumn{% if section.settings.title == blank %} no-heading{% endif %}">
+    <div class="page-width multicolumn-padding section-{{ section.id }}-padding isolate{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+    {% if settings.animations_reveal_on_scroll %}
+        data-cascade
+            {% endif %}>
+        {%- unless section.settings.title == blank -%}
+            <div class="title-wrapper-with-link title-wrapper--self-padded-mobile title-wrapper--no-top-margin multicolumn__title">
+                <h2 class="title inline-richtext {{ section.settings.heading_size }}">
+                    {{ section.settings.title }}
+                </h2>
+                {%- unless section.settings.subheading == blank -%}
+                    <div class="process-steps__subheading rte">{{ section.settings.subheading }}</div>
+                {%- endunless -%}
+            </div>
+        {%- endunless -%}
+
+        <div class="process-steps__row">
+            {%- for block in section.blocks -%}
+                <div class="process-steps__step" {{ block.shopify_attributes }}>
+                    <span class="process-steps__number">{{ forloop.index }}</span>
+                    <div>
+                        {%- if block.settings.title != blank -%}
+                            <p class="process-steps__title">{{ block.settings.title }}</p>
+                        {%- endif -%}
+                        {%- if block.settings.text != blank -%}
+                            <p class="process-steps__text">{{ block.settings.text }}</p>
+                        {%- endif -%}
+                    </div>
+                </div>
+            {%- endfor -%}
+        </div>
+
+        {%- unless section.settings.disclaimer == blank -%}
+            <p class="process-steps__subheading rte" style="margin-top: 28px; font-style: italic; font-size: 1.3rem;">{{ section.settings.disclaimer }}</p>
+        {%- endunless -%}
+    </div>
+</div>
+
+{% schema %}
+{
+  "name": "CGB Process",
+  "class": "section",
+  "tag": "section",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg",
+      "label": "Background color",
+      "default": "#fff"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "title",
+      "default": "How the Process Works",
+      "label": "Heading"
+    },
+    {
+      "type": "richtext",
+      "id": "subheading",
+      "label": "Subheading"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "options": [
+        {
+          "value": "h2",
+          "label": "t:sections.all.heading_size.options__1.label"
+        },
+        {
+          "value": "h1",
+          "label": "t:sections.all.heading_size.options__2.label"
+        },
+        {
+          "value": "h0",
+          "label": "t:sections.all.heading_size.options__3.label"
+        },
+        {
+          "value": "hxl",
+          "label": "t:sections.all.heading_size.options__4.label"
+        },
+        {
+          "value": "hxxl",
+          "label": "t:sections.all.heading_size.options__5.label"
+        }
+      ],
+      "default": "h1",
+      "label": "t:sections.all.heading_size.label"
+    },
+    {
+      "type": "richtext",
+      "id": "disclaimer",
+      "label": "Disclaimer text"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 56
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 56
+    }
+  ],
+  "blocks": [
+    {
+      "type": "step",
+      "name": "Step",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title"
+        },
+        {
+          "type": "textarea",
+          "id": "text",
+          "label": "Text"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "CGB Process",
+      "blocks": [
+        {
+          "type": "step",
+          "settings": {
+            "title": "Share your room and project requirements",
+            "text": "Room size, ceiling height, facility type, budget and timing. A floor plan or photo helps but is not required."
+          }
+        },
+        {
+          "type": "step",
+          "settings": {
+            "title": "Review equipment mix and conceptual placement",
+            "text": "We put together an equipment list and a conceptual layout showing how the zones fit your room."
+          }
+        },
+        {
+          "type": "step",
+          "settings": {
+            "title": "Receive a tailored quote",
+            "text": "A quote built around your list, with condition options where new and remanufactured both make sense."
+          }
+        },
+        {
+          "type": "step",
+          "settings": {
+            "title": "Coordinate delivery, assembly or installation",
+            "text": "Where these services are available and approved for your project, we scope them alongside the equipment."
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
