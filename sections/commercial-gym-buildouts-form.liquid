@@ -1,0 +1,2099 @@
+{%- style -%}
+    /* Figma's mobile frames inset every section 24px top and bottom, regardless of the
+       desktop value — confirmed across nodes 4612:86181 (facility-types), 4612:86422
+       (space-traffic), 4612:88420 (equipment-zones), 5280:81995 (condition-options),
+       4612:86205 (form) and 4612:86666 (faq). Deriving it from the desktop setting
+       (x0.75) gave 60px and made every section ~72px too tall on mobile. The desktop
+       setting still governs from 750px up. */
+  .section-{{ section.id }}-padding {
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.section_padding_top }}px;
+      padding-bottom: {{ section.settings.section_padding_bottom }}px;
+    }
+  }
+
+  #shopify-section-{{ section.id }} {
+    background-color: {{ section.settings.bg }};
+  }
+
+  /* title-wrapper-with-link is Dawn's heading+side-link flex row
+     (justify-content: space-between); this section has no side link,
+     so force it to stack heading/subheading as a centered column
+     on all screen sizes instead of the two sitting side by side. */
+  #shopify-section-{{ section.id }} .title-wrapper-with-link {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    /* The theme gives this wrapper a 30px bottom margin, which collapsed against the
+       steps row's 28px top margin and won, putting the row 30px below the heading
+       block instead of Figma's 28px. Zero it so the row's own margin governs. */
+    margin-bottom: 0;
+  }
+
+  /* Figma node 4585:80564 "Heading" — Oswald SemiBold 38px/50px desktop */
+  #shopify-section-{{ section.id }} .title.h1 {
+    font-size: 20px;
+    line-height: 26px;
+  }
+
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .title.h1 {
+      font-size: 38px;
+      line-height: 50px;
+    }
+  }
+
+  /* Figma node 4612:86205 (mobile) — Lato Regular 14px/20px, #4f4f55 */
+  #shopify-section-{{ section.id }} .cgb-form__subheading {
+    text-align: center;
+    max-width: 800px;
+    margin: 12px auto 0;
+    font-family: 'Lato', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: #4f4f55;
+  }
+
+  /* Figma node 4585:80564 (desktop) — Lato Regular 16px/24px, #393940 */
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .cgb-form__subheading {
+      font-size: 16px;
+      line-height: 24px;
+      color: #393940;
+    }
+  }
+
+  /* Figma node 4612:86220 (mobile) — stacked column, 4px gap, chevron rotated
+     90deg as a downward separator between lines */
+  #shopify-section-{{ section.id }} .cgb-form__phases {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 20px;
+    text-align: center;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__phase {
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 24px;
+    color: #4f4f55;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__phase-chevron {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4f4f55;
+    transform: rotate(90deg);
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__phase-chevron svg {
+    width: 8px;
+    height: 14px;
+  }
+
+  /* Figma node 4585:80582 (desktop) — single row, Lato Bold 20px/26px,
+     chevron connector (24x24, #4f4f55) upright, 20px gap each side */
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .cgb-form__phases {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-top: 28px;
+      /* Figma node 4585:80582 — the steps frame is 50px tall with its 26px labels
+         centred inside it, i.e. 12px above and below. Without this the row was only
+         as tall as the labels, leaving the heading-to-card distance 26px short of
+         Figma's 106px (28 + 50 + 28). */
+      padding-top: 12px;
+      padding-bottom: 12px;
+      text-align: left;
+    }
+
+    #shopify-section-{{ section.id }} .cgb-form__phase {
+      font-size: 20px;
+      line-height: 26px;
+    }
+
+    #shopify-section-{{ section.id }} .cgb-form__phase-chevron {
+      transform: rotate(0deg);
+    }
+  }
+
+  /* Figma node 4585:80472 "inputs" — 624px white card, radius 12, 32px padding */
+  #shopify-section-{{ section.id }} .cgb-form__card {
+    width: 100%;
+    max-width: 624px;
+    /* Figma node 4585:80472 — 28px below the steps frame (frame ends 12647, card
+       starts 12675), not the theme's 2.4rem/24px. */
+    margin: 28px auto 0;
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 32px;
+    box-sizing: border-box;
+    /* The card is white on a white section, so the only thing separating it from
+       the page is Figma's drop shadow — without it the form reads as having no
+       container at all. Read off the SVG filter both frames carry, identically:
+       4585:80472 (desktop) `filter0_d_4585_80472` and 4612:86208 (mobile)
+       `filter0_d_4612_86208` — feOffset dy=10, feGaussianBlur stdDeviation=20
+       (CSS blur is 2x stdDeviation, so 40px), no feMorphology so zero spread,
+       feColorMatrix 0.495/0.495/0.495 at 0.12 alpha = rgba(126, 126, 126, 0.12).
+       Same on both, hence no mobile override below. */
+    box-shadow: 0 10px 40px rgba(126, 126, 126, 0.12);
+  }
+
+
+  #shopify-section-{{ section.id }} .cgb-form__step-label {
+    margin: 0 0 4px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 24px;
+    color: #000000;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__progress-track {
+    width: 100%;
+    height: 4px;
+    background-color: #fce6de;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__progress-fill {
+    /* The theme ships a global `a:empty, ul:empty, ..., div:empty { display: none }`
+       rule (minified into base-v2.min.css). This fill is an empty <div> — it is
+       coloured and sized purely by CSS — so that rule hid it outright and the
+       progress bar never showed any progress at all, just the #fce6de track.
+       Restate display so the section's own rule wins. */
+    display: block;
+    width: 50%;
+    height: 100%;
+    background-color: #f1592a;
+    transition: width 0.3s ease;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__progress-row {
+    margin-bottom: 24px;
+  }
+
+  /* Figma "Check the highlighted fields and try again" error banner */
+  #shopify-section-{{ section.id }} .cgb-form__banner {
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    background-color: #fdece7;
+    border: 1px solid #d83d0e;
+    border-radius: 8px;
+    color: #d83d0e;
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__step-heading {
+    margin: 0 0 16px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 20px;
+    color: #000000;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-field {
+    margin-bottom: 16px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-field__label {
+    display: block;
+    margin-bottom: 6px;
+    font-family: 'Lato', sans-serif;
+    font-size: 12px;
+    line-height: 18px;
+    color: #393940;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-field__required {
+    color: #d83d0e;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-field__optional {
+    color: #b3b3b3;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-field__input {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: 48px;
+    padding: 0 16px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    background-color: #ffffff;
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    color: #393940;
+    box-sizing: border-box;
+  }
+
+  /* Custom dropdown (replaces native <select>) — a native select's open-state
+     options list is rendered by the OS/browser, not page CSS, so it can't be
+     made reliably responsive across mobile devices. Building it ourselves
+     (button trigger + an absolutely-positioned, self-sized list) guarantees
+     it always stays within the field's own width and the viewport. */
+  #shopify-section-{{ section.id }} .cgb-select {
+    position: relative;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-select__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-select__value {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #393940;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-select__value--placeholder {
+    color: #b3b3b3;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-select__chevron {
+    flex: none;
+    width: 14px;
+    height: 8px;
+    transition: transform 0.15s ease;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-select--open .cgb-select__chevron {
+    transform: rotate(180deg);
+  }
+
+  #shopify-section-{{ section.id }} .cgb-select__list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 20;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    max-width: 100%;
+    max-height: 240px;
+    overflow-y: auto;
+    background-color: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    box-sizing: border-box;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-select__option {
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    color: #393940;
+    cursor: pointer;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-select__option:hover {
+    background-color: #f7f7f7;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-field--error .cgb-select__trigger {
+    border-color: #d83d0e;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-field__hint {
+    margin: 6px 0 0;
+    font-family: 'Lato', sans-serif;
+    font-size: 10px;
+    line-height: 14px;
+    color: #808080;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-field__error {
+    display: none;
+    margin: 6px 0 0;
+    font-family: 'Lato', sans-serif;
+    font-size: 10px;
+    line-height: 14px;
+    color: #d83d0e;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-field--error .cgb-field__input {
+    border-color: #d83d0e;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-field--error .cgb-field__hint {
+    display: none;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-field--error .cgb-field__error {
+    display: block;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__continue {
+    display: block;
+    width: 100%;
+    margin-top: 24px;
+  }
+
+  /* Figma nodes 4585:80749 / 4585:81167 — button labels are Lato Bold 16/24. The
+     theme's .button rule declares no font-family, and a <button> does not inherit
+     one the way the hero's <a class="button"> does, so these fell back to the
+     browser default (Arial). */
+  #shopify-section-{{ section.id }} .button {
+    font-family: 'Lato', sans-serif;
+    /* That base rule is also display:flex with align-items:center but no
+       justify-content, so any button wider than its own text packs the label at
+       flex-start. The Back button is the one that shows it here — a min-width holds
+       it at 122px around a 35px label, leaving 24px of slack on the left and 63px on
+       the right, on desktop as well as mobile. The full-width Continue / status
+       buttons escape it only because .cgb-form__continue and .cgb-form__status-action
+       set display:block, where text-align:center works. Figma centres every button
+       label (4585:80749: a 67px "Continue" centred in a 560px button). */
+    justify-content: center;
+  }
+
+  /* Figma node 4585:80755 "inputs" (Step 2) — Ceiling height / Budget range and
+     Phone / Email sit in a two-up row on desktop (16px gap), stacked on mobile
+     since no mobile frame was given for this node (same convention as elsewhere). */
+  #shopify-section-{{ section.id }} .cgb-form__field-row {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .cgb-form__field-row {
+      flex-direction: row;
+    }
+
+    #shopify-section-{{ section.id }} .cgb-form__field-row .cgb-field {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+  }
+
+  /* 48px gap between the "Your project" and "Your contact details" field groups */
+  #shopify-section-{{ section.id }} .cgb-form__step-heading--spaced {
+    margin-top: 48px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-field__textarea {
+    height: 72px;
+    min-height: 72px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    resize: vertical;
+    font-family: inherit;
+  }
+
+  /* Figma node 4585:80955 "Equipment Zone Group" / 4585:81546 "Contact method
+     container" — pill-style toggle tags, 8px gap, radius 6, #f2f2f2 border */
+  #shopify-section-{{ section.id }} .cgb-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-tag {
+    padding: 6px 12px;
+    border: 1px solid #f2f2f2;
+    border-radius: 6px;
+    background-color: #ffffff;
+    font-family: 'Lato', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: #393940;
+    cursor: pointer;
+  }
+
+  /* Figma node 4585:82176 "General forms / tag" selected state — solid fill,
+     white border/text, confirmed via the filled-state example (Cardio,
+     Selectorized and plate-loaded strength, Free weights and benches,
+     and the Email contact-method tag all shown selected) */
+  #shopify-section-{{ section.id }} .cgb-tag[aria-pressed="true"] {
+    border-color: #ffffff;
+    background-color: #d83d0e;
+    color: #ffffff;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-field--error .cgb-tags {
+    outline: 1px solid #d83d0e;
+    outline-offset: 4px;
+    border-radius: 6px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__disclaimer {
+    margin: 24px 0 0;
+    font-family: 'Lato', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: #393940;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__disclaimer a {
+    color: #d83d0e;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__buttons-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__back {
+    flex: none;
+  }
+
+  /* Figma nodes 4585:81213 (loading), 4598:83423 (error), 4598:83503 (success) —
+     full-card replacements, no step indicator/progress bar in any of them */
+  #shopify-section-{{ section.id }} .cgb-form__status {
+    text-align: center;
+    padding: 48px 0 8px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__status-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__status-icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__status-spinner {
+    animation: cgb-form-spin 0.9s linear infinite;
+  }
+
+  @keyframes cgb-form-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__status-heading {
+    margin: 0 0 8px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    line-height: 36px;
+    color: #393940;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__status-text {
+    margin: 0 auto;
+    max-width: 480px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 26px;
+    color: #808080;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__status[data-cgb-status="error"] .cgb-form__status-text,
+  #shopify-section-{{ section.id }} .cgb-form__status[data-cgb-status="success"] .cgb-form__status-text {
+    max-width: 560px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__status-action {
+    display: block;
+    width: 100%;
+    margin-top: 32px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__status-action[disabled] {
+    opacity: 0.7;
+    cursor: default;
+  }
+
+  /* Theme-editor-only QA aid so Success/Error can be reviewed before real
+     submission wiring exists; not rendered on the live storefront. */
+  #shopify-section-{{ section.id }} .cgb-form__status-preview {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px dashed #e5e5e5;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-form__status-preview button {
+    font-family: 'Lato', sans-serif;
+    font-size: 12px;
+    padding: 6px 10px;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #393940;
+    cursor: pointer;
+  }
+  /* Figma mobile node 4612:86208 "inputs" — a 343x520 card whose internals are all
+     tighter than desktop's. Every value below is read off that node:
+       card padding            16px  (desktop 32) — children sit at x=14034 in a card at 14018
+       progress row -> fields  16px  (desktop 24) — row ends 13078, fields start 13094
+       section heading -> 1st  12px  (desktop 16) — heading ends 13114, input starts 13126
+       between fields          12px  (desktop 16) — input 1 ends 13198, input 2 at 13210
+       fields -> button        16px  (desktop 24) — fields end 13470, buttons start 13486
+     16 + 32 + 16 + 376 + 16 + 48 + 16 = 520 exactly.
+     Also 20px from the steps row to the card rather than desktop's 28px (steps end
+     13010, inputs start 13030). Placed after the base rules so it wins; an earlier
+     media query at the same specificity would have lost to them. */
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .cgb-form__card {
+      margin-top: 20px;
+      padding: 16px;
+    }
+
+    #shopify-section-{{ section.id }} .cgb-form__progress-row {
+      margin-bottom: 16px;
+    }
+
+    #shopify-section-{{ section.id }} .cgb-form__step-heading {
+      margin-bottom: 12px;
+    }
+
+    #shopify-section-{{ section.id }} .cgb-field {
+      margin-bottom: 12px;
+    }
+
+    #shopify-section-{{ section.id }} .cgb-form__continue {
+      margin-top: 16px;
+    }
+  }
+
+  /* ---------------------------------------------------------------------------
+     MIGRATION SCAFFOLDING - Powerful Form Builder form 164478.
+     .cgb-pfb mirrors .cgb-form__card's box (624 max-width, 28px above, centred) so
+     the PFB form lands exactly where the legacy card sits once the legacy card is
+     toggled off. Placed last in the style block so the max-width:749px override
+     below wins at equal specificity - same reason the existing mobile block sits
+     after the base rules. Remove with the embed when the migration completes.
+     See CGB-Form-Migration-Runbook.md.
+     --------------------------------------------------------------------------- */
+  #shopify-section-{{ section.id }} .cgb-pfb {
+    width: 100%;
+    max-width: 624px;
+    margin: 28px auto 0;
+  }
+
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .cgb-pfb {
+      margin-top: 20px;
+    }
+  }
+
+  /* ===========================================================================
+     PHASE 2 RE-SKIN - Powerful Form Builder form 164478.
+
+     Targets PFB's real rendered markup, read from the preview DOM, not assumed:
+
+       .globo-form-control[data-type]        one field
+         label.globo-label                   floating label (absolute in PFB)
+           span.label-content                the text
+           span.text-danger                  the " *" required marker
+         .globo-form-input                   the "filled" box (bg tint, radius)
+           input.material_filled-input  | fieldset > ul.flex-wrap > li.globo-list-control
+         small.help-text.globo-description   the hint
+
+     PFB renders in its material_filled preset: Almarai font, dark-green
+     (#2e4e49) buttons, 2px radii, a tinted .globo-form-input, and labels
+     absolutely positioned *inside* the field. Every rule below sets its target
+     value outright rather than merely unsetting a Material one, so this skin
+     also holds if the form's style preset is changed in PFB admin later.
+
+     No !important anywhere - these selectors already outrank PFB's
+     .material_filled-* by specificity, matching the approach in
+     assets/section-custom-form.css.
+
+     Values cite cgb-form-style-tokens.md. The section file remains the source
+     of truth; Figma corroborates only.
+     =========================================================================== */
+
+  /* --- Card: token sheet SS4 ------------------------------------------------ */
+  /* PFB caps its own app at 600px and paints a 3-layer Material shadow. The card
+     is white on a white section, so the shadow is the only thing separating it
+     from the page - it is the one style to get right if nothing else lands. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-app {
+    max-width: none;
+    width: 100%;
+    padding: 32px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(126, 126, 126, 0.12);
+    font-family: 'Lato', sans-serif;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form.boxed-form {
+    max-width: none;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  /* --- Field wrapper: SS6, 16px desktop / 12px mobile ----------------------- */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control {
+    margin-bottom: 16px;
+    padding: 0;
+  }
+
+  /* --- Label: SS6 - Lato 12/18 #393940, 6px above the input ----------------- */
+  /* PFB floats this: position absolute, pointer-events none, translate(12,16).
+     All three are undone here so it sits statically above the field. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control .globo-label {
+    position: static;
+    transform: none;
+    pointer-events: auto;
+    display: block;
+    margin: 0 0 6px;
+    padding: 0;
+    font-family: 'Lato', sans-serif;
+    font-size: 12px;
+    line-height: 18px;
+    font-weight: 400;
+    color: #393940;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control .globo-label .label-content {
+    font-size: 12px;
+    line-height: 18px;
+    color: #393940;
+  }
+
+  /* Required marker - SS6 uses #d83d0e */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control .text-danger {
+    color: #d83d0e;
+  }
+
+  /* --- Input box: SS6 - 48px, 1px #e5e5e5, radius 8, white ------------------ */
+  /* The material_filled look is only a background tint on this wrapper - there
+     are no ::before/::after underlines to neutralise (both compute to none). */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input {
+    background-color: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    overflow: visible;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input input,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input select,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input textarea {
+    height: 48px;
+    min-height: 48px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 8px;
+    background-color: transparent;
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    color: #393940;
+    box-shadow: none;
+  }
+
+  /* SS6 textarea: 72px, 12px top/bottom padding */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input textarea {
+    height: 72px;
+    min-height: 72px;
+    padding: 12px 16px;
+    line-height: 24px;
+    resize: vertical;
+  }
+
+  /* D4 - the section defines no ::placeholder; #b3b3b3 is the theme's
+     established placeholder colour and matches the custom select's fake one. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input input::placeholder,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input textarea::placeholder {
+    color: #b3b3b3;
+    opacity: 1;
+  }
+
+  /* D3 - focus is genuinely absent from the section, which is an a11y gap, not
+     a style preference. Resolved toward the in-repo precedent:
+     assets/section-custom-form.css focuses Globo inputs with a #D83D0E border. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input:focus-within {
+    border-color: #d83d0e;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input input:focus,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input select:focus,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input textarea:focus {
+    outline: none;
+  }
+
+  /* --- Select: SS7 is a visual target only ---------------------------------- */
+  /* PFB uses a native select, whose open list the OS draws - the section built a
+     custom listbox precisely because that list cannot be styled. The closed
+     state is matched here; the open list is an accepted approximation. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 40px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8' fill='none'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%23393940' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    cursor: pointer;
+  }
+
+  /* --- Hint: SS6 - Lato 10/14 #808080, 6px below the input ------------------ */
+  #shopify-section-{{ section.id }} .cgb-pfb .help-text.globo-description {
+    display: block;
+    margin-top: 6px;
+    font-family: 'Lato', sans-serif;
+    font-size: 10px;
+    line-height: 14px;
+    color: #808080;
+  }
+
+  /* --- Group headings: SS6 - Lato Bold 14/20 #000 --------------------------- */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control[data-type='heading'] {
+    margin-bottom: 16px;
+    font-family: 'Lato', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 700;
+    color: #000000;
+  }
+
+  /* SS6: 48px between "Your project" and "Your contact details". The general
+     sibling combinator picks only a heading that follows another heading, so
+     step 1's single heading is untouched. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control[data-type='heading'] ~ .globo-form-control[data-type='heading'] {
+    margin-top: 48px;
+  }
+
+  /* --- Tag pills: SS8 -------------------------------------------------------- */
+  /* Equipment zones (multi) and preferred contact method (single). PFB renders
+     a native checkbox/radio list; this restyles that markup into the pill row.
+     CSS only - per the runbook the JS interaction is NOT rebuilt. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input ul.flex-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input li.globo-list-control {
+    width: auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* The native control is taken out of flow rather than display:none, so it
+     stays keyboard-focusable and the :checked selector below still works. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .checkbox-input,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .radio-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    margin: 0;
+    pointer-events: none;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .checkbox-label,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .radio-label {
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+    padding: 6px 12px;
+    background-color: #ffffff;
+    border: 1px solid #f2f2f2;
+    border-radius: 6px;
+    font-family: 'Lato', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: #393940;
+    cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+  }
+
+  /* SS8 selected: #d83d0e fill, #ffffff border, #ffffff text */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .checkbox-input:checked + .checkbox-label,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .radio-input:checked + .radio-label {
+    background-color: #d83d0e;
+    border-color: #ffffff;
+    color: #ffffff;
+  }
+
+  /* The native box is visually hidden, so focus has to be shown on the pill. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .checkbox-input:focus-visible + .checkbox-label,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .radio-input:focus-visible + .radio-label {
+    outline: 2px solid #d83d0e;
+    outline-offset: 2px;
+  }
+
+  /* --- Buttons: SS9 ---------------------------------------------------------- */
+  /* Both fixes the section had to make to the theme's .button recur here, for the
+     same reasons: PFB sets no font-family on its buttons, and lays them out with
+     flex and no justify-content, so a label in a full-width button packs left.
+     Back stays solid orange per D1 - the section wins over Figma's outline. */
+  #shopify-section-{{ section.id }} .cgb-pfb .gfb__footer .action,
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__footer .action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    height: 48px;
+    padding: 12px 24px;
+    background-color: #d83d0e;
+    border: none;
+    border-radius: 8px;
+    color: #ffffff;
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 700;
+    box-shadow: none;
+    cursor: pointer;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .gfb__footer .action.previous,
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__footer .action.previous {
+    background-color: #d83d0e;
+    border: none;
+    color: #ffffff;
+  }
+
+  /* --- Status messages: SS10 ------------------------------------------------- */
+  /* PFB exposes .message.success / .message.error as full-panel replacements,
+     which is the same shape as the section's status panels. */
+  #shopify-section-{{ section.id }} .cgb-pfb .message.success,
+  #shopify-section-{{ section.id }} .cgb-pfb .message.error {
+    text-align: center;
+    padding: 48px 0 8px;
+    font-family: 'Lato', sans-serif;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .message .gfb__content-title {
+    margin-bottom: 8px;
+    font-family: 'Lato', sans-serif;
+    font-size: 28px;
+    line-height: 36px;
+    font-weight: 700;
+    color: #393940;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .message .content,
+  #shopify-section-{{ section.id }} .cgb-pfb .message .content p {
+    max-width: 560px;
+    margin-left: auto;
+    margin-right: auto;
+    font-family: 'Lato', sans-serif;
+    font-size: 20px;
+    line-height: 26px;
+    color: #808080;
+  }
+
+  /* SS13 error banner */
+  #shopify-section-{{ section.id }} .cgb-pfb .message.error {
+    background-color: #fdece7;
+    border: 1px solid #d83d0e;
+    border-radius: 8px;
+    color: #d83d0e;
+  }
+
+  /* --- Mobile: SS4 card padding 16, SS6 field gap 12 ------------------------- */
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .cgb-pfb .globo-form-app {
+      padding: 16px;
+    }
+
+    #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control {
+      margin-bottom: 12px;
+    }
+
+    #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control[data-type='heading'] {
+      margin-bottom: 12px;
+    }
+  }
+
+  /* --- Corrections found by measuring the skinned form on the preview -------- */
+
+  /* PFB's form element carries its own 30px padding INSIDE .globo-form-app's
+     32px, so fields rendered 560 - 60 = 500px wide in a 624px card. The card's
+     padding is the only one we want; this removes the inner one. Same story for
+     the app's own 30px vertical margin, which stacked on .cgb-pfb's 28px. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-app {
+    margin: 0;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb form.g-container {
+    padding: 0;
+  }
+
+  /* PFB's inputs are content-box, so the 16px side padding was being added to a
+     percentage width rather than taken out of it. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input {
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input input,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input select,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input textarea {
+    box-sizing: border-box;
+    width: 100%;
+  }
+
+  /* The select chevron is the one property PFB defends with !important, so this
+     is the one place the skin has to answer in kind. SS7: 14 x 8, #393940. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8' fill='none'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%23393940' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 16px center !important;
+    background-size: 14px 8px !important;
+  }
+
+  /* SS9 buttons row: flex, space-between, 16px gap, 24px above. PFB's footer is
+     display:block with 8px side padding, which also made the button 484px in a
+     560px card. */
+  #shopify-section-{{ section.id }} .cgb-pfb .gfb__footer,
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0;
+    margin-top: 24px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .gfb__footer .action,
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__footer .action {
+    flex: 0 0 auto;
+    min-width: 120px;
+  }
+
+  /* Step 1 shows Continue full width; step 2 puts Back and Submit in a row. PFB
+     marks the Back button .hidden on step 1, so its own state class is the hook -
+     no JS needed, and it flips automatically on step change. */
+  #shopify-section-{{ section.id }} .cgb-pfb .gfb__footer .action.previous.hidden ~ .action.next,
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__footer .action.previous.hidden ~ .action.next {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .cgb-pfb .gfb__footer,
+    #shopify-section-{{ section.id }} .cgb-pfb .wizard__footer {
+      margin-top: 16px;
+    }
+  }
+
+  /* --- Placeholders: PFB hides them with visibility, not colour ------------- */
+  /* material_filled shows the placeholder only once its floating label has moved
+     up. That label is now static, so the placeholder must be visible at rest -
+     otherwise every text field renders blank. Colour/opacity were already ours;
+     visibility is the property that was actually hiding them. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input input::placeholder,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input textarea::placeholder {
+    visibility: visible;
+    color: #b3b3b3;
+    opacity: 1;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input input::-webkit-input-placeholder,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input textarea::-webkit-input-placeholder {
+    visibility: visible;
+    color: #b3b3b3;
+    opacity: 1;
+  }
+
+  /* --- Progress indicator: SS5 ---------------------------------------------- */
+  /* PFB does ship a native step indicator - nav.steps > .step > .step__content >
+     p.step__number + .lines > .line.-background / .line.-start / .line.-progress.
+     It carries no text, but it is a real track, so per the runbook it gets
+     restyled rather than duplicated with a parallel one of our own.
+     PFB's palette here is dark green #2e4e49 on grey #c3c3c3. */
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__steps {
+    margin-bottom: 24px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__steps .line.-background {
+    height: 4px;
+    background-color: #fce6de;
+    border-radius: 2px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__steps .line.-start,
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__steps .line.-progress {
+    height: 4px;
+    background-color: #f1592a;
+    border-radius: 2px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__steps .step__number {
+    background-color: #ffffff;
+    border-color: #f1592a;
+  }
+
+  /* SS5 also puts a "Step 1/2" label above the track. PFB renders no text at all
+     in its indicator, so it is supplied here and keyed to PFB's own state class:
+     the Back button carries .hidden on step 1 only. :has() drives it, so the
+     label flips on step change with no JS; where :has() is unsupported the label
+     simply does not render and the track still reads correctly. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-formbuilder-wizard:has(.action.previous.hidden) .wizard__steps::before,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-formbuilder-wizard:has(.action.previous:not(.hidden)) .wizard__steps::before {
+    display: block;
+    margin-bottom: 4px;
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 700;
+    color: #000000;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-formbuilder-wizard:has(.action.previous.hidden) .wizard__steps::before {
+    content: 'Step 1/2';
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-formbuilder-wizard:has(.action.previous:not(.hidden)) .wizard__steps::before {
+    content: 'Step 2/2';
+  }
+
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .cgb-pfb .wizard__steps {
+      margin-bottom: 16px;
+    }
+  }
+
+  /* --- Put the step indicator back in flow ---------------------------------- */
+  /* PFB positions .wizard__steps absolutely and translates it (-272px, 8px), so
+     it escaped the card's 32px padding and rendered 15px ABOVE the card's top
+     edge - and margin-bottom on it did nothing, since absolute elements push no
+     siblings. The positioning comes from PFB's stylesheet, not an inline style,
+     so ID-scoped rules win it back without !important.
+     The 24px gap below the row (SS5) is then supplied by .panel's own 25px top
+     padding, which is left alone deliberately: .panels carries a JS-measured
+     inline height, so the less this skin disturbs panel box metrics the better. */
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__steps {
+    position: static;
+    transform: none;
+    margin-bottom: 0;
+  }
+
+  /* The form's own header is now empty - its heading, subheading and phase row
+     were removed in PFB admin so the section can render them - but it kept a
+     20px bottom margin, pushing everything down by that much. */
+  #shopify-section-{{ section.id }} .cgb-pfb .gfb__page-header {
+    margin: 0;
+  }
+
+  /* --- Final rhythm pass, measured against the legacy card on the same page -- */
+  /* The legacy card is the source of truth, so these three numbers were taken
+     from it directly rather than from the token sheet: card top -> progress 32,
+     last field -> button 24, button -> card bottom 32. */
+
+  /* PFB pads .wizard__steps 4px top, putting the track 37px below the card top
+     against the legacy card's 32px. */
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__steps {
+    padding-top: 0;
+  }
+
+  /* The last field kept its 16px bottom margin on top of the footer's 24px, so
+     the gap above the button was 42px against the legacy card's 24px. */
+  #shopify-section-{{ section.id }} .cgb-pfb .panel .globo-form-control:last-child {
+    margin-bottom: 0;
+  }
+
+  /* PFB renders an always-present congratulations paragraph below the footer,
+     empty until submission, which added 8px under the button. */
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__congrats-message:empty {
+    display: none;
+    margin: 0;
+  }
+
+  /* --- Step 2 fixes: pill groups and the two-button row --------------------- */
+
+  /* The bordered 48px box belongs to text and select fields only. On a checkbox
+     or radio control the same wrapper holds a fieldset of pills, so the border
+     drew a second box around the whole group (SS8 has no such box). */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control[data-type='checkbox'] .globo-form-input,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control[data-type='radio'] .globo-form-input {
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+  }
+
+  /* PFB draws its own 16x16 checkbox/radio glyph as ::before on the label (and a
+     tick as ::after), which sat outside each pill. The native input is already
+     hidden; these are what remained visible. SS8's pill is the whole control. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .checkbox-label::before,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .checkbox-label::after,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .radio-label::before,
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-input .radio-label::after {
+    display: none;
+  }
+
+  /* PFB forces its footer buttons to width:100% and paints Back white, both with
+     enough weight to survive an ID-scoped override - so this is the second and
+     last place the skin answers with !important. D1 keeps Back solid orange:
+     the section wins over Figma's white/#d3d9e5 outline. */
+  #shopify-section-{{ section.id }} .cgb-pfb .gfb__footer .action,
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__footer .action {
+    width: auto !important;
+    min-width: 120px;
+  }
+
+  #shopify-section-{{ section.id }} .cgb-pfb .gfb__footer .action.previous,
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__footer .action.previous {
+    background-color: #d83d0e !important;
+    color: #ffffff !important;
+    border: none !important;
+  }
+
+  /* Step 1 has no Back, so Continue stays full width - keyed to PFB's own
+     .hidden state class, and now needs !important to beat the width rule above. */
+  #shopify-section-{{ section.id }} .cgb-pfb .gfb__footer .action.previous.hidden ~ .action.next,
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__footer .action.previous.hidden ~ .action.next {
+    width: 100% !important;
+    flex: 1 1 100%;
+  }
+
+  /* --- Final two -------------------------------------------------------------
+     The 48px group separator selector does match (verified in the browser: one
+     match, same parent), but the declaration was being overridden - PFB injects
+     a per-form <style> block keyed to .globo-form-id-164478, which is the same
+     thing that forced !important on the footer buttons. Third and last use. */
+  #shopify-section-{{ section.id }} .cgb-pfb .globo-form-control[data-type='heading'] ~ .globo-form-control[data-type='heading'] {
+    margin-top: 48px !important;
+  }
+
+  /* PFB marks a completed step with a small dark-green SVG inside .step__number.
+     SS5's progress row is a plain track with no icons, so it goes. */
+  #shopify-section-{{ section.id }} .cgb-pfb .wizard__steps .step svg {
+    display: none;
+  }
+
+{%- endstyle -%}
+
+<div class="cgb-form" id="commercial-gym-buildouts-form">
+  <div class="page-width section-{{ section.id }}-padding">
+    {%- unless section.settings.heading == blank -%}
+      <div class="title-wrapper-with-link title-wrapper--self-padded-mobile title-wrapper--no-top-margin">
+        <h2 class="title inline-richtext h1">{{ section.settings.heading }}</h2>
+        {%- unless section.settings.subheading == blank -%}
+          <div class="cgb-form__subheading rte">{{ section.settings.subheading }}</div>
+        {%- endunless -%}
+      </div>
+    {%- endunless -%}
+
+    <div class="cgb-form__phases">
+      <span class="cgb-form__phase">{{ section.settings.phase_1_text }}</span>
+      <span class="cgb-form__phase-chevron" aria-hidden="true">
+        <svg viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L7 7L1 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <span class="cgb-form__phase">{{ section.settings.phase_2_text }}</span>
+      <span class="cgb-form__phase-chevron" aria-hidden="true">
+        <svg viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L7 7L1 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <span class="cgb-form__phase">{{ section.settings.phase_3_text }}</span>
+    </div>
+
+    {%- if section.settings.legacy_card_visible -%}
+    <div class="cgb-form__card">
+      {%- assign cgb_form_dom_id = 'CommercialGymBuildoutsForm-' | append: section.id -%}
+      {%- form 'contact', id: cgb_form_dom_id, class: 'cgb-form__form' -%}
+        {%- comment -%}
+          Accepted-submission hook: reflects the real, server-confirmed
+          form.posted_successfully? state on every render of this page,
+          including the redirect Shopify performs back to this page after
+          a POST to /contact. The AJAX handler below parses the response
+          HTML for this exact marker to decide loading -> success vs error;
+          it never treats a resolved fetch or absence of a thrown JS error
+          as acceptance on its own.
+        {%- endcomment -%}
+        <input type="hidden" data-cgb-form-posted value="{{ form.posted_successfully? }}">
+
+        <div class="cgb-form__progress-row">
+          <p class="cgb-form__step-label" data-cgb-step-label>Step 1/2</p>
+          <div class="cgb-form__progress-track">
+            <div class="cgb-form__progress-fill" data-cgb-progress-fill></div>
+          </div>
+        </div>
+
+        <div class="cgb-form__banner" data-cgb-error-banner hidden>Check the highlighted fields and try again</div>
+
+        <div class="cgb-form__step" data-cgb-step="1">
+          <p class="cgb-form__step-heading">Tell us about your space</p>
+
+          <div class="cgb-field" data-cgb-field>
+            <label class="cgb-field__label" id="CGBFacilityTypeLabel-{{ section.id }}">Facility type <span class="cgb-field__required">*</span></label>
+            <div class="cgb-select" data-cgb-select>
+              <button type="button" class="cgb-field__input cgb-select__trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="CGBFacilityTypeLabel-{{ section.id }}" data-cgb-select-trigger>
+                <span class="cgb-select__value cgb-select__value--placeholder" data-cgb-select-value data-placeholder="Select your facility type">Select your facility type</span>
+                <svg class="cgb-select__chevron" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M1 1L7 7L13 1" stroke="#393940" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <ul class="cgb-select__list" role="listbox" hidden data-cgb-select-list>
+                <li class="cgb-select__option" role="option" data-value="Commercial Gyms &amp; Training Studios">Commercial Gyms &amp; Training Studios</li>
+                <li class="cgb-select__option" role="option" data-value="Apartments, HOAs &amp; Multifamily">Apartments, HOAs &amp; Multifamily</li>
+                <li class="cgb-select__option" role="option" data-value="Hotels &amp; Hospitality">Hotels &amp; Hospitality</li>
+                <li class="cgb-select__option" role="option" data-value="Schools &amp; Universities">Schools &amp; Universities</li>
+                <li class="cgb-select__option" role="option" data-value="Fire, Police &amp; Municipal">Fire, Police &amp; Municipal</li>
+                <li class="cgb-select__option" role="option" data-value="Corporate, Medical &amp; Senior Living">Corporate, Medical &amp; Senior Living</li>
+              </ul>
+              <input type="hidden" name="contact[facility_type]" data-cgb-required value="">
+            </div>
+            <p class="cgb-field__error" data-cgb-error>Select your facility type</p>
+          </div>
+
+          <div class="cgb-field" data-cgb-field>
+            <label class="cgb-field__label" for="CGBRoomSize-{{ section.id }}">Approximate room size <span class="cgb-field__required">*</span></label>
+            <input type="text" id="CGBRoomSize-{{ section.id }}" name="contact[room_size]" class="cgb-field__input" placeholder="Enter your approximate room size" data-cgb-required>
+            <p class="cgb-field__hint">Square footage or room dimensions, for example 1,200 sq ft or 40 x 30</p>
+            <p class="cgb-field__error" data-cgb-error>Enter your approximate room size</p>
+          </div>
+
+          <div class="cgb-field" data-cgb-field>
+            <label class="cgb-field__label" for="CGBDeliveryZip-{{ section.id }}">Delivery ZIP <span class="cgb-field__required">*</span></label>
+            <input type="text" id="CGBDeliveryZip-{{ section.id }}" name="contact[delivery_zip]" class="cgb-field__input" placeholder="Enter your delivery ZIP" inputmode="numeric" maxlength="5" data-cgb-required data-cgb-pattern="^\d{5}$">
+            <p class="cgb-field__error" data-cgb-error>Enter a valid 5-digit ZIP code</p>
+          </div>
+
+          <div class="cgb-field" data-cgb-field>
+            <label class="cgb-field__label" id="CGBTargetWindowLabel-{{ section.id }}">Target opening or completion <span class="cgb-field__required">*</span></label>
+            <div class="cgb-select" data-cgb-select>
+              <button type="button" class="cgb-field__input cgb-select__trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="CGBTargetWindowLabel-{{ section.id }}" data-cgb-select-trigger>
+                <span class="cgb-select__value cgb-select__value--placeholder" data-cgb-select-value data-placeholder="Select a target window">Select a target window</span>
+                <svg class="cgb-select__chevron" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M1 1L7 7L13 1" stroke="#393940" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <ul class="cgb-select__list" role="listbox" hidden data-cgb-select-list>
+                <li class="cgb-select__option" role="option" data-value="As soon as possible">As soon as possible</li>
+                <li class="cgb-select__option" role="option" data-value="1-3 months">1-3 months</li>
+                <li class="cgb-select__option" role="option" data-value="3-6 months">3-6 months</li>
+                <li class="cgb-select__option" role="option" data-value="6-12 months">6-12 months</li>
+                <li class="cgb-select__option" role="option" data-value="12+ months / just exploring">12+ months / just exploring</li>
+              </ul>
+              <input type="hidden" name="contact[target_window]" data-cgb-required value="">
+            </div>
+            <p class="cgb-field__error" data-cgb-error>Select a target window</p>
+          </div>
+
+          <button type="button" class="button button--primary cgb-form__continue" data-cgb-continue>{{ section.settings.continue_button_label }}</button>
+        </div>
+
+        <div class="cgb-form__step" data-cgb-step="2" hidden>
+          <p class="cgb-form__step-heading">Your project</p>
+
+          <div class="cgb-form__field-row">
+            <div class="cgb-field" data-cgb-field>
+              <label class="cgb-field__label" id="CGBCeilingHeightLabel-{{ section.id }}">Ceiling height <span class="cgb-field__required">*</span></label>
+              <div class="cgb-select" data-cgb-select>
+                <button type="button" class="cgb-field__input cgb-select__trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="CGBCeilingHeightLabel-{{ section.id }}" data-cgb-select-trigger>
+                  <span class="cgb-select__value cgb-select__value--placeholder" data-cgb-select-value data-placeholder="Select a ceiling height">Select a ceiling height</span>
+                  <svg class="cgb-select__chevron" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M1 1L7 7L13 1" stroke="#393940" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <ul class="cgb-select__list" role="listbox" hidden data-cgb-select-list>
+                  <li class="cgb-select__option" role="option" data-value="Under 9 ft">Under 9 ft</li>
+                  <li class="cgb-select__option" role="option" data-value="9-11 ft">9-11 ft</li>
+                  <li class="cgb-select__option" role="option" data-value="12-14 ft">12-14 ft</li>
+                  <li class="cgb-select__option" role="option" data-value="15-20 ft">15-20 ft</li>
+                  <li class="cgb-select__option" role="option" data-value="Over 20 ft">Over 20 ft</li>
+                </ul>
+                <input type="hidden" name="contact[ceiling_height]" data-cgb-required value="">
+              </div>
+              <p class="cgb-field__error" data-cgb-error>Select a ceiling height</p>
+            </div>
+
+            <div class="cgb-field" data-cgb-field>
+              <label class="cgb-field__label" id="CGBBudgetRangeLabel-{{ section.id }}">Budget range <span class="cgb-field__required">*</span></label>
+              <div class="cgb-select" data-cgb-select>
+                <button type="button" class="cgb-field__input cgb-select__trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="CGBBudgetRangeLabel-{{ section.id }}" data-cgb-select-trigger>
+                  <span class="cgb-select__value cgb-select__value--placeholder" data-cgb-select-value data-placeholder="Select a budget range">Select a budget range</span>
+                  <svg class="cgb-select__chevron" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M1 1L7 7L13 1" stroke="#393940" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <ul class="cgb-select__list" role="listbox" hidden data-cgb-select-list>
+                  <li class="cgb-select__option" role="option" data-value="Under $25,000">Under $25,000</li>
+                  <li class="cgb-select__option" role="option" data-value="$25,000-$50,000">$25,000-$50,000</li>
+                  <li class="cgb-select__option" role="option" data-value="$50,000-$100,000">$50,000-$100,000</li>
+                  <li class="cgb-select__option" role="option" data-value="$100,000-$250,000">$100,000-$250,000</li>
+                  <li class="cgb-select__option" role="option" data-value="$250,000+">$250,000+</li>
+                </ul>
+                <input type="hidden" name="contact[budget_range]" data-cgb-required value="">
+              </div>
+              <p class="cgb-field__error" data-cgb-error>Select a budget range</p>
+            </div>
+          </div>
+
+          <div class="cgb-field" data-cgb-field>
+            <label class="cgb-field__label" id="CGBConditionPreferenceLabel-{{ section.id }}">Equipment condition preference <span class="cgb-field__required">*</span></label>
+            <div class="cgb-select" data-cgb-select>
+              <button type="button" class="cgb-field__input cgb-select__trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="CGBConditionPreferenceLabel-{{ section.id }}" data-cgb-select-trigger>
+                <span class="cgb-select__value cgb-select__value--placeholder" data-cgb-select-value data-placeholder="Select a condition preference">Select a condition preference</span>
+                <svg class="cgb-select__chevron" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M1 1L7 7L13 1" stroke="#393940" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <ul class="cgb-select__list" role="listbox" hidden data-cgb-select-list>
+                <li class="cgb-select__option" role="option" data-value="New">New</li>
+                <li class="cgb-select__option" role="option" data-value="Remanufactured">Remanufactured</li>
+                <li class="cgb-select__option" role="option" data-value="Mixed">Mixed</li>
+                <li class="cgb-select__option" role="option" data-value="Not sure yet">Not sure yet</li>
+              </ul>
+              <input type="hidden" name="contact[condition_preference]" data-cgb-required value="">
+            </div>
+            <p class="cgb-field__error" data-cgb-error>Select a condition preference</p>
+          </div>
+
+          <div class="cgb-field" data-cgb-field>
+            <p class="cgb-field__label">Equipment zones needed <span class="cgb-field__required">*</span></p>
+            <div class="cgb-tags" data-cgb-tag-group data-cgb-required>
+              <input type="hidden" name="contact[equipment_zones]" data-cgb-tag-value value="">
+              <button type="button" class="cgb-tag" aria-pressed="false" data-value="Cardio">Cardio</button>
+              <button type="button" class="cgb-tag" aria-pressed="false" data-value="Selectorized and plate-loaded strength">Selectorized and plate-loaded strength</button>
+              <button type="button" class="cgb-tag" aria-pressed="false" data-value="Functional trainers, racks and rigs">Functional trainers, racks and rigs</button>
+              <button type="button" class="cgb-tag" aria-pressed="false" data-value="Free weights and benches">Free weights and benches</button>
+              <button type="button" class="cgb-tag" aria-pressed="false" data-value="Flooring, storage and accessories">Flooring, storage and accessories</button>
+            </div>
+            <p class="cgb-field__hint">Select all that apply</p>
+            <p class="cgb-field__error" data-cgb-error>Select all that apply</p>
+          </div>
+
+          <div class="cgb-field" data-cgb-field>
+            <label class="cgb-field__label" id="CGBDeliveryInstallLabel-{{ section.id }}">Delivery, assembly or installation <span class="cgb-field__required">*</span></label>
+            <div class="cgb-select" data-cgb-select>
+              <button type="button" class="cgb-field__input cgb-select__trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="CGBDeliveryInstallLabel-{{ section.id }}" data-cgb-select-trigger>
+                <span class="cgb-select__value cgb-select__value--placeholder" data-cgb-select-value data-placeholder="Select an option">Select an option</span>
+                <svg class="cgb-select__chevron" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M1 1L7 7L13 1" stroke="#393940" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <ul class="cgb-select__list" role="listbox" hidden data-cgb-select-list>
+                <li class="cgb-select__option" role="option" data-value="Delivery only">Delivery only</li>
+                <li class="cgb-select__option" role="option" data-value="Delivery and assembly">Delivery and assembly</li>
+                <li class="cgb-select__option" role="option" data-value="Delivery, assembly and installation">Delivery, assembly and installation</li>
+                <li class="cgb-select__option" role="option" data-value="Not needed">Not needed</li>
+              </ul>
+              <input type="hidden" name="contact[delivery_install]" data-cgb-required value="">
+            </div>
+            <p class="cgb-field__error" data-cgb-error>Select an option</p>
+          </div>
+
+          <div class="cgb-field">
+            <label class="cgb-field__label" for="CGBFloorPlan-{{ section.id }}">Floor plan or photos <span class="cgb-field__optional">(optional)</span></label>
+            <input type="text" id="CGBFloorPlan-{{ section.id }}" name="contact[floor_plan_link]" class="cgb-field__input" placeholder="Paste a link to your floor plan or photos">
+          </div>
+
+          <div class="cgb-field">
+            <label class="cgb-field__label" for="CGBNotes-{{ section.id }}">Notes <span class="cgb-field__optional">(optional)</span></label>
+            <textarea id="CGBNotes-{{ section.id }}" name="contact[notes]" class="cgb-field__input cgb-field__textarea" placeholder="Add a notes" maxlength="1200"></textarea>
+            <p class="cgb-field__hint">Anything else that would help us plan the room</p>
+          </div>
+
+          <p class="cgb-form__step-heading cgb-form__step-heading--spaced">Your contact details</p>
+
+          <div class="cgb-field" data-cgb-field>
+            <label class="cgb-field__label" for="CGBFullName-{{ section.id }}">Full name <span class="cgb-field__required">*</span></label>
+            <input type="text" id="CGBFullName-{{ section.id }}" name="contact[name]" class="cgb-field__input" placeholder="Enter your full name" data-cgb-required>
+            <p class="cgb-field__error" data-cgb-error>Enter your full name</p>
+          </div>
+
+          <div class="cgb-field" data-cgb-field>
+            <label class="cgb-field__label" for="CGBOrganization-{{ section.id }}">Organization <span class="cgb-field__required">*</span></label>
+            <input type="text" id="CGBOrganization-{{ section.id }}" name="contact[organization]" class="cgb-field__input" placeholder="Enter your organization" data-cgb-required>
+            <p class="cgb-field__error" data-cgb-error>Enter your organization</p>
+          </div>
+
+          <div class="cgb-form__field-row">
+            <div class="cgb-field" data-cgb-field>
+              <label class="cgb-field__label" for="CGBPhone-{{ section.id }}">Phone <span class="cgb-field__required">*</span></label>
+              <input type="tel" id="CGBPhone-{{ section.id }}" name="contact[phone]" class="cgb-field__input" placeholder="(925) 555-0100" data-cgb-required data-cgb-pattern="^[0-9()\-\s+]{7,}$">
+              <p class="cgb-field__error" data-cgb-error>Enter a valid phone number</p>
+            </div>
+
+            <div class="cgb-field" data-cgb-field>
+              <label class="cgb-field__label" for="CGBEmail-{{ section.id }}">Email <span class="cgb-field__required">*</span></label>
+              <input type="email" id="CGBEmail-{{ section.id }}" name="contact[email]" class="cgb-field__input" placeholder="your@gmail.com" data-cgb-required data-cgb-pattern="^[^\s@]+@[^\s@]+\.[^\s@]{2,}$">
+              <p class="cgb-field__error" data-cgb-error>Enter a valid email address</p>
+            </div>
+          </div>
+
+          <div class="cgb-field" data-cgb-field>
+            <p class="cgb-field__label">Preferred contact method <span class="cgb-field__required">*</span></p>
+            <div class="cgb-tags" data-cgb-tag-group data-cgb-tag-mode="single" data-cgb-required>
+              <input type="hidden" name="contact[preferred_contact_method]" data-cgb-tag-value value="">
+              <button type="button" class="cgb-tag" aria-pressed="false" data-value="Phone">Phone</button>
+              <button type="button" class="cgb-tag" aria-pressed="false" data-value="Email">Email</button>
+            </div>
+            <p class="cgb-field__error" data-cgb-error>Select a contact method</p>
+          </div>
+
+          <p class="cgb-form__disclaimer">
+            We use your details to prepare your quote and to contact you about this request.
+            {%- if shop.policies.privacy_policy.url != blank %}
+              See our <a href="{{ shop.policies.privacy_policy.url }}">Privacy Policy</a>.
+            {%- else %}
+              See our Privacy Policy.
+            {%- endif %}
+          </p>
+
+          <div class="cgb-form__buttons-row">
+            <button type="button" class="button cgb-form__back" data-cgb-back>Back</button>
+            <button type="button" class="button button--primary" data-cgb-submit disabled title="Submission is disabled until wiring is fully reviewed and approved">Request My Layout &amp; Quote</button>
+          </div>
+        </div>
+
+        <div class="cgb-form__status" data-cgb-status="loading" hidden>
+          <div class="cgb-form__status-icon">
+            <svg class="cgb-form__status-spinner" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" stroke="#fce6de" stroke-width="3"/>
+              <path d="M22 12a10 10 0 0 0-10-10" stroke="#f1592a" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <p class="cgb-form__status-heading">Sending your request</p>
+          <p class="cgb-form__status-text">You receive a tailored quote to review by your preferred contact method.</p>
+          <button type="button" class="button button--primary cgb-form__status-action" disabled>Request My Layout &amp; Quote</button>
+        </div>
+
+        <div class="cgb-form__status" data-cgb-status="error" hidden>
+          <div class="cgb-form__status-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" fill="#e9380d"/>
+              <rect x="11" y="6" width="2" height="8" rx="1" fill="#ffffff"/>
+              <circle cx="12" cy="16.5" r="1.25" fill="#ffffff"/>
+            </svg>
+          </div>
+          <p class="cgb-form__status-heading">That did not send</p>
+          <p class="cgb-form__status-text">Something went wrong on our end. Try again, or call +1-925-215-2927 and we will take the details over the phone.</p>
+          <button type="button" class="button button--primary cgb-form__status-action" data-cgb-try-again>Try again</button>
+        </div>
+
+        <div class="cgb-form__status" data-cgb-status="success" hidden>
+          <div class="cgb-form__status-icon">
+            <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="26" cy="26" r="24" fill="none" stroke="#28a745" stroke-width="3"/>
+              <path fill="none" stroke="#28a745" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14 27l7 7 16-16"/>
+            </svg>
+          </div>
+          <p class="cgb-form__status-heading">Your request is in</p>
+          <p class="cgb-form__status-text">A Fitness Superstore gym specialist will review your room details and follow up to discuss your equipment mix, conceptual placement and a tailored quote. If you would like to talk sooner, call +1-925-215-2927.</p>
+        </div>
+
+        {%- if request.design_mode -%}
+          <div class="cgb-form__status-preview">
+            <button type="button" data-cgb-preview="1">Preview: Step 1</button>
+            <button type="button" data-cgb-preview="2">Preview: Step 2</button>
+            <button type="button" data-cgb-preview="loading">Preview: Loading</button>
+            <button type="button" data-cgb-preview="error">Preview: Error</button>
+            <button type="button" data-cgb-preview="success">Preview: Success</button>
+          </div>
+        {%- endif -%}
+      {%- endform -%}
+    </div>
+    {%- endif -%}
+
+    {%- comment -%}
+      MIGRATION SCAFFOLDING - Powerful Form Builder form 164478 (data-id "MTY0NDc4"),
+      embedded per the theme's existing convention (sections/contact-form.liquid:76,
+      request-form.liquid:28, address-section.liquid:26). Renders as a sibling of the
+      legacy card above, and deliberately outside the Shopify form tag since nested
+      forms are invalid HTML.
+      The legacy card remains the source of truth and is untouched; this block and the
+      two toggles in the schema are migration scaffolding, not its retirement.
+      See CGB-Form-Migration-Runbook.md.
+    {%- endcomment -%}
+    {%- if section.settings.pfb_enabled -%}
+      <div class="cgb-pfb" data-cgb-pfb-form-id="164478">
+        <div class="globo-formbuilder" data-id="MTY0NDc4"></div>
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+<script>
+(function () {
+  /* --------------------------------------------------------------------------
+     Commercial Gym Buildouts - lead measurement.
+
+     Fires the two locked events for an accepted submission of Powerful Form
+     Builder form 164478. The acceptance signal, how it was verified and the
+     failure paths it was tested against are documented in
+     cgb-form-hook-documentation.md - read that before changing anything here.
+
+     No form field values are read or emitted anywhere in this block, per the
+     locked no-PII measurement contract.
+  -------------------------------------------------------------------------- */
+
+  var PROVIDER = 'powerful_form_builder';
+  var PROVIDER_FORM_ID = '164478';
+  var SECTION_FORM_ID = 'commercial_gym_buildouts_form';
+  var ATTRIBUTION_STORAGE_KEY = 'cgbAttribution';
+  var ATTRIBUTION_KEYS = [
+    'utm_source',
+    'utm_medium',
+    'utm_campaign',
+    'utm_content',
+    'utm_term',
+    'oppref'
+  ];
+
+  // Capture on arrival, not at fire time. Reading location.search when the
+  // event fires loses attribution for anyone who lands on a campaign URL and
+  // then navigates within the site before submitting. Persisted for the
+  // session so it survives that navigation.
+  //
+  // Scope limit, deliberate: this script only runs on this page, so a visitor
+  // who arrives on a campaign URL elsewhere on the site and reaches this page
+  // by navigation is not captured. Covering that needs a theme-wide snippet in
+  // layout/theme.liquid, which would widen the page-scoped footprint this PR
+  // was reviewed as having. Flagged rather than assumed.
+  function captureAttribution() {
+    var params;
+
+    try {
+      params = new URLSearchParams(window.location.search);
+    } catch (e) {
+      return;
+    }
+
+    var found = {};
+    var any = false;
+
+    ATTRIBUTION_KEYS.forEach(function (key) {
+      var value = params.get(key);
+      if (value) {
+        found[key] = value;
+        any = true;
+      }
+    });
+
+    // Only overwrite when this arrival actually carries parameters, so an
+    // ordinary param-less pageview cannot wipe a campaign touch.
+    if (!any) return;
+
+    try {
+      window.sessionStorage.setItem(ATTRIBUTION_STORAGE_KEY, JSON.stringify(found));
+    } catch (e) {}
+  }
+
+  function readAttribution() {
+    try {
+      var raw = window.sessionStorage.getItem(ATTRIBUTION_STORAGE_KEY);
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') return parsed;
+      }
+    } catch (e) {}
+
+    return {};
+  }
+
+  captureAttribution();
+
+  // Reads Shopify's native Customer Privacy API only. Vladimir confirmed on
+  // 2026-09-17 that this store's consent banner runs on that native API and
+  // not on a third-party cookie-banner app, so there is nothing else to
+  // integrate with and this is the whole consent source, not a stopgap.
+  // The 'unavailable' return below is a defensive branch for the API being
+  // absent - it is no longer a placeholder waiting on that answer.
+  function getConsentState() {
+    try {
+      if (window.Shopify && window.Shopify.customerPrivacy &&
+          typeof window.Shopify.customerPrivacy.currentVisitorConsent === 'function') {
+        var consent = window.Shopify.customerPrivacy.currentVisitorConsent();
+        return {
+          marketing: !!consent.marketing,
+          analytics: !!consent.analytics,
+          preferences: !!consent.preferences,
+          sale_of_data: !!consent.sale_of_data
+        };
+      }
+    } catch (e) {}
+
+    return 'unavailable';
+  }
+
+  // Fallback id for the legacy card only - see the note in fireLeadEvents.
+  function makeEventId() {
+    if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+    return 'cgb-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+  }
+
+  // Routing, per Vladimir's answer (2026-09-17): both events publish to
+  // Shopify Customer Events through the Web Pixels API, which is where his
+  // server-side "GTM & dataLayer" Customer Events pixel subscribes.
+  //
+  // A plain dataLayer.push from inline theme JS is NOT a substitute - it
+  // never crosses into the Customer Events pixel sandbox, so nothing there
+  // would ever see it. It is deliberately NOT kept as a fallback either:
+  // this page already carries a client-side GTM container that reads
+  // window.dataLayer (it stamped gtm.uniqueEventId onto our pushes while
+  // dataLayer was the transport), so pushing there as well would expose
+  // these events to a second, client-side firing path that nobody has
+  // approved - and would double-count against the server-side pixel if a
+  // tag were ever bound to either event name.
+  //
+  // Stape Conversion Tracking is cancelled and is not a target here.
+  //
+  // This remains the only transport in the file. Do not inline one at any
+  // other call site, and do not reintroduce a dataLayer push.
+  function routeEvent(eventName, payload) {
+    try {
+      if (window.Shopify && window.Shopify.analytics &&
+          typeof window.Shopify.analytics.publish === 'function') {
+        window.Shopify.analytics.publish(eventName, payload);
+        return;
+      }
+    } catch (e) {}
+
+    // Should be unreachable: Shopify.analytics is injected by
+    // content_for_header on every storefront page, and it keeps its own
+    // replayQueue, so a publish made before the pixel manager initialises is
+    // replayed rather than lost. Surfaced rather than silently swallowed,
+    // because the alternative is an accepted lead going unrecorded with no
+    // trace of why.
+    if (window.console && typeof window.console.warn === 'function') {
+      window.console.warn(
+        '[CGB] Shopify.analytics.publish unavailable; lead event not delivered:',
+        eventName
+      );
+    }
+  }
+
+  // Called only once acceptance has been confirmed by the provider hook below
+  // - never on click, on validation passing, on a loading state, on a timeout,
+  // or on a rejected or errored response.
+  function fireLeadEvents(submissionId) {
+    // Deduped on the provider's own submission id, not on a per-pageview flag.
+    // That matters in both directions: the form resets to step 1 after a
+    // successful submit, so a genuine second lead in the same pageview must
+    // still fire, while a refresh or back-navigation must not re-fire the
+    // first one.
+    var dedupeKey = 'cgbLeadFired:' + PROVIDER_FORM_ID + ':' + submissionId;
+
+    try {
+      if (window.sessionStorage && window.sessionStorage.getItem(dedupeKey)) return;
+    } catch (e) {}
+
+    var basePayload = Object.assign({
+      provider: PROVIDER,
+      provider_submission_id: submissionId,
+      provider_form_id: PROVIDER_FORM_ID,
+      form_id: SECTION_FORM_ID,
+      page_path: window.location.pathname,
+      event_timestamp: new Date().toISOString(),
+      consent_state: getConsentState()
+    }, readAttribution());
+
+    routeEvent('lead_created', basePayload);
+    routeEvent('fss_commercial_buildout_lead_success', basePayload);
+
+    try {
+      if (window.sessionStorage) window.sessionStorage.setItem(dedupeKey, '1');
+    } catch (e) {}
+  }
+
+  // The accepted-submission hook. The app dispatches this inside its own
+  // if ("true" == f.success) branch, which is reachable only after the submit
+  // fetch resolved with response.ok - two independent server conditions.
+  // Verified against the shipped bundle and seven executed scenarios,
+  // including a 200 whose body said success:"false", which correctly did not
+  // fire. Confirmed by Globo support on 2026-09-18.
+  document.addEventListener('globo.formbuilder.form.submitted', function (e) {
+    var detail = e && e.detail;
+    if (!detail) return;
+
+    // The listener is on document and this theme registers seven Globo forms,
+    // so without this guard a submission on any other one would fire a
+    // Commercial Gym Buildouts conversion. formId is the numeric id as a
+    // string: the app rewrites the section's base64 data-id ("MTY0NDc4") to
+    // 164478 when it renders the form, so comparing against the base64 value
+    // would silently never match.
+    if (String(detail.formId) !== PROVIDER_FORM_ID) return;
+
+    // Re-assert the response shape rather than trusting the dispatch
+    // condition. Globo confirmed the mechanism but stated plainly that it is
+    // undocumented, so an app update could change when this fires with no
+    // notice. This check is what keeps that from becoming a false conversion.
+    var responses = Array.isArray(detail.response) ? detail.response : [detail.response];
+    var result = null;
+
+    for (var i = 0; i < responses.length; i++) {
+      var candidate = responses[i];
+      if (candidate && typeof candidate === 'object' && 'success' in candidate) {
+        result = candidate;
+        break;
+      }
+    }
+
+    // success is the string "true", not a boolean - the app itself tests it
+    // with a loose comparison.
+    if (!result || String(result.success) !== 'true' || !result.id) return;
+
+    fireLeadEvents(String(result.id));
+  });
+
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var root = document.getElementById('shopify-section-{{ section.id }}');
+    if (!root) return;
+
+    var form = root.querySelector('.cgb-form__form');
+    var banner = root.querySelector('[data-cgb-error-banner]');
+    var stepLabel = root.querySelector('[data-cgb-step-label]');
+    var progressFill = root.querySelector('[data-cgb-progress-fill]');
+    var step1 = root.querySelector('[data-cgb-step="1"]');
+    var step2 = root.querySelector('[data-cgb-step="2"]');
+    var continueBtn = root.querySelector('[data-cgb-continue]');
+    var backBtn = root.querySelector('[data-cgb-back]');
+    var submitBtn = root.querySelector('[data-cgb-submit]');
+    var progressRow = root.querySelector('.cgb-form__progress-row');
+    var statusPanels = root.querySelectorAll('[data-cgb-status]');
+    var tryAgainBtn = root.querySelector('[data-cgb-try-again]');
+
+    // The legacy card is gated off by default (legacy_card_visible), and when
+    // it is not rendered every lookup above returns null. Everything below
+    // wires that card's own controls, so it must not run. Without this the
+    // script threw "Cannot read properties of null" at the first
+    // addEventListener and aborted, taking the rest of the block with it.
+    if (!form || !continueBtn || !backBtn || !submitBtn) return;
+
+    function showPanel(name) {
+      step1.hidden = name !== '1';
+      step2.hidden = name !== '2';
+      progressRow.hidden = name === 'loading' || name === 'error' || name === 'success';
+      banner.hidden = true;
+
+      statusPanels.forEach(function (panel) {
+        panel.hidden = panel.getAttribute('data-cgb-status') !== name;
+      });
+    }
+
+    function validateField(field) {
+      var input = field.querySelector('[data-cgb-required]');
+      if (!input) return true;
+
+      var valid;
+
+      if (input.hasAttribute('data-cgb-tag-group')) {
+        valid = !!input.querySelector('.cgb-tag[aria-pressed="true"]');
+      } else {
+        var value = input.value.trim();
+        valid = value !== '';
+
+        var pattern = input.getAttribute('data-cgb-pattern');
+        if (valid && pattern) {
+          valid = new RegExp(pattern).test(value);
+        }
+      }
+
+      field.classList.toggle('cgb-field--error', !valid);
+      return valid;
+    }
+
+    function validateStep(step) {
+      var fields = step.querySelectorAll('[data-cgb-field]');
+      var allValid = true;
+
+      fields.forEach(function (field) {
+        if (!validateField(field)) {
+          allValid = false;
+        }
+      });
+
+      banner.hidden = allValid;
+      return allValid;
+    }
+
+    function syncTagValue(group) {
+      var valueInput = group.querySelector('[data-cgb-tag-value]');
+      if (!valueInput) return;
+
+      var selected = [];
+      group.querySelectorAll('.cgb-tag[aria-pressed="true"]').forEach(function (t) {
+        selected.push(t.getAttribute('data-value'));
+      });
+
+      valueInput.value = selected.join(', ');
+    }
+
+    function setSelectOpen(select, isOpen) {
+      var list = select.querySelector('[data-cgb-select-list]');
+      var trigger = select.querySelector('[data-cgb-select-trigger]');
+      list.hidden = !isOpen;
+      trigger.setAttribute('aria-expanded', String(isOpen));
+      select.classList.toggle('cgb-select--open', isOpen);
+    }
+
+    function closeAllSelects(except) {
+      root.querySelectorAll('[data-cgb-select]').forEach(function (sel) {
+        if (sel !== except) setSelectOpen(sel, false);
+      });
+    }
+
+    root.querySelectorAll('[data-cgb-select]').forEach(function (select) {
+      var trigger = select.querySelector('[data-cgb-select-trigger]');
+      var list = select.querySelector('[data-cgb-select-list]');
+      var valueEl = select.querySelector('[data-cgb-select-value]');
+      var hiddenInput = select.querySelector('[data-cgb-required]');
+      var field = select.closest('[data-cgb-field]');
+
+      trigger.addEventListener('click', function () {
+        var willOpen = list.hidden;
+        closeAllSelects(select);
+        setSelectOpen(select, willOpen);
+      });
+
+      list.querySelectorAll('[data-value]').forEach(function (option) {
+        option.addEventListener('click', function () {
+          var value = option.getAttribute('data-value');
+          hiddenInput.value = value;
+          valueEl.textContent = value || valueEl.getAttribute('data-placeholder');
+          valueEl.classList.toggle('cgb-select__value--placeholder', value === '');
+          setSelectOpen(select, false);
+          if (field) field.classList.remove('cgb-field--error');
+        });
+      });
+    });
+
+    document.addEventListener('click', function (e) {
+      root.querySelectorAll('[data-cgb-select]').forEach(function (sel) {
+        if (!sel.contains(e.target)) setSelectOpen(sel, false);
+      });
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeAllSelects(null);
+    });
+
+    root.querySelectorAll('.cgb-tag').forEach(function (tag) {
+      tag.addEventListener('click', function () {
+        var group = tag.closest('[data-cgb-tag-group]');
+        var isSingle = group.getAttribute('data-cgb-tag-mode') === 'single';
+
+        if (isSingle) {
+          group.querySelectorAll('.cgb-tag').forEach(function (t) {
+            t.setAttribute('aria-pressed', 'false');
+          });
+          tag.setAttribute('aria-pressed', 'true');
+        } else {
+          var pressed = tag.getAttribute('aria-pressed') === 'true';
+          tag.setAttribute('aria-pressed', pressed ? 'false' : 'true');
+        }
+
+        syncTagValue(group);
+      });
+    });
+
+    continueBtn.addEventListener('click', function () {
+      if (!validateStep(step1)) return;
+
+      showPanel('2');
+      stepLabel.textContent = 'Step 2/2';
+      progressFill.style.width = '100%';
+    });
+
+    backBtn.addEventListener('click', function () {
+      showPanel('1');
+      stepLabel.textContent = 'Step 1/2';
+      progressFill.style.width = '50%';
+    });
+
+    submitBtn.addEventListener('click', function () {
+      if (submitBtn.disabled) return;
+      if (!validateStep(step2)) return;
+
+      showPanel('loading');
+
+      var eventId = makeEventId();
+      var formData = new FormData(form);
+
+      fetch(form.getAttribute('action') || window.location.pathname, {
+        method: 'POST',
+        credentials: 'same-origin',
+        body: formData
+      })
+        .then(function (response) {
+          return response.text();
+        })
+        .then(function (html) {
+          var parsed = new DOMParser().parseFromString(html, 'text/html');
+          var marker = parsed.querySelector('[data-cgb-form-posted]');
+          var accepted = !!marker && marker.getAttribute('value') === 'true';
+
+          if (accepted) {
+            fireLeadEvents(eventId);
+            showPanel('success');
+          } else {
+            showPanel('error');
+          }
+        })
+        .catch(function () {
+          showPanel('error');
+        });
+    });
+
+    if (tryAgainBtn) {
+      tryAgainBtn.addEventListener('click', function () {
+        showPanel('2');
+        stepLabel.textContent = 'Step 2/2';
+        progressFill.style.width = '100%';
+      });
+    }
+
+    root.querySelectorAll('[data-cgb-preview]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var target = btn.getAttribute('data-cgb-preview');
+        showPanel(target);
+        if (target === '1' || target === '2') {
+          stepLabel.textContent = target === '1' ? 'Step 1/2' : 'Step 2/2';
+          progressFill.style.width = target === '1' ? '50%' : '100%';
+        }
+      });
+    });
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "CGB Form",
+  "class": "section",
+  "tag": "section",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg",
+      "label": "Background color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "default": "Request Your Gym Layout & Quote",
+      "label": "Heading"
+    },
+    {
+      "type": "richtext",
+      "id": "subheading",
+      "default": "<p>Two short steps. The more you share about the room, the more useful the quote.</p>",
+      "label": "Subheading"
+    },
+    {
+      "type": "text",
+      "id": "phase_1_text",
+      "default": "Share your room, budget and timing",
+      "label": "Phase 1 text"
+    },
+    {
+      "type": "text",
+      "id": "phase_2_text",
+      "default": "We build an equipment mix and layout concept",
+      "label": "Phase 2 text"
+    },
+    {
+      "type": "text",
+      "id": "phase_3_text",
+      "default": "You receive a tailored quote to review",
+      "label": "Phase 3 text"
+    },
+    {
+      "type": "text",
+      "id": "continue_button_label",
+      "default": "Continue",
+      "label": "Continue button label"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "section_padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "section_padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 80
+    },
+    {
+      "type": "header",
+      "content": "Form migration"
+    },
+    {
+      "type": "checkbox",
+      "id": "pfb_enabled",
+      "label": "Show new form (PFB)",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "legacy_card_visible",
+      "label": "Show legacy form",
+      "info": "Kept as the rollback path until the PFB form is signed off. Retires at Phase 8.",
+      "default": false
+    }
+  ],
+  "presets": [
+    {
+      "name": "CGB Form"
+    }
+  ]
+}
+{% endschema %}

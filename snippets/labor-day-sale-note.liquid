@@ -1,3 +1,20 @@
+{% doc %}
+  Route September products to one campaign card; otherwise retain Labor Day.
+  @param {product} product - Current product.
+  @param {string} [section_id] - Section identifier used by variant refresh.
+  @param {boolean} [hide_on_mobile] - Hide the desktop-layout copy on mobile.
+{% enddoc %}
+{%- comment -%}
+  Separate September campaign extension. Keep the original Labor Day body below
+  intact when integrating other pricing changes; September does not depend on
+  the permanent-price cleanup. The capture marker selects one card only.
+{%- endcomment -%}
+{%- capture september_campaign_markup -%}
+  {%- render 'september-overstock-sale-note', product: product, section_id: section_id, hide_on_mobile: hide_on_mobile -%}
+{%- endcapture -%}
+{%- if september_campaign_markup contains 'data-september-overstock-2026' -%}
+  {{- september_campaign_markup -}}
+{%- else -%}
 {% comment %}
   snippets/labor-day-sale-note.liquid
 
@@ -134,4 +151,6 @@
       </p>
     </div>
   </div>
+{%- endif -%}
+
 {%- endif -%}

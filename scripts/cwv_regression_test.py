@@ -33,8 +33,34 @@ require(theme, "function waitForGorgiasLoaded(timeoutMs)", 'layout/theme.liquid'
 require(theme, "window.clearTimeout(timer);", 'layout/theme.liquid')
 require(theme, "}, { once: true });", 'layout/theme.liquid')
 
-# 4) Product page should preload featured media for better LCP.
-require(head_meta, "{% if template contains 'product' and product and product.featured_media %}", 'snippets/head-meta.liquid')
+# 4) Product page should preload its LCP image.
+# #812 split this into two branches: bounded PDP templates (combined-listings,
+# variants, variants-pulley, gift_cards) preload product.media.first at two
+# breakpoints, everything else preloads product.featured_media.
+# Assert markup unique to each preload <link>, not just the branch conditions --
+# a condition can survive while its <link> is deleted, and the outer guard string
+# also appears in the canonical-link block further down the file.
+require(head_meta, '{% assign initial_media = product.media.first %}', 'snippets/head-meta.liquid')
+# bounded-template preloads, mobile then desktop
+require(head_meta, 'imagesizes="(max-width: 768px) 100vw, 800px"', 'snippets/head-meta.liquid')
+require(
+    head_meta,
+    'imagesizes="(min-width: 1290px) 580px, (min-width: 990px) calc(100vw - 710px), 100vw"',
+    'snippets/head-meta.liquid',
+)
+# featured-media preload
+require(head_meta, '{% elsif product.featured_media %}', 'snippets/head-meta.liquid')
+require(
+    head_meta,
+    'href="{{ product.featured_media.preview_image | image_url: width: 1440 }}"',
+    'snippets/head-meta.liquid',
+)
+require(
+    head_meta,
+    'imagesizes="(min-width: 1200px) 34vw, (min-width: 990px) 38vw, 100vw"',
+    'snippets/head-meta.liquid',
+)
+# every preload above must keep LCP priority
 require(head_meta, 'fetchpriority="high"', 'snippets/head-meta.liquid')
 
 # 5) jQuery should not be render-blocking.
@@ -85,5 +111,50 @@ for f in [
 ]:
     if Path(f).exists():
         raise AssertionError(f"Expected removed file still exists: {f}")
+
+# ---------------------------------------------------------------------------
+# 13) Phase 1 - PageSpeed/Lighthouse cloaking must stay removed.
+#
+# snippets/optimization.liquid detected Lighthouse/PSI's test environment and
+# stripped scripts, CSS and images for test tools only, so lab scores measured
+# a page real users never got. Never reintroduce it in any form.
+# ---------------------------------------------------------------------------
+if Path('snippets/optimization.liquid').exists():
+    raise AssertionError('snippets/optimization.liquid was reintroduced (PSI cloaking)')
+
+for text, context in [(theme, 'layout/theme.liquid'), (head_meta, 'snippets/head-meta.liquid')]:
+    forbid(text, "render 'optimization'", context)
+    for marker in ['Chrome-Lighthouse', 'Page Speed Insights', '__isPSA', '___mnag',
+                   'asyncLazyLoad', 'text/lazyload']:
+        forbid(text, marker, context)
+
+# The deferred vendor injector must not branch on user agent at all.
+forbid(theme, 'navigator.userAgent', 'layout/theme.liquid')
+
+# 14) Phase 1 - the Judge.me badge poller must terminate.
+require(theme, 'clearInterval(timer)', 'layout/theme.liquid')
+
+# 15) Phase 1 - Convert's official tag gets a preconnect.
+require(theme, '<link rel="preconnect" href="https://cdn-4.convertexperiments.com" crossorigin>',
+        'layout/theme.liquid')
+
+# 16) Gorgias Convert removal is permanent; Convert.com A/B testing remains.
+#
+# The cdn.9gtb.com bundle loader was installed by a former contractor and was
+# removed after the 2026-09-06 Gorgias Convert audit: zero active campaigns,
+# Convert billing INACTIVE, and the campaign bundle never fully installed. It
+# was shipping to every customer and doing nothing. This is a settled removal,
+# not a deferral -- if Gorgias Convert is ever deliberately adopted, revisit
+# this guard as part of that new implementation.
+forbid(theme, '9gtb.com', 'layout/theme.liquid')
+forbid(theme, 'convert-bundle-loader', 'layout/theme.liquid')
+require(theme, 'cdn-4.convertexperiments.com/v1/js/', 'layout/theme.liquid')
+
+# 17) Phase 2 - Heatmap.com is interaction/load deferred, not eager.
+require(script_tags, 'function loadHeatmap()', 'snippets/script-tags.liquid')
+require(script_tags, "window.addEventListener(evt, loadHeatmap, { once: true, passive: true });",
+        'snippets/script-tags.liquid')
+forbid(script_tags, '<script>/* >> Heatmap.com :: Snippet << */(function (h,e,a,t,m,ap)',
+       'snippets/script-tags.liquid')
 
 print('CWV regression checks passed.')
