@@ -54,6 +54,8 @@ REMOVE_FROM_FEEDS = "remove_from_feeds_tag"
 OPTION_CARRIER_PRODUCT_IDS = {
     # French Fitness Aluminum Pulley Upgrade (New) - 124 option variants
     "gid://shopify/Product/10278798000444",
+    # Body-Solid Aluminum Pulley Upgrade - 11 option variants (BSLDGAP*)
+    "gid://shopify/Product/10279695679804",
     # Aluminum Pulley Upgrade - Accessories / Add Ons (484) - 105 option variants
     "gid://shopify/Product/9939989037372",
 }
