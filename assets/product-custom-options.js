@@ -970,7 +970,11 @@ if (!customElements.get('product-customization-options')) {
       renderNgsDue(ngsDeferred, ngsQuoteRequired) {
         const blocks = document.querySelectorAll('[data-ngs-due-line]');
         const amount0 = Number(ngsDeferred) || 0;
-        this.setBilledTodayLabels(amount0 > 0 || ngsQuoteRequired);
+        // Kept for priceHelper, which adds it to the Fitness Superstore total to
+        // produce the full purchase amount Tim asked to see alongside the two parts.
+        this.ngsDeferredAmount = amount0;
+        this.ngsHasService = amount0 > 0 || ngsQuoteRequired;
+        this.setBilledTodayLabels(this.ngsHasService);
         if (blocks.length === 0) return;
         const amount = Number(ngsDeferred) || 0;
         const show = amount > 0 || ngsQuoteRequired;
@@ -1015,6 +1019,29 @@ if (!customElements.get('product-customization-options')) {
         });
 
         this.renderOptionsAddedTotal(priceAdjustment);
+        this.renderPurchaseTotal(finalPrice);
+      }
+
+      // Total amount for the purchase: what Fitness Superstore charges today
+      // plus what National Gym Service will bill. Shown only when an NGS service
+      // is selected, so an ordinary order still sees a single total.
+      renderPurchaseTotal(fitnessSuperstoreTotal) {
+        const lines = document.querySelectorAll('[data-ngs-purchase-total-line]');
+        if (lines.length === 0) return;
+        const ngs = Number(this.ngsDeferredAmount) || 0;
+        const show = !!this.ngsHasService;
+        lines.forEach((line) => {
+          line.hidden = !show;
+          if (!show) return;
+          const el = line.querySelector('[data-ngs-purchase-total-value]');
+          if (!el) return;
+          const currency = el.dataset.currency || '$';
+          const total = (Number(fitnessSuperstoreTotal) || 0) + ngs;
+          el.innerText = `${currency}${total.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`;
+        });
       }
 
       renderOptionsAddedTotal(priceAdjustment) {
