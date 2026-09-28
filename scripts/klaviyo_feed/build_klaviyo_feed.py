@@ -23,6 +23,7 @@ import re
 import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
+from html import unescape
 
 # Rubber Coated Hex Dumbbell SKUs exist twice in Shopify: once as standalone
 # single-SKU products and once as variants of this multi-variant parent. Both
@@ -112,6 +113,11 @@ FEED_KEYS = [
 
 TAG_RE = re.compile(r"<[^>]+>")
 WS_RE = re.compile(r"\s+")
+# Shopify's plain-text `description` keeps the contents of <style> and <script>
+# blocks as text, so embedded widgets (the rubber-smell FAQ box on the Rubber
+# Hex, bumper and grip plate families, the discontinued-PDP card) leaked raw
+# CSS/JS into every catalog product block. Drop those blocks from the HTML first.
+EMBEDDED_CODE_RE = re.compile(r"<(style|script)\b[^>]*>.*?</\1\s*>", re.I | re.S)
 
 
 def plain_text(value):
@@ -119,6 +125,19 @@ def plain_text(value):
     if not value:
         return ""
     return WS_RE.sub(" ", TAG_RE.sub(" ", value)).strip()
+
+
+def description_of(product):
+    """Plain-text description with embedded <style>/<script> code removed.
+
+    Only descriptions that actually embed code are rebuilt from the HTML; every
+    other row keeps Shopify's own plain text byte for byte.
+    """
+    html = product.get("descriptionHtml") or ""
+    if not EMBEDDED_CODE_RE.search(html):
+        return plain_text(product.get("description"))
+    text = TAG_RE.sub(" ", EMBEDDED_CODE_RE.sub(" ", html))
+    return WS_RE.sub(" ", unescape(text)).strip()
 
 
 def mf(node, key):
@@ -239,7 +258,7 @@ def build_row(product, variant, legacy_taxonomy=None, variant_count=1):
     return {
         "id": sku,
         "title": product.get("title") or "",
-        "description": plain_text(product.get("description")),
+        "description": description_of(product),
         "link": link_of(product, variant, variant_count),
         "image_link": image_of(product, variant),
         "price": price,
