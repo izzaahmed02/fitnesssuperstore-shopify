@@ -135,18 +135,19 @@
       var prev = root.querySelector('[data-sr-prev]');
       var next = root.querySelector('[data-sr-next]');
 
-      function centerFor(sl) { return sl.offsetLeft - (track.clientWidth - sl.offsetWidth) / 2; }
+      // Drive the active dot off actual scroll position (not nearest-center),
+      // so dot 1 = start and the last dot = end, and edge slides map correctly.
+      function maxScroll() { return Math.max(0, track.scrollWidth - track.clientWidth); }
       function current() {
-        var mid = track.scrollLeft + track.clientWidth / 2, best = 0, bd = Infinity;
-        slides.forEach(function (sl, i) {
-          var m = sl.offsetLeft + sl.offsetWidth / 2, d = Math.abs(m - mid);
-          if (d < bd) { bd = d; best = i; }
-        });
-        return best;
+        var ms = maxScroll();
+        if (ms <= 0 || slides.length < 2) return 0;
+        return Math.round((track.scrollLeft / ms) * (slides.length - 1));
       }
       function go(i) {
         i = Math.max(0, Math.min(slides.length - 1, i));
-        track.scrollTo({ left: centerFor(slides[i]), behavior: 'smooth' });
+        var ms = maxScroll();
+        var left = slides.length > 1 ? ms * (i / (slides.length - 1)) : 0;
+        track.scrollTo({ left: left, behavior: 'smooth' });
       }
       if (prev) prev.addEventListener('click', function () { go(current() - 1); });
       if (next) next.addEventListener('click', function () { go(current() + 1); });
