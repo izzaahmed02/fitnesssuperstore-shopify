@@ -307,6 +307,14 @@ class SuppressionTests(unittest.TestCase):
         self.assertEqual(feed, [])
         self.assertEqual(report["exception_reason_counts"]["option_carrier_excluded"], 1)
 
+    def test_body_solid_option_carrier_is_suppressed_by_id(self):
+        pid = 10279695679804
+        node, variant = product(pid, "BSLDGAP1", "275.00")
+        self.assertIn(f"gid://shopify/Product/{pid}", builder.OPTION_CARRIER_PRODUCT_IDS)
+        _, report, feed = self.build([node, variant])
+        self.assertEqual(feed, [])
+        self.assertEqual(report["exception_reason_counts"]["option_carrier_excluded"], 1)
+
     def test_suppressed_rows_are_still_accounted_for(self):
         ok_node, ok_variant = product(805, "OK-1", "10.00")
         sup_node, sup_variant = product(806, "SUP-1", "10.00", tags=["REMOVE FROM FEEDS"])
