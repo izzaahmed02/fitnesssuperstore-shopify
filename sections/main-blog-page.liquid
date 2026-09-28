@@ -77,9 +77,6 @@
       placeholder="Search all blog posts..."
       style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;"
     >
-    <div id="no-results">
-      <p>No articles found matching your search.</p>
-    </div>
   </div>
 
   <div class="all-blogs-container">
@@ -134,8 +131,25 @@
 document.addEventListener('DOMContentLoaded', function () {
   const searchInput = document.getElementById('blog-live-search');
   const blogSections = document.querySelectorAll('.blog-section');
-  const noResults = document.getElementById('no-results');
-  
+  const searchWrapper = document.querySelector('.blog-search-wrapper');
+
+  // Empty state is created in JS on demand so no placeholder copy sits in the
+  // server-rendered page source.
+  let noResults = null;
+  function setNoResults(show) {
+    if (show) {
+      if (!noResults) {
+        noResults = document.createElement('div');
+        noResults.id = 'no-results';
+        noResults.innerHTML = '<p>No articles found matching your search.</p>';
+        searchWrapper.appendChild(noResults);
+      }
+      noResults.style.display = 'block';
+    } else if (noResults) {
+      noResults.style.display = 'none';
+    }
+  }
+
   let allArticles = [];
   
   // Collect all articles from all blogs
@@ -161,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const articles = allArticles.filter(a => a.section === section);
         container.innerHTML = articles.map(a => a.html).join('');
       });
-      noResults.style.display = 'none';
+      setNoResults(false);
       return;
     }
 
@@ -197,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
-    noResults.style.display = foundAny ? 'none' : 'block';
+    setNoResults(!foundAny);
   }
 
   searchInput.addEventListener('input', e => {
