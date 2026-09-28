@@ -135,47 +135,78 @@
       var prev = root.querySelector('[data-sr-prev]');
       var next = root.querySelector('[data-sr-next]');
 
-      // Drive the active dot off actual scroll position (not nearest-center),
-      // so dot 1 = start and the last dot = end, and edge slides map correctly.
+      // Build the dots from actual reachable scroll stops ("pages"), not one per
+      // slide: when several slides are visible at once the scroll range is small,
+      // so a per-slide model leaves some dots pointing at the same position and
+      // looking dead (Tim/QA: 2nd and 4th dots not clickable). Each stop is a
+      // distinct scroll position, so every dot moves the scroller. Recomputed on
+      // resize because clientWidth/scrollWidth change with viewport.
       function maxScroll() { return Math.max(0, track.scrollWidth - track.clientWidth); }
-      function current() {
+
+      var stops = [];
+      var dots = [];
+      function computeStops() {
         var ms = maxScroll();
-        if (ms <= 0 || slides.length < 2) return 0;
-        return Math.round((track.scrollLeft / ms) * (slides.length - 1));
+        if (ms <= 1) { stops = [0]; return; }
+        var step = Math.max(1, track.clientWidth * 0.9); // advance ~one viewport per page
+        var list = [];
+        for (var x = 0; x < ms - 1; x += step) list.push(Math.round(x));
+        if (list[list.length - 1] !== Math.round(ms)) list.push(Math.round(ms));
+        stops = list;
+      }
+      function current() {
+        var s = track.scrollLeft, best = 0, bd = Infinity;
+        for (var i = 0; i < stops.length; i++) {
+          var d = Math.abs(stops[i] - s);
+          if (d < bd) { bd = d; best = i; }
+        }
+        return best;
       }
       function go(i) {
-        i = Math.max(0, Math.min(slides.length - 1, i));
-        var ms = maxScroll();
-        var left = slides.length > 1 ? ms * (i / (slides.length - 1)) : 0;
-        track.scrollTo({ left: left, behavior: 'smooth' });
+        i = Math.max(0, Math.min(stops.length - 1, i));
+        track.scrollTo({ left: stops[i], behavior: 'smooth' });
       }
       if (prev) prev.addEventListener('click', function () { go(current() - 1); });
       if (next) next.addEventListener('click', function () { go(current() + 1); });
 
-      var dots = [];
-      if (dotsWrap) {
-        slides.forEach(function (_, i) {
+      function renderDots() {
+        if (!dotsWrap) return;
+        dotsWrap.innerHTML = '';
+        dots = [];
+        if (stops.length < 2) return; // everything fits — no paging needed
+        stops.forEach(function (_, i) {
           var b = document.createElement('button');
           b.type = 'button';
-          b.setAttribute('aria-label', 'Go to photo ' + (i + 1));
-          if (i === 0) b.setAttribute('aria-current', 'true');
+          b.setAttribute('aria-label', 'Go to view ' + (i + 1));
           b.addEventListener('click', function () { go(i); });
           dotsWrap.appendChild(b);
           dots.push(b);
         });
-        var raf;
-        track.addEventListener('scroll', function () {
-          if (raf) return;
-          raf = requestAnimationFrame(function () {
-            raf = null;
-            var c = current();
-            dots.forEach(function (d, i) {
-              if (i === c) { d.setAttribute('aria-current', 'true'); }
-              else { d.removeAttribute('aria-current'); }
-            });
-          });
+        syncDots();
+      }
+      function syncDots() {
+        if (!dots.length) return;
+        var c = current();
+        dots.forEach(function (d, i) {
+          if (i === c) { d.setAttribute('aria-current', 'true'); }
+          else { d.removeAttribute('aria-current'); }
         });
       }
+
+      computeStops();
+      renderDots();
+
+      var raf;
+      track.addEventListener('scroll', function () {
+        if (raf) return;
+        raf = requestAnimationFrame(function () { raf = null; syncDots(); });
+      });
+
+      var rz;
+      window.addEventListener('resize', function () {
+        clearTimeout(rz);
+        rz = setTimeout(function () { computeStops(); renderDots(); }, 150);
+      });
     });
   }
 
