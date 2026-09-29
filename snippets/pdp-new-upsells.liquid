@@ -65,26 +65,199 @@
     both sides while split never sees an empty run. Appending the whole probe
     instead would double the separator between entries and split would yield a
     phantom "" group — a blank third tab.
+
   endcomment
   assign group_sep = '~|~'
   assign group_acc = group_sep
   assign ungrouped_label = 'Add-Ons'
+  assign upsell_card_separator = '<!--pdp-upsell-card-->'
+  assign upsell_card_group_separator = '<!--pdp-upsell-group-->'
+  assign upsell_cards_acc = ''
+  assign upsell_skip_notes = ''
+-%}
 
-  for entry in upsell_entries
-    assign entry_group = ''
+{%- for entry in upsell_entries -%}
+  {%- liquid
+    comment
+      Normalise the three accepted shapes to one
+      (variant, product, quantity, group, label) tuple.
+    endcomment
+    assign up_variant = blank
+    assign up_product = blank
+    assign up_qty = 1
+    assign up_group = ''
+    assign up_label = ''
+
     if entry.system != blank
-      assign entry_group = entry.group.value | default: entry.tab.value | default: entry.category.value
+      assign up_variant = entry.variant.value
+      assign up_product = entry.product.value
+      assign up_qty = entry.default_quantity.value | default: entry.quantity.value | default: 1
+      assign up_group = entry.group.value | default: entry.tab.value | default: entry.category.value
+      assign up_label = entry.label.value
+    elsif entry.variants != blank
+      assign up_product = entry
+    else
+      assign up_variant = entry
     endif
-    if entry_group == blank
-      assign entry_group = ungrouped_label
-    endif
-    assign group_probe = group_sep | append: entry_group | append: group_sep
-    unless group_acc contains group_probe
-      assign group_acc = group_acc | append: entry_group | append: group_sep
-    endunless
-  endfor
 
+    if up_variant == blank and up_product != blank
+      assign up_variant = up_product.selected_or_first_available_variant
+    endif
+
+    comment
+      The variant is authoritative (Tim, Aug 2): whenever one is
+      set, the card's title, image and URL come from ITS parent
+      product, never from the entry's own product field. A
+      mismatched pair would otherwise show one product while
+      adding another to the cart.
+    endcomment
+    if up_variant != blank
+      assign up_product = up_variant.product
+    endif
+
+    if up_group == blank
+      assign up_group = ungrouped_label
+    endif
+    if up_qty < 1
+      assign up_qty = 1
+    endif
+
+    comment
+      Normalise against the variant's Shopify quantity rule, or the
+      card renders as buyable and every click is rejected by
+      /cart/add.js: raise to the minimum, round UP to the next
+      increment, and drop the entry if that lands above the maximum.
+      Nested ifs on purpose — a nil max compared to a number is a
+      Liquid error, not false.
+    endcomment
+    assign up_qty_unpurchasable = false
+    if up_variant != blank
+      assign up_rule = up_variant.quantity_rule
+      if up_rule.min > up_qty
+        assign up_qty = up_rule.min
+      endif
+      if up_rule.increment > 1
+        assign up_rem = up_qty | modulo: up_rule.increment
+        if up_rem > 0
+          assign up_qty = up_qty | plus: up_rule.increment | minus: up_rem
+        endif
+      endif
+      if up_rule.max != blank
+        if up_qty > up_rule.max
+          assign up_qty_unpurchasable = true
+        endif
+      endif
+    endif
+
+    comment
+      PR #733 review thread 8: `available` stays true while stock is left.
+    endcomment
+    assign up_short_stock = false
+    if up_variant != blank
+      if up_variant.inventory_management == 'shopify' and up_variant.inventory_policy != 'continue'
+        if up_qty > up_variant.inventory_quantity
+          assign up_short_stock = true
+        endif
+      endif
+    endif
+  -%}
+
+  {%- comment -%} Skip an invalid, deleted or unavailable entry rather than render a
+      broken purchase path. The HTML comment is the flag: invisible to
+      customers, but it tells QA the entry was dropped deliberately. {%- endcomment -%}
+  {%- capture up_skip_note -%}
+    {%- if up_variant == blank -%}
+      <!-- pdp-upsell skipped: entry has no resolvable variant (deleted or unset) -->
+    {%- elsif up_variant.available == false -%}
+      <!-- pdp-upsell skipped: {{ up_product.title | escape }} is unavailable -->
+    {%- elsif up_qty_unpurchasable -%}
+      <!-- pdp-upsell skipped: {{ up_product.title | escape }} quantity {{ up_qty }} exceeds the variant's maximum of {{ up_variant.quantity_rule.max }} -->
+    {%- elsif up_short_stock -%}
+      <!-- pdp-upsell skipped: {{ up_product.title | escape }} adds {{ up_qty }} but only {{ up_variant.inventory_quantity }} in stock -->
+    {%- elsif up_product.tags contains 'avisplus-product-options' -%}
+      {%- comment -%} An Avis option-holder product, not a standalone one. Adding
+          it makes a cart line that cart-drawer.liquid renders as an
+          `.extra-option-item` — a hidden sub-row of the item above it, which
+          cart-drawer.js then SUBTRACTS from the header count. The buyer sees
+          the line disappear and the count go down. {%- endcomment -%}
+      <!-- pdp-upsell skipped: {{ up_product.title | escape }} is an Avis option product (tag avisplus-product-options); point this entry at the standalone product instead -->
+    {%- endif -%}
+  {%- endcapture -%}
+
+  {%- if up_skip_note != blank -%}
+    {%- assign upsell_skip_notes = upsell_skip_notes | append: up_skip_note -%}
+  {%- else -%}
+    {%- liquid
+      assign group_probe = group_sep | append: up_group | append: group_sep
+      unless group_acc contains group_probe
+        assign group_acc = group_acc | append: up_group | append: group_sep
+      endunless
+
+      assign up_img = up_variant.featured_image | default: up_product.featured_image
+      assign up_title = up_label | default: up_product.title
+      assign up_line_total = up_variant.price | times: up_qty
+      comment
+        "Product Code" is the store's own metafield — the same value the
+        buy-box info tab shows. Falls back to the raw variant SKU only
+        when that field is unset.
+      endcomment
+      assign up_code = up_product.metafields.custom.product_code | default: up_variant.sku
+    -%}
+    {%- capture up_card -%}
+      <li class="pdp-new__addon-card">
+        <a class="pdp-new__addon-img" href="{{ up_product.url }}" tabindex="-1">
+          {%- if up_img -%}
+            <img
+              src="{{ up_img | image_url: width: 336 }}"
+              alt="{{ up_img.alt | escape }}"
+              width="168"
+              height="168"
+              loading="lazy"
+            >
+          {%- endif -%}
+        </a>
+        <div class="pdp-new__addon-info">
+          <a class="pdp-new__addon-title" href="{{ up_product.url }}">{{ up_title | escape }}</a>
+          {%- if up_code != blank -%}
+            <span class="pdp-new__addon-sku">Product Code: {{ up_code }}</span>
+          {%- endif -%}
+          <div class="pdp-new__addon-cta">
+            {%- comment -%} Unit price always, per the Figma card, plus the
+                multiple and line total when the entry adds more than one —
+                a card reading "$76.00" must not move the cart by $912.00
+                unannounced. {%- endcomment -%}
+            <span class="pdp-new__addon-price">Price: {{ up_variant.price | money }}</span>
+            {%- if up_qty > 1 -%}
+              <span class="pdp-new__addon-qty">
+                Adds {{ up_qty }} &middot; {{ up_line_total | money }} total
+              </span>
+            {%- endif -%}
+            {%- comment -%} A real, separate cart line. data-quantity carries
+                the per-item default; pdp-new.js POSTs it to /cart/add.js and
+                renders the cart drawer. {%- endcomment -%}
+            {%- comment -%} No sold-out state: an unavailable entry is
+                skipped above, so every card that renders is buyable. {%- endcomment -%}
+            <button
+              type="button"
+              class="pdp-new__addon-atc"
+              data-upsell-add
+              data-variant-id="{{ up_variant.id }}"
+              data-quantity="{{ up_qty }}"
+            >
+              {% render 'pdp-new-icon-cart', class: 'pdp-new__cart-icon--sm' %}
+              <span>Add to Cart</span>
+            </button>
+          </div>
+        </div>
+      </li>
+    {%- endcapture -%}
+    {%- assign upsell_cards_acc = upsell_cards_acc | append: upsell_card_separator | append: up_group | append: upsell_card_group_separator | append: up_card -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{%- liquid
   assign upsell_groups = group_acc | remove_first: group_sep | split: group_sep
+  assign upsell_cards = upsell_cards_acc | split: upsell_card_separator
 -%}
 
 {%- comment -%}
@@ -92,6 +265,7 @@
   finds both a source and a target, even when the list is empty.
 {%- endcomment -%}
 <div id="PdpNewAddons-{{ section_id }}">
+  {{- upsell_skip_notes -}}
   {%- if upsell_groups.size > 0 -%}
     <div class="pdp-new__addons pdp-new__upsells" {{ block_attributes }}>
       {%- if heading != blank -%}
@@ -116,157 +290,9 @@
             <div class="tabs__item{% if forloop.first %} active visible{% endif %}" data-index="{{ forloop.index }}">
               <pdp-carousel class="pdp-new__addon-carousel">
                 <ul class="pdp-new__addon-track" role="list">
-                  {%- for entry in upsell_entries -%}
-                    {%- liquid
-                      comment
-                        Normalise the three accepted shapes to one
-                        (variant, product, quantity, group, label) tuple.
-                      endcomment
-                      assign up_variant = blank
-                      assign up_product = blank
-                      assign up_qty = 1
-                      assign up_group = ''
-                      assign up_label = ''
-
-                      if entry.system != blank
-                        assign up_variant = entry.variant.value
-                        assign up_product = entry.product.value
-                        assign up_qty = entry.default_quantity.value | default: entry.quantity.value | default: 1
-                        assign up_group = entry.group.value | default: entry.tab.value | default: entry.category.value
-                        assign up_label = entry.label.value
-                      elsif entry.variants != blank
-                        assign up_product = entry
-                      else
-                        assign up_variant = entry
-                      endif
-
-                      if up_variant == blank and up_product != blank
-                        assign up_variant = up_product.selected_or_first_available_variant
-                      endif
-
-                      comment
-                        The variant is authoritative (Tim, Aug 2): whenever one is
-                        set, the card's title, image and URL come from ITS parent
-                        product, never from the entry's own product field. A
-                        mismatched pair would otherwise show one product while
-                        adding another to the cart.
-                      endcomment
-                      if up_variant != blank
-                        assign up_product = up_variant.product
-                      endif
-
-                      if up_group == blank
-                        assign up_group = ungrouped_label
-                      endif
-                      if up_qty < 1
-                        assign up_qty = 1
-                      endif
-
-                      comment
-                        Normalise against the variant's Shopify quantity rule, or the
-                        card renders as buyable and every click is rejected by
-                        /cart/add.js: raise to the minimum, round UP to the next
-                        increment, and drop the entry if that lands above the maximum.
-                        Nested ifs on purpose — a nil max compared to a number is a
-                        Liquid error, not false.
-                      endcomment
-                      assign up_qty_unpurchasable = false
-                      if up_variant != blank
-                        assign up_rule = up_variant.quantity_rule
-                        if up_rule.min > up_qty
-                          assign up_qty = up_rule.min
-                        endif
-                        if up_rule.increment > 1
-                          assign up_rem = up_qty | modulo: up_rule.increment
-                          if up_rem > 0
-                            assign up_qty = up_qty | plus: up_rule.increment | minus: up_rem
-                          endif
-                        endif
-                        if up_rule.max != blank
-                          if up_qty > up_rule.max
-                            assign up_qty_unpurchasable = true
-                          endif
-                        endif
-                      endif
-                    -%}
-
-                    {%- if up_group == group -%}
-                    {%- comment -%} Skip an invalid, deleted or unavailable entry rather than render a
-                        broken purchase path. The HTML comment is the flag: invisible to
-                        customers, but it tells QA the entry was dropped deliberately. {%- endcomment -%}
-                    {%- if up_variant == blank -%}
-                      <!-- pdp-upsell skipped: entry has no resolvable variant (deleted or unset) -->
-                    {%- elsif up_variant.available == false -%}
-                      <!-- pdp-upsell skipped: {{ up_product.title | escape }} is unavailable -->
-                    {%- elsif up_qty_unpurchasable -%}
-                      <!-- pdp-upsell skipped: {{ up_product.title | escape }} quantity {{ up_qty }} exceeds the variant's maximum of {{ up_variant.quantity_rule.max }} -->
-                    {%- elsif up_product.tags contains 'avisplus-product-options' -%}
-                      {%- comment -%} An Avis option-holder product, not a standalone one. Adding
-                          it makes a cart line that cart-drawer.liquid renders as an
-                          `.extra-option-item` — a hidden sub-row of the item above it, which
-                          cart-drawer.js then SUBTRACTS from the header count. The buyer sees
-                          the line disappear and the count go down. {%- endcomment -%}
-                      <!-- pdp-upsell skipped: {{ up_product.title | escape }} is an Avis option product (tag avisplus-product-options); point this entry at the standalone product instead -->
-                    {%- else -%}
-                      {%- liquid
-                        assign up_img = up_variant.featured_image | default: up_product.featured_image
-                        assign up_title = up_label | default: up_product.title
-                        assign up_line_total = up_variant.price | times: up_qty
-                        comment
-                          "Product Code" is the store's own metafield — the same value the
-                          buy-box info tab shows. Falls back to the raw variant SKU only
-                          when that field is unset.
-                        endcomment
-                        assign up_code = up_product.metafields.custom.product_code | default: up_variant.sku
-                      -%}
-                      <li class="pdp-new__addon-card">
-                        <a class="pdp-new__addon-img" href="{{ up_product.url }}" tabindex="-1">
-                          {%- if up_img -%}
-                            <img
-                              src="{{ up_img | image_url: width: 336 }}"
-                              alt="{{ up_img.alt | escape }}"
-                              width="168"
-                              height="168"
-                              loading="lazy"
-                            >
-                          {%- endif -%}
-                        </a>
-                        <div class="pdp-new__addon-info">
-                          <a class="pdp-new__addon-title" href="{{ up_product.url }}">{{ up_title | escape }}</a>
-                          {%- if up_code != blank -%}
-                            <span class="pdp-new__addon-sku">Product Code: {{ up_code }}</span>
-                          {%- endif -%}
-                          <div class="pdp-new__addon-cta">
-                            {%- comment -%} Unit price always, per the Figma card, plus the
-                                multiple and line total when the entry adds more than one —
-                                a card reading "$76.00" must not move the cart by $912.00
-                                unannounced. {%- endcomment -%}
-                            <span class="pdp-new__addon-price">Price: {{ up_variant.price | money }}</span>
-                            {%- if up_qty > 1 -%}
-                              <span class="pdp-new__addon-qty">
-                                Adds {{ up_qty }} &middot; {{ up_line_total | money }} total
-                              </span>
-                            {%- endif -%}
-                            {%- comment -%} A real, separate cart line. data-quantity carries
-                                the per-item default; pdp-new.js POSTs it to /cart/add.js and
-                                renders the cart drawer. {%- endcomment -%}
-                            {%- comment -%} No sold-out state: an unavailable entry is
-                                skipped above, so every card that renders is buyable. {%- endcomment -%}
-                            <button
-                              type="button"
-                              class="pdp-new__addon-atc"
-                              data-upsell-add
-                              data-variant-id="{{ up_variant.id }}"
-                              data-quantity="{{ up_qty }}"
-                            >
-                              {% render 'pdp-new-icon-cart', class: 'pdp-new__cart-icon--sm' %}
-                              <span>Add to Cart</span>
-                            </button>
-                          </div>
-                        </div>
-                      </li>
-                    {%- endif -%}
-                    {%- endif -%}
+                  {%- for up_card_entry in upsell_cards -%}
+                    {%- assign up_card_parts = up_card_entry | split: upsell_card_group_separator -%}
+                    {%- if up_card_parts[0] == group -%}{{ up_card_parts[1] }}{%- endif -%}
                   {%- endfor -%}
                 </ul>
                 <button
