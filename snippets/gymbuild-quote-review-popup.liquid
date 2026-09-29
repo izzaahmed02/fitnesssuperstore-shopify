@@ -122,6 +122,24 @@
     class="gymbuild-quote-review-modal__content"
     tabindex="-1"
   >
+    {%- comment -%}
+      FEEDBACK DEVIATION (Sagi, 2026-09-26) — not in Figma (section
+      4145:78911 has no back control). Returns to "Customize this build"
+      so the visitor can change things before requesting the quote.
+      Styled as a copy of the drawer's own "Back to build" control
+      (.gymbuild-customize-drawer__back: chevron, Lato 700 16/24, #23232b)
+      so the two popups read as one flow. Nothing is reset on the way
+      back: swaps, add-ons and anything typed in the form below all live
+      in the DOM and survive. Reversal: gymbuild-figma-deviations.md,
+      item 4.
+    {%- endcomment -%}
+    <button type="button" class="gymbuild-quote-review-modal__back" data-gymbuild-review-back>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+        <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Back to customize
+    </button>
+
     <div class="gymbuild-quote-review-modal__header">
       <h2 class="gymbuild-quote-review-modal__title">Request quote review for this build</h2>
       <button
@@ -435,6 +453,27 @@
     text-transform: uppercase;
     color: #23232b;
     margin: 0;
+  }
+
+  /* FEEDBACK DEVIATION (Sagi, 2026-09-26) — back control. Mirrors
+     .gymbuild-customize-drawer__back exactly. Reversal: delete this rule,
+     the button above and the handler in the script below.
+     gymbuild-figma-deviations.md, item 4. */
+  .gymbuild-quote-review-modal__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    margin: 0 0 12px;
+    cursor: pointer;
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 700;
+    color: #23232b;
   }
 
   .gymbuild-quote-review-modal__close {
@@ -917,5 +956,22 @@
       populateReview();
       reviewModal.show(trigger);
     });
+
+    // FEEDBACK DEVIATION (Sagi, 2026-09-26) — back to "Customize this
+    // build". Works from both entry points (the drawer's footer button and
+    // the PDP's own button). The drawer is handed the PDP opener, not the
+    // footer button that opened this modal, so that closing the drawer
+    // later returns focus to the page rather than into a closed drawer.
+    // Reversal: gymbuild-figma-deviations.md, item 4.
+    var reviewBackBtn = reviewModal.querySelector('[data-gymbuild-review-back]');
+    if (reviewBackBtn) {
+      reviewBackBtn.addEventListener('click', function () {
+        var customizeDrawer = document.getElementById('GymBuildCustomizeModal-{{ section.id }}');
+        if (!customizeDrawer || typeof customizeDrawer.show !== 'function') return;
+        var pdpOpener = document.querySelector('modal-opener[data-modal="#GymBuildCustomizeModal-{{ section.id }}"] button');
+        reviewModal.hide();
+        customizeDrawer.show(pdpOpener || undefined);
+      });
+    }
   })();
 </script>
