@@ -3,7 +3,20 @@
   if line_item.variant.metafields.options.product_options.value != blank
     assign options = line_item.variant.metafields.options.product_options.value
   endif
-    
+
+
+  assign pdp_new_line = false
+  if line_item.properties['_pdp'] == 'new'
+    assign pdp_new_line = true
+  endif
+  assign pdp_line_keys = '|'
+  for property in line_item.properties
+    if property.last != blank and property.last != '0'
+      assign pdp_line_keys = pdp_line_keys | append: property.first | append: '|'
+    endif
+  endfor
+  assign pdp_install_match = line_item.properties['_pdp_install_match'] | default: 'assembly'
+
   assign warranty_index = 1
   assign color_index = 1
   assign assambly_index = 0
@@ -53,6 +66,10 @@
     assign assambly_index = last_index
   endfor
 %}
+
+{%- capture pdp_keep_properties -%}
+  {"_pdp":{{ line_item.properties['_pdp'] | json }},"_pdp_install_match":{{ line_item.properties['_pdp_install_match'] | json }},"Warranty":{{ line_item.properties['Warranty'] | json }},"Processing Time":{{ line_item.properties['Processing Time'] | json }}}
+{%- endcapture -%}
 <product-customization-options
   data-product-id="{{ line_item.key }}"
   data-variant-id="{{ line_item.variant.id }}"
@@ -60,6 +77,7 @@
   id="product-options"
   data-product="default"
   data-stamp="none"
+  data-keep-properties="{{ pdp_keep_properties | escape }}"
 >
   <div class="product-options__overlay" data-close-popup="{{ line_item.key }}"></div>
   <div class="product-options__popup-container">
@@ -127,13 +145,52 @@
             assign quantity_index = 1
             assign color_index = color_index | plus: 1
           endif
+
+          assign pdp_keep_category = true
+          assign pdp_cart_covered = false
+          if pdp_new_line and color_counter == 0
+            assign pdp_keep_category = false
+            assign pdp_cart_show = false
+            for product_option in category.product_options.value
+              capture pdp_control
+                render 'pdp-options-adapter', product_option: product_option, installation_match: pdp_install_match
+              endcapture
+              assign pdp_key = '|' | append: product_option.product_option_title | append: '|'
+              if pdp_line_keys contains pdp_key
+                assign pdp_control = pdp_control | append: ' needed visible'
+              endif
+
+              if product_option.option_type == 'Quantity input'
+                for pdp_variant in product_option.product_option_variants.value
+                  assign pdp_key = '|' | append: pdp_variant.product.title | append: '|'
+                  if pdp_line_keys contains pdp_key
+                    assign pdp_control = pdp_control | append: ' needed visible'
+                  endif
+                endfor
+              endif
+              if pdp_control contains 'needed'
+                assign pdp_keep_category = true
+              endif
+              if pdp_control contains 'visible' or pdp_control contains 'install'
+                assign pdp_cart_show = true
+              endif
+            endfor
+            if pdp_keep_category and pdp_cart_show == false
+              assign pdp_cart_covered = true
+            endif
+          endif
         %}
 
+        {%- if pdp_keep_category -%}
         <div
           class="product-option__item"
-          {% unless category.hide_option %}
-            style="order:  {% if color_title != blank %}{{ color_index }}{% elsif category_title_downcase == 'warranty' %}{{ warranty_index }}{% elsif category_title_downcase == 'assembly & room of choice installation needed?' %}{{ assambly_index }}{% elsif quantity_option %}0{% else %}{{ index }}{% endif %};"
-          {% endunless %}
+          {% if pdp_cart_covered %}
+            style="display: none !important;"
+          {% else %}
+            {% unless category.hide_option %}
+              style="order:  {% if color_title != blank %}{{ color_index }}{% elsif category_title_downcase == 'warranty' %}{{ warranty_index }}{% elsif category_title_downcase == 'assembly & room of choice installation needed?' %}{{ assambly_index }}{% elsif quantity_option %}0{% else %}{{ index }}{% endif %};"
+            {% endunless %}
+          {% endif %}
         >
           {% if category.title != blank %}
             <h2
@@ -147,7 +204,8 @@
               {% endif %}
             >
               <span>
-                {% unless category.hide_option %}
+     
+                {% unless category.hide_option or pdp_new_line %}
                   {{- display_number -}}
                 {% endunless %}
               </span>
@@ -203,6 +261,35 @@
             </h2>
           {% endif %}
           {% for product_option in category.product_options.value %}
+            {% liquid
+              comment
+                New-PDP lines: same per-control rule as the category filter above -
+                a control renders if the adapter needs it or this line holds a value
+                for it; anything else is omitted, not hidden.
+              endcomment
+              assign pdp_keep_option = true
+              if pdp_new_line and color_counter == 0
+                capture pdp_control
+                  render 'pdp-options-adapter', product_option: product_option, installation_match: pdp_install_match
+                endcapture
+                assign pdp_key = '|' | append: product_option.product_option_title | append: '|'
+                if pdp_line_keys contains pdp_key
+                  assign pdp_control = pdp_control | append: ' needed'
+                endif
+                if product_option.option_type == 'Quantity input'
+                  for pdp_variant in product_option.product_option_variants.value
+                    assign pdp_key = '|' | append: pdp_variant.product.title | append: '|'
+                    if pdp_line_keys contains pdp_key
+                      assign pdp_control = pdp_control | append: ' needed'
+                    endif
+                  endfor
+                endif
+                unless pdp_control contains 'needed'
+                  assign pdp_keep_option = false
+                endunless
+              endif
+            %}
+            {% if pdp_keep_option %}
             {% assign title = product_option.product_option_title | downcase %}
             {% if title == 'paint color' or title == 'paint colors' or title == 'color' %}
               {% render 'cart-item-color-picker',
@@ -261,8 +348,10 @@
                 active_conditional_option: active_conditional_option
               %}
             {% endif %}
+            {% endif %}
           {% endfor %}
         </div>
+        {%- endif -%}
       {% endfor %}
     </div>
     <div class="product-options__popup-container-footer">
