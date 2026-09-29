@@ -68,33 +68,12 @@ font-size: 28px!important;
   .campaign-sale-container.hide-on-mobile { display: none !important; }
 }
 
-/* Remove left side nav on Collection and Product templates only (from A/B test winner).
-   Collection rules use .collection-template (collection pages only) instead of
-   .collection-layout, which is shared with search pages and must keep its sidebar. */
-.product-layout aside.sidebarmenu,
-.collection-template aside.sidebarmenu {
-  display: none;
-}
-
-.product-layout .inner-container,
-.collection-template .inner-container {
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-@media only screen and (min-width: 992px) {
-  .collection-template .boost-sd-layout {
-    margin: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-}
-
-@media only screen and (min-width: 576px) {
-  .collection-template .boost-sd__product-list-grid--3-col.boost-sd__product-list--margin .boost-sd__product-item {
-    width: calc(25% - var(--boostsd-product-list-gap-desktop)) !important;
-  }
-}
+/* Left side nav restored on Collection and Product templates (Tim, Sept 28 2026:
+   "Switch back to Left Nav = Y on collection/PDP?"). This removes the June 26 A/B-winner
+   rules that hid aside.sidebarmenu and stretched .inner-container / the Boost grid to
+   full width (4-up) on these templates. The sidebar, the 236px column and the 3-up Boost
+   grid now come from the same layout/theme.liquid rules the rest of the site uses.
+   Revert: restore the removed block from git history. */
 
 /* PDP gallery tuning knobs — adjust these two values to taste.
    --pdp-info-width: width of the right buy-box column (wider = less blank space).
@@ -106,7 +85,10 @@ font-size: 28px!important;
                      clipped, and it is only ever downscaled to fit — never upscaled
                      beyond its intrinsic size. */
 .product-layout {
-  --pdp-info-width: 560px;
+  /* 480px = the theme default buy-box width (custom-main-product-page.css) used while
+     the sidebar was shown. 560px was only for the space freed by removing the sidebar;
+     at 990-1200px it would squeeze the gallery once the 236px sidebar is back. */
+  --pdp-info-width: 480px;
   --pdp-image-max: 700px;
 }
 
@@ -301,4 +283,13 @@ body.accessibility-mode .pdp-breadcrumbs .custom-breadcrumbs__navigation .breadc
 body.accessibility-mode .pdp-breadcrumbs .custom-breadcrumbs__navigation .breadcrumb-segment a {
   color: #23232b !important;
   font-weight: 400 !important;
+}
+
+/* CGB "Plan Your Gym Your Way" (rich-text section commercial_gym_buildouts_planning_links):
+   .rich-text__buttons--multiple stretches each button (flex-grow, 22rem min-width), and the
+   theme's .button is display:flex with no justify-content, so the labels packed to the
+   left of each button (Sagi, Sept 29). Centre them. */
+[id$="__commercial_gym_buildouts_planning_links"] .rich-text__buttons .button {
+  justify-content: center;
+  text-align: center;
 }
