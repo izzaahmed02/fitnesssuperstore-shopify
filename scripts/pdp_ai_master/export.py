@@ -161,7 +161,7 @@ class CaptureClient:
         if not path.exists():
             raise FileNotFoundError(f"no capture for product {pid} at {path}")
         self.request_count += 1
-        blob = json.loads(path.read_text())
+        blob = json.loads(path.read_text(encoding="utf-8"))
         return blob.get("data", blob)
 
 
@@ -837,7 +837,7 @@ def main() -> int:
     run_id = f"run_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
 
     query_path = HERE / "queries" / "product_v5.graphql"
-    document = query_path.read_text()
+    document = query_path.read_text(encoding="utf-8")
     try:
         assert_read_only(document, str(query_path))
         assert_no_seed_input([str(args.overlay)] if args.overlay else [])
@@ -845,7 +845,7 @@ def main() -> int:
         print(f"ABORT: {exc}", file=sys.stderr)
         return 3
 
-    scope = json.loads(args.scope.read_text())
+    scope = json.loads(args.scope.read_text(encoding="utf-8"))
     targets = scope["products"]
 
     if args.from_capture:
@@ -879,7 +879,8 @@ def main() -> int:
                 raise RuntimeError("product not found or not readable")
             if args.capture_to:
                 (args.capture_to / f"product_{pid}.json").write_text(
-                    json.dumps({"data": data}, ensure_ascii=False, indent=1)
+                    json.dumps({"data": data}, ensure_ascii=False, indent=1),
+                    encoding="utf-8",
                 )
             record = build_record(product, run_ts)
             records.append(record)
@@ -964,7 +965,9 @@ def main() -> int:
 
     # Field source matrix travels with the package.
     matrix_src = HERE / "config" / "field_source_matrix_v5.csv"
-    (args.out / "field_source_matrix_V5.csv").write_text(matrix_src.read_text())
+    (args.out / "field_source_matrix_V5.csv").write_text(
+        matrix_src.read_text(encoding="utf-8"), encoding="utf-8"
+    )
 
     by_sev: dict[str, int] = {}
     for row in conflicts:
@@ -984,7 +987,8 @@ def main() -> int:
             variants=variant_count, stamp=PREVIEW_STAMP,
             conflict_summary="\n".join(summary_lines),
             capture_hint=args.from_capture or "captures/<date>",
-        )
+        ),
+        encoding="utf-8",
     )
 
     # Manifest last so it can checksum everything else.
@@ -1044,7 +1048,8 @@ def main() -> int:
             "bytes": path.stat().st_size,
         }
     (args.out / "manifest.json").write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
+        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
     )
 
     print(f"{status}: {len(records)}/{len(targets)} products, "
