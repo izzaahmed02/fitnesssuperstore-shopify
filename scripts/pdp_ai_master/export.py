@@ -29,7 +29,7 @@ Usage
 -----
 Live run against Shopify Admin GraphQL (read-only):
 
-    export SHOPIFY_SHOP=fitness-superstore.myshopify.com
+    export SHOPIFY_SHOP=79ef8b-5e.myshopify.com
     export SHOPIFY_ADMIN_TOKEN=shpat_...          # read scopes only
     python3 scripts/pdp_ai_master/export.py --out out/run_$(date -u +%Y%m%dT%H%M%SZ)
 

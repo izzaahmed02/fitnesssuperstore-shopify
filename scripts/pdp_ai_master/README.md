@@ -170,7 +170,7 @@ python3 scripts/pdp_ai_master/tests/test_export.py
 Live read-only run against the approved 20-SKU scope:
 
 ```
-export SHOPIFY_SHOP=<shop>.myshopify.com
+export SHOPIFY_SHOP=79ef8b-5e.myshopify.com
 export SHOPIFY_ADMIN_TOKEN=<read-only token>
 python3 scripts/pdp_ai_master/export.py \
     --commit "$(git rev-parse --short HEAD)" \
@@ -194,7 +194,7 @@ traced back to the exact API response it came from.
 
 ## Credential requirement
 
-The harness needs a **read-only** custom-app token with the four scopes
+The harness needs a **read-only** custom-app token with the three scopes
 above, held wherever the job is meant to run. It does not create one and it
 does not read credentials from anywhere but the environment. Until a
 controlled credential exists, runs happen from an operator's own session,
