@@ -428,6 +428,13 @@
                   <label class="pdp-new__label" for="PdpNewDelivery-{{ section.id }}">{{ block.settings.label | escape }}</label>
                   <div class="pdp-new__select-wrap">
                     <select id="PdpNewDelivery-{{ section.id }}" class="pdp-new__select" data-option-group-select>
+                      {%- assign pdp_del_default_listed = false -%}
+                      {%- for variant in pdp_del_option.product_option_variants.value -%}
+                        {%- if variant.id == pdp_del_default -%}{%- assign pdp_del_default_listed = true -%}{%- endif -%}
+                      {%- endfor -%}
+                      {%- unless pdp_del_default_listed -%}
+                        <option value="" disabled selected>Select a delivery option</option>
+                      {%- endunless -%}
                       {%- for variant in pdp_del_option.product_option_variants.value -%}
                         {%- liquid
                           assign v_title = variant.title
