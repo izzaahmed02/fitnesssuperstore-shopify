@@ -179,7 +179,16 @@
       {% endif %}
 
       {% if gymbuild_items != blank %}
-        <div class="gymbuild-customize-drawer__tabs" role="tablist" aria-label="Package inclusion categories">
+        {%- comment -%}
+          FEEDBACK DEVIATION (Sagi, 2026-09-26) — Figma 4539:88550 shows a
+          plain single-row strip. With 13 categories it overflows, and a
+          hidden-scrollbar overflow strip cannot be moved with a desktop
+          mouse. The script below adds click-and-drag for mouse pointers and
+          toggles .has-fade-start / .has-fade-end so the clipped edge reads as
+          "more this way". No arrows, by decision. Reversal: see
+          gymbuild-figma-deviations.md, item 2.
+        {%- endcomment -%}
+        <div class="gymbuild-customize-drawer__tabs" role="tablist" aria-label="Package inclusion categories" data-gymbuild-tabs>
           {%- liquid
             assign rendered_tabs = ''
             assign tab_index = 0
@@ -430,7 +439,24 @@
                         </div>
 
                         <p class="gymbuild-customize-drawer__card-title">{{ inclusion_title }}</p>
-                        <p class="gymbuild-customize-drawer__card-count" data-gymbuild-item-count>{{ inclusion_qty }} {{ inclusion_qty | pluralize: 'item', 'items' }}</p>
+                        {%- comment -%}
+                          FEEDBACK DEVIATION (Izza, 2026-09-25) — not in Figma.
+                          The "Swapped" tag sits beside the count and stays
+                          visible for as long as the card holds something other
+                          than its default, so it is clear which items differ.
+                          selectAlternate() toggles it; swapping back to the
+                          default hides it again. Reversal: see
+                          gymbuild-figma-deviations.md, item 3.
+                        {%- endcomment -%}
+                        <div class="gymbuild-customize-drawer__card-meta">
+                          <p class="gymbuild-customize-drawer__card-count" data-gymbuild-item-count>{{ inclusion_qty }} {{ inclusion_qty | pluralize: 'item', 'items' }}</p>
+                          <span class="gymbuild-customize-drawer__swapped-tag" data-gymbuild-swapped-tag hidden>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+                              <path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Swapped
+                          </span>
+                        </div>
 
                         <button type="button" class="gymbuild-customize-drawer__swap-btn" data-gymbuild-swap-btn{% if alternative_count == 0 %} disabled{% endif %}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -460,6 +486,8 @@
         <p class="gymbuild-customize-drawer__panel-heading">Swap to:</p>
         <div class="gymbuild-customize-drawer__swap-grid" data-gymbuild-swap-grid></div>
       </div>
+      {%- comment -%} Screen-reader echo of the "Swapped" tag (feedback deviation, item 3). {%- endcomment -%}
+      <p class="visually-hidden" aria-live="polite" data-gymbuild-live></p>
     </div>
 
     <div class="gymbuild-customize-drawer__footer" data-base-price="{{ current_variant.price }}">
@@ -669,6 +697,12 @@
 
   .gymbuild-customize-drawer[open] .gymbuild-customize-drawer__content {
     transform: translateX(0);
+  }
+
+  /* Option C size-change reopen (feedback deviation, item 1): the drawer is
+     shown already in place, without the slide-in. */
+  .gymbuild-customize-drawer.is-instant .gymbuild-customize-drawer__content {
+    transition: none;
   }
 
   /* ---------- Header (Figma 4539:88520, 704x84) ---------- */
@@ -927,6 +961,41 @@
     display: none;
   }
 
+  /* FEEDBACK DEVIATION (Sagi, 2026-09-26) — not in Figma. Edge fade on
+     whichever side still has tabs to reveal, plus a grab cursor where the
+     strip actually overflows. Classes are set by the tab-strip script;
+     with JS off the strip is exactly the Figma strip. Reversal: delete
+     from here to the matching END marker. See
+     gymbuild-figma-deviations.md, item 2. */
+  .gymbuild-customize-drawer__tabs.has-fade-end {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+  }
+
+  .gymbuild-customize-drawer__tabs.has-fade-start {
+    -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 56px), transparent);
+    mask-image: linear-gradient(to left, #000 calc(100% - 56px), transparent);
+  }
+
+  .gymbuild-customize-drawer__tabs.has-fade-start.has-fade-end {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 56px, #000 calc(100% - 56px), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 56px, #000 calc(100% - 56px), transparent);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .gymbuild-customize-drawer__tabs.is-scrollable,
+    .gymbuild-customize-drawer__tabs.is-scrollable .gymbuild-customize-drawer__tab {
+      cursor: grab;
+    }
+
+    .gymbuild-customize-drawer__tabs.is-dragging,
+    .gymbuild-customize-drawer__tabs.is-dragging .gymbuild-customize-drawer__tab {
+      cursor: grabbing;
+      user-select: none;
+    }
+  }
+  /* FEEDBACK DEVIATION tab-strip fade + drag — END */
+
   .gymbuild-customize-drawer__tab {
     position: relative;
     appearance: none;
@@ -1057,6 +1126,45 @@
     font-weight: 400;
     color: var(--gb-muted);
   }
+
+  /* FEEDBACK DEVIATION (Izza, 2026-09-25) — not in Figma. The count and
+     the "Swapped" tag share one row; the count keeps its Figma type and
+     4px top gap via this wrapper. Styled from the drawer's own tokens:
+     accent text on the same #fdf2ee tint the dev banner uses, Lato 700
+     like every other label here, 8px radius like the swap button.
+     Reversal: see gymbuild-figma-deviations.md, item 3. */
+  .gymbuild-customize-drawer__card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    margin: 4px 12px 0;
+  }
+
+  .gymbuild-customize-drawer__card-meta .gymbuild-customize-drawer__card-count {
+    margin: 0;
+  }
+
+  .gymbuild-customize-drawer__swapped-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: var(--gb-radius-btn);
+    background: #fdf2ee;
+    color: var(--gb-accent);
+    font-family: Lato, var(--font-body-family, sans-serif);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .gymbuild-customize-drawer__swapped-tag[hidden] {
+    display: none;
+  }
+  /* FEEDBACK DEVIATION swapped tag — END */
 
   .gymbuild-customize-drawer__swap-btn {
     /* Figma 4539:88587 "Simple button": 186.67x40, radius 8,
@@ -1327,14 +1435,62 @@
       });
     }
 
+    /* ------------------------------------------------------------------
+       Size change. A size change is still a full navigation to
+       variant.url, so the new size's own item list, prices and weights
+       come straight from Liquid (the documented decision in CLAUDE.md).
+
+       FEEDBACK (Sagi, 2026-09-26) asked for the popup not to close on a
+       size change. Chosen fix is "Option C": before navigating, leave a
+       short-lived sessionStorage marker; on the next load this script sees
+       it and reopens the drawer straight away with no slide-in, so the
+       visitor lands back in the popup on the new size. Not in Figma.
+       Reversal: see gymbuild-figma-deviations.md, item 1.
+
+       The marker carries a timestamp and is only honoured for 30s, so an
+       abandoned or failed navigation cannot make the drawer pop open on a
+       later, unrelated visit. Storage can throw (private mode, blocked
+       site data); every access is guarded and failure just falls back to
+       the old behaviour — a normal reload with the popup closed.
+       ------------------------------------------------------------------ */
+    var REOPEN_KEY = 'gymbuild:reopen-customize:{{ product.id }}';
+    var REOPEN_MAX_AGE_MS = 30000;
+
     var sizeRadios = modal.querySelectorAll('input[name="GymBuildCustomizeSize-{{ section.id }}"]');
     sizeRadios.forEach(function (radio) {
       radio.addEventListener('change', function () {
         if (radio.checked && radio.dataset.variantUrl) {
+          try {
+            sessionStorage.setItem(REOPEN_KEY, String(Date.now()));
+          } catch (e) {}
           window.location.href = radio.dataset.variantUrl;
         }
       });
     });
+
+    function reopenAfterSizeChange() {
+      var stamp = null;
+      try {
+        stamp = sessionStorage.getItem(REOPEN_KEY);
+        sessionStorage.removeItem(REOPEN_KEY);
+      } catch (e) {}
+      if (!stamp || Date.now() - parseInt(stamp, 10) > REOPEN_MAX_AGE_MS) return;
+
+      var openBtn = document.querySelector('modal-opener[data-modal="#GymBuildCustomizeModal-{{ section.id }}"] button');
+      customElements.whenDefined('modal-dialog').then(function () {
+        // Skip the 280ms slide-in: the visitor never chose to close the
+        // drawer, so it should read as "still open", not "opening again".
+        modal.classList.add('is-instant');
+        modal.show(openBtn || undefined);
+        recalcSubtotal();
+        updateTabFades();
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            modal.classList.remove('is-instant');
+          });
+        });
+      });
+    }
 
     var tabs = Array.from(modal.querySelectorAll('[data-tab]'));
     var panels = Array.from(modal.querySelectorAll('[data-panel]'));
@@ -1352,8 +1508,109 @@
           panel.classList.toggle('is-active', isActive);
           panel.hidden = !isActive;
         });
+
+        revealTab(tab);
       });
     });
+
+    /* ------------------------------------------------------------------
+       FEEDBACK DEVIATION (Sagi, 2026-09-26) — tab strip drag + edge fade.
+       Not in Figma. The strip is overflow-x:auto with its scrollbar
+       hidden (to match Figma), which touch and trackpads can scroll but a
+       desktop mouse cannot. This adds:
+         - click-and-drag, for mouse pointers only (touch already scrolls
+           natively and must not be intercepted);
+         - .has-fade-start / .has-fade-end, so the clipped edge reads as
+           "more this way" instead of a tab that is cut off;
+         - revealTab(), so a half-visible tab slides fully into view
+           when it is clicked.
+       No arrows, by decision. A drag that moves more than DRAG_THRESHOLD
+       px swallows the click that follows it, so dragging never switches
+       tabs by accident. Reversal: delete from here to the matching END
+       marker plus the revealTab(tab) call above, and the CSS block of the
+       same name. See gymbuild-figma-deviations.md, item 2.
+       ------------------------------------------------------------------ */
+    var tabStrip = modal.querySelector('[data-gymbuild-tabs]');
+    var FADE_PX = 56;
+    var DRAG_THRESHOLD = 5;
+
+    function updateTabFades() {
+      if (!tabStrip) return;
+      var maxScroll = tabStrip.scrollWidth - tabStrip.clientWidth;
+      var scrollable = maxScroll > 1;
+      tabStrip.classList.toggle('is-scrollable', scrollable);
+      tabStrip.classList.toggle('has-fade-start', scrollable && tabStrip.scrollLeft > 1);
+      tabStrip.classList.toggle('has-fade-end', scrollable && tabStrip.scrollLeft < maxScroll - 1);
+    }
+
+    function revealTab(tab) {
+      if (!tabStrip) return;
+      var stripRect = tabStrip.getBoundingClientRect();
+      var tabRect = tab.getBoundingClientRect();
+      var target = tabStrip.scrollLeft;
+      // Clear the fade as well as the edge, so the tab ends up fully legible.
+      if (tabRect.left < stripRect.left + FADE_PX) {
+        target -= (stripRect.left + FADE_PX) - tabRect.left;
+      } else if (tabRect.right > stripRect.right - FADE_PX) {
+        target += tabRect.right - (stripRect.right - FADE_PX);
+      }
+      if (target !== tabStrip.scrollLeft) {
+        tabStrip.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
+      }
+    }
+
+    if (tabStrip) {
+      var drag = null;
+      var suppressClick = false;
+
+      tabStrip.addEventListener('scroll', updateTabFades, { passive: true });
+      if ('ResizeObserver' in window) {
+        new ResizeObserver(updateTabFades).observe(tabStrip);
+      }
+
+      tabStrip.addEventListener('pointerdown', function (event) {
+        if (event.pointerType !== 'mouse' || event.button !== 0) return;
+        if (!tabStrip.classList.contains('is-scrollable')) return;
+        drag = { x: event.clientX, left: tabStrip.scrollLeft, moved: false };
+      });
+
+      window.addEventListener('pointermove', function (event) {
+        if (!drag) return;
+        var dx = event.clientX - drag.x;
+        if (!drag.moved && Math.abs(dx) < DRAG_THRESHOLD) return;
+        if (!drag.moved) {
+          drag.moved = true;
+          tabStrip.classList.add('is-dragging');
+        }
+        tabStrip.scrollLeft = drag.left - dx;
+      });
+
+      window.addEventListener('pointerup', function () {
+        if (!drag) return;
+        if (drag.moved) {
+          suppressClick = true;
+          // If no click follows (released outside the strip), do not let
+          // the flag eat the next genuine click.
+          setTimeout(function () { suppressClick = false; }, 0);
+        }
+        drag = null;
+        tabStrip.classList.remove('is-dragging');
+      });
+
+      // Capture phase, so it runs before the tab's own click handler.
+      tabStrip.addEventListener('click', function (event) {
+        if (!suppressClick) return;
+        suppressClick = false;
+        event.preventDefault();
+        event.stopPropagation();
+      }, true);
+
+      // Native image/text drag would hijack the gesture in some browsers.
+      tabStrip.addEventListener('dragstart', function (event) {
+        event.preventDefault();
+      });
+    }
+    /* FEEDBACK DEVIATION tab strip drag + edge fade — END */
 
     // "Swap to:" sub-view — same drawer, no new modal. See snippet's top
     // comment (Figma node 4544:92078) for the visual-only/TEMPORARY-data
@@ -1364,6 +1621,7 @@
     var swapCurrentEl = modal.querySelector('[data-gymbuild-swap-current]');
     var swapGridEl = modal.querySelector('[data-gymbuild-swap-grid]');
     var backBtn = modal.querySelector('[data-gymbuild-back]');
+    var liveEl = modal.querySelector('[data-gymbuild-live]');
     var basePriceCents = footer ? parseInt(footer.dataset.basePrice, 10) || 0 : 0;
     var activeCard = null;
 
@@ -1532,9 +1790,30 @@
       activeCard.dataset.itemQty = altQty;
       activeCard.dataset.itemWeight = alt.weight;
 
+      // FEEDBACK DEVIATION (Izza, 2026-09-25) — "Swapped" tag. Driven by
+      // current vs original id, not by "a swap happened", so swapping back
+      // to the default clears it. Reversal: gymbuild-figma-deviations.md,
+      // item 3.
+      var isSwapped = String(activeCard.dataset.itemId) !== String(activeCard.dataset.originalId);
+      var swappedTag = activeCard.querySelector('[data-gymbuild-swapped-tag]');
+      if (swappedTag) swappedTag.hidden = !isSwapped;
+      activeCard.classList.toggle('is-swapped', isSwapped);
+      if (liveEl) {
+        liveEl.textContent = isSwapped
+          ? 'Swapped to ' + alt.title + '.'
+          : 'Restored the package default, ' + alt.title + '.';
+      }
+
+      var swappedCard = activeCard;
       recalcSubtotal();
 
       showMainView();
+
+      // Land back on the card that just changed, with its Swap button
+      // focused, so the tag is on screen and keyboard users keep their place.
+      var swapBtn = swappedCard.querySelector('[data-gymbuild-swap-btn]');
+      if (swapBtn) swapBtn.focus({ preventScroll: true });
+      swappedCard.scrollIntoView({ block: 'nearest' });
     }
 
     modal.querySelectorAll('[data-gymbuild-swap-btn]').forEach(function (btn) {
@@ -1555,9 +1834,19 @@
     document.addEventListener('click', function (event) {
       if (event.target.closest('[data-modal="#GymBuildCustomizeModal-{{ section.id }}"]')) {
         recalcSubtotal();
+        updateTabFades();
       }
     });
 
     recalcSubtotal();
+    updateTabFades();
+
+    // Option C size-change reopen (feedback deviation, item 1). Runs last so
+    // every handler above is bound before the drawer can be shown.
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', reopenAfterSizeChange);
+    } else {
+      reopenAfterSizeChange();
+    }
   })();
 </script>
