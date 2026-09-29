@@ -59,7 +59,7 @@ recommendation-event history line up.
 | --- | --- |
 | `id`, `sku` | `variant.sku` |
 | `title` | `product.title` |
-| `description` | `product.description`, tags and whitespace collapsed |
+| `description` | `product.descriptionHtml` with `<style>`/`<script>` blocks removed, then tags and whitespace collapsed (falls back to `product.description`) |
 | `link` | `custom.product_canonical_url`, else `product.onlineStoreUrl`; multi-variant products are deep-linked with `?variant=<id>` so each row resolves to its own variant |
 | `image_link` | `variant.image`, else `product.featuredMedia` |
 | `price` | `variant.price` — Admin base price verbatim, no promotional discount inferred |
