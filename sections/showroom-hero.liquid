@@ -1,0 +1,52 @@
+{%- comment -%} Benicia Showroom — Hero {%- endcomment -%}
+{{ 'showroom-benicia.css' | asset_url | stylesheet_tag }}
+{{ 'showroom-benicia-fixes.css' | asset_url | stylesheet_tag }}
+{%- liquid
+  assign s = section.settings
+  assign phone_tel = s.phone_tel | remove: ' ' | remove: '(' | remove: ')' | remove: '-'
+-%}
+<section class="sr-page sr-hero" style="--sr-hero-image: url('{{ s.hero_image | image_url: width: 2000 }}');">
+  <div class="sr-hero__overlay"></div>
+  <div class="sr-container sr-hero__inner">
+    <h1 class="sr-hero__title">{{ s.hero_heading }}</h1>
+    <p class="sr-hero__text">{{ s.hero_text }}</p>
+    <ul class="sr-hero__meta">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>{{ s.address }}</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>{{ s.showroom_hours }}</li>
+    </ul>
+    <div class="sr-hero__ctas">
+      <div class="sr-hero__ctarow">
+        <a class="sr-btn sr-btn--primary" href="tel:{{ phone_tel }}" data-sr-event="showroom_call_click" data-sr-location="hero">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8a15.5 15.5 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.24 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.46.57 3.6a1 1 0 0 1-.25 1z"/></svg>{{ s.cta_call_label }}
+        </a>
+        <a class="sr-btn sr-btn--secondary" href="#sr-check-model">{{ s.cta_check_label }}</a>
+      </div>
+      <a class="sr-btn sr-btn--link" href="{{ s.directions_url }}" target="_blank" rel="noopener" data-sr-event="directions_click" data-sr-location="hero">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>{{ s.cta_directions_label }}
+      </a>
+    </div>
+  </div>
+</section>
+<script src="{{ 'showroom-benicia.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Showroom Hero",
+  "tag": "section",
+  "class": "section section-showroom-hero",
+  "settings": [
+    { "type": "image_picker", "id": "hero_image", "label": "Hero background image" },
+    { "type": "text", "id": "hero_heading", "label": "Hero heading", "default": "Try Commercial Gym Equipment Before You Buy in Benicia, CA" },
+    { "type": "textarea", "id": "hero_text", "label": "Hero text", "default": "Visit our active warehouse showroom in Benicia to see and compare select French Fitness strength equipment, racks, functional trainers, free weights, commercial cardio, and finished remanufactured machines. Models on display rotate, so call ahead or check a model before you drive." },
+    { "type": "text", "id": "address", "label": "Address", "default": "457 Industrial Way, Benicia, CA 94510" },
+    { "type": "text", "id": "showroom_hours", "label": "Showroom hours", "default": "Showroom hours: Mon–Fri, 8 AM–3:30 PM" },
+    { "type": "text", "id": "cta_call_label", "label": "Call CTA label", "default": "Call to Check a Model" },
+    { "type": "text", "id": "cta_check_label", "label": "Check-a-model CTA label", "default": "Check a Model Before You Visit" },
+    { "type": "text", "id": "cta_directions_label", "label": "Directions CTA label", "default": "Get Directions" },
+    { "type": "header", "content": "Contact & Directions" },
+    { "type": "text", "id": "phone_tel", "label": "Phone (tel: value)", "default": "+19252152927" },
+    { "type": "text", "id": "directions_url", "label": "Get Directions URL", "default": "https://www.google.com/maps/dir/?api=1&destination=457+Industrial+Way,+Benicia,+CA+94510" }
+  ],
+  "presets": [{ "name": "Showroom Hero" }]
+}
+{% endschema %}
