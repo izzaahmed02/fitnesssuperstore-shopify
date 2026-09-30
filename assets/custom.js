@@ -351,3 +351,163 @@ async function loadPricingReferenceHTML() {
   const res = await fetch(url, { cache: 'force-cache' });
   return res.text();
 }
+
+/*
+ * Rubber Hex selector: near-title Purchase Type / Weight selector for product
+ * pages whose picker has exactly those two options (Rubber Hex children), or a
+ * single option listed in SINGLE_OPTION_FAMILIES. Reuses the existing variant
+ * picker (same inputs, same navigation via
+ * handleCombinedClick above) and only moves and restyles it:
+ *  - moves the picker directly under the visible product title;
+ *  - Sets / Singles as orange pills, Weight as compact orange-outline pills;
+ *  - shows only the weights that exist for the selected Purchase Type (from the
+ *    family variants map) and sorts them by weight.
+ */
+(function () {
+  const STYLE_ID = 'rh-selector-style';
+  // Finish-selector layout (snippets/finish-selector.liquid) with the Sep 28
+  // turf spec: selected = orange #D12E06 with white text, unselected = white
+  // with orange outline/text. Scoped and !important because the theme's own
+  // pill rules load later in the page.
+  const STYLES =
+    'variant-selects.rh-selector.rh-selector{display:block !important;margin:0 0 20px !important;}' +
+    'variant-selects.rh-selector.rh-selector fieldset{border:0 !important;padding:0 !important;margin:0 0 12px !important;display:flex !important;align-items:center !important;flex-wrap:wrap !important;gap:10px !important;min-width:0 !important;}' +
+    'variant-selects.rh-selector.rh-selector fieldset legend{float:left !important;font-family:"Lato",sans-serif !important;font-size:14px !important;font-weight:700 !important;line-height:1 !important;color:#23232B !important;padding:0 !important;margin:0 2px 0 0 !important;}' +
+    'variant-selects.rh-selector.rh-selector fieldset input[type=radio]{position:absolute !important;opacity:0 !important;width:1px !important;height:1px !important;margin:0 !important;}' +
+    'variant-selects.rh-selector.rh-selector fieldset input[type=radio] + label{display:inline-flex !important;align-items:center !important;justify-content:center !important;min-width:72px !important;padding:8px 16px !important;margin:0 !important;border:1px solid #D12E06 !important;border-radius:4px !important;background:#fff !important;box-shadow:none !important;font-family:"Lato",sans-serif !important;font-size:14px !important;font-weight:600 !important;letter-spacing:0 !important;line-height:1 !important;color:#D12E06 !important;text-decoration:none !important;cursor:pointer !important;text-align:center !important;transition:border-color .2s ease,color .2s ease,background .2s ease !important;}' +
+    'variant-selects.rh-selector.rh-selector fieldset input[type=radio] + label::before{content:none !important;}' +
+    'variant-selects.rh-selector.rh-selector fieldset input[type=radio] + label:hover{background:#FDEEEA !important;}' +
+    'variant-selects.rh-selector.rh-selector fieldset input[type=radio]:checked + label,variant-selects.rh-selector.rh-selector fieldset input[type=radio]:checked + label:hover{background:#D12E06 !important;border-color:#D12E06 !important;color:#fff !important;cursor:default !important;}' +
+    'variant-selects.rh-selector.rh-selector fieldset.rh-weight input[type=radio] + label{min-width:0 !important;padding:8px 10px !important;font-size:13px !important;}' +
+    'variant-selects.rh-selector.rh-selector fieldset input[type=radio][hidden] + label,variant-selects.rh-selector.rh-selector fieldset input[type=radio] + label[hidden]{display:none !important;}' +
+    'variant-selects.rh-selector.rh-selector .rh-compare-link{display:inline-block;font-family:"Lato",sans-serif;font-size:14px;font-weight:600;color:#D12E06;text-decoration:underline;margin:0 0 4px;}' +
+    '@media (max-width:749px){variant-selects.rh-selector.rh-selector fieldset legend{float:none !important;width:100% !important;margin:0 0 8px !important;}variant-selects.rh-selector.rh-selector fieldset:not(.rh-weight) input[type=radio] + label{flex:1 1 auto !important;min-width:0 !important;padding:10px 12px !important;}variant-selects.rh-selector.rh-selector fieldset.rh-weight{display:grid !important;grid-template-columns:repeat(4,minmax(0,1fr)) !important;gap:8px !important;}variant-selects.rh-selector.rh-selector fieldset.rh-weight legend{grid-column:1/-1 !important;}}';
+
+  function optionName(fieldset) {
+    const legend = fieldset.querySelector('legend');
+    return legend ? legend.textContent.split(':')[0].trim() : '';
+  }
+
+  function weightKey(value) {
+    const nums = String(value).match(/\d+(\.\d+)?/g) || ['0'];
+    return nums.map(Number);
+  }
+
+  function compareWeights(a, b) {
+    const ka = weightKey(a);
+    const kb = weightKey(b);
+    for (let i = 0; i < Math.max(ka.length, kb.length); i++) {
+      const d = (ka[i] || 0) - (kb[i] || 0);
+      if (d) return d;
+    }
+    return 0;
+  }
+
+  // Single-option families shown the same way (e.g. Turf Grade: V1 / V2 / V3),
+  // in their existing order, with a "Compare all" link when the page has a
+  // comparison table. Empty until a family is approved for it ('Turf Grade' is
+  // the planned first entry).
+  const SINGLE_OPTION_FAMILIES = [];
+
+  function injectStyles() {
+    if (document.getElementById(STYLE_ID)) return;
+    const style = document.createElement('style');
+    style.id = STYLE_ID;
+    style.textContent = STYLES;
+    document.head.appendChild(style);
+  }
+
+  function moveUnderTitle(productInfo, selects) {
+    const title = Array.from(productInfo.querySelectorAll('.product__title')).find(
+      (el) => el.offsetParent !== null
+    );
+    if (title) title.insertAdjacentElement('afterend', selects);
+  }
+
+  function setupSingleOption(productInfo, selects, fieldset) {
+    injectStyles();
+    selects.classList.add('rh-selector');
+    moveUnderTitle(productInfo, selects);
+    const count = fieldset.querySelectorAll('input[type=radio]').length;
+    // The grade comparison renders from features_specs.comparison_chart_table
+    // (sections/extra-info.liquid, .comparision-chart-table).
+    const table = document.querySelector('.comparision-chart-table, .product__description table, [class*="description"] table');
+    if (table && count > 1) {
+      if (!table.id) table.id = 'compare-grades';
+      const link = document.createElement('a');
+      link.href = '#' + table.id;
+      link.className = 'rh-compare-link';
+      link.textContent = 'Compare all ' + count + ' ' + (fieldset.querySelector('legend').textContent.split(':')[0].trim().split(' ').pop().toLowerCase() + 's');
+      selects.appendChild(link);
+    }
+    productInfo.dataset.rhSelector = 'done';
+  }
+
+  function setup(productInfo) {
+    if (productInfo.dataset.rhSelector === 'done') return;
+    const selects = productInfo.querySelector('variant-selects');
+    if (!selects) return;
+    const fieldsets = Array.from(selects.querySelectorAll('fieldset[data-variant-options]'));
+    const names = fieldsets.map(optionName);
+    if (fieldsets.length === 1 && SINGLE_OPTION_FAMILIES.indexOf(names[0]) !== -1) {
+      setupSingleOption(productInfo, selects, fieldsets[0]);
+      return;
+    }
+    const pIndex = names.indexOf('Purchase Type');
+    const wIndex = names.indexOf('Weight');
+    if (fieldsets.length !== 2 || pIndex === -1 || wIndex === -1) return;
+
+    // Family variants map when the page emits one; otherwise fall back to the
+    // picker's own availability flag (combinations that don't exist render as
+    // unavailable).
+    let variantsMap = null;
+    try {
+      variantsMap = JSON.parse(productInfo.querySelector('script[data-product-variants-map]').textContent);
+    } catch (_) {
+      variantsMap = null;
+    }
+    const purchaseFieldset = fieldsets[pIndex];
+    const weightFieldset = fieldsets[wIndex];
+    const checkedPurchase = purchaseFieldset.querySelector('input[type=radio]:checked');
+    if (!checkedPurchase) return;
+
+    const pKey = 'o' + (pIndex + 1);
+    const wKey = 'o' + (wIndex + 1);
+    const weights = Array.isArray(variantsMap)
+      ? new Set(variantsMap.filter((v) => v[pKey] === checkedPurchase.value).map((v) => v[wKey]))
+      : null;
+
+    const pairs = Array.from(weightFieldset.querySelectorAll('input[type=radio]')).map((input) => ({
+      input,
+      label: weightFieldset.querySelector('label[for="' + CSS.escape(input.id) + '"]'),
+    }));
+    pairs.sort((a, b) => compareWeights(a.input.value, b.input.value));
+    pairs.forEach(({ input, label }) => {
+      const exists = weights ? weights.has(input.value) : !input.classList.contains('disabled');
+      input.hidden = !exists;
+      weightFieldset.appendChild(input);
+      if (label) {
+        label.hidden = !exists;
+        weightFieldset.appendChild(label);
+      }
+    });
+
+    injectStyles();
+    weightFieldset.classList.add('rh-weight');
+    selects.classList.add('rh-selector');
+    moveUnderTitle(productInfo, selects);
+    productInfo.dataset.rhSelector = 'done';
+  }
+
+  function run() {
+    document
+      .querySelectorAll('product-info')
+      .forEach(setup);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run);
+  } else {
+    run();
+  }
+})();
