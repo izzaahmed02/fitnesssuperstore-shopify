@@ -135,6 +135,12 @@ def lifecycle_hit(offer_id, sku, lifecycle):
                                 or offer_id.split("-", 1)[0] in lifecycle)
 
 
+def emitted_lifecycle_row(nid, rec):
+    return ("emitted:lifecycle_excluded", "", nid, rec["sku"], rec["price"], rec["title"],
+            "discontinued per feeds/lifecycle-exclusions.csv but still emitted; "
+            "check status and template in Shopify")
+
+
 def classify(old, new, exclusions, lifecycle=frozenset()):
     """Every id on either side gets exactly one row and one reason code."""
     old_by_sku = collections.defaultdict(list)
@@ -155,6 +161,9 @@ def classify(old, new, exclusions, lifecycle=frozenset()):
     for nid in sorted(set(new) - set(old)):
         rec = new[nid]
         sku = rec["sku"]
+        if lifecycle_hit(nid, sku, lifecycle):
+            rows.append(emitted_lifecycle_row(nid, rec))
+            continue
         prior = [o for o in old_by_sku.get(sku, []) if o != nid]
         base = nid.split("-", 1)[0] if scheme_of(nid) == "composite" else None
         if prior:
@@ -194,14 +203,12 @@ def classify(old, new, exclusions, lifecycle=frozenset()):
         rows.append((code, oid, "", sku, rec["price"], rec["title"], note))
 
     # A lifecycle-excluded SKU that is still in the generated feed is the opposite
-    # failure: a discontinued product serving as a live offer. Checked across the
-    # whole new feed, because an unchanged row never shows up in the diff above.
-    for nid in sorted(new):
+    # failure: a discontinued product serving as a live offer. New ids were coded
+    # above; this catches the unchanged ones, which never show up in the diff
+    # otherwise. One row per offer id either way.
+    for nid in sorted(set(new) & set(old)):
         if lifecycle_hit(nid, new[nid]["sku"], lifecycle):
-            rec = new[nid]
-            rows.append(("emitted:lifecycle_excluded", "", nid, rec["sku"], rec["price"],
-                         rec["title"], "discontinued per feeds/lifecycle-exclusions.csv "
-                         "but still emitted; check status and template in Shopify"))
+            rows.append(emitted_lifecycle_row(nid, new[nid]))
 
     for oid in sorted(set(old) & set(new)):
         o, n = old[oid], new[oid]
