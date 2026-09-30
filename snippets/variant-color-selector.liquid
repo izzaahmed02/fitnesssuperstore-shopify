@@ -1,0 +1,176 @@
+{%- comment -%}
+  Near-title Color selector for a single product with Color variants (P82 line).
+
+  Same look and placement as finish-selector (FFB/FFS DAP). Only the UI moves: the
+  real Color option still renders (hidden) in product-variant-picker, and each
+  button here selects the matching hidden input, so the variant switches the usual
+  way (no page reload; gallery, price and cart variant update as before).
+
+  Labels are shortened on screen only; variant names and SKUs are unchanged:
+    "Silver / Gray Frame w/Black Console (Same as Primary Pic)"
+      -> "Silver/Gray Frame" (line 1) + "Black Console" (line 2)
+    "Custom Color (Select Your Color Below)" -> "Custom Color"
+
+  Custom Color: after switching, the page scrolls to the existing custom-color "+"
+  in the options and opens its popup.
+
+  Accepts:
+    product - {Object} the product to render the selector for (required)
+{%- endcomment -%}
+
+{%- liquid
+  assign color_option = null
+  for option in product.options_with_values
+    assign option_handle = option.name | handleize
+    if option_handle == 'color'
+      assign color_option = option
+      break
+    endif
+  endfor
+-%}
+
+{%- if color_option and color_option.values.size > 1 -%}
+  {%- style -%}
+    .finish-selector{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:0 0 20px;}
+    .finish-selector__label{font-family:"Lato",sans-serif;font-size:14px;font-weight:700;color:#23232B;margin-right:2px;}
+    .finish-selector__option{display:inline-flex;align-items:center;justify-content:center;min-width:72px;padding:8px 16px;border:1px solid #D4D4D8;border-radius:4px;background:#fff;font-family:"Lato",sans-serif;font-size:14px;font-weight:600;line-height:1;color:#23232B;text-decoration:none;cursor:pointer;transition:border-color .2s ease,color .2s ease,background .2s ease;}
+    .finish-selector__option:hover{border-color:#D12E06;color:#D12E06;}
+    .finish-selector__option.is-active{border-color:#D12E06;background:#D12E06;color:#fff;cursor:default;pointer-events:none;}
+    .finish-selector--variant{align-items:flex-start;flex-wrap:nowrap;}
+    .finish-selector--variant .finish-selector__label{flex:0 0 auto;display:flex;align-items:center;min-height:32px;}
+    .finish-selector--variant.has-two-lines .finish-selector__label{min-height:56px;}
+    .finish-selector--variant .finish-selector__options{display:flex;flex-wrap:wrap;gap:10px;flex:1 1 auto;min-width:0;}
+    .finish-selector--variant .finish-selector__option{flex-direction:column;gap:4px;line-height:1.2;text-align:center;}
+    .finish-selector--variant.has-two-lines .finish-selector__option{min-height:56px;}
+    .finish-selector--variant .finish-selector__option.is-active[data-custom-color]{cursor:pointer;pointer-events:auto;}
+    .finish-selector--variant .finish-selector__option.is-unavailable{opacity:.6;}
+  {%- endstyle -%}
+  {%- liquid
+    assign has_two_lines = false
+    for value in color_option.values
+      if value.name contains ' w/'
+        assign has_two_lines = true
+        break
+      endif
+    endfor
+  -%}
+  <div class="finish-selector finish-selector--variant{% if has_two_lines %} has-two-lines{% endif %}" role="group" aria-label="Choose {{ color_option.name | escape }}">
+    <div class="finish-selector__label">{{ color_option.name | escape }}:</div>
+    <div class="finish-selector__options">
+    {%- for value in color_option.values -%}
+      {%- liquid
+        assign value_name = value.name
+        assign label_main = value_name | split: ' w/' | first | split: '(' | first | replace: ' / ', '/' | strip
+        assign label_sub = ''
+        if value_name contains ' w/'
+          assign label_sub = value_name | split: ' w/' | last | split: '(' | first | strip
+        endif
+        assign value_lc = value_name | downcase
+      -%}
+      <button
+        type="button"
+        class="finish-selector__option{% if value.selected %} is-active{% endif %}{% unless value.available %} is-unavailable{% endunless %}"
+        data-variant-color-value="{{ value_name | escape }}"
+        {% if value_lc contains 'custom' %}
+          data-custom-color
+        {% endif %}
+        aria-pressed="{{ value.selected }}"
+        title="{{ value_name | escape }}"
+      >
+        <span>{{ label_main | escape }}</span>
+        {%- if label_sub != blank -%}<span>{{ label_sub | escape }}</span>{%- endif -%}
+      </button>
+    {%- endfor -%}
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      if (window.__variantColorSelectorBound) return;
+      window.__variantColorSelectorBound = true;
+
+      function setActive(value) {
+        document.querySelectorAll('.finish-selector--variant [data-variant-color-value]').forEach(function (btn) {
+          var on = btn.getAttribute('data-variant-color-value') === value;
+          btn.classList.toggle('is-active', on);
+          btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+      }
+
+      function selectHiddenValue(value) {
+        var wrap = document.querySelector('[data-hidden-color-option]');
+        if (!wrap) return;
+        var radio = Array.prototype.find.call(wrap.querySelectorAll('input[type="radio"]'), function (input) {
+          return input.value === value;
+        });
+        if (radio) {
+          if (!radio.checked) radio.click();
+          return;
+        }
+        var select = wrap.querySelector('select');
+        if (select && select.value !== value) {
+          select.value = value;
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+
+      // The page has more than one custom-color "+": a copy of the options sits in a
+      // visibility:hidden container that still has layout. Only use the one the
+      // customer can actually see.
+      function visibleTrigger() {
+        return Array.prototype.find.call(document.querySelectorAll('.swatch--custom-trigger'), function (el) {
+          var r = el.getBoundingClientRect();
+          return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility === 'visible';
+        });
+      }
+
+      function triggerInView(trigger) {
+        var r = trigger.getBoundingClientRect();
+        return r.top >= 0 && r.bottom <= window.innerHeight;
+      }
+
+      function scrollToTrigger(behavior) {
+        var trigger = visibleTrigger();
+        if (!trigger) return;
+        var top = trigger.getBoundingClientRect().top + window.pageYOffset - window.innerHeight / 3;
+        window.scrollTo({ top: Math.max(0, top), behavior: behavior });
+      }
+
+      // The variant change fires the section's gallery script (activateMobileById),
+      // which scrollIntoView()s the gallery slide once on the form change and again
+      // after the variant fetch. That pulls the page back up, so scroll only after the
+      // variant update has settled, then re-check and correct once.
+      function openCustomColor() {
+        var tries = 0;
+        (function waitForTrigger() {
+          var trigger = visibleTrigger();
+          if (!trigger) {
+            if (++tries < 50) setTimeout(waitForTrigger, 100);
+            return;
+          }
+          setTimeout(function () {
+            var t = visibleTrigger();
+            if (!t) return;
+            var group = t.closest('.custom-color-group') || document;
+            var form = group.querySelector('.custom-color-input');
+            if (!form || form.style.display === 'none') t.click();
+            scrollToTrigger('smooth');
+            setTimeout(function () {
+              var t = visibleTrigger();
+              if (t && !triggerInView(t)) scrollToTrigger('auto');
+            }, 900);
+          }, 300);
+        })();
+      }
+
+      document.addEventListener('click', function (event) {
+        var btn = event.target.closest && event.target.closest('.finish-selector--variant [data-variant-color-value]');
+        if (!btn) return;
+        var value = btn.getAttribute('data-variant-color-value');
+        selectHiddenValue(value);
+        setActive(value);
+        if (btn.hasAttribute('data-custom-color')) openCustomColor();
+      });
+    })();
+  </script>
+{%- endif -%}

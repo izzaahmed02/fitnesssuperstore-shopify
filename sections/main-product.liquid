@@ -202,6 +202,19 @@
   {%- endif -%}
   {% assign variant_images = product.images | where: 'attached_to_variant?', true | map: 'src' %}
 
+  {%- liquid
+    assign show_variant_color_selector = false
+    assign product_title_lc = product.title | downcase
+    if product_title_lc contains 'p82 console'
+      for option in product.options_with_values
+        assign option_handle = option.name | handleize
+        if option_handle == 'color' and option.values.size > 1
+          assign show_variant_color_selector = true
+        endif
+      endfor
+    endif
+  -%}
+
 
   {% comment %} pdp-page-width main-container {% endcomment %}
     <div class="product product--{{ section.settings.media_size }} product--{{ section.settings.media_position }} product--{{ section.settings.gallery_layout }} product--mobile-{{ section.settings.mobile_thumbnails }} grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %}">
@@ -215,6 +228,9 @@
                 </div>
                 {%- if product.metafields.custom.product_color != blank -%}
                   {% render 'finish-selector', product: product %}
+                {%- endif -%}
+                {%- if show_variant_color_selector -%}
+                  {% render 'variant-color-selector', product: product %}
                 {%- endif -%}
 
               {% when 'price' %}
@@ -870,6 +886,11 @@
                 {%- if product.metafields.custom.product_color != blank -%}
                   <div class="hidden lg:block">
                     {% render 'finish-selector', product: product %}
+                  </div>
+                {%- endif -%}
+                {%- if show_variant_color_selector -%}
+                  <div class="hidden lg:block">
+                    {% render 'variant-color-selector', product: product %}
                   </div>
                 {%- endif -%}
               {% when 'price' %}
@@ -1705,7 +1726,12 @@
                 %}
 
               {%- when 'variant_picker' -%}
-                {% render 'product-variant-picker', product: product, block: block, product_form_id: product_form_id %}
+                {% render 'product-variant-picker',
+                  product: product,
+                  block: block,
+                  product_form_id: product_form_id,
+                  hide_color_option: show_variant_color_selector
+                %}
               {%- when 'buy_buttons' -%}
                 {%- render 'buy-buttons',
                   block: block,
