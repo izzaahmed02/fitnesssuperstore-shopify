@@ -237,6 +237,19 @@
   {%- endif -%}
   {% assign variant_images = product.images | where: 'attached_to_variant?', true | map: 'src' %}
 
+  {%- liquid
+    assign show_variant_color_selector = false
+    assign product_title_lc = product.title | downcase
+    if product_title_lc contains 'p82 console'
+      for option in product.options_with_values
+        assign option_handle = option.name | handleize
+        if option_handle == 'color' and option.values.size > 1
+          assign show_variant_color_selector = true
+        endif
+      endfor
+    endif
+  -%}
+
   {% assign is_gift_cards_template = false %}
   {% if template.suffix == 'gift_cards' %}
     {% assign is_gift_cards_template = true %}
@@ -271,6 +284,9 @@
                     </a>
                   {% endif %}
                 </div>
+                {%- if show_variant_color_selector -%}
+                  {% render 'variant-color-selector', product: product %}
+                {%- endif -%}
               {%- when 'review_widget' -%}
                 {%- assign hide_avail_mobile = false -%}
                 {%- if product.tags contains 'avisplus-product-options' or is_gift_cards_template -%}
@@ -808,6 +824,11 @@
                     </a>
                   {% endif %}
                 </div>
+                {%- if show_variant_color_selector -%}
+                  <div class="hidden lg:block">
+                    {% render 'variant-color-selector', product: product %}
+                  </div>
+                {%- endif -%}
               {% when 'price' %}
 
 
@@ -1622,7 +1643,12 @@
                 {%- if template.suffix == 'variants-pulley' -%}
                   {% render 'product-variant-picker-pulley', product: product, block: block, product_form_id: product_form_id %}
                 {%- else -%}
-                  {% render 'product-variant-picker', product: product, block: block, product_form_id: product_form_id %}
+                  {% render 'product-variant-picker',
+                    product: product,
+                    block: block,
+                    product_form_id: product_form_id,
+                    hide_color_option: show_variant_color_selector
+                  %}
                 {%- endif -%}
               {%- when 'buy_buttons' -%}
                 {%- render 'buy-buttons',

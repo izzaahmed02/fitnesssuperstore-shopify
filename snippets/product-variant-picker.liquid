@@ -5,6 +5,9 @@
   - product: {Object} product object.
   - block: {Object} passing the block information.
   - product_form_id: {String} Id of the product form to which the variant picker is associated.
+  - hide_color_option: {Boolean} optional. When true, the "Color" option still renders here
+    (so variant switching works as usual) but is hidden; the visible buttons are the
+    variant-color-selector under the title, which click these inputs.
   Usage:
   {% render 'product-variant-picker', product: product, block: block, product_form_id: product_form_id %}
 {% endcomment %}
@@ -18,6 +21,12 @@
     {{ block.shopify_attributes }}
   >
     {%- for option in product.options_with_values -%}
+      {%- assign option_handle = option.name | handleize -%}
+      {%- assign hide_this_option = false -%}
+      {%- if hide_color_option and option_handle == 'color' -%}
+        {%- assign hide_this_option = true -%}
+      {%- endif -%}
+      {%- if hide_this_option -%}<div hidden data-hidden-color-option>{%- endif -%}
       {%- liquid
         assign swatch_count = option.values | map: 'swatch' | compact | size
         assign picker_type = block.settings.picker_type
@@ -28,12 +37,6 @@
           else
             assign picker_type = 'swatch'
           endif
-        endif
-
-        assign option_handle = option.name | handleize
-        assign product_title_lc = product.title | downcase
-        if swatch_count == 0 and option_handle == 'color' and product_title_lc contains 'p82 console'
-          assign picker_type = 'color_name_swatch'
         endif
 
         assign variant_help_key = option.name | handleize
@@ -111,24 +114,6 @@
             picker_type: picker_type
           %}
         </fieldset>
-      {%- elsif picker_type == 'color_name_swatch' -%}
-        <fieldset class="js product-form__input product-form__input--color-name-swatch" data-variant-options>
-          <legend class="form__label">
-            <span class="color-name-swatch__label">{{ option.name }}:</span>
-            <span class="color-name-swatch__value" data-selected-value>
-              {{- option.selected_value -}}
-            </span>
-            {{ variant_help_icon }}
-          </legend>
-          <div class="color-name-swatch__list">
-            {% render 'product-variant-options',
-              product: product,
-              option: option,
-              block: block,
-              picker_type: picker_type
-            %}
-          </div>
-        </fieldset>
       {%- elsif picker_type == 'button' -%}
         <fieldset class="js product-form__input product-form__input--pill" data-variant-options>
           <legend class="form__label">
@@ -174,6 +159,7 @@
           </div>
         </div>
       {%- endif -%}
+      {%- if hide_this_option -%}</div>{%- endif -%}
     {%- endfor -%}
 
     <script type="application/json" data-selected-variant>{{ product.selected_or_first_available_variant | json }}</script>
@@ -208,21 +194,6 @@
     .variant-help-icon { cursor: pointer; vertical-align: middle; margin-left: 6px; flex-shrink: 0; }
     .variant-help-modal-title { margin: 0 0 12px; padding-right: 32px; }
     .variant-help-modal-body { line-height: 1.5; }
-    .product-form__input--color-name-swatch legend { font-size: 14px; color: #000; }
-    .product-form__input--color-name-swatch .color-name-swatch__label { font-weight: 700; }
-    .product-form__input--color-name-swatch .color-name-swatch__value { font-weight: 400; }
-    .product-form__input--color-name-swatch .color-name-swatch__list { display: flex; flex-wrap: wrap; gap: 12px; padding: 4px; }
-    .product-form__input--color-name-swatch input[type='radio'] { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
-    .product-form__input--color-name-swatch .color-name-swatch {
-      display: flex; align-items: center; justify-content: center;
-      width: 24px; height: 24px; border-radius: 50%; box-sizing: border-box;
-      border: 0.8px solid #e5e5e5; cursor: pointer; margin: 0; padding: 0;
-    }
-    .product-form__input--color-name-swatch .color-name-swatch:hover { border-color: #ff6600; }
-    .product-form__input--color-name-swatch .color-name-swatch--custom { background: #3e77aa; }
-    .product-form__input--color-name-swatch input[type='radio']:checked + .color-name-swatch { outline: 1px solid var(--primary-orange, #d12e06); outline-offset: 3px; }
-    .product-form__input--color-name-swatch input[type='radio']:focus-visible + .color-name-swatch { outline: 2px solid #333; outline-offset: 3px; }
-    .product-form__input--color-name-swatch input.disabled + .color-name-swatch { opacity: 0.6; }
   </style>
 
   <script>
