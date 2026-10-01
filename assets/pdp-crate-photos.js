@@ -17,6 +17,16 @@
   'use strict';
 
   var activeTrigger = null;
+  var activeDialog = null;
+
+  var FOCUSABLE = [
+    'a[href]',
+    'button:not([disabled])',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])'
+  ].join(',');
 
   function elements() {
     return {
@@ -26,7 +36,35 @@
   }
 
   function onKeydown(event) {
-    if (event.key === 'Escape' || event.key === 'Esc') close();
+    if (event.key === 'Escape' || event.key === 'Esc') {
+      close();
+      return;
+    }
+
+    // aria-modal="true" promises the dialog is modal, so Tab must not walk out
+    // into the PDP behind it. A photo-only dialog has just the close button to
+    // land on, so focus cycles back to it.
+    if (event.key !== 'Tab' || !activeDialog) return;
+
+    var items = activeDialog.querySelectorAll(FOCUSABLE);
+    if (!items.length) {
+      event.preventDefault();
+      return;
+    }
+
+    var first = items[0];
+    var last = items[items.length - 1];
+
+    if (!activeDialog.contains(document.activeElement)) {
+      event.preventDefault();
+      first.focus();
+    } else if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   function onBackdropClick(event) {
@@ -43,6 +81,8 @@
       els.wrapper.style.display = 'none';
     }
     if (els.container) els.container.innerHTML = '';
+
+    activeDialog = null;
 
     if (activeTrigger) {
       activeTrigger.focus();
@@ -76,6 +116,7 @@
     // it is positioned against #dynamic-product-content either way.
     var dialog = els.container.querySelector('.crate-photos');
     (dialog || els.container).appendChild(closeButton);
+    activeDialog = dialog;
 
     activeTrigger = trigger;
     els.wrapper.style.display = 'flex';
