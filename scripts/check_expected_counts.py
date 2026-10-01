@@ -238,7 +238,7 @@ def check(manifest, expected, matched, id_diffs=None):
         combined = adds.get("combined_expected_new_offers")
         if combined is not None and total_new < combined:
             notes.append(f"WARN: {total_new} catalog additions across both feeds against an "
-                         f"expected {combined} (31 French Fitness at $100 and over plus the 55 "
+                         f"expected {combined} (the rostered French Fitness additions plus the 55 "
                          "queued master SKUs). Some of the 55 are legitimately dropped by the "
                          "floor, so check excluded_rows.csv before treating this as a defect.")
     elif adds:
