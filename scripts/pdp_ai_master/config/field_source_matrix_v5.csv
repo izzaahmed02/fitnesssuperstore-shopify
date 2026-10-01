@@ -1,0 +1,83 @@
+field,source_type,source_path,volatility,embed_ok_for_rag,customer_facing,verification_status,notes
+shopify_product_id,SAPI-DIRECT,product.id,durable,TRUE,FALSE,API_POPULATED,Join key.
+handle,SAPI-DIRECT,product.handle,durable,TRUE,TRUE,API_POPULATED,Join key.
+title,SAPI-DIRECT,product.title,durable,TRUE,TRUE,API_POPULATED,
+product_url,SAPI-DIRECT,product.onlineStoreUrl,durable,TRUE,TRUE,API_POPULATED,Join key. Null when unpublished.
+status,SAPI-DIRECT,product.status,durable,FALSE,FALSE,API_POPULATED,ACTIVE/DRAFT/ARCHIVED. UNLISTED surfaces via publication state.
+vendor,SAPI-DIRECT,product.vendor,durable,TRUE,TRUE,API_POPULATED,
+product_type,SAPI-DIRECT,product.productType,durable,TRUE,FALSE,API_POPULATED,Frequently "Product Index"; not a customer-facing type.
+tags,SAPI-DIRECT,product.tags,durable,FALSE,FALSE,API_POPULATED,Carries operational flags (OUT_OF_STOCK_HOLD / REMOVE FROM FEEDS / hidden).
+collections,SAPI-DIRECT,product.collections,durable,TRUE,TRUE,API_POPULATED,
+taxonomy_category,SAPI-DIRECT,product.category.fullName,durable,TRUE,FALSE,API_POPULATED,Shopify Standard Product Taxonomy.
+seo_title,SAPI-DIRECT,product.seo.title,durable,TRUE,TRUE,API_POPULATED,
+seo_description,SAPI-DIRECT,product.seo.description,durable,TRUE,TRUE,API_POPULATED,
+description_html,SAPI-DIRECT,product.descriptionHtml,durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,Contains spec claims; verify before AI restatement.
+image_link,SAPI-DIRECT,product.media[IMAGE][0],durable,TRUE,TRUE,API_POPULATED,
+additional_image_links,SAPI-DIRECT,product.media[IMAGE][1..],durable,TRUE,TRUE,API_POPULATED,
+video_links,SAPI-DIRECT,product.media[VIDEO|EXTERNAL_VIDEO],durable,TRUE,TRUE,API_POPULATED,
+variant_id,SAPI-DIRECT,variant.id,durable,TRUE,FALSE,API_POPULATED,Join key.
+sku,SAPI-DIRECT,variant.sku,durable,TRUE,FALSE,API_POPULATED,Join key. Null on some variants - see conflict report.
+barcode,SAPI-DIRECT,variant.barcode,durable,TRUE,FALSE,API_POPULATED,GTIN the Google feed reads. Distinct from custom.upc_code.
+price,SAPI-DIRECT,variant.price,volatile,FALSE,TRUE,LIVE_FETCH_REQUIRED,Never embedded.
+compare_at_price,SAPI-DIRECT,variant.compareAtPrice,volatile,FALSE,TRUE,LIVE_FETCH_REQUIRED,Never embedded. Deceptive-pricing exposure - see conflict report.
+inventory_quantity,SAPI-DIRECT,variant.inventoryQuantity,volatile,FALSE,FALSE,LIVE_FETCH_REQUIRED,Placeholder buffers present. Not real stock.
+inventory_policy,SAPI-DIRECT,variant.inventoryPolicy,volatile,FALSE,FALSE,LIVE_FETCH_REQUIRED,
+available_for_sale,SAPI-DIRECT,variant.availableForSale,volatile,FALSE,TRUE,LIVE_FETCH_REQUIRED,Authoritative buyability signal - prefer over inventory_quantity.
+cost_internal,SAPI-DIRECT,variant.inventoryItem.unitCost.amount,volatile,FALSE,FALSE,INTERNAL_ONLY,Never leaves internal outputs.
+shipping_weight,SAPI-DIRECT,variant.inventoryItem.measurement.weight,durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,
+updated_at,SAPI-DIRECT,product.updatedAt,durable,FALSE,FALSE,API_POPULATED,Staleness input.
+product_code,SAPI-META,metafield custom.product_code,durable,TRUE,FALSE,API_POPULATED,
+brand,SAPI-META,metafield custom.brand,durable,TRUE,TRUE,API_POPULATED,
+grade,SAPI-META,metafield custom.grade,durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,"Commercial / Light Commercial / Home. Misused as a turf grade on FF-AGSL, so it is not safely comparable across the catalog."
+condition_state,SAPI-META,metafield custom.condition_state,durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,New / remanufactured / As Is. Verify before any AI statement.
+warranty,SAPI-META,metafield custom.warranty,volatile,FALSE,TRUE,NEEDS_HUMAN_VERIFICATION,"Never embedded. Never stated unverified. Carries a leading U+200B zero-width space on most SKUs - strip before comparison or matching."
+warranty_info,SAPI-META,metaobject features_specs.warranty_info,volatile,FALSE,TRUE,NEEDS_HUMAN_VERIFICATION,Rich text. Same rule as warranty.
+ships,SAPI-META,metafield custom.ships,volatile,FALSE,TRUE,LIVE_FETCH_REQUIRED,
+processing_time,SAPI-META,metafield custom.processing_time,volatile,FALSE,TRUE,LIVE_FETCH_REQUIRED,
+processing_time_long,SAPI-META,metafield custom.processing_time_long,volatile,FALSE,TRUE,LIVE_FETCH_REQUIRED,
+upc_code,SAPI-META,metafield custom.upc_code,durable,TRUE,FALSE,API_POPULATED,Present on SKUs whose variant.barcode is blank - see conflict report.
+ean,SAPI-META,metafield custom.ean,durable,TRUE,FALSE,API_POPULATED,
+mpn,SAPI-META,metafield custom.mpn,durable,TRUE,FALSE,API_POPULATED,
+vendor_part_no,SAPI-META,metafield custom.vendor_part_no,durable,TRUE,FALSE,API_POPULATED,
+length_in,SAPI-META,metafield custom.length_in,durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,
+width_in,SAPI-META,metafield custom.width_in,durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,
+height_in,SAPI-META,metafield custom.height_in,durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,
+product_weight_lbs,SAPI-META,metafield custom.product_weight_lbs,durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,
+short_description,SAPI-META,metafield custom.short_description,durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,
+breadcrumbs,SAPI-META,metafield custom.breadcrumbs,durable,TRUE,TRUE,API_POPULATED,
+breadcrumb_paths,SAPI-META,metaobject list custom.breadcrumb_paths,durable,TRUE,TRUE,API_POPULATED,Resolved to readable titles + collection IDs.
+product_options,SAPI-META,metaobject list options.product_options,durable,TRUE,TRUE,API_POPULATED,Resolved to full field sets.
+product_attributes,SAPI-META,metaobject custom.product_attributes_*,durable,TRUE,TRUE,API_POPULATED,Per-category attribute entry.
+related_products,SAPI-META,metafield custom.related_products,durable,TRUE,TRUE,API_POPULATED,Product references resolved to handle + title.
+features,SAPI-META,metaobject features_specs.features,durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,Rich text. Contains spec claims.
+benefits,SAPI-META,metaobject features_specs.benefits,durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,Rich text.
+tech_specs,SAPI-META,metaobject features_specs.tech_specs + other_features,durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,HTML tables. Material spec claims.
+weight_stacks,SAPI-META,metaobject features_specs.weight_stacks,durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,Tahoe-line verification open in the Tahoe QA thread.
+comparison_chart,SAPI-META,metaobject features_specs.comparison_chart_table,durable,FALSE,TRUE,NEEDS_APPROVAL,Names competitors directly. Approval required before any AI surface quotes it.
+comparison_chart_title,SAPI-META,metaobject features_specs.comparison_chart_title,durable,FALSE,TRUE,NEEDS_APPROVAL,Same rule as comparison_chart.
+buying_guide,SAPI-META,metaobject features_specs.buying_guide,durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,
+faqs,SAPI-META,metaobject features_specs.frequently_asked_questions,durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,Carries embedded FAQPage JSON-LD.
+set_includes,SAPI-META,metaobject features_specs.set_includes,durable,TRUE,TRUE,API_POPULATED,Null on every sample SKU checked - authoring gap not a pipeline gap.
+accessories_included,SAPI-META,metaobject features_specs.accessories_included,durable,TRUE,TRUE,API_POPULATED,
+shipping_dims_weight,SAPI-META,metaobject features_specs.shipping_dims_weight(_2),durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,
+manuals_downloads,SAPI-META,metaobject custom.extra_info + downloads_other_info,durable,TRUE,TRUE,API_POPULATED,Resolved to link JSON. Absent on part of the sample.
+retail_price,SAPI-META,metafield custom.retail_price,volatile,FALSE,FALSE,LIVE_FETCH_REQUIRED,Integer cents. Not the PDP price.
+product_canonical_url,SAPI-META,metafield custom.product_canonical_url,durable,FALSE,FALSE,NOT_A_SOURCE,"Null on all 20 sample SKUs. Canonicals are emitted by Smart SEO, not this field. Do not read it as the canonical."
+main_category,SAPI-META,metafield custom.main_category,durable,TRUE,FALSE,API_POPULATED,
+sub_category,SAPI-META,metafield custom.sub_category,durable,TRUE,FALSE,API_POPULATED,
+review_rating,SAPI-META,metafield reviews.rating,volatile,FALSE,TRUE,LIVE_FETCH_REQUIRED,Never embedded.
+review_count,SAPI-META,metafield reviews.rating_count,volatile,FALSE,TRUE,LIVE_FETCH_REQUIRED,Never embedded.
+google_product_category,GMC,metafield mm-google-shopping.google_product_category,durable,TRUE,FALSE,API_POPULATED,Also mirrored in mc-facebook namespace.
+google_product_type,GMC,Google Shopping feed export,durable,TRUE,FALSE,FEED_JOIN_REQUIRED,Requires the feed export - outstanding.
+item_group_id,GMC,Google Shopping feed export,durable,TRUE,FALSE,BLOCKED,Blocked on the Rubber Hex parent/URL decision.
+custom_labels,GMC,Google Shopping feed export,durable,FALSE,FALSE,NOT_IN_SHOPIFY,Feed-side only. No Shopify field backs these.
+structured_data_schema,THEME,theme/Liquid product schema output,durable,FALSE,TRUE,NEEDS_HUMAN_VERIFICATION,Must not publish InStock where available_for_sale is false.
+pdp_badges,THEME,theme section settings,durable,FALSE,TRUE,NEEDS_HUMAN_VERIFICATION,
+promo_messaging,THEME,theme section settings,volatile,FALSE,TRUE,LIVE_FETCH_REQUIRED,Never embedded.
+financing_messaging,THEME,theme/app block,volatile,FALSE,TRUE,LIVE_FETCH_REQUIRED,Never embedded. Regulated content.
+delivery_installation_notes,THEME,theme/Liquid + metafield mix,volatile,FALSE,TRUE,LIVE_FETCH_REQUIRED,Never embedded.
+breadcrumb_rendered,THEME,theme/Liquid breadcrumb output,durable,TRUE,TRUE,API_POPULATED,Rendered path can differ from breadcrumb_paths.
+recommendation_overlay,MANUAL,Product Recommendation Matrix REV9,durable,FALSE,FALSE,PREVIEW_UNAPPROVED,Overlay only. Never a factual PDP source.
+replacement_product_link,MANUAL,Product team maintained,durable,TRUE,TRUE,NOT_IN_SHOPIFY,No field exists yet - needs creating before it can be populated.
+discontinued_status,MANUAL,Product team maintained,durable,TRUE,TRUE,NOT_IN_SHOPIFY,No field exists yet - needs creating before it can be populated.
+preorder_backorder_status,MANUAL,Product team maintained,volatile,FALSE,TRUE,NOT_IN_SHOPIFY,No field exists yet. Never embedded once it does.
