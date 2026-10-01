@@ -1,5 +1,6 @@
 {%- assign product_url = request.origin | append: product.url -%}
 {%- assign selected_variant = product.selected_or_first_available_variant -%}
+{%- assign fallback_logo_url = 'logo.png' | asset_url -%}
 
 <script type="application/ld+json">
 {
@@ -9,6 +10,20 @@
       "@id": {{ product_url | append: '#product' | json }},
       "@type": "Product",
       "name": {{ product.title | json }},
+
+      {% if product.metafields.reviews.rating.value.rating and product.metafields.reviews.rating_count.value %}
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "@id": {{ product_url | append: '#aggregaterating' | json }},
+        "name": {{ product.title | json }},
+        "ratingValue": {{ product.metafields.reviews.rating.value.rating | json }},
+        "bestRating": 5,
+        "worstRating": 1,
+        "ratingCount": {{ product.metafields.reviews.rating_count.value | json }},
+        "reviewCount": {{ product.metafields.reviews.rating_count.value | json }}
+      },
+      {% endif %}
+
       "description": {{ product.description | strip_html | strip_newlines | strip | replace: '&amp;', '&' | truncate: 500 | default: 'Discontinued fitness equipment.' | json }},
       "image": [
         {% for image in product.images %}
@@ -52,6 +67,74 @@
         }
       },
       "url": {{ product_url | json }}
+
+      {% if product.metafields.custom.seo_videos %}
+      ,
+      "subjectOf": [
+        {% for video in product.metafields.custom.seo_videos.value %}
+          {%- liquid
+            assign video_title = video.title.value | default: video.title | default: product.title | default: shop.name
+
+            assign video_description = video.description.value | default: video.description | default: product.description | default: shop.description
+            assign video_description = video_description | strip_html | strip_newlines | strip | replace: '&amp;', '&' | truncate: 500
+
+            if video_description == blank
+              assign video_description = 'Video for ' | append: product.title
+            endif
+
+            assign video_thumbnail = video.thumbnail_url.value | default: video.thumbnail_url
+
+            if video_thumbnail == blank and product.featured_image
+              assign video_thumbnail = product.featured_image.src | img_url: 'master' | split: '?' | first
+            endif
+
+            if video_thumbnail == blank
+              assign video_thumbnail = 'product-placeholder.jpg' | asset_url | split: '?' | first
+            endif
+
+            assign video_upload_date = video.upload_date.value | default: video.upload_date | default: product.published_at | default: product.created_at | default: '2026-01-01T00:00:00Z'
+
+            assign video_duration_seconds = video.duration_seconds.value | default: video.duration_seconds
+
+            assign video_content_url = video.content_url.value | default: video.content_url
+            assign video_embed_url = video.embed_url.value | default: video.embed_url | default: video.video_url.value | default: video.video_url
+
+            assign publisher_logo_url = settings.logo | image_url: width: 800
+          -%}
+          {
+            "@type": "VideoObject",
+            "@id": {{ product_url | append: '#video-' | append: forloop.index | json }},
+            "name": {{ video_title | strip | json }},
+            "description": {{ video_description | json }},
+            "thumbnailUrl": [
+              {% if video_thumbnail contains 'https://' or video_thumbnail contains 'http://' %}
+                {{ video_thumbnail | json }}
+              {% else %}
+                {{ video_thumbnail | prepend: 'https:' | json }}
+              {% endif %}
+            ],
+            "uploadDate": {{ video_upload_date | date: '%Y-%m-%dT%H:%M:%SZ' | json }},
+            {% if video_duration_seconds != blank %}
+            "duration": {{ 'PT' | append: video_duration_seconds | append: 'S' | json }},
+            {% endif %}
+            {% if video_content_url != blank %}
+            "contentUrl": {% if video_content_url contains 'https://' or video_content_url contains 'http://' %}{{ video_content_url | json }}{% else %}{{ video_content_url | prepend: 'https:' | json }}{% endif %},
+            {% endif %}
+            {% if video_embed_url != blank %}
+            "embedUrl": {% if video_embed_url contains 'https://' or video_embed_url contains 'http://' %}{{ video_embed_url | json }}{% else %}{{ video_embed_url | prepend: 'https:' | json }}{% endif %},
+            {% endif %}
+            "publisher": {
+              "@type": "Organization",
+              "name": {{ shop.name | json }},
+              "logo": {
+                "@type": "ImageObject",
+                "url": {% if publisher_logo_url contains 'https://' or publisher_logo_url contains 'http://' %}{{ publisher_logo_url | json }}{% elsif publisher_logo_url != blank %}{{ publisher_logo_url | prepend: 'https:' | json }}{% elsif fallback_logo_url contains 'https://' or fallback_logo_url contains 'http://' %}{{ fallback_logo_url | json }}{% else %}{{ fallback_logo_url | prepend: 'https:' | json }}{% endif %}
+              }
+            }
+          }{% unless forloop.last %},{% endunless %}
+        {% endfor %}
+      ]
+      {% endif %}
     },
     {
       "@type": "BreadcrumbList",
@@ -62,19 +145,70 @@
           "name": {{ shop.name | json }},
           "item": {{ request.origin | append: '/' | json }}
         }
-        {% if collection %}
+
+        {%- assign position = 2 -%}
+        {%- assign all_breadcrumb_objects = product.metafields.custom.breadcrumb_paths.value | sort: "priority" -%}
+        {%- assign active_path = nil -%}
+        {%- assign source_flag = "unset" -%}
+
+        {%- if collection -%}
+          {%- for b_path in all_breadcrumb_objects -%}
+            {%- assign b_steps = b_path.steps.value -%}
+            {%- assign latest_step = b_steps.last -%}
+            {%- if latest_step and latest_step.handle == collection.handle -%}
+              {%- assign active_path = b_path -%}
+              {%- assign source_flag = "metaobject" -%}
+              {%- break -%}
+            {%- endif -%}
+          {%- endfor -%}
+        {%- endif -%}
+
+        {%- if active_path == nil -%}
+          {%- for fallback_path in all_breadcrumb_objects -%}
+            {%- if fallback_path.steps and fallback_path.steps.value != blank -%}
+              {%- assign active_path = fallback_path -%}
+              {%- assign source_flag = "metaobject" -%}
+              {%- break -%}
+            {%- endif -%}
+          {%- endfor -%}
+        {%- endif -%}
+
+        {%- if source_flag == "unset" and product.collections.first -%}
+          {%- assign default_coll = product.collections.first -%}
+          {%- assign source_flag = "default" -%}
+        {%- endif -%}
+
+        {%- if source_flag == "metaobject" -%}
+          {%- assign nav_steps = active_path.steps.value -%}
+          {%- assign nav_titles = active_path.custom_titles.value -%}
+          {%- for nav_coll in nav_steps -%}
+            {%- if nav_coll.handle != blank -%}
+              ,
+              {
+                "@type": "ListItem",
+                "position": {{ position }},
+                "name": {{ nav_titles[forloop.index0] | default: nav_coll.title | json }},
+                "item": {{ request.origin | append: '/collections/' | append: nav_coll.handle | json }}
+              }
+              {%- assign position = position | plus: 1 -%}
+            {%- endif -%}
+          {%- endfor -%}
+
+        {%- elsif source_flag == "default" -%}
+          ,
+          {
+            "@type": "ListItem",
+            "position": {{ position }},
+            "name": {{ default_coll.title | json }},
+            "item": {{ request.origin | append: '/collections/' | append: default_coll.handle | json }}
+          }
+          {%- assign position = position | plus: 1 -%}
+        {%- endif -%}
+
         ,
         {
           "@type": "ListItem",
-          "position": 2,
-          "name": {{ collection.title | json }},
-          "item": {{ request.origin | append: collection.url | json }}
-        }
-        {% endif %}
-        ,
-        {
-          "@type": "ListItem",
-          "position": {% if collection %}3{% else %}2{% endif %},
+          "position": {{ position }},
           "name": {{ product.title | json }},
           "item": {{ product_url | json }}
         }
