@@ -103,6 +103,22 @@ class BuilderTests(unittest.TestCase):
         _, _, feed = self.build([node, variant])
         self.assertEqual(feed[0]["description"], "Low-odor rubber & grip. Smell?")
 
+    def test_description_rebuild_drops_html_comments(self):
+        # Commented-out markup is hidden on the PDP and absent from Shopify's
+        # plain text; rebuilding from HTML must not surface it (or a stray -->).
+        html = (
+            "<p>Recline Forma bike.</p><style>.x{display:none}</style>"
+            "<!--<br><a href=\"/manual.pdf\">Owners Manual</a><p>1 Year Warranty</p>-->"
+            "<p>Constant Pulse Rate.</p><!-- unclosed <p>Prop 65</p>"
+        )
+        node, variant = product(
+            1, "SKU-1", "10.00",
+            description="Recline Forma bike. .x{display:none} Constant Pulse Rate.",
+            descriptionHtml=html,
+        )
+        _, _, feed = self.build([node, variant])
+        self.assertEqual(feed[0]["description"], "Recline Forma bike. Constant Pulse Rate.")
+
     def test_description_without_embedded_code_is_shopify_text_verbatim(self):
         # Rows with no <style>/<script> keep Shopify's plain text exactly, so the
         # fix cannot reflow the ~3,400 descriptions that never leaked.

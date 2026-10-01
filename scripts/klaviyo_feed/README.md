@@ -59,7 +59,7 @@ recommendation-event history line up.
 | --- | --- |
 | `id`, `sku` | `variant.sku` |
 | `title` | `product.title` |
-| `description` | `product.descriptionHtml` with `<style>`/`<script>` blocks removed, then tags and whitespace collapsed (falls back to `product.description`) |
+| `description` | `product.descriptionHtml` with `<style>`/`<script>` blocks and HTML comments removed, then tags and whitespace collapsed (falls back to `product.description`) |
 | `link` | `product.onlineStoreUrl` only; `custom.product_canonical_url` is SEO-only and never governs email/catalog destinations; multi-variant products are deep-linked with `?variant=<id>` |
 | `image_link` | `variant.image`, else `product.featuredMedia` |
 | `price` | `variant.price` — Admin base price verbatim, no promotional discount inferred |

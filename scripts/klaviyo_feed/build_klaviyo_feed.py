@@ -135,6 +135,10 @@ WS_RE = re.compile(r"\s+")
 # Hex, bumper and grip plate families, the discontinued-PDP card) leaked raw
 # CSS/JS into every catalog product block. Drop those blocks from the HTML first.
 EMBEDDED_CODE_RE = re.compile(r"<(style|script)\b[^>]*>.*?</\1\s*>", re.I | re.S)
+# Commented-out markup never renders on the PDP and Shopify's plain text drops
+# it, so the rebuilt text must too. An unclosed comment hides the rest of the
+# page in a browser, so it runs to the end.
+HTML_COMMENT_RE = re.compile(r"<!--.*?(?:-->|\Z)", re.S)
 
 
 def plain_text(value):
@@ -153,7 +157,8 @@ def description_of(product):
     html = product.get("descriptionHtml") or ""
     if not EMBEDDED_CODE_RE.search(html):
         return plain_text(product.get("description"))
-    text = TAG_RE.sub(" ", EMBEDDED_CODE_RE.sub(" ", html))
+    html = EMBEDDED_CODE_RE.sub(" ", HTML_COMMENT_RE.sub(" ", html))
+    text = TAG_RE.sub(" ", html)
     return WS_RE.sub(" ", unescape(text)).strip()
 
 
