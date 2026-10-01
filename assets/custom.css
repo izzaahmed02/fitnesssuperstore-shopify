@@ -285,6 +285,23 @@ body.accessibility-mode .pdp-breadcrumbs .custom-breadcrumbs__navigation .breadc
   font-weight: 400 !important;
 }
 
+/* PR #879 carried the same .breadcrumb-segment markup to the page, blog and
+   article nav, but the rule above is scoped to .pdp-breadcrumbs, so in
+   accessibility mode the base-v2.min.css !important rules turned every
+   ancestor and parent crumb orange there - making the visible mobile parent
+   read as the current page. Reported by Saliha, 27 Sept.
+
+   Deliberately a separate block rather than widening the PDP selector above,
+   so that rule stays byte-identical. The current page keeps its orange/bold
+   treatment via .breadcrumb-current, which this does not touch, and the
+   comparison-chart renderer is unaffected - it uses .fake-breadcrumbs__url,
+   not .breadcrumb-segment. */
+body.accessibility-mode .page-breadcrumbs .custom-breadcrumbs__navigation .breadcrumb-segment,
+body.accessibility-mode .page-breadcrumbs .custom-breadcrumbs__navigation .breadcrumb-segment a {
+  color: #23232b !important;
+  font-weight: 400 !important;
+}
+
 /* CGB "Plan Your Gym Your Way" (rich-text section commercial_gym_buildouts_planning_links):
    .rich-text__buttons--multiple stretches each button (flex-grow, 22rem min-width), and the
    theme's .button is display:flex with no justify-content, so the labels packed to the
