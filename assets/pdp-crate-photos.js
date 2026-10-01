@@ -52,7 +52,7 @@
 
   function open(trigger) {
     var els = elements();
-    var template = document.getElementById(trigger.getAttribute('aria-controls'));
+    var template = document.getElementById(trigger.getAttribute('data-crate-photos-template'));
 
     if (!els.wrapper || !els.container || !template) return;
 

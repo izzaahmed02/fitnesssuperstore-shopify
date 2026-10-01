@@ -202,6 +202,7 @@
 
 #dynamic-product-content .crate-photos__image {
   width: 100%;
+  max-width: 100%;
   height: auto;
   max-height: 60vh;
   object-fit: contain;
@@ -212,7 +213,7 @@
 
 @media (max-width: 749px) {
   #dynamic-product-content .crate-photos__grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     max-height: 70vh;
     overflow-y: auto;
   }
@@ -224,13 +225,36 @@
 }
 
 /* The crate popup's close control is a real <button> so Enter and Space
-   activate it; the theme's .modal-close carries only positioning, so strip the
-   browser's own button chrome. */
+   activate it. The theme's .modal-close sets top/right but no `position`, so
+   those offsets are inert and only its descendant SVG is absolutely
+   positioned. Left alone, the button box would sit in flow below the gallery
+   while the icon floated at the top, and focusing it would scroll this
+   overflow-y:auto container to the bottom with the focus ring on an empty box.
+   Position the button itself and let the icon sit inside it, so its visual and
+   focus locations coincide. */
 #dynamic-product-content button.modal-close {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  z-index: 1;
   padding: 0;
   border: 0;
   background: none;
   color: inherit;
   line-height: 1;
   cursor: pointer;
+}
+
+#dynamic-product-content button.modal-close svg {
+  position: static;
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+@media (max-width: 749px) {
+  #dynamic-product-content button.modal-close {
+    top: 11px;
+    right: 10px;
+  }
 }

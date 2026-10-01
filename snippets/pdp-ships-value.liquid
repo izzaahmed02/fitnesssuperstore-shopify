@@ -94,17 +94,31 @@
 -%}
 {%- if is_crate_treatment -%}
   {%- if crate_photo_count > 0 -%}
-    {%- assign crate_modal_id = 'CratePhotos-' | append: product.id -%}
+    {%- liquid
+      # aria-controls must name the dialog the shopper actually gets, not the
+      # inert <template> it is cloned from, so the two carry separate ids. The
+      # dialog id and its role/label live on the cloned .crate-photos element.
+      assign crate_dialog_id = 'CratePhotos-' | append: product.id
+      assign crate_template_id = 'CratePhotosTemplate-' | append: product.id
+      assign crate_heading_id = 'CratePhotosHeading-' | append: product.id
+    -%}
     <button
       type="button"
       class="ships-crate__trigger"
       data-crate-photos-trigger
+      data-crate-photos-template="{{ crate_template_id }}"
       aria-haspopup="dialog"
-      aria-controls="{{ crate_modal_id }}"
+      aria-controls="{{ crate_dialog_id }}"
     >{{ ships_label }}</button>
-    <template id="{{ crate_modal_id }}">
-      <div class="crate-photos">
-        <h2 class="crate-photos__heading">{{ ships_label }} — {{ product.title | escape }}</h2>
+    <template id="{{ crate_template_id }}">
+      <div
+        class="crate-photos"
+        id="{{ crate_dialog_id }}"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="{{ crate_heading_id }}"
+      >
+        <h2 class="crate-photos__heading" id="{{ crate_heading_id }}">{{ ships_label }} — {{ product.title | escape }}</h2>
         <div class="crate-photos__grid">
           {%- for photo in crate_photos -%}
             {%- liquid
