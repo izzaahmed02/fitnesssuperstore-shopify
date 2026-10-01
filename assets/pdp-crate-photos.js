@@ -69,7 +69,13 @@
     var closeIcon = document.getElementById('icon-close-template');
     closeButton.innerHTML = closeIcon ? closeIcon.innerHTML : '&times;';
     closeButton.addEventListener('click', close);
-    els.container.appendChild(closeButton);
+
+    // Inside the role="dialog" element, not beside it: initial focus has to
+    // land within the dialog for its accessible name to be announced and for
+    // aria-modal to describe the focused context. It stays visually put, since
+    // it is positioned against #dynamic-product-content either way.
+    var dialog = els.container.querySelector('.crate-photos');
+    (dialog || els.container).appendChild(closeButton);
 
     activeTrigger = trigger;
     els.wrapper.style.display = 'flex';
