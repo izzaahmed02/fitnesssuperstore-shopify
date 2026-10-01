@@ -61,6 +61,21 @@ OPTION_CARRIER_PRODUCT_IDS = {
 }
 OPTION_CARRIER_EXCLUDED = "option_carrier_excluded"
 
+# Individual variant rows that must never reach the feed, keyed by SKU.
+# FFT-DCC-APU is currently on an excluded option carrier, but this standing
+# guard keeps it out even if that row is later moved or recreated elsewhere.
+EXCLUDED_VARIANT_SKUS = {"FFT-DCC-APU"}
+SKU_EXCLUDED = "sku_excluded"
+_EXCLUDED_VARIANT_SKUS_UPPER = {sku.upper() for sku in EXCLUDED_VARIANT_SKUS}
+
+
+def variant_suppression_reason(variant):
+    """Reason this single variant row never reaches the candidate set, or None."""
+    sku = (variant.get("sku") or "").strip().upper()
+    if sku in _EXCLUDED_VARIANT_SKUS_UPPER:
+        return SKU_EXCLUDED
+    return None
+
 
 def suppression_reason(product):
     """Reason this whole product never reaches the candidate set, or None."""
@@ -221,11 +236,11 @@ def image_of(product, variant):
 def link_of(product, variant=None, variant_count=1):
     """Product PDP, deep-linked to the variant when the product has several.
 
-    A variant-level feed needs one distinct link per row; without the variant
-    parameter every variant of a product would share the parent's URL and land
-    the reader on whichever variant Shopify defaults to.
+    Email/catalog links always use the product's own Shopify storefront URL.
+    custom.product_canonical_url is an SEO signal and must not govern Klaviyo
+    recommendation destinations. Multi-variant rows keep their variant deep link.
     """
-    url = mf(product, "mf_canonical") or (product.get("onlineStoreUrl") or "").strip()
+    url = (product.get("onlineStoreUrl") or "").strip()
     if not url or variant_count <= 1 or not variant:
         return url
 
@@ -419,8 +434,9 @@ def main(argv=None):
         reason = suppression_reason(product)
         for variant in variants:
             row = build_row(product, variant, legacy_taxonomy, len(variants))
-            if reason:
-                row["_suppression_reason"] = reason
+            row_reason = reason or variant_suppression_reason(variant)
+            if row_reason:
+                row["_suppression_reason"] = row_reason
                 suppressed.append(row)
             else:
                 candidates.append(row)
@@ -592,7 +608,16 @@ def main(argv=None):
             # them: an option carrier contributes 100+ rows from a single
             # product, so the two are very different numbers.
             "suppressed_variant_rows": len(suppressed),
-            "suppressed_products": len({row["_shopify_product_id"] for row in suppressed}),
+            "suppressed_products": len(
+                {
+                    row["_shopify_product_id"]
+                    for row in suppressed
+                    if row["_suppression_reason"] != SKU_EXCLUDED
+                }
+            ),
+            "sku_excluded_rows": sum(
+                1 for row in suppressed if row["_suppression_reason"] == SKU_EXCLUDED
+            ),
             "emitted_with_warning": len(exceptions) - len(excluded),
             "accounted": accounted,
         },
