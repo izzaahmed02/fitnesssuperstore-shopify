@@ -73,11 +73,13 @@ echo "== 5/8  reason-coded id diffs =="
 ff_rc=0; fs_rc=0
 python3 scripts/feed_id_diff.py \
   --old "$OLD_FF" --new "$OUT/googleshoppingfrenchfitness.csv" \
-  --excluded "$OUT/excluded_rows.csv" --out "$OUT/id_diff_ff.csv" || ff_rc=$?
+  --excluded "$OUT/excluded_rows.csv" --lifecycle feeds/lifecycle-exclusions.csv \
+  --out "$OUT/id_diff_ff.csv" || ff_rc=$?
 echo
 python3 scripts/feed_id_diff.py \
   --old "$OLD_FS" --new "$OUT/googleshoppingfs.csv" \
-  --excluded "$OUT/excluded_rows.csv" --out "$OUT/id_diff_fs.csv" || fs_rc=$?
+  --excluded "$OUT/excluded_rows.csv" --lifecycle feeds/lifecycle-exclusions.csv \
+  --out "$OUT/id_diff_fs.csv" || fs_rc=$?
 
 echo
 echo "== 6/8  matched-vs-designed count guard =="

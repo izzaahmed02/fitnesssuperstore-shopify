@@ -184,6 +184,10 @@ UNMAPPED = [
 # asks Shopify about exactly the same set the generator paginates through.
 PRODUCT_FILTER = "status:active"
 
+# Lifecycle SOP: the discontinued template is the exclusion signal, never a manual
+# row edit.
+DISCONTINUED_TEMPLATE = "discontinued"
+
 # Tim 2026-09-19: "nothing compared Merchant Center's matched count against the
 # designed count", and the automated local feed served 46 offers short for two
 # weeks in silence. The cause there was Shopify clamping pagination at 250 items.
@@ -202,7 +206,7 @@ query Products($cursor: String) {
   products(first: 50, after: $cursor, query: "status:active") {
     pageInfo { hasNextPage endCursor }
     nodes {
-      id title handle status vendor productType tags onlineStoreUrl descriptionHtml
+      id title handle status vendor productType tags templateSuffix onlineStoreUrl descriptionHtml
       featuredMedia { preview { image { url } } }
       media(first: 10) { nodes { preview { image { url } } } }
       collections(first: 50) { nodes { title } }
@@ -992,6 +996,19 @@ def main():
 
     for product in fetch_products(args.shop, args.token, tally):
         scanned += 1
+        # Tim 2026-09-06, lifecycle SOP: "the generator excludes any product with
+        # template_suffix = discontinued." Checked before anything else and logged
+        # per variant, so a discontinued product that is still ACTIVE (containment
+        # half-applied) drops with a reason instead of emitting as a live offer.
+        if (product.get("templateSuffix") or "").strip().lower() == DISCONTINUED_TEMPLATE:
+            product_id = numeric_id(product["id"])
+            variants = product["variants"]["nodes"]
+            for variant in variants:
+                offer_id = (f"{product_id}-{numeric_id(variant['id'])}"
+                            if len(variants) > 1 else product_id)
+                report.append((offer_id, (variant["sku"] or "").strip(),
+                               "excluded: discontinued template (lifecycle)"))
+            continue
         reason = excluded_by_shared_rules(product, rules)
         if reason:
             continue
