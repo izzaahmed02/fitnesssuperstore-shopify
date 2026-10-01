@@ -1,0 +1,30 @@
+{%- comment -%}
+  Publishes the National Gym Service option allowlist to the PDP as JSON so the
+  price logic in product-custom-options.js can tell which selected options are
+  billed by National Gym Service LLC rather than collected by Fitness
+  Superstore at checkout.
+
+  This reads the SAME shop metafield the Cart Transform function reads
+  (`fs_bundle.ngs_allowlist`), so the storefront and the charge logic can never
+  disagree about which options are deferred. If the metafield is absent the
+  snippet emits nothing, the script finds no allowlist, and every option is
+  totalled exactly as it is today.
+
+  Entries are keyed by bare numeric variant id because that is what the option
+  inputs carry in the DOM. The function keys on the full GID.
+{%- endcomment -%}
+
+{%- assign ngs_allowlist = shop.metafields.fs_bundle.ngs_allowlist.value -%}
+{%- if ngs_allowlist.options.size > 0 -%}
+  <script type="application/json" data-ngs-allowlist>
+    {
+      "options": [
+        {%- for entry in ngs_allowlist.options -%}
+          {%- assign numeric_id = entry.variantId | split: '/' | last -%}
+          {"id":{{ numeric_id | json }},"mode":{{ entry.mode | json }}}
+          {%- unless forloop.last -%},{%- endunless -%}
+        {%- endfor -%}
+      ]
+    }
+  </script>
+{%- endif -%}
