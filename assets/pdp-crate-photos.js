@@ -6,67 +6,84 @@
  * uses, so the popup looks and closes like every other PDP popup.
  *
  * The photos are rendered server-side into a <template> next to the trigger, so
- * nothing is fetched on click and products without photos ship no trigger and
+ * nothing is fetched on click, and products without photos ship no trigger and
  * no template at all.
+ *
+ * The container is shared with the theme's other popups, so every listener this
+ * adds is torn down on close: a stale handler would otherwise clear whichever
+ * popup happens to be open next.
  */
 (function () {
   'use strict';
 
-  function closeModal(wrapper, container) {
-    wrapper.style.display = 'none';
-    container.innerHTML = '';
+  var activeTrigger = null;
+
+  function elements() {
+    return {
+      wrapper: document.querySelector('.modal-wrapper'),
+      container: document.getElementById('dynamic-product-content')
+    };
   }
 
-  function openModal(trigger) {
-    var wrapper = document.querySelector('.modal-wrapper');
-    var container = document.getElementById('dynamic-product-content');
+  function onKeydown(event) {
+    if (event.key === 'Escape' || event.key === 'Esc') close();
+  }
+
+  function onBackdropClick(event) {
+    var wrapper = elements().wrapper;
+    if (wrapper && event.target === wrapper) close();
+  }
+
+  function close() {
+    var els = elements();
+
+    document.removeEventListener('keydown', onKeydown);
+    if (els.wrapper) {
+      els.wrapper.removeEventListener('click', onBackdropClick);
+      els.wrapper.style.display = 'none';
+    }
+    if (els.container) els.container.innerHTML = '';
+
+    if (activeTrigger) {
+      activeTrigger.focus();
+      activeTrigger = null;
+    }
+  }
+
+  function open(trigger) {
+    var els = elements();
     var template = document.getElementById(trigger.getAttribute('aria-controls'));
 
-    if (!wrapper || !container || !template) return;
+    if (!els.wrapper || !els.container || !template) return;
 
-    container.innerHTML = '';
-    container.style.width = 'auto';
-    container.appendChild(template.content.cloneNode(true));
+    els.container.innerHTML = '';
+    els.container.style.width = 'auto';
+    els.container.appendChild(template.content.cloneNode(true));
 
-    var closeButton = document.createElement('span');
+    // A real <button> so Enter and Space activate it natively; the theme's
+    // .modal-close class carries only the positioning.
+    var closeButton = document.createElement('button');
+    closeButton.type = 'button';
     closeButton.className = 'modal-close';
+    closeButton.setAttribute('aria-label', 'Close');
     var closeIcon = document.getElementById('icon-close-template');
     closeButton.innerHTML = closeIcon ? closeIcon.innerHTML : '&times;';
-    closeButton.setAttribute('role', 'button');
-    closeButton.setAttribute('tabindex', '0');
-    closeButton.setAttribute('aria-label', 'Close');
-    container.appendChild(closeButton);
+    closeButton.addEventListener('click', close);
+    els.container.appendChild(closeButton);
 
-    wrapper.style.display = 'flex';
+    activeTrigger = trigger;
+    els.wrapper.style.display = 'flex';
 
-    closeButton.addEventListener('click', function () {
-      closeModal(wrapper, container);
-      trigger.focus();
-    });
+    document.addEventListener('keydown', onKeydown);
+    els.wrapper.addEventListener('click', onBackdropClick);
 
-    // The theme's own handlers close on backdrop click and stop propagation
-    // inside the container, but they are bound by the main-product scripts.
-    // Bind our own so the popup still closes if those have not run.
-    wrapper.addEventListener('click', function onBackdrop(event) {
-      if (event.target === wrapper) {
-        closeModal(wrapper, container);
-        wrapper.removeEventListener('click', onBackdrop);
-      }
-    });
-
-    document.addEventListener('keydown', function onEscape(event) {
-      if (event.key === 'Escape' || event.key === 'Esc') {
-        closeModal(wrapper, container);
-        document.removeEventListener('keydown', onEscape);
-        trigger.focus();
-      }
-    });
+    closeButton.focus();
   }
 
   document.addEventListener('click', function (event) {
     var trigger = event.target.closest('[data-crate-photos-trigger]');
     if (!trigger) return;
     event.preventDefault();
-    openModal(trigger);
+    open(trigger);
   });
 })();

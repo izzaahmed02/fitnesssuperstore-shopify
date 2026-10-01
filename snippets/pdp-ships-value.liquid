@@ -42,8 +42,10 @@
   assign ships_normalized = ships_value | strip_html | strip | downcase
 
   # Echoed so "New in Crates" renders plural. strip_html keeps a rich-text
-  # field from injecting markup ahead of the manual link.
-  assign ships_label = ships_value | strip_html | strip
+  # field from injecting markup ahead of the manual link. A stored trailing
+  # period is dropped so the label never doubles up with the punctuation this
+  # snippet adds around the manual link.
+  assign ships_label = ships_value | strip_html | strip | remove_last: '.'
 
   # The manual can be either a url-type metafield (custom.manual_link) or a
   # file_reference (custom.manual_file). Resolve both shapes to a plain URL
