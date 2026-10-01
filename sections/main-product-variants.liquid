@@ -2133,6 +2133,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('Variant data:', variantData);
     console.log('New processing time:', newProcessingTime);
+
+    syncProcessingTimeOption(newProcessingTime);
     
     if (newProcessingTime) {
       const currentText = processingTimeElement.textContent.trim();
@@ -2158,6 +2160,58 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
+  // Keep the hidden "Processing Time" option group in step with the selected
+  // variant. That group is what populates the _functionOperation line-item
+  // property, and the cart and checkout read the property - not the variant
+  // metafield. Without this the group keeps whatever was rendered at page load,
+  // so a direct ?variant= link or a picker change ships the wrong promise.
+  // No-op when the group is absent or offers no matching choice, so products
+  // that do not use a Processing Time option are unaffected.
+  function syncProcessingTimeOption(value) {
+    if (!value) return;
+    const group = document.querySelector('[data-option-accordion][data-type="processing-time"]');
+    if (!group) return;
+
+    const normalise = (text) => (text || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const wanted = normalise(value);
+    if (!wanted) return;
+
+    let match = null;
+    group.querySelectorAll('input.product-options__swatch-input').forEach((input) => {
+      if (match) return;
+      const label = input.closest('label');
+      const candidates = [input.dataset.fieldName, label ? label.textContent : ''];
+      if (candidates.some((candidate) => normalise(candidate) === wanted)) match = input;
+    });
+
+    if (!match) {
+      console.log('No Processing Time choice matches the selected variant:', value);
+      return;
+    }
+
+    if (!match.checked) {
+      match.checked = true;
+      match.dispatchEvent(new Event('change', { bubbles: true }));
+      match.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    // Write the value the cart payload actually reads, in case no other handler
+    // owns this group on this template.
+    const selectionHolder = group.querySelector('[data-selected-options]');
+    if (selectionHolder && selectionHolder.dataset.selectedOptions !== match.value) {
+      selectionHolder.dataset.selectedOptions = match.value;
+      const titleNode = selectionHolder.querySelector('[data-option-title]');
+      if (titleNode) titleNode.textContent = match.dataset.fieldName || value;
+      const idNode = selectionHolder.querySelector('[data-option-id]');
+      if (idNode) {
+        idNode.setAttribute('data-option-id', match.dataset.customizationOption || '');
+        idNode.setAttribute('data-option-variant-name', match.dataset.fieldName || value);
+      }
+    }
+
+    console.log('Processing Time option synced to:', value);
+  }
+
   // Watch for SKU changes using MutationObserver
   const observer = new MutationObserver(function(mutations) {
     console.log('SKU element changed, updating processing time...');
