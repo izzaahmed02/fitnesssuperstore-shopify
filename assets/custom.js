@@ -443,10 +443,41 @@ async function loadPricingReferenceHTML() {
     productInfo.dataset.rhSelector = 'done';
   }
 
+  // Pulley-template picker (snippets/product-variant-picker-pulley.liquid, the
+  // French Fitness Aluminum Pulley Upgrade): same near-title placement and pill
+  // look for Product Line, with the searchable Machine Model dropdown restyled
+  // to match. Selection still runs through that snippet's own script.
+  const PULLEY_STYLES =
+    'variant-selects.rh-pulley fieldset.pulley-machine-model .pulley-searchable{flex:1 1 100% !important;}' +
+    'variant-selects.rh-pulley .pulley-trigger{border:1px solid #D12E06 !important;border-radius:4px !important;padding:10px 14px !important;font-family:"Lato",sans-serif !important;font-size:14px !important;font-weight:600 !important;color:#23232B !important;}' +
+    'variant-selects.rh-pulley .pulley-trigger:hover,variant-selects.rh-pulley .pulley-trigger:focus-visible,variant-selects.rh-pulley .pulley-trigger[aria-expanded="true"]{border-color:#D12E06 !important;background:#FDEEEA !important;}' +
+    'variant-selects.rh-pulley .pulley-chevron{color:#D12E06 !important;}' +
+    'variant-selects.rh-pulley .pulley-panel{border-color:#D12E06 !important;}' +
+    'variant-selects.rh-pulley .pulley-item{font-family:"Lato",sans-serif !important;font-size:14px !important;}' +
+    'variant-selects.rh-pulley .pulley-item:hover,variant-selects.rh-pulley .pulley-item:focus-visible{background:#FDEEEA !important;}' +
+    'variant-selects.rh-pulley .pulley-item--selected{background:#D12E06 !important;color:#fff !important;font-weight:600 !important;}';
+
+  function setupPulley(productInfo, selects) {
+    injectStyles();
+    if (!document.getElementById(STYLE_ID + '-pulley')) {
+      const style = document.createElement('style');
+      style.id = STYLE_ID + '-pulley';
+      style.textContent = PULLEY_STYLES;
+      document.head.appendChild(style);
+    }
+    selects.classList.add('rh-selector', 'rh-pulley');
+    moveUnderTitle(productInfo, selects);
+    productInfo.dataset.rhSelector = 'done';
+  }
+
   function setup(productInfo) {
     if (productInfo.dataset.rhSelector === 'done') return;
     const selects = productInfo.querySelector('variant-selects');
     if (!selects) return;
+    if (selects.querySelector('fieldset.pulley-product-line')) {
+      setupPulley(productInfo, selects);
+      return;
+    }
     const fieldsets = Array.from(selects.querySelectorAll('fieldset[data-variant-options]'));
     const names = fieldsets.map(optionName);
     if (fieldsets.length === 1 && SINGLE_OPTION_FAMILIES.indexOf(names[0]) !== -1) {
