@@ -3,9 +3,10 @@
 <div class="page-width">
     <div class="homepage-subscription__wrapper">
         <h2 class="homepage-subscription__title h2">{{ section.settings.title }}</h2>
-        <form action="#" class="homepage-subscription__form">
-            <label for="email" class="visually-hidden">Email address</label>
-            <input placeholder="Enter your email" type="email" id="email" class="homepage-subscription__input">
+        <form action="#" class="homepage-subscription__form" data-error-message="{{ section.settings.error-message | escape }}">
+            <label for="HomepageSubscriptionEmail-{{ section.id }}" class="visually-hidden">Email address</label>
+            <input placeholder="Enter your email" type="email" id="HomepageSubscriptionEmail-{{ section.id }}" class="homepage-subscription__input" aria-describedby="HomepageSubscriptionError-{{ section.id }}" required>
+            <div id="HomepageSubscriptionError-{{ section.id }}" class="error-message" role="alert" hidden></div>
             <button class="homepage-subscription__button" type="submit">Subscribe
                 {% render 'chevron-button' %}
             </button>
@@ -60,6 +61,12 @@
       "id": "thank-you-copy",
       "default": "Check your email for a confirmation message.",
       "label": "Section  Message Copy"
+    },
+    {
+      "type": "text",
+      "id": "error-message",
+      "default": "We could not subscribe you. Please try again.",
+      "label": "Section Error Message"
     }
   ],
   "presets": [
