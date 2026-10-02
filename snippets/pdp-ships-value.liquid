@@ -15,6 +15,10 @@
     truth for singular vs plural.
   - "Assembly Manual Link" is a real link to that model's manual, from
     custom.manual_link or custom.manual_file.
+  - Manual popup (Tim, Option 1, Oct 2): on desktop the link opens the manual
+    in the same modal as "(More Info)" via assets/ships-manual-popup.js. Phones,
+    tablets and browsers without an inline PDF viewer keep the native new-tab
+    href, as do Cmd/Ctrl/middle-click and no-JS.
   - When custom.crate_photos has entries, the ships value itself becomes the
     trigger for a popup showing that product's own crate photos. It reuses the
     theme's existing modal (.modal-wrapper / #dynamic-product-content), the
@@ -118,6 +122,9 @@
       href="{{ manual_url | escape }}"
       target="_blank"
       rel="noopener noreferrer"
+      data-manual-popup
+      data-manual-css="{{ 'ships-manual-popup.css' | asset_url }}"
+      aria-haspopup="dialog"
     >Assembly Manual Link</a>).{% else %}.{% endif %} Installation Options Available
   {%- comment -%}
     The template and script are emitted AFTER the sentence. Between the trigger
@@ -125,6 +132,9 @@
     browser renders as a visible space - "New in Crate ." - on a product with
     photos but no manual.
   {%- endcomment -%}
+  {%- if manual_url != blank -%}
+    <script src="{{ 'ships-manual-popup.js' | asset_url }}" defer="defer"></script>
+  {%- endif -%}
   {%- if crate_photo_count > 0 -%}
     <template id="{{ crate_template_id }}">
       <div
