@@ -862,8 +862,15 @@
                 <div class="product__title hidden lg:block" {{ block.shopify_attributes }}>
                   <h1>{{ product.title | escape }}</h1>
                 </div>
+                {%- comment -%}
+                  Desktop copy only, like the title above it. Below 990px the selector is
+                  already rendered under the title in .product__info-wrapper--mobile, so
+                  without the wrapper it showed twice on mobile.
+                {%- endcomment -%}
                 {%- if product.metafields.custom.product_color != blank -%}
-                  {% render 'finish-selector', product: product %}
+                  <div class="hidden lg:block">
+                    {% render 'finish-selector', product: product %}
+                  </div>
                 {%- endif -%}
               {% when 'price' %}
 
