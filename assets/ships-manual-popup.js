@@ -4,10 +4,10 @@
 
   - Only links rendered by snippets/pdp-ships-value.liquid with [data-manual-popup].
   - Desktop only (Tim, Option 1): the popup is used when the browser has an
-    inline PDF viewer, a fine pointer and a viewport >= 750px. Everything else
-    keeps the native href and opens a new tab.
-    NOTE: an iPad with a trackpad reports pointer: fine and gets the popup.
-    Tim asked for iPads on the new-tab path; tighten canPopup() if needed.
+    inline PDF viewer, a fine pointer, no touchscreen and a viewport >= 750px.
+    Everything else keeps the native href and opens a new tab.
+    The touchscreen check sends every iPad to the new tab (Tim): with a trackpad
+    an iPad reports pointer: fine and a Mac user agent, but still has touch points.
   - Cmd/Ctrl/Shift/middle-click still open a new tab (native href is kept).
   - If the modal markup is missing, the link falls back to its normal new-tab behaviour.
   - Cleans up its own class and iframe on close so (More Info) and the crate-photo
@@ -24,6 +24,7 @@
 
   function canPopup() {
     return navigator.pdfViewerEnabled === true &&
+      navigator.maxTouchPoints === 0 &&
       window.matchMedia('(pointer: fine)').matches &&
       window.matchMedia('(min-width: 750px)').matches;
   }
