@@ -1,0 +1,39 @@
+{% comment %}
+  Top-seller product card (Module 6). All product data is bound live —
+  title, image, price, availability, URL come straight from `product`.
+  Compare-at fallback chain per scope doc: compare_at_price -> compare_at_price_max -> custom.retail_price.
+{% endcomment %}
+{% assign slot = slot | default: 1 %}
+
+{% assign compare_price = product.compare_at_price %}
+{% if compare_price == blank or compare_price <= product.price %}
+  {% assign compare_price = product.compare_at_price_max %}
+{% endif %}
+{% if compare_price == blank or compare_price <= product.price %}
+  {% assign compare_price = product.metafields.custom.retail_price %}
+{% endif %}
+
+<a
+  href="{{ product.url }}"
+  class="top-seller-card"
+  data-fss-hp-event="fss_hp_product_click"
+  data-fss-hp-props='{"product_handle": "{{ product.handle }}", "slot": {{ slot }}}'
+>
+  <div class="top-seller-card__image-wrap">
+    {% if product.featured_image != blank %}
+      {{ product.featured_image | image_url: width: 400 | image_tag: loading: 'lazy', widths: '200, 300, 400', sizes: '(min-width: 750px) 33vw, 50vw' }}
+    {% endif %}
+    {% unless product.available %}
+      <span class="top-seller-card__availability">Sold out</span>
+    {% endunless %}
+  </div>
+  <div class="top-seller-card__info">
+    <div class="top-seller-card__title">{{ product.title | replace: "(Remanufactured)", "" | replace: "(New)", "" }}</div>
+    <div class="top-seller-card__price">
+      <span class="top-seller-card__price-current">{{ product.price | money }}</span>
+      {% if compare_price != blank and compare_price > product.price %}
+        <span class="top-seller-card__price-compare">{{ compare_price | money }}</span>
+      {% endif %}
+    </div>
+  </div>
+</a>

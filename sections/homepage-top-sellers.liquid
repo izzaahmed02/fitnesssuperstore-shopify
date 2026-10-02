@@ -1,0 +1,118 @@
+{% comment %}
+  Module 6 — Top Sellers. Bound to a live collection (section.settings.collection),
+  no hardcoded product handles/prices. Collection defaults to "most-popular" as an
+  assumption pending G0-f sign-off (Izza/Larianne) — see scope doc.
+{% endcomment %}
+
+<div class="top-sellers">
+  {% if section.settings.heading != blank %}
+    <h2>{{ section.settings.heading }}</h2>
+  {% endif %}
+
+  <div class="top-sellers__grid">
+    {% assign slot = 0 %}
+    {% for product in section.settings.collection.products limit: section.settings.products_to_show %}
+      {% assign slot = slot | plus: 1 %}
+      {% render 'homepage-top-seller-card', product: product, slot: slot %}
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+.top-sellers {
+  padding: 24px 16px;
+}
+.top-sellers h2 {
+  font-size: 20px;
+  line-height: 26px;
+  margin: 0 0 16px;
+}
+.top-sellers__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.top-seller-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+.top-seller-card__image-wrap {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0px 0px 12px 0px #0000001A;
+}
+.top-seller-card__image-wrap img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.top-seller-card__availability {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: #616166;
+  color: #fff;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+.top-seller-card__info {
+  padding: 8px 4px 0;
+}
+.top-seller-card__title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.top-seller-card__price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.top-seller-card__price-current {
+  font-weight: 700;
+  font-size: 15px;
+}
+.top-seller-card__price-compare {
+  font-size: 13px;
+  color: #8a8a8a;
+  text-decoration: line-through;
+}
+</style>
+
+{% schema %}
+{
+  "name": "Top Sellers",
+  "class": "top-sellers-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Section Heading",
+      "default": "Top Sellers"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Top-seller collection"
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "label": "Products to show",
+      "min": 2,
+      "max": 8,
+      "step": 2,
+      "default": 4
+    }
+  ],
+  "presets": [
+    {
+      "name": "Top Sellers",
+      "category": "Custom"
+    }
+  ]
+}
+{% endschema %}
