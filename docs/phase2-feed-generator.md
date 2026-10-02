@@ -527,6 +527,53 @@ not a roster, so the guard proves the right *number* of catalog additions landed
 not yet that they are the right 31. When the list lands it becomes a roster here in
 one pass, the same shape as `feeds/under-100-campaign.csv`.
 
+## Catalog additions: counts, then identity
+
+Tim, 2026-09-20 item 4: "Counts prove quantity; the roster proves identity."
+
+`scripts/check_expected_counts.py` runs in one of two modes and always says which:
+
+- **COUNT mode** while `feeds/catalog-additions.csv` has no data rows. The run proves
+  the right NUMBER of `added:new_offer` rows landed, per the floors in
+  `feeds/expected-counts.json`.
+- **IDENTITY mode** as soon as the roster has rows. It then checks the actual SKUs the
+  id diff coded `added:new_offer` against the roster.
+
+The switch is data, not code, which is the one pass Tim asked for: drop Izza's 31 SKUs
+into the CSV and the next run is an identity check.
+
+| Roster row | Behaviour if it does not land |
+| --- | --- |
+| `required=yes` | hard failure. The 31 at $100 and over are unconditional. |
+| `required=no` | warning. The 55 queued masters pre-date the GO and at least one cannot emit, since FF-RIT24 is $16 and the floor correctly drops it. |
+
+An addition that lands but is **not** on the roster is a warning too. It is not wrong on
+its own, but additions nobody signed off are how scope grows quietly, and that is worth
+seeing on the run rather than discovering in Merchant Center.
+
+## Lifecycle exclusions: discontinued drops are expected
+
+Tim, 2026-09-22: FFT-PLCP and FFD-PLCP are classified discontinued and "join the
+lifecycle exclusion set: discontinued template = excluded from every feed output, no
+manual row edits", folded into the guard "so their disappearance from the next file
+registers as correct, not as a count anomaly."
+
+Without this, the next diff codes both as `dropped:unexplained` and the run fails:
+an UNLISTED product is never read by the generator, so nothing lands in
+`excluded_rows.csv` to explain the drop.
+
+- `feeds/lifecycle-exclusions.csv` lists the discontinued SKUs and product ids.
+  `run_cutover_diff.sh` passes it to both diffs with `--lifecycle`.
+- A listed SKU leaving the feed is coded `dropped:lifecycle_discontinued` and the
+  count guard notes it as expected.
+- A listed SKU still in the generated feed is coded `emitted:lifecycle_excluded`, and
+  both the diff and the count guard fail. That is a discontinued product serving as a
+  live offer.
+- The generator now also honours the lifecycle SOP's own rule, "the generator excludes
+  any product with template_suffix = discontinued". So a product whose containment is
+  half-applied (still ACTIVE, but on the discontinued template) drops with the logged
+  reason `excluded: discontinued template (lifecycle)` instead of emitting.
+
 ## Still open
 
 1. Merchant Center account-level tax confirmation, before the three tax columns come out.
