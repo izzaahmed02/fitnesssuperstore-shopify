@@ -102,7 +102,7 @@
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  (function() {
     function initHeroCarousel() {
       const $questions = $('.homepageHeroSection .questions');
       
@@ -141,21 +141,34 @@
       }
     }
 
-    // Theme editor re-renders the section without a new DOMContentLoaded
-    document.addEventListener('shopify:section:load', initAndRelease);
+    function setup() {
+      initAndRelease();
 
-    // Initialize on load
-    initAndRelease();
+      // Re-initialize on window resize (namespaced so a re-run doesn't stack handlers)
+      let resizeTimer;
+      $(window).off('resize.heroCarousel').on('resize.heroCarousel', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+          initHeroCarousel();
+        }, 250);
+      });
+    }
 
-    // Re-initialize on window resize
-    let resizeTimer;
-    $(window).on('resize', function() {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(function() {
-        initHeroCarousel();
-      }, 250);
-    });
-  });
+    // Theme editor re-renders or adds the section without a new
+    // DOMContentLoaded, so bind this right away rather than inside it.
+    if (!window.heroCarouselSectionLoadBound) {
+      window.heroCarouselSectionLoadBound = true;
+      document.addEventListener('shopify:section:load', initAndRelease);
+    }
+
+    // Initialize on load, or straight away if this script ran after it
+    // (section added in the theme editor).
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setup);
+    } else {
+      setup();
+    }
+  })();
 </script>
 
 <style>
