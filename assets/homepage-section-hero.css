@@ -500,14 +500,16 @@ margin: 0;
      after DOMContentLoaded, so until then the three cards painted squeezed
      side by side in a tall band and then snapped to one card. Show just the
      first card, sized like the carousel slide, so the first paint already
-     matches what Slick settles on. Slick adds .slick-initialized before it
-     measures, so it still sees all three cards. */
-  .homepageHeroSection .questions:not(.slick-initialized) {
+     matches what Slick settles on. Keyed to .is-carousel-pending, which the
+     section's inline script sets and always clears after the init attempt,
+     so a carousel that never starts still shows all three cards. Slick adds
+     .slick-initialized before it measures, so it still sees all three. */
+  .homepageHeroSection .questions.is-carousel-pending:not(.slick-initialized) {
     display: block;
     box-sizing: border-box;
   }
 
-  .homepageHeroSection .questions:not(.slick-initialized) .benefit-card {
+  .homepageHeroSection .questions.is-carousel-pending:not(.slick-initialized) .benefit-card {
     width: auto;
     height: auto;
     min-height: 0;
@@ -515,7 +517,7 @@ margin: 0;
     padding: 16px 20px;
   }
 
-  .homepageHeroSection .questions:not(.slick-initialized) .benefit-card:not(:first-child) {
+  .homepageHeroSection .questions.is-carousel-pending:not(.slick-initialized) .benefit-card:not(:first-child) {
     display: none;
   }
 
