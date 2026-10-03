@@ -445,7 +445,10 @@ observePopup() {
       slideWrap.className = 'mobile-gallery-slide-wrap';
 
       if (media.media_type === 'video') {
-        slideWrap.innerHTML = `<div class="mobile-gallery-slide" data-media-id="${media.id}"><video controls muted playsinline preload="none" poster="${media.preview_image?.src || ''}">${(media.sources || []).map((source) => `<source src="${source.url}" type="${source.mime_type}">`).join('')}</video></div>`;
+        // No native controls in the inline slider: on Android Chrome a horizontal drag over
+        // them is taken as seeking, so the swipe never reaches slick and the customer is
+        // stuck on a video slide. Tapping the slide opens the popup, which adds controls.
+        slideWrap.innerHTML = `<div class="mobile-gallery-slide mobile-gallery-slide--video" data-media-id="${media.id}"><video muted playsinline preload="none" poster="${media.preview_image?.src || ''}">${(media.sources || []).map((source) => `<source src="${source.url}" type="${source.mime_type}">`).join('')}</video><span class="mobile-gallery-video-play" aria-hidden="true"></span></div>`;
       } else if (media.media_type === 'external_video') {
         slideWrap.innerHTML = `<div class="mobile-gallery-slide external-video" data-media-id="${media.id}"><div class="video-wrapper"><div class="video-iframe-overlay" aria-hidden="true"></div></div></div>`;
       } else if (media.preview_image) {
@@ -600,6 +603,10 @@ observePopup() {
     }
     // Handle MP4 videos
     else if (video && media) {
+      // The inline slide has no controls and a play badge (see renderSlides); the popup
+      // is where the video is played, so give it controls and drop the badge.
+      video.controls = true;
+      clone.querySelector('.mobile-gallery-video-play')?.remove();
       container.appendChild(clone);
     }
     // Handle images with zoom/pan

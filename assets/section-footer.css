@@ -14,14 +14,37 @@
 
 .footer__top {
     display: flex;
-    justify-content: space-between;
-    column-gap: 20px;
+    flex-direction: column;
+    row-gap: 10px;
 }
 
-.footer__info {
-    display: flex;
-    flex-direction: column;
-    row-gap: 40px;
+.footer__socials {
+    margin-top: 12px;
+}
+
+@media screen and (min-width: 990px) {
+    .footer__top {
+        display: grid;
+        grid-template-columns: max-content max-content;
+        grid-template-areas:
+            "logo nav"
+            "contacts nav";
+        justify-content: space-between;
+        column-gap: 20px;
+        row-gap: 40px;
+    }
+
+    .footer__logo {
+        grid-area: logo;
+    }
+
+    .footer__menu {
+        grid-area: nav;
+    }
+
+    .footer__contacts-wrap {
+        grid-area: contacts;
+    }
 }
 
 .footer__logo img {
@@ -49,19 +72,29 @@
 }
 
 .footer__menu {
-   display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 30px;
-  
 }
 
-@media screen and (max-width: 1100px) {
- .footer__menu {
-   display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    gap: 30px;
-  
-} 
+/* Column counts are capped to what the row can actually hold. Above 989px
+   .footer__top is a max-content grid, so neither track shrinks: the nav is
+   always at least (157px * columns) + (30px * gaps) wide, and the
+   logo/contacts track is 296px (the seven social icons on one line) plus the
+   20px column gap. When that total passed the .page-width content box the
+   rightmost menu column ran outside the footer and scrolled the whole page
+   sideways — reported on live and on the Phase 1 preview at 1024x1366.
+   Five columns need 1321px of viewport, four need 1134px. */
+@media screen and (max-width: 1329px) {
+    .footer__menu {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media screen and (max-width: 1134px) {
+    .footer__menu {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
 }
 
 
@@ -128,13 +161,6 @@
     text-decoration: none;
 }
 
-@media screen and (max-width: 989px) {
-    .footer__top {
-        flex-direction: column;
-        row-gap: 40px;
-    }
-}
-
 @media screen and (max-width: 749px) {
     .footer__menu {
         flex-direction: column;
@@ -146,6 +172,6 @@
        iOS home-indicator safe area so the full line stays readable at 375, 390
        and 428px widths. */
     .footer__copyright {
-        padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px));
     }
 }
