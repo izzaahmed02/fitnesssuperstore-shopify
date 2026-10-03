@@ -574,6 +574,23 @@ an UNLISTED product is never read by the generator, so nothing lands in
   half-applied (still ACTIVE, but on the discontinued template) drops with the logged
   reason `excluded: discontinued template (lifecycle)` instead of emitting.
 
+## Must-exclude and must-include gate
+
+Tim, 2026-10-02: the two 12-stack jungle gyms (FFB-12SMJG, FFS-12SMJG) stay out of GMC
+regardless of the ground-shipping estimate. Their live estimate is $999, just under the
+$1,000 cutoff, so before this nothing kept them out.
+
+- `feeds/feed-rules.json` `shared.always_exclude.skus` is a SKU blocklist, checked per
+  variant in both feeds and logged as `excluded: sku blocklist`. The id diff codes those
+  drops `dropped:sku_blocklist`.
+- `feeds/must-exclude.csv` lists all 28 products Tim ruled out (the 26 Other Machine
+  Attachments add-ons and the two jungle gyms). `scripts/check_feed_membership.py` fails
+  the run if any of them is in either generated feed, matched on SKU, bare product id or
+  composite id. It is an extra guard: the collection rule and the blocklist still do the
+  excluding.
+- The same script proves every `required=yes` row of `feeds/catalog-additions.csv` (the
+  three Rubber Hex sets) is in its feed. It runs as step 4b of `run_cutover_diff.sh`.
+
 ## Still open
 
 1. Merchant Center account-level tax confirmation, before the three tax columns come out.
