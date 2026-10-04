@@ -595,7 +595,7 @@
                the server's bare variant price. Recompute against the new base so
                a variant whose defaults carry a price never shows a total below
                what the cart payload will charge. */
-            var configurator = root.querySelector('product-customization-options');
+            var configurator = root.querySelector('pdp-new-customization-options');
             if (configurator && typeof configurator.updatePrice === 'function') {
               configurator.updatePrice();
             }
