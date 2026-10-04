@@ -1,6 +1,6 @@
-if (!customElements.get('product-form-with-options')) {
+if (!customElements.get('pdp-new-product-form')) {
   customElements.define(
-    'product-form-with-options',
+    'pdp-new-product-form',
     class ProductFormWithOptions extends HTMLElement {
       constructor() {
         super();
