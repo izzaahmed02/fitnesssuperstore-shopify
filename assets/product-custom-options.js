@@ -859,7 +859,9 @@ if (!customElements.get('product-customization-options')) {
             if (tag) {
               const parsed = JSON.parse(tag.textContent);
               (parsed.options || []).forEach((entry) => {
-                if (entry && entry.id) map.set(String(entry.id), entry.mode);
+                if (entry && entry.id) {
+                  map.set(String(entry.id), { mode: entry.mode, price: Number(entry.price) });
+                }
               });
             }
           } catch (e) {
@@ -875,7 +877,26 @@ if (!customElements.get('product-customization-options')) {
       // a quote and never as a dollar figure.
       ngsModeFor(variantId) {
         if (!variantId) return null;
-        return this.ngsAllowlist().get(String(variantId).trim()) || null;
+        const entry = this.ngsAllowlist().get(String(variantId).trim());
+        return entry ? entry.mode : null;
+      }
+
+      // The amount owed to National Gym Service for one unit of this option.
+      //
+      // The ALLOWLIST price wins over the amount posted in the DOM, and the two
+      // can differ. The function reads its figure from this same shop metafield
+      // and writes it onto the order; the DOM value is whatever the option
+      // markup carries, which a customer can influence and which can drift from
+      // the approved mapping. Showing the DOM figure here would let the page
+      // state one amount owed to National Gym Service while the order records
+      // another, and NGS would then invoice against the order.
+      //
+      // Falls back to the posted amount only when the allowlist carries no
+      // price, which is the v1 shape with the field absent.
+      ngsAmountFor(variantId, postedAmount) {
+        const entry = this.ngsAllowlist().get(String(variantId || '').trim());
+        if (entry && Number.isFinite(entry.price)) return entry.price;
+        return postedAmount;
       }
 
       updatePrice() {
@@ -911,7 +932,16 @@ if (!customElements.get('product-customization-options')) {
           if (ngsMode === 'quote_required') {
             ngsQuoteRequired = true;
           } else if (ngsMode === 'defer') {
-            ngsDeferred += amount;
+            // Per-unit allowlist price, scaled by however many units the DOM
+            // amount represented. A quantity option posts price * quantity, so
+            // recovering the multiplier keeps quantities correct without
+            // trusting the posted price itself.
+            const perUnit = this.ngsAmountFor(variantId, amount);
+            const unitPosted = Number(
+              (value.includes(':::') ? value.split(':::')[1] : option.dataset?.quantityOptionVariantPrice) || 0,
+            );
+            const units = unitPosted > 0 ? Math.round(amount / unitPosted) : 1;
+            ngsDeferred += perUnit * (units > 0 ? units : 1);
           } else {
             priceAdjustment += amount;
           }

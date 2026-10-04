@@ -32,7 +32,19 @@
     - context: {String} 'drawer' or 'page'.
 {%- endcomment -%}
 
+{%- comment -%}
+  THE SIZE GATE. Shopify silently omits a metafield value over 10,000 bytes
+  from a FUNCTION's input; Liquid has no such limit. Without this check an
+  oversized allowlist makes the function charge every NGS service in full while
+  this block still splits the total and says "not charged today". The theme
+  therefore applies the function's own limit to itself and goes silent above it.
+  Reasoning in full in snippets/ngs-allowlist-data.liquid.
+{%- endcomment -%}
 {%- assign ngs_config = shop.metafields.fs_bundle.ngs_allowlist.value -%}
+{%- assign ngs_raw_size = ngs_config | json | size -%}
+{%- if ngs_raw_size > 10000 -%}
+  {%- assign ngs_config = nil -%}
+{%- endif -%}
 {%- assign ngs_options = ngs_config.options -%}
 {%- assign ngs_total_cents = 0 -%}
 {%- assign ngs_line_count = 0 -%}
@@ -44,10 +56,22 @@
         {%- for selection in property.last -%}
           {%- assign selected_id = selection.variantId | split: '/' | last -%}
           {%- for entry in ngs_options -%}
-            {%- assign entry_id = entry.variantId | split: '/' | last -%}
+            {%- comment -%}
+              v2 is the compact tuple [variantId, priceMinorUnits, modeCode];
+              v1 is the verbose object. Both are read because v1 is what the
+              25 September preview wrote. Prices are held in cents either way,
+              so v1's major-unit price is scaled and v2's is used as-is.
+            {%- endcomment -%}
+            {%- if ngs_config.version == 2 -%}
+              {%- assign entry_id = entry[0] -%}
+              {%- assign entry_cents = entry[1] -%}
+            {%- else -%}
+              {%- assign entry_id = entry.variantId | split: '/' | last -%}
+              {%- assign entry_cents = entry.price | times: 100 -%}
+            {%- endif -%}
             {%- if entry_id == selected_id -%}
               {%- assign units = selection.quantity | default: 1 | times: item.quantity -%}
-              {%- assign line_cents = entry.price | times: 100 | times: units -%}
+              {%- assign line_cents = entry_cents | times: units -%}
               {%- assign ngs_total_cents = ngs_total_cents | plus: line_cents -%}
               {%- assign ngs_line_count = ngs_line_count | plus: 1 -%}
               {%- break -%}

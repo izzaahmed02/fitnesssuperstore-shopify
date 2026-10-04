@@ -12,18 +12,63 @@
 
   Entries are keyed by bare numeric variant id because that is what the option
   inputs carry in the DOM. The function keys on the full GID.
+
+  THE SIZE GATE, AND WHY THE THEME NEEDS ONE AT ALL
+
+  Shopify SILENTLY omits a metafield value over 10,000 bytes from a FUNCTION's
+  input — it arrives as `null`, with no error. Liquid has no such limit, so
+  this snippet would happily read a value the function cannot see.
+
+  That asymmetry is the dangerous one. Without this gate an oversized allowlist
+  makes the function charge every NGS service in full while this page tells the
+  customer "Not charged today" — the page promising a deferral the checkout
+  will not honour. Revenue is safe; the customer is misled, and National Gym
+  Service may be told to invoice an amount Fitness Superstore already collected.
+
+  So the theme applies the function's own limit to itself: over 10,000 bytes,
+  emit nothing and display exactly as today. The generator enforces a tighter
+  9,000-byte authoring margin, so reaching this gate means something upstream
+  went wrong and silence is the correct response.
+
+  The size is measured on the re-serialized value. The stored value is written
+  compact by scripts/rekey-ngs-allowlist-to-staging.mjs and is pure ASCII, so
+  re-serializing reproduces it closely enough for a safety net that should never
+  be the operative path.
 {%- endcomment -%}
 
 {%- assign ngs_allowlist = shop.metafields.fs_bundle.ngs_allowlist.value -%}
-{%- if ngs_allowlist.options.size > 0 -%}
+{%- assign ngs_raw_size = ngs_allowlist | json | size -%}
+
+{%- if ngs_allowlist.options.size > 0 and ngs_raw_size <= 10000 -%}
   <script type="application/json" data-ngs-allowlist>
     {
+      "deferralActive": {% if ngs_allowlist.deferralActive %}true{% else %}false{% endif %},
       "options": [
-        {%- for entry in ngs_allowlist.options -%}
-          {%- assign numeric_id = entry.variantId | split: '/' | last -%}
-          {"id":{{ numeric_id | json }},"mode":{{ entry.mode | json }}}
-          {%- unless forloop.last -%},{%- endunless -%}
-        {%- endfor -%}
+        {%- comment -%}
+          v2 is the compact tuple [variantId, priceMinorUnits, modeCode], which
+          is what makes the allowlist fit at all: the verbose v1 object form put
+          171 rows at ~30 kB against a 10 kB ceiling. v1 is still read because
+          it is what the 25 September preview wrote.
+        {%- endcomment -%}
+        {%- if ngs_allowlist.version == 2 -%}
+          {%- for entry in ngs_allowlist.options -%}
+            {%- assign mode_code = entry[2] -%}
+            {%- if mode_code == 1 -%}
+              {%- assign mode_name = 'quote_required' -%}
+            {%- else -%}
+              {%- assign mode_name = 'defer' -%}
+            {%- endif -%}
+            {%- assign price_major = entry[1] | divided_by: 100.0 -%}
+            {"id":{{ entry[0] | json }},"mode":{{ mode_name | json }},"price":{{ price_major }}}
+            {%- unless forloop.last -%},{%- endunless -%}
+          {%- endfor -%}
+        {%- else -%}
+          {%- for entry in ngs_allowlist.options -%}
+            {%- assign numeric_id = entry.variantId | split: '/' | last -%}
+            {"id":{{ numeric_id | json }},"mode":{{ entry.mode | json }},"price":{{ entry.price | default: 0 }}}
+            {%- unless forloop.last -%},{%- endunless -%}
+          {%- endfor -%}
+        {%- endif -%}
       ]
     }
   </script>
