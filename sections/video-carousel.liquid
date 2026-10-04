@@ -70,10 +70,16 @@
   {% assign video_upload_date = article.published_at | default: article.created_at | default: page.published_at | default: page.created_at | default: '2026-01-01T00:00:00Z' %}
   {% assign has_seo_videos = page.metafields.custom.seo_videos.value | default: collection.metafields.custom.seo_videos.value | default: article.metafields.custom.seo_videos.value | default: product.metafields.custom.seo_videos.value %}
   <div class="carousel-item">
-    <div class="video-thumbnail" data-video-url="{{ video_url }}">
-      <img src="{{ fallback_thumb }}" alt="{{ block.settings.thumbnail.alt | escape }}" />
-      <div class="play-button">&#9658;</div>
-    </div>
+    <button
+      type="button"
+      class="video-thumbnail"
+      data-video-url="{{ video_url }}"
+      aria-haspopup="dialog"
+      aria-label="Play video{% if block.settings.thumbnail.alt != blank %}: {{ block.settings.thumbnail.alt | escape }}{% endif %}"
+    >
+      <img src="{{ fallback_thumb }}" alt="" />
+      <span class="play-button" aria-hidden="true">&#9658;</span>
+    </button>
 
     {% if has_seo_videos == blank and shopify_video != blank and shopify_video.sources != blank %}
   {% assign video_src = shopify_video.sources[0].url %}
@@ -130,9 +136,17 @@
 
   </div>
 
-  <div class="video-modal" id="videoModal">
-    <div class="modal-content">
-      <span class="close-modal" onclick="closeModal()">&times;</span>
+  <div class="video-modal" id="videoModal" hidden>
+    <div
+      class="modal-content"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="videoModalTitle"
+    >
+      <h2 id="videoModalTitle" class="visually-hidden">Video player</h2>
+      <button type="button" class="close-modal" data-close-video-modal aria-label="Close video">
+        <span aria-hidden="true">&times;</span>
+      </button>
       <div id="modalVideoContainer"></div>
     </div>
   </div>
@@ -166,7 +180,6 @@
     cursor: pointer;
     color: transparent;
     border: none;
-    outline: none;
     background: #616166;
   }
 
@@ -255,9 +268,14 @@
     background-color: #23232B!important;
   }
 
-  .video-carousel .slick-next:focus, .video-carousel .slick-next:hover, .video-carousel .slick-prev:focus, .video-carousel .slick-prev:hover {
+  .video-carousel .slick-next:hover, .video-carousel .slick-prev:hover {
     background: #616166;
-    outline: none !important;
+  }
+
+  .video-carousel .slick-next:focus-visible, .video-carousel .slick-prev:focus-visible {
+    background: #616166;
+    outline: 2px solid #C9390D;
+    outline-offset: 2px;
   }
 
   .video-carousel .slick-slide {
@@ -278,6 +296,22 @@
   .video-carousel .video-thumbnail {
     position: relative;
     cursor: pointer;
+    display: block;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    text-align: inherit;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .video-carousel .video-thumbnail:focus-visible {
+    outline: 2px solid #C9390D;
+    outline-offset: 3px;
   }
 
   .video-carousel .video-thumbnail img {
@@ -335,6 +369,11 @@
   }
 
   .video-carousel .close-modal {
+    padding: 0;
+    border: 0;
+    font-family: inherit;
+    -webkit-appearance: none;
+    appearance: none;
     position: absolute;
     top: -66px;
     right: 0px;
@@ -351,10 +390,10 @@
     justify-content: center;
   }
 
-  body.acsb-keynav :focus {
-    outline: none!important;
+  .video-carousel .close-modal:focus-visible {
+    outline: 2px solid #FFFFFF;
+    outline-offset: 2px;
   }
-
 
   @media screen and (max-width: 749px) {
     .video-carousel .carouselHdg {

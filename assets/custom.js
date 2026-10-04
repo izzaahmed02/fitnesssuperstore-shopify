@@ -265,6 +265,49 @@ onReady(() => {
     }, 150));
   }
 
+  // --- Video modal: dialog focus management (WCAG 2.2 AA 2.1.1/2.1.2/2.4.3/2.4.11)
+  // The trigger that opened the modal, so focus can be returned to it on close.
+  let videoModalOpener = null;
+
+  const FOCUSABLE = [
+    'a[href]', 'button:not([disabled])', 'input:not([disabled])',
+    'select:not([disabled])', 'textarea:not([disabled])', 'iframe',
+    'video[controls]', '[tabindex]:not([tabindex="-1"])'
+  ].join(',');
+
+  function modalFocusables(modal) {
+    return Array.from(modal.querySelectorAll(FOCUSABLE))
+      .filter((el) => el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+  }
+
+  // Keep Tab/Shift+Tab inside the dialog while it is open, and close on Escape.
+  function onVideoModalKeydown(e) {
+    const modal = document.getElementById('videoModal');
+    if (!modal || modal.hidden) return;
+
+    if (e.key === 'Escape' || e.key === 'Esc') {
+      e.preventDefault();
+      window.closeModal();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+
+    const items = modalFocusables(modal);
+    if (!items.length) {
+      e.preventDefault();
+      return;
+    }
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (e.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
   document.addEventListener('click', (e) => {
     const thumb = e.target.closest('.video-thumbnail');
     if (!thumb) return;
@@ -276,20 +319,45 @@ onReady(() => {
     let embed;
     if (/youtube\.com|youtu\.be/.test(url)) {
       const id = (url.split(/v=|\/([^\/\?]+)$/).filter(Boolean).pop() || '').trim();
-      embed = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1" height="450" width="550" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      embed = `<iframe title="Video player" src="https://www.youtube.com/embed/${id}?autoplay=1" height="450" width="550" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
     } else {
       embed = `<video controls autoplay src="${url}"></video>`;
     }
     container.innerHTML = embed;
+    videoModalOpener = thumb;
+    modal.hidden = false;
     modal.style.display = 'flex';
-  }, { passive: true });
+    document.addEventListener('keydown', onVideoModalKeydown, true);
+
+    // Move focus into the dialog, preferring the close control.
+    const close = modal.querySelector('[data-close-video-modal], .close-modal');
+    const target = close || modalFocusables(modal)[0];
+    if (target && typeof target.focus === 'function') target.focus();
+  });
 
   window.closeModal = function(){
     const modal = document.getElementById('videoModal');
     const container = document.getElementById('modalVideoContainer');
     if (container) container.innerHTML = '';
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+      modal.style.display = 'none';
+      modal.hidden = true;
+    }
+    document.removeEventListener('keydown', onVideoModalKeydown, true);
+    // Return focus to the control that opened the dialog.
+    if (videoModalOpener && document.body.contains(videoModalOpener)) {
+      videoModalOpener.focus();
+    }
+    videoModalOpener = null;
   };
+
+  // Close control is a real <button>, so Enter/Space work without inline onclick.
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('[data-close-video-modal]')) {
+      e.preventDefault();
+      window.closeModal();
+    }
+  });
 
 });
 
