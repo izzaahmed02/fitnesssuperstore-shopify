@@ -1077,18 +1077,7 @@ if (!customElements.get('pdp-new-customization-options')) {
           sections = this.cartDrawer.getSectionsToRender().map((section) => section.id);
         }
 
-        const keptProperties = {};
-        try {
-          const kept = JSON.parse(this.dataset.keepProperties || '{}');
-          Object.keys(kept).forEach((key) => {
-            if (kept[key] !== null && kept[key] !== '') keptProperties[key] = kept[key];
-          });
-        } catch (error) {
-          console.error(error);
-        }
-
         const productProperties = {
-          ...keptProperties,
           ...this.prepareOptions(),
           _functionOperation: this.prepareFunctionalProperties(),
         };
