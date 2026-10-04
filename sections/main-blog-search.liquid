@@ -39,6 +39,7 @@
   .blog-search-result__media--medium img { height: 30.7rem; }
   .blog-search-result__media--large img { height: 40.7rem; }
 }
+.blog-search-result__author a.card__author-link { color: inherit; text-decoration: underline; }
 
 {%- endstyle -%}
 
@@ -121,10 +122,26 @@
               {%- assign img_h = 400 | divided_by: img_ar | round -%}
               {%- capture img_json -%}{"url":{{ article.image | image_url: width: 400 | json | replace: '<', '\u003c' }},"alt":{{ article.image.alt | default: article.title | strip_html | json | replace: '<', '\u003c' }},"width":400,"height":{{ img_h }}}{%- endcapture -%}
             {%- endif -%}
+            {%- comment -%}
+              Match article-card.liquid and the slider: custom.author_name wins
+              over the native article.author, and custom.author_url makes the
+              name a link. Serialising article.author alone dropped the
+              configured link on the articles that have one.
+            {%- endcomment -%}
             {%- assign card_author = '' -%}
-            {%- if section.settings.show_author -%}{%- assign card_author = article.author -%}{%- endif -%}
+            {%- assign card_author_url = '' -%}
+            {%- if section.settings.show_author -%}
+              {%- assign meta_author = article.metafields.custom.author_name.value -%}
+              {%- if meta_author != blank -%}
+                {%- assign card_author = meta_author -%}
+                {%- assign meta_author_url = article.metafields.custom.author_url.value -%}
+                {%- if meta_author_url != blank -%}{%- assign card_author_url = meta_author_url -%}{%- endif -%}
+              {%- else -%}
+                {%- assign card_author = article.author -%}
+              {%- endif -%}
+            {%- endif -%}
             {%- unless first_item -%},{%- endunless -%}{%- assign first_item = false -%}
-            {"title":{{ article.title | strip_html | json | replace: '<', '\u003c' }},"excerpt":{{ card_excerpt | json | replace: '<', '\u003c' }},"tags":{{ card_tags | json | replace: '<', '\u003c' }},"published_at":{{ published_epoch | json }},"url":{{ article.url | json | replace: '<', '\u003c' }},"author":{{ card_author | json | replace: '<', '\u003c' }},"image":{{ img_json }}}
+            {"title":{{ article.title | strip_html | json | replace: '<', '\u003c' }},"excerpt":{{ card_excerpt | json | replace: '<', '\u003c' }},"tags":{{ card_tags | json | replace: '<', '\u003c' }},"published_at":{{ published_epoch | json }},"url":{{ article.url | json | replace: '<', '\u003c' }},"author":{{ card_author | json | replace: '<', '\u003c' }},"author_url":{{ card_author_url | json | replace: '<', '\u003c' }},"image":{{ img_json }}}
           {%- endfor -%}
         {%- endif -%}
       {%- endfor -%}
@@ -223,7 +240,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (article.author) {
       const author = document.createElement('span');
       author.className = 'article-card__info caption-with-letter-spacing blog-search-result__author';
-      author.textContent = article.author;
+      // A configured custom.author_url keeps the name linked here too, the way
+      // the article cards render it; plain text when no URL is set.
+      if (article.author_url) {
+        const authorLink = document.createElement('a');
+        authorLink.className = 'card__author-link';
+        authorLink.href = article.author_url;
+        authorLink.textContent = article.author;
+        author.appendChild(authorLink);
+      } else {
+        author.textContent = article.author;
+      }
       wrapper.appendChild(author);
     }
 

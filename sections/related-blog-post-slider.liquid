@@ -210,17 +210,43 @@ articles only. On article pages this suppression never applies.
 
         </div>
 
-        {% if section.settings.show_scrollbar and display_count > 3 %}
-          
-        {% else %}
-          <style>
-            @media screen and (min-width: 767px) {
-              #shopify-section-{{ section.id }} .related-slider__bottom {
-                display: none;
-              }
-            }
-          </style>
+        {%- comment -%}
+          Hide the bottom controls only where the track cannot scroll. Slides are
+          one per view below 990px and three per view at 990px and up, so "fits
+          without scrolling" means display_count <= 1 below 990px and
+          display_count <= 3 at 990px and up.
+
+          The previous rule hid them from 767px up whenever display_count <= 3,
+          which on the hub is always true because display_count is capped at
+          articles_limit (3). Between 767px and 989px that left one full-width
+          card on screen with no arrows or scrollbar to reach the other two.
+        {%- endcomment -%}
+        {% assign can_scroll_small = false %}
+        {% if section.settings.show_scrollbar and display_count > 1 %}
+          {% assign can_scroll_small = true %}
         {% endif %}
+        {% assign can_scroll_large = false %}
+        {% if section.settings.show_scrollbar and display_count > 3 %}
+          {% assign can_scroll_large = true %}
+        {% endif %}
+        {% unless can_scroll_small and can_scroll_large %}
+          <style>
+            {% unless can_scroll_small %}
+              @media screen and (min-width: 767px) and (max-width: 989px) {
+                #shopify-section-{{ section.id }} .related-slider__bottom {
+                  display: none;
+                }
+              }
+            {% endunless %}
+            {% unless can_scroll_large %}
+              @media screen and (min-width: 990px) {
+                #shopify-section-{{ section.id }} .related-slider__bottom {
+                  display: none;
+                }
+              }
+            {% endunless %}
+          </style>
+        {% endunless %}
 
         <div class="related-slider__bottom">
 
