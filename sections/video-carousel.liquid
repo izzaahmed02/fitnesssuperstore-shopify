@@ -464,7 +464,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-  $('.video-carousel .slick-carousel').slick({
+  var $carousel = $('.video-carousel .slick-carousel');
+
+  // The thumbnail is now a <button>, so it is in the tab order. Slick clones
+  // slides for the infinite loop and marks off-screen slides aria-hidden, so
+  // without this the same video appears several times to a keyboard or screen
+  // reader user. Only thumbnails in real, visible slides stay tabbable.
+  function syncThumbnailTabOrder() {
+    $carousel.find('.video-thumbnail').each(function () {
+      var slide = this.closest('.slick-slide');
+      var reachable = !!slide && !slide.classList.contains('slick-cloned')
+        && slide.getAttribute('aria-hidden') !== 'true';
+      // Slick already marks the slide aria-hidden; this only governs tab order.
+      this.setAttribute('tabindex', reachable ? '0' : '-1');
+    });
+  }
+
+  $carousel.on('init reInit setPosition afterChange', function () {
+    syncThumbnailTabOrder();
+  });
+
+  $carousel.slick({
 
     slidesToShow: 3,
     slidesToScroll: 1,
@@ -486,5 +506,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     ]
   });
+
+  syncThumbnailTabOrder();
 });
 </script>

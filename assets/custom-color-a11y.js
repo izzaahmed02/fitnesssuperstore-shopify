@@ -44,28 +44,35 @@
     trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
 
-  function observe(root) {
-    var swatches = root.querySelectorAll('.swatch:not(.swatch--custom-trigger)');
-    if (swatches.length) {
-      var swatchObserver = new MutationObserver(function (records) {
-        records.forEach(function (r) { syncSwatch(r.target); });
-      });
-      Array.prototype.forEach.call(swatches, function (el) {
-        syncSwatch(el);
-        swatchObserver.observe(el, { attributes: true, attributeFilter: ['class'] });
-      });
-    }
+  // One observer per concern, reused as the options app injects more swatches.
+  var seen = new WeakSet();
+  var swatchObserver = new MutationObserver(function (records) {
+    records.forEach(function (r) { syncSwatch(r.target); });
+  });
+  var panelObserver = new MutationObserver(function (records) {
+    records.forEach(function (r) { syncTrigger(r.target); });
+  });
 
-    var panels = root.querySelectorAll('.custom-color-input');
-    if (panels.length) {
-      var panelObserver = new MutationObserver(function (records) {
-        records.forEach(function (r) { syncTrigger(r.target); });
-      });
-      Array.prototype.forEach.call(panels, function (el) {
+  function observe(root) {
+    Array.prototype.forEach.call(
+      root.querySelectorAll('.swatch:not(.swatch--custom-trigger)'),
+      function (el) {
+        syncSwatch(el);
+        if (seen.has(el)) return;
+        seen.add(el);
+        swatchObserver.observe(el, { attributes: true, attributeFilter: ['class'] });
+      }
+    );
+
+    Array.prototype.forEach.call(
+      root.querySelectorAll('.custom-color-input'),
+      function (el) {
         syncTrigger(el);
+        if (seen.has(el)) return;
+        seen.add(el);
         panelObserver.observe(el, { attributes: true, attributeFilter: ['style'] });
-      });
-    }
+      }
+    );
   }
 
   function init() {
