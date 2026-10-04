@@ -1,6 +1,6 @@
-if (!customElements.get('product-customization-options')) {
+if (!customElements.get('pdp-new-customization-options')) {
   customElements.define(
-    'product-customization-options',
+    'pdp-new-customization-options',
     class ProductCustomizationOptions extends HTMLElement {
       constructor() {
         super();
