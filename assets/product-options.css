@@ -545,7 +545,15 @@ product-customization-options {
       opacity: 1;
     }
   }
-  
+
+  /* #837 finding 4: the hover tooltip never shows below 750px, but its nowrap box still widened the page (fixed) */
+  @media (max-width: 749px) {
+    .swatch::after,
+    .swatch::before {
+      display: none;
+    }
+  }
+
   .options_heading span:first-child {
     font-weight: 400;
   }
@@ -632,6 +640,22 @@ product-customization-options {
   
     .option_selected-price:empty {
       display: none;
+    }
+  }
+
+  /* #837 finding 4: let long selected-colour names wrap on mobile instead of running past the screen edge */
+  @media (max-width: 749px) {
+    /* The title ("Colors") is a bare text node; inherited break-word let it split mid-word once the label could shrink */
+    product-customization-options .product-options__category-title {
+      word-break: normal;
+    }
+
+    product-customization-options .product-options__category-title .option_selected-container {
+      min-width: 0;
+    }
+
+    product-customization-options .product-options__category-title .option_selected {
+      white-space: normal;
     }
   }
   
