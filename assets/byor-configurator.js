@@ -378,12 +378,16 @@
       });
     }
 
-    Object.keys(state.storage).forEach(function (gapIndex) {
-      var picks = state.storage[gapIndex] || {};
-      Object.keys(picks).forEach(function (sku) {
-        add(sku, picks[sku]);
+    // Storage only counts while Step 10 is offered — a floor→wall switch or a
+    // shared link must not carry storage tiers onto a build that can't take them.
+    if (Rules.storageAvailable(state)) {
+      Object.keys(state.storage).forEach(function (gapIndex) {
+        var picks = state.storage[gapIndex] || {};
+        Object.keys(picks).forEach(function (sku) {
+          add(sku, picks[sku]);
+        });
       });
-    });
+    }
 
     Object.keys(state.extras).forEach(function (sku) {
       add(sku, state.extras[sku]);
@@ -606,6 +610,7 @@
               state.topStyle = null;
               state.sectionBars = {};
               state.gapBars = {};
+              state.storage = {};
               self.render();
             }
           )
