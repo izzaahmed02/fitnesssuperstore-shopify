@@ -851,7 +851,6 @@ if (!customElements.get('pdp-new-customization-options')) {
       updatePrice() {
         let priceAdjustment = 0;
         const activeOptions = this.querySelectorAll('[data-customization-option]:checked, [data-select-option], [data-quantity-option-input]');
-        if (activeOptions.length === 0) return;
         activeOptions.forEach((option) => {
           const value = option.value;
           if (value.includes(':::')) {
