@@ -29,6 +29,11 @@ window.BYOR.share = (function () {
   /* SKUs and option ids we are willing to accept back out of a URL. */
   var TOKEN_RE = /^[A-Za-z0-9._-]{1,64}$/;
 
+  /* A build with every option maxed out encodes to about 12.5 KB (checked in
+   * scripts/byor-rules-check.js); anything past this is not one of ours and
+   * starts a fresh build. */
+  var MAX_TOKEN_LENGTH = 16384;
+
   /* Step 5 top styles (Rules.topStyles in byor-configurator.js). */
   var TOP_STYLES = ['basic', 'basic_cm', 'monkey'];
 
@@ -180,7 +185,7 @@ window.BYOR.share = (function () {
    * `blank` is the caller's newState() so we never invent a shape here.
    */
   function decode(encoded, blank) {
-    if (typeof encoded !== 'string' || !encoded) return null;
+    if (typeof encoded !== 'string' || !encoded || encoded.length > MAX_TOKEN_LENGTH) return null;
 
     var json = b64decode(encoded);
     if (!json) return null;

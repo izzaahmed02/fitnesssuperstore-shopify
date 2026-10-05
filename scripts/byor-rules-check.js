@@ -505,6 +505,46 @@ console.log('Malformed share links');
 
   const proto = safeDecode(rawToken('{"v":1,"m":"floor","u":{"108":2},"__proto__":{"polluted":1}}')).value;
   check('__proto__ in a link pollutes nothing', [({}).polluted, proto.polluted], [undefined, undefined]);
+
+  // Oversized links start a fresh build; the largest real build still restores.
+  const junkExtras = {};
+  for (let i = 0; i < 20000; i++) junkExtras['FF-X-' + i] = 1;
+  const oversized = rawToken({ v: 1, m: 'floor', u: { 108: 2 }, d: 43, t: 'basic', x: junkExtras });
+  check('oversized link — rejected', safeDecode(oversized), { value: null });
+
+  const data = BYOR.data;
+  const every = (list, qty) => {
+    const out = {};
+    list.forEach((sku) => (out[sku] = qty));
+    return out;
+  };
+  const perIndex = (count, picks) => {
+    const out = {};
+    for (let i = 0; i < count; i++) out[i] = picks;
+    return out;
+  };
+  const largest = build({
+    layoutId: 'training-2',
+    mounting: 'floor',
+    uprights: { 72: 4, 84: 4, 91: 4, 108: 4, 120: 4, 142: 4 },
+    depth: 71,
+    spacing: 71,
+    topStyle: 'basic_cm',
+    hooks: 'both',
+    hookQty: every(data.jHooksAndSpotters.jhooks.concat(data.jHooksAndSpotters.spotters), 9),
+    sectionBars: perIndex(12, every(data.widthBars[43].map((o) => o.sku), 2)),
+    gapBars: perIndex(11, every(data.widthBars[71].map((o) => o.sku), 2)),
+    secondRow: true,
+    secondRowSectionBars: perIndex(12, every(data.widthBars[43].map((o) => o.sku), 2)),
+    secondRowGapBars: perIndex(11, every(data.widthBars[71].map((o) => o.sku), 2)),
+    storage: perIndex(11, every(data.storageTiers[71], 5)),
+    extras: every(data.otherAttachments.map((a) => a.sku), 9),
+    siteUncertain: true
+  });
+  const largestToken = share.encode(largest);
+  const largestRestored = safeDecode(largestToken).value;
+  check('largest realistic build — still restores', largestRestored !== null, true);
+  check('largest realistic build — identical bill of materials', largestRestored && billOfMaterials(largestRestored), billOfMaterials(largest));
 }
 
 console.log('Quote gates — not cart-eligible');
