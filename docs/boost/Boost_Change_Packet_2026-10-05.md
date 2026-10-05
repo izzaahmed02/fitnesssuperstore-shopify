@@ -1,6 +1,6 @@
 # Boost AI Search — Proposed bounded change packet for Tim's approval
 Prepared 5 October 2026 by Yusra. Status: NOT APPLIED. Nothing has been changed in Boost, Shopify or the theme.
-Vendor conversation reference: Boost/clearer.io conversation ID 215476119527050 (Stephen, thread "Other").
+Vendor conversation reference: Boost/clearer.io conversation ID 215476119527050, given by Stephen on 4 Oct in the "Other" thread. Note this differs from the earlier controlling ID 215475012569575 used through August.
 
 ## 1. Where the vendor request stands
 - 26 Sep — implementation request + Andrew's Phase1_Signal_Hierarchy_Governance_v2 sent to Stephen in the existing "Other" conversation.
@@ -19,6 +19,8 @@ Vendor conversation reference: Boost/clearer.io conversation ID 215476119527050 
 | Is the lb/lbs asymmetry AI Synonyms or built-in analyzer stemming? | Neither is configurable: lb, lbs and pound are treated as ordinary keywords, not units, so ranking differs by token frequency. Fix is Manual Synonyms or consistent product data. | Numerical/unit intent is engine-internal, but workaroundable at our end. |
 
 Boost also confirmed it cannot restrict a brand or product-type query to only that brand or type, which means Andrew's Tier 2 "exact brand/vendor" and "exact product class" eligibility rules cannot be enforced in Boost at all.
+
+Worth stating plainly: these are re-confirmations, not new answers. Boost gave the same negative on intermediate product-class weighting on 22 Aug and on brand/class eligibility on 26 Aug. Nothing in the 4 Oct reply reopens either. What IS new is the semantic weight control in Q4 and the explicit "no plan upgrade or paid custom work" in Q7.
 
 ## 3. Verified against live data today — two things Boost does not know
 **(a) The Product Type recommendation cannot be used as written.**
@@ -57,34 +59,36 @@ The failure has moved from under-retrieval to over-retrieval. Result totals toda
 
 A "bumper plate 45 lbs" query returning 178 products is the tier-6 breach in Andrew's framework: personalization and semantic signals are changing the membership of the set, not just its order.
 
-## 5. Proposed change — one variable at a time, in this order
-No change proceeds without Tim's written GO naming the exact step.
+## 5. Where this sits in the approved sequence
+Tim's approved order is unchanged and this packet does not jump it. One variable at a time, each with a separate written GO.
 
-**Step 1. Set Semantic Search impact weight from 50% to 0.**
-- Why: Boost confirmed semantic is the only mechanism that ADDS non-matching products. Andrew's Tier 6 says these signals "must not alter the eligible set." This is the single change that enforces it.
-- Revert condition: restore to 50% if any tracked query's correct top-three is lost, or total results collapse below the count of genuinely matching products.
+**Already approved and still pending execution — GO 2.** Both Search Personalization and Product Performance Ranking OFF together, two toggles as one conceptual variable, Semantic Search and AI Synonyms untouched. Arafat owns execution. Tim accepted Arafat's 25 Sep capture as the new reference baseline on 26 Sep, which cleared the drift gate that was blocking it. Nothing below moves ahead of this.
 
-**Step 2. Set Description to Non-searchable.**
-- Why: verified above as the second source of set expansion. Boost's own recommendation.
-- Revert condition: restore Description to Low if any model-code or brand query loses a product that only matches via Description.
+**Next designated variable — Description exclusion (still HOLD).** Tim designated this on 11/14 Sep as the step after GO 2 is measured: Description first, then Tags, never together, executed by us in our own Boost admin rather than requested from the vendor, effective on save with roughly a 10 minute sync and facets unaffected. It needs its own written GO after the GO 2 +24h read. Boost's 4 Oct answer repeats the same recommendation, so vendor and internal positions now agree.
 
-**Step 3. Add Manual Synonyms: lb <=> lbs, lb <=> pound, lbs <=> pounds.**
-- Why: Boost's recommended fix for unit intent, no code required.
-- Revert condition: delete the rules if unit queries return a wider or worse set than before.
+**New, from Boost's 4 Oct answer — queue behind the above.** Boost disclosed for the first time that Semantic Search runs at a 50% impact weight and that it is the only mechanism that ADDS products with no lexical match, and that the weight can be set to 0. This is the first mechanism anyone has offered that enforces Andrew's Tier 6 rule that these signals "must not alter the eligible set." It is a candidate step, not an approved one, and it must not be bundled with GO 2 or with the Description exclusion.
 
-**Rejected, with reason to be sent to Boost:** Product Type = High / Title = Medium. Our product_type field carries no class data (99.5% is the single value "Product Index"), so this would demote the only working field in favour of a constant.
+**Also new — the synonym row already exists.** Boost recommends lb <=> lbs and lb <=> pound Manual Synonyms. The 14 Sep configuration export showed the store already has exactly one Manual Synonym row, "lbs to lb", and it is DISABLED. So this is enabling an existing rule and adding the pound pair, not creating a set from scratch. Tim's 24 Aug direction not to activate bidirectional Manual Synonyms yet still stands until he lifts it.
 
-**Deferred:** retitling products for lb/lbs consistency (Boost's Approach 1). At least 136 active products carry an "lb" form with no "lbs" anywhere in the title (629 titles match lb*, 493 of those contain lbs). This is a catalog project, not a search setting, and should not be bundled with the above.
+**Rejected, with reason to send back to Boost.** Product Type = High and Product Title = Medium. Our product_type field carries no class data, so this would demote the only field that currently works in favour of a constant.
+
+**Deferred.** Retitling products for lb/lbs consistency (Boost's Approach 1). At least 136 active products carry an "lb" form with no "lbs" anywhere in the title (629 titles match lb*, 493 of those contain lbs). That is a catalog project, not a search setting, and should not ride along with any of the above.
+
+### Admission sources now on the record
+Boost's 4 Oct answer describes lexical matching and semantic expansion. Two further sources are already documented internally and Boost has never mentioned either:
+- Tags are searchable at medium weight and metafields are searchable at medium weight (18 Sep export read). Metafields were not named in any vendor answer or internal read before that date.
+- Twelve merchandising records exist, nine of them query pins. A pin can place a product regardless of lexical match, which makes merchandising a third admission path. One of them, the Rubber Hex hide, lands on our own tracked query rows.
 
 ## 6. Verification and rollback
-- Before each step: Arafat captures the 16 tracked queries against the Sept 25 baseline Tim approved on 26 Sep, and records the current Boost setting value verbatim.
+- Before each step: Arafat captures the 16 tracked queries against the 25 Sep baseline Tim approved on 26 Sep, using the fixed method (logged-out Incognito, US VPN, US/USD, relevance sort, no filters, page 1, limit 36), and records the current Boost setting value verbatim.
 - Apply ONE step. Trigger a Manual sync in Boost and wait for it to finish — Boost confirmed there is no preview and no staging; the change is live on sync completion.
 - Immediately after sync: re-capture the same 16 queries. Then re-capture at 24 hours.
-- Stop condition: any tracked query losing a correct exact-intent product from its top three, or any hidden/archived product appearing. On a stop, restore the recorded prior value and re-sync.
+- Stop condition, per Tim's 23 Sep ruling: a tracked query total changes, or an exact-name query (Q04 full-name Rubber Hex Dumbbells, Q06 full-name FFS Silver Dual Adjustable Pulley, Q16 fsr100) no longer returns its named product in the top three, or any tracked query errors. Ranking movement alone is observational, not a regression. On a stop, restore the recorded prior value and re-sync the same day.
 - Only after a clean 24-hour re-check does the next step proceed.
 
 ## 7. Open items
 - Boost has still not named an implementation owner. Needs to be pressed or accepted explicitly.
-- Current Boost admin values for Semantic Search weight, Description searchability and any existing Manual Synonyms need to be read and recorded in the admin before Step 1 — they could not be read from outside the app.
+- GO 2 has still never run. It has been scheduled four times (9 Sep, 14 Sep, 21 Sep, 25 Sep). The drift gate that blocked the fourth attempt was cleared by Tim on 26 Sep, so it is executable.
+- Current Boost admin values for Semantic Search impact weight and Description searchability need to be read and recorded in the admin before any step. They cannot be read from outside the app. The 14 Sep export is the last known good read for the rest.
 - Andrew's §6 answers should be recorded against the v2 document, as §8 of that document requires.
-- The repair-versus-migrate decision now has its deciding input: Boost cannot express Tier 2. That is a separate decision for Tim.
+- The repair-versus-migrate decision: Boost has now confirmed three times that it cannot express Tier 2. The provisional direction Tim set on 21 Aug was repair, not migrate. Whether the 4 Oct re-confirmation changes that is a separate decision for Tim.
