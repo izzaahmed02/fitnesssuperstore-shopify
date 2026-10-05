@@ -59,8 +59,8 @@ recommendation-event history line up.
 | --- | --- |
 | `id`, `sku` | `variant.sku` |
 | `title` | `product.title` |
-| `description` | `product.description`, tags and whitespace collapsed |
-| `link` | `custom.product_canonical_url`, else `product.onlineStoreUrl`; multi-variant products are deep-linked with `?variant=<id>` so each row resolves to its own variant |
+| `description` | `product.descriptionHtml` with `<style>`/`<script>` blocks removed, then tags and whitespace collapsed (falls back to `product.description`) |
+| `link` | `product.onlineStoreUrl` only; `custom.product_canonical_url` is SEO-only and never governs email/catalog destinations; multi-variant products are deep-linked with `?variant=<id>` |
 | `image_link` | `variant.image`, else `product.featuredMedia` |
 | `price` | `variant.price` — Admin base price verbatim, no promotional discount inferred |
 | `availability` | `In Stock` / `Out of Stock` / `Backorder`, from `availableForSale` + inventory policy |
@@ -105,6 +105,8 @@ Whole-product suppression, applied before anything else looks at the rows:
 - `option_carrier_excluded` — the product is an option carrier listed in
   `OPTION_CARRIER_PRODUCT_IDS`: its variants are configuration choices on
   another product, not purchasable items.
+- `sku_excluded` — a specific variant SKU is explicitly blocked even if its
+  parent product is otherwise feedable. `FFT-DCC-APU` is the standing guard.
 
 Suppressed products are removed from the candidate set entirely rather than
 excluded row by row. This matters because the duplicate analysis counts SKUs

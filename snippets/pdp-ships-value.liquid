@@ -1,22 +1,37 @@
 {%- comment -%}
-  PDP "Ships:" row value — crate/manual treatment.
+  PDP "Ships:" row value — crate / manual / crate-photo treatment.
 
   Per Tim French, canonical Gmail thread "Re: Remove Blanket Wrap Packaging on
-  Most Products." (2026-09-03 → 2026-09-10).
+  Most Products." (2026-09-03 → 2026-09-22).
 
-  RULE (data-driven, no hardcoded product mapping in the production path):
-  when custom.ships is exactly "New in Crate" AND a usable assembly manual
-  exists (custom.manual_link or custom.manual_file), the row renders the
-  approved sentence
+  RULE (data-driven, no hardcoded product mapping):
+  when custom.ships is exactly "New in Crate" or "New in Crates", the row
+  renders the approved sentence
 
     Ships: New in Crate (Assembly Manual Link). Installation Options Available
 
-  where "Assembly Manual Link" is a real link to that model's manual, and the
-  representative packaging video + "Packaging details" disclosure are
-  suppressed for that product.
+  - The ships value is echoed verbatim, so multi-crate products carrying
+    "New in Crates" render the plural. The field stays the single source of
+    truth for singular vs plural.
+  - "Assembly Manual Link" is a real link to that model's manual, from
+    custom.manual_link or custom.manual_file.
+  - When custom.crate_photos has entries, the ships value itself becomes the
+    trigger for a popup showing that product's own crate photos. It reuses the
+    theme's existing modal (.modal-wrapper / #dynamic-product-content), the
+    same mechanism as "(More Info)".
+  - With no crate photos the value renders as plain text with no link, and
+    with no manual the manual-link clause is simply absent.
+  - The crate value ALONE suppresses the representative packaging video and
+    the "Packaging details" disclosure, whether or not a manual or photos
+    exist (Tim, Oct 1). A product whose ships field says it arrives in a
+    crate must never also show blanket-wrap packaging copy; the manual and
+    photos only add to the sentence, they do not gate it.
 
-  Any product that does not meet BOTH conditions keeps its stored ships value
-  and the existing PR #663 packaging-video behaviour untouched.
+  Any product that does not meet the crate conditions keeps its stored ships
+  value and the existing PR #663 packaging-video behaviour untouched. That
+  includes the packaging exceptions, whose stored values ("New in Wooden
+  Crates (Assembly Options Available)" and similar) do not match the two
+  exact crate values above.
 
   Callers: sections/main-product.liquid, main-product-comb.liquid and
   main-product-variants.liquid — the three PDP templates that render the
@@ -27,6 +42,12 @@
 {%- liquid
   assign ships_value = product.metafields.custom.ships
   assign ships_normalized = ships_value | strip_html | strip | downcase
+
+  # Echoed so "New in Crates" renders plural. strip_html keeps a rich-text
+  # field from injecting markup ahead of the manual link. A stored trailing
+  # period is dropped so the label never doubles up with the punctuation this
+  # snippet adds around the manual link.
+  assign ships_label = ships_value | strip_html | strip | remove_last: '.'
 
   # The manual can be either a url-type metafield (custom.manual_link) or a
   # file_reference (custom.manual_file). Resolve both shapes to a plain URL
@@ -52,26 +73,96 @@
       endif
     endif
   endif
--%}
 
-{%- liquid
+  assign crate_photos = product.metafields.custom.crate_photos.value
+  assign crate_photo_count = 0
+  if crate_photos != blank
+    assign crate_photo_count = crate_photos.size
+  endif
+
   assign ships_is_crate = false
   if ships_normalized == 'new in crate' or ships_normalized == 'new in crate.'
     assign ships_is_crate = true
+  elsif ships_normalized == 'new in crates' or ships_normalized == 'new in crates.'
+    assign ships_is_crate = true
   endif
 
-  assign is_crate_manual = false
-  if ships_is_crate and manual_url != blank
-    assign is_crate_manual = true
-  endif
+  # The crate value alone decides this. Manual and photo availability only
+  # change what the sentence contains, never whether the legacy packaging
+  # video and disclosure are suppressed.
+  assign is_crate_treatment = ships_is_crate
 -%}
-{%- if is_crate_manual -%}
-  New in Crate (<a
-    class="ships-manual__link"
-    href="{{ manual_url | escape }}"
-    target="_blank"
-    rel="noopener noreferrer"
-  >Assembly Manual Link</a>). Installation Options Available
+{%- if is_crate_treatment -%}
+  {%- if crate_photo_count > 0 -%}
+    {%- liquid
+      # aria-controls must name the dialog the shopper actually gets, not the
+      # inert <template> it is cloned from, so the two carry separate ids. The
+      # dialog id and its role/label live on the cloned .crate-photos element.
+      assign crate_dialog_id = 'CratePhotos-' | append: product.id
+      assign crate_template_id = 'CratePhotosTemplate-' | append: product.id
+      assign crate_heading_id = 'CratePhotosHeading-' | append: product.id
+    -%}
+    <button
+      type="button"
+      class="ships-crate__trigger"
+      data-crate-photos-trigger
+      data-crate-photos-template="{{ crate_template_id }}"
+      aria-haspopup="dialog"
+      aria-controls="{{ crate_dialog_id }}"
+    >{{ ships_label }}</button>
+  {%- else -%}
+    {{ ships_label }}
+  {%- endif -%}
+  {%- if manual_url != blank %} (<a
+      class="ships-manual__link"
+      href="{{ manual_url | escape }}"
+      target="_blank"
+      rel="noopener noreferrer"
+    >Assembly Manual Link</a>).{% else %}.{% endif %} Installation Options Available
+  {%- comment -%}
+    The template and script are emitted AFTER the sentence. Between the trigger
+    button and the punctuation they would leave whitespace text nodes that the
+    browser renders as a visible space - "New in Crate ." - on a product with
+    photos but no manual.
+  {%- endcomment -%}
+  {%- if crate_photo_count > 0 -%}
+    <template id="{{ crate_template_id }}">
+      <div
+        class="crate-photos"
+        id="{{ crate_dialog_id }}"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="{{ crate_heading_id }}"
+      >
+        <h2 class="crate-photos__heading" id="{{ crate_heading_id }}">{{ ships_label }} — {{ product.title | escape }}</h2>
+        <div class="crate-photos__grid">
+          {%- for photo in crate_photos -%}
+            {%- liquid
+              assign photo_src = photo | image_url: width: 1400
+              if photo_src == blank
+                assign photo_src = photo.url
+              endif
+              assign photo_alt = photo.alt
+              if photo_alt == blank
+                assign photo_alt = product.title | append: ' crate packaging photo'
+              endif
+            -%}
+            {%- if photo_src != blank -%}
+              <img
+                class="crate-photos__image"
+                src="{{ photo_src }}"
+                alt="{{ photo_alt | escape }}"
+                loading="lazy"
+                width="1400"
+                height="1400"
+              >
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+      </div>
+    </template>
+    <script src="{{ 'pdp-crate-photos.js' | asset_url }}" defer="defer"></script>
+  {%- endif -%}
 {%- else -%}
   {{ ships_value }}
   {% render 'shipping-packaging-video-link', product: product %}

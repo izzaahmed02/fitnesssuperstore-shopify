@@ -223,8 +223,8 @@
 
 
                 <div>
-{% comment %} GMC/MSRP compliance (2026-04): reference "retail price" ("As high as") display hidden — show actual selling price only. Do not re-enable without a verified/substantiated reference price.
-                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
+                  {% comment %} GMC/MSRP compliance (2026-04): reference price display hidden.
+{% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
                     <span class="pr_custom_compare_price"
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
@@ -246,8 +246,8 @@
                         price_class: 'price--large'
                       -%}
 
-{% comment %} GMC/MSRP compliance (2026-04): "You save $X" savings display hidden — show actual selling price only. Do not re-enable without a verified/substantiated reference price.
-                      {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
+                      {% comment %} GMC/MSRP compliance (2026-04): savings display hidden.
+{% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
                       %}
                         <span class="you-save"
                           >You save
@@ -866,16 +866,23 @@
                 <div class="product__title hidden lg:block" {{ block.shopify_attributes }}>
                   <h1>{{ product.title | escape }}</h1>
                 </div>
+                {%- comment -%}
+                  Desktop copy only, like the title above it. Below 990px the selector is
+                  already rendered under the title in .product__info-wrapper--mobile, so
+                  without the wrapper it showed twice on mobile.
+                {%- endcomment -%}
                 {%- if product.metafields.custom.product_color != blank -%}
-                  {% render 'finish-selector', product: product %}
+                  <div class="hidden lg:block">
+                    {% render 'finish-selector', product: product %}
+                  </div>
                 {%- endif -%}
               {% when 'price' %}
 
 
                 <div class="product__price-row">
                 <div class="product__prices hidden lg:block">
-{% comment %} GMC/MSRP compliance (2026-04): reference "retail price" ("As high as") display hidden — show actual selling price only. Do not re-enable without a verified/substantiated reference price.
-                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
+                  {% comment %} GMC/MSRP compliance (2026-04): reference price display hidden.
+{% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
                     <span class="pr_custom_compare_price"
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
@@ -897,8 +904,8 @@
                         price_class: 'price--large'
                       -%}
 
-{% comment %} GMC/MSRP compliance (2026-04): "You save $X" savings display hidden — show actual selling price only. Do not re-enable without a verified/substantiated reference price.
-                      {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
+                      {% comment %} GMC/MSRP compliance (2026-04): savings display hidden.
+{% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
                       %}
                         <span class="you-save"
                           >You save

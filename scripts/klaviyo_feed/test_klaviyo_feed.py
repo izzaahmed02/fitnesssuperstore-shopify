@@ -86,6 +86,40 @@ class BuilderTests(unittest.TestCase):
         # description is flattened to plain text with collapsed whitespace
         self.assertEqual(feed[0]["description"], "Hello world")
 
+    def test_description_drops_embedded_style_and_script(self):
+        # Shopify's plain-text description keeps <style>/<script> contents as
+        # text; the HTML is the source so the widget code never reaches Klaviyo.
+        html = (
+            "<p>Low-odor rubber &amp; grip.</p>\n<style>\n.message-box {\ndisplay: none;\n}\n"
+            "@media (max-width: 767px){ .apu-desktop{display:none;} }\n</style>\n"
+            "<p class=\"message-text\" onclick=\"showMessageBox()\">Smell?</p>\n"
+            "<SCRIPT type=\"text/javascript\">function showMessageBox() { return 1; }</SCRIPT>"
+        )
+        node, variant = product(
+            1, "SKU-1", "10.00",
+            description="Low-odor rubber & grip. .message-box { display: none; } Smell? function showMessageBox() { return 1; }",
+            descriptionHtml=html,
+        )
+        _, _, feed = self.build([node, variant])
+        self.assertEqual(feed[0]["description"], "Low-odor rubber & grip. Smell?")
+
+    def test_description_without_embedded_code_is_shopify_text_verbatim(self):
+        # Rows with no <style>/<script> keep Shopify's plain text exactly, so the
+        # fix cannot reflow the ~3,400 descriptions that never leaked.
+        node, variant = product(
+            1, "SKU-1", "10.00",
+            description="Cybex® Arc & more",
+            descriptionHtml="<p>Cybex<sup>®</sup> Arc &amp; more</p>",
+        )
+        _, _, feed = self.build([node, variant])
+        self.assertEqual(feed[0]["description"], "Cybex® Arc & more")
+
+    def test_description_falls_back_when_html_absent(self):
+        node, variant = product(1, "SKU-1", "10.00")
+        self.assertNotIn("descriptionHtml", node)
+        _, _, feed = self.build([node, variant])
+        self.assertEqual(feed[0]["description"], "Hello world")
+
     def test_feed_keys_are_exactly_the_mapped_keys(self):
         node, variant = product(1, "SKU-1", "10.00")
         _, _, feed = self.build([node, variant])
@@ -272,6 +306,37 @@ class SuppressionTests(unittest.TestCase):
         _, report, feed = self.build([node, variant])
         self.assertEqual(feed, [])
         self.assertEqual(report["exception_reason_counts"]["option_carrier_excluded"], 1)
+
+    def test_body_solid_option_carrier_is_suppressed_by_id(self):
+        pid = 10279695679804
+        node, variant = product(pid, "BSLDGAP1", "275.00")
+        self.assertIn(f"gid://shopify/Product/{pid}", builder.OPTION_CARRIER_PRODUCT_IDS)
+        _, report, feed = self.build([node, variant])
+        self.assertEqual(feed, [])
+        self.assertEqual(report["exception_reason_counts"]["option_carrier_excluded"], 1)
+
+    def test_explicit_fft_dcc_apu_guard_survives_parent_changes(self):
+        node, variant = product(809, "FFT-DCC", "3499.00")
+        apu = dict(
+            variant,
+            id="gid://shopify/ProductVariant/8092",
+            sku="fft-dcc-apu",
+        )
+        _, report, feed = self.build([node, variant, apu])
+        self.assertEqual([r["id"] for r in feed], ["FFT-DCC"])
+        self.assertEqual(report["exception_reason_counts"]["sku_excluded"], 1)
+        self.assertEqual(report["counts"]["sku_excluded_rows"], 1)
+        self.assertEqual(report["counts"]["suppressed_products"], 0)
+
+    def test_catalog_link_ignores_seo_canonical_and_uses_own_product_url(self):
+        node, variant = product(
+            810,
+            "FFS-45DLLP",
+            "100.00",
+            mf_canonical={"value": "https://www.fitnesssuperstore.com/products/black-counterpart"},
+        )
+        _, _, feed = self.build([node, variant])
+        self.assertEqual(feed[0]["link"], node["onlineStoreUrl"])
 
     def test_suppressed_rows_are_still_accounted_for(self):
         ok_node, ok_variant = product(805, "OK-1", "10.00")

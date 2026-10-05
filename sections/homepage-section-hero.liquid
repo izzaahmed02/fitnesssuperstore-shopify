@@ -91,10 +91,18 @@
      
     </div>
   </div>
+  <script>
+    // Flag the cards as an about-to-start mobile carousel so the CSS paints
+    // only the first card until Slick runs (no three-card flash). Cleared
+    // below whether or not Slick initializes.
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      document.currentScript.previousElementSibling.classList.add('is-carousel-pending');
+    }
+  </script>
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  (function() {
     function initHeroCarousel() {
       const $questions = $('.homepageHeroSection .questions');
       
@@ -121,18 +129,46 @@
       }
     }
 
-    // Initialize on load
-    initHeroCarousel();
-
-    // Re-initialize on window resize
-    let resizeTimer;
-    $(window).on('resize', function() {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(function() {
+    // Drop the pre-init flag even if jQuery/Slick failed, so a carousel that
+    // never starts falls back to showing all three cards.
+    function initAndRelease() {
+      try {
         initHeroCarousel();
-      }, 250);
-    });
-  });
+      } finally {
+        document.querySelectorAll('.homepageHeroSection .questions.is-carousel-pending').forEach(function(el) {
+          el.classList.remove('is-carousel-pending');
+        });
+      }
+    }
+
+    function setup() {
+      initAndRelease();
+
+      // Re-initialize on window resize (namespaced so a re-run doesn't stack handlers)
+      let resizeTimer;
+      $(window).off('resize.heroCarousel').on('resize.heroCarousel', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+          initHeroCarousel();
+        }, 250);
+      });
+    }
+
+    // Theme editor re-renders or adds the section without a new
+    // DOMContentLoaded, so bind this right away rather than inside it.
+    if (!window.heroCarouselSectionLoadBound) {
+      window.heroCarouselSectionLoadBound = true;
+      document.addEventListener('shopify:section:load', initAndRelease);
+    }
+
+    // Initialize on load, or straight away if this script ran after it
+    // (section added in the theme editor).
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setup);
+    } else {
+      setup();
+    }
+  })();
 </script>
 
 <style>
