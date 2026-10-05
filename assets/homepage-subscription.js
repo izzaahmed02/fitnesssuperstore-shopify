@@ -1,80 +1,88 @@
 document.addEventListener('DOMContentLoaded', function () {
+	const subscriptionForms = document.querySelectorAll('.homepage-subscription__form');
+
+	subscriptionForms.forEach(function (subscriptionForm) {
+		setupSubscriptionForm(subscriptionForm);
+	});
+});
+
+function setupSubscriptionForm(subscriptionForm) {
 	let attempts = 0;
 	const maxAttempts = 10;
-	const interval = 1000; // Interval in milliseconds
+	const interval = 1000;
+	const sectionRoot = subscriptionForm.closest('.shopify-section') || document;
+	const hiddenFormContainer = sectionRoot.querySelector('.homepage-subscription__original-form');
+	const thankWrapper = sectionRoot.querySelector('.homepage-subscription__message');
+	const sectionWrapper = sectionRoot.querySelector('.homepage-subscription__wrapper');
+	const emailInput = subscriptionForm.querySelector('input[type="email"]');
+	const errorMessage = subscriptionForm.querySelector('.error-message');
+
+	if (!hiddenFormContainer || !thankWrapper || !sectionWrapper || !emailInput || !errorMessage) {
+		return;
+	}
+
+	emailInput.addEventListener('invalid', function () {
+		setEmailError(emailInput, errorMessage, 'Please enter a valid email address.');
+	});
+
+	emailInput.addEventListener('input', function () {
+		if (emailInput.validity.valid) {
+			clearEmailError(emailInput, errorMessage);
+		}
+	});
 
 	const intervalId = setInterval(function () {
-		const subscriptionForm = document.querySelector('.homepage-subscription__form');
-		const hiddenFormContainer = document.querySelector('.homepage-subscription__original-form');
-		const thankWrapper = document.querySelector('.homepage-subscription__message');
-		const sectionWrapper = document.querySelector('.homepage-subscription__wrapper');
+		const hiddenForm = hiddenFormContainer.querySelector('form');
 
-		if (subscriptionForm && hiddenFormContainer) {
-			const hiddenForm = hiddenFormContainer.querySelector('form');
-            
-			if (hiddenForm) {
-				clearInterval(intervalId);
-	
-				const hiddenEmailInput = hiddenForm.querySelector('input[type="email"]');
-				if (!hiddenEmailInput) {
-					console.error('Hidden email input not found in the hidden form.');
+		if (hiddenForm) {
+			clearInterval(intervalId);
+
+			const hiddenEmailInput = hiddenForm.querySelector('input[type="email"]');
+			if (!hiddenEmailInput) {
+				console.error('Hidden email input not found in the hidden form.');
+				return;
+			}
+
+			subscriptionForm.addEventListener('submit', function (e) {
+				e.preventDefault();
+
+				const email = emailInput.value.trim();
+
+				if (!emailInput.validity.valid || !validateEmail(email)) {
+					setEmailError(emailInput, errorMessage, 'Please enter a valid email address.');
+					emailInput.focus();
 					return;
 				}
-	
-				// Add submit handler for the visible form
-				subscriptionForm.addEventListener('submit', function (e) {
-					e.preventDefault(); // Prevent the default form submission
-	
-					// Extract the email value from the visible form
-					const emailInput = subscriptionForm.querySelector('input[type="email"]');
-					if (!emailInput) {
-						console.error('Email input not found in the subscription form.');
-						return;
-					}
-					const email = emailInput.value.trim();
-	
-					// Validate the email
-					if (!validateEmail(email)) {
-						emailInput.classList.add('error');
-						displayErrorMessage(emailInput, 'Please enter a valid email address.');
-						return;
-					} else {
-						emailInput.classList.remove('error');
-						removeErrorMessage(emailInput);
-					}
-	
-					// Pass the value to the hidden email input using the standard "input" event
-					hiddenEmailInput.value = email;
-					hiddenEmailInput.dispatchEvent(new Event('input', { bubbles: true }));
-					console.log('Email value passed to hidden input via input event:', email);
-	
-					// Programmatically simulate a click on the hidden form's submit button
-					const submitButton = hiddenForm.querySelector('button');
-					if (submitButton) {
-						setTimeout(() => {
-							submitButton.click();
-							sectionWrapper.style.display = 'none';
-							thankWrapper.style.display = 'block';
-							setTimeout(() => {
-								window.location.reload();
-							}, 2000);
-						}, 50);
-					} else {
-						console.error('Submit button not found in the hidden form.');
-					}
-				});
-			}
+
+				clearEmailError(emailInput, errorMessage);
+
+				hiddenEmailInput.value = email;
+				hiddenEmailInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+				const submitButton = hiddenForm.querySelector('button');
+				if (submitButton) {
+					setTimeout(function () {
+						submitButton.click();
+						sectionWrapper.style.display = 'none';
+						thankWrapper.style.display = 'block';
+						thankWrapper.focus({ preventScroll: true });
+
+						setTimeout(function () {
+							window.location.reload();
+						}, 2000);
+					}, 50);
+				} else {
+					console.error('Submit button not found in the hidden form.');
+				}
+			});
 		} else {
 			attempts++;
 			if (attempts >= maxAttempts) {
-				console.log('Form elements not found after maximum attempts.');
 				clearInterval(intervalId);
-			} else {
-				console.log('Attempt', attempts, ': form elements not found, retrying...');
 			}
 		}
 	}, interval);
-});
+}
 
 /**
  * Validates the email address.
@@ -86,28 +94,16 @@ function validateEmail(email) {
 	return regex.test(email);
 }
 
-/**
- * Displays an error message below the specified input element.
- * @param {HTMLElement} inputElement - The input element to display the error for.
- * @param {string} message - The error message text.
- */
-function displayErrorMessage(inputElement, message) {
-	let errorDiv = inputElement.parentElement.querySelector('.error-message');
-	if (!errorDiv) {
-		errorDiv = document.createElement('div');
-		errorDiv.className = 'error-message';
-		inputElement.parentElement.insertBefore(errorDiv, inputElement.nextElementSibling);
-	}
-	errorDiv.textContent = message;
+function setEmailError(inputElement, errorElement, message) {
+	inputElement.classList.add('error');
+	inputElement.setAttribute('aria-invalid', 'true');
+	errorElement.textContent = message;
+	errorElement.hidden = false;
 }
 
-/**
- * Removes the error message for the specified input element.
- * @param {HTMLElement} inputElement - The input element for which the error message should be removed.
- */
-function removeErrorMessage(inputElement) {
-	const errorDiv = inputElement.parentElement.querySelector('.error-message');
-	if (errorDiv) {
-		errorDiv.remove();
-	}
+function clearEmailError(inputElement, errorElement) {
+	inputElement.classList.remove('error');
+	inputElement.setAttribute('aria-invalid', 'false');
+	errorElement.textContent = '';
+	errorElement.hidden = true;
 }
