@@ -6,9 +6,27 @@ page-subscription__wrapper
     {% endif %}">
         <h2 class="homepage-subscription__title">{{ section.settings.title }}</h2>
         <div class="homepage-subscription__content">
-            <form action="#" class="homepage-subscription__form">
-                <label for="email" class="homepage-subscription__from-label hidden"></label>
-                <input placeholder="Enter your email" type="email" id="email" class="homepage-subscription__input">
+            <form action="#" class="homepage-subscription__form" data-subscription-form>
+                <label for="PageSubscriptionEmail-{{ section.id }}" class="visually-hidden">Email address</label>
+                <input
+                        placeholder="Enter your email"
+                        type="email"
+                        id="PageSubscriptionEmail-{{ section.id }}"
+                        name="email"
+                        class="homepage-subscription__input"
+                        autocomplete="email"
+                        required
+                        aria-required="true"
+                        aria-invalid="false"
+                        aria-describedby="PageSubscriptionError-{{ section.id }}"
+                >
+                <p
+                        id="PageSubscriptionError-{{ section.id }}"
+                        class="error-message"
+                        role="alert"
+                        aria-live="assertive"
+                        hidden
+                ></p>
                 <button class="homepage-subscription__button" type="submit">Subscribe
                     {% render 'chevron-button' %}
                 </button>
@@ -22,7 +40,13 @@ page-subscription__wrapper
             </div>
         </div>
     </div>
-    <div class="homepage-subscription__message">
+    <div
+            class="homepage-subscription__message"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            tabindex="-1"
+    >
         <h2 class="homepage-subscription__message-title">{{ section.settings.thank-you }}</h2>
         <p class="homepage-subscription__message-copy">{{ section.settings.thank-you-copy }}</p>
     </div>
