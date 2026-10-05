@@ -360,17 +360,27 @@
       }
     }
 
+    // Second-row bars count only if Step 8 would still offer them for the
+    // current top style and span, so a style change or shared link can't
+    // carry hidden bars into the cart.
     if (state.secondRow) {
+      var allowedSkus = function (size) {
+        return Rules.widthBarOptions(state, size).map(function (option) {
+          return option.sku;
+        });
+      };
+      var sectionAllowed = allowedSkus(Rules.sectionBarSize());
+      var gapAllowed = allowedSkus(state.spacing);
       for (var s2 = 0; s2 < slots; s2++) {
         var row = state.secondRowSectionBars[s2] || {};
         Object.keys(row).forEach(function (sku) {
-          add(sku, row[sku]);
+          if (sectionAllowed.indexOf(sku) !== -1) add(sku, row[sku]);
         });
       }
       for (var g2 = 0; g2 < gaps; g2++) {
         var rowGap = state.secondRowGapBars[g2] || {};
         Object.keys(rowGap).forEach(function (sku) {
-          add(sku, rowGap[sku]);
+          if (gapAllowed.indexOf(sku) !== -1) add(sku, rowGap[sku]);
         });
       }
     }
@@ -613,6 +623,8 @@
               state.topStyle = null;
               state.sectionBars = {};
               state.gapBars = {};
+              state.secondRowSectionBars = {};
+              state.secondRowGapBars = {};
               state.storage = {};
               self.render();
             }
@@ -733,6 +745,8 @@
               state.topStyle = value;
               state.sectionBars = {};
               state.gapBars = {};
+              state.secondRowSectionBars = {};
+              state.secondRowGapBars = {};
               self.render();
             }
           )
