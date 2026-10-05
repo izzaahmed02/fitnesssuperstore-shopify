@@ -545,6 +545,22 @@ console.log('Malformed share links');
   const largestRestored = safeDecode(largestToken).value;
   check('largest realistic build — still restores', largestRestored !== null, true);
   check('largest realistic build — identical bill of materials', largestRestored && billOfMaterials(largestRestored), billOfMaterials(largest));
+
+  // Depth and spacing only restore as values the steps offer.
+  const badDepth = safeDecode(rawToken({ v: 1, m: 'floor', u: { 108: 2 }, d: 999, t: 'basic' })).value;
+  check('d=999 decodes to an unset depth', badDepth.depth, null);
+  check('d=999 build asks for a depth again', outstanding(badDepth).indexOf('Choose your rig depth.') > -1, true);
+  check('d=999 build orders no made-up depth SKUs', Object.keys(billOfMaterials(badDepth)).filter((sku) => /-999-/.test(sku)), []);
+
+  const badSpacing = safeDecode(rawToken({ v: 1, m: 'floor', u: { 108: 4 }, d: 43, s: 1000000000, t: 'basic' })).value;
+  check('s=1000000000 decodes to an unset spacing', badSpacing.spacing, null);
+  check('s=1000000000 build asks for a spacing again', outstanding(badSpacing).indexOf('Choose the spacing between sections.') > -1, true);
+  check('s=1000000000 build draws nothing', visual.buildGeometry(badSpacing, rules), null);
+
+  const depths = data.depths.filter((d) => safeDecode(rawToken({ v: 1, m: 'floor', u: { 108: 2 }, d: d })).value.depth === d);
+  check('share decode accepts every Step 3 depth', depths, data.depths);
+  const spacings = data.spacings.filter((s) => safeDecode(rawToken({ v: 1, m: 'floor', u: { 108: 4 }, s: s })).value.spacing === s);
+  check('share decode accepts every Step 4 spacing', spacings, data.spacings);
 }
 
 console.log('Quote gates — not cart-eligible');

@@ -125,6 +125,12 @@ window.BYOR.share = (function () {
     return isFinite(n) && n > 0 ? n : null;
   }
 
+  /* A number only if the step offers it (byor-data.js depths / spacings). */
+  function oneOf(value, allowed) {
+    var n = num(value);
+    return n !== null && allowed && allowed.indexOf(n) !== -1 ? n : null;
+  }
+
   function token(value) {
     return typeof value === 'string' && TOKEN_RE.test(value) ? value : null;
   }
@@ -204,8 +210,10 @@ window.BYOR.share = (function () {
     state.layoutId = token(payload.l);
     state.mounting = payload.m === 'wall' || payload.m === 'floor' ? payload.m : null;
     state.uprights = qtyMap(payload.u);
-    state.depth = num(payload.d);
-    state.spacing = num(payload.s);
+    /* Unknown depths or spacings are unset so the step is asked again. */
+    var data = (window.BYOR && window.BYOR.data) || {};
+    state.depth = oneOf(payload.d, data.depths);
+    state.spacing = oneOf(payload.s, data.spacings);
     /* Only a known top style survives, and monkey bars are floor mounted only.
      * Anything else is unset so Step 5 is asked again. */
     state.topStyle = TOP_STYLES.indexOf(payload.t) !== -1 ? payload.t : null;
