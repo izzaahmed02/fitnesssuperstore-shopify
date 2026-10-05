@@ -379,6 +379,194 @@ console.log('Share encode/decode');
   check('rejects an unknown mounting value', share.decode(share.encode(build({ mounting: 'roof', uprights: { 108: 2 } })), newState()).mounting, null);
 }
 
+/* -------------------------------------------------------------------------
+ * Regression checks for the PR #710 review findings and the quote gates.
+ * Each finding check fails on the #710 code and passes after its fix.
+ * ---------------------------------------------------------------------- */
+
+// A raw link token for payloads encode() would never produce.
+function rawToken(payload) {
+  const json = typeof payload === 'string' ? payload : JSON.stringify(payload);
+  return Buffer.from(json, 'utf8').toString('base64url');
+}
+
+// Mirrors the summary's add-to-cart gate: nothing outstanding and no quote reason.
+function cartEligible(state, catalog) {
+  return outstanding(state).length === 0 && quoteReasons(state, catalog, billOfMaterials(state)).length === 0;
+}
+
+// Live catalog only ever holds roster SKUs; anything else resolves to null.
+const rosterCatalog = {
+  get: (sku) => (BYOR.data.roster[sku] ? { available: true, price: 0, variantId: 1 } : null)
+};
+
+const storageSkus = (lines) => Object.keys(lines).filter((sku) => BYOR.data.storageTiers[43].concat(BYOR.data.storageTiers[71]).indexOf(sku) > -1);
+const monkeyBarSkus = (lines) => Object.keys(lines).filter((sku) => /^FF-RR-PB-/.test(sku));
+
+console.log('Finding A — stale storage tiers');
+{
+  const picks = { 0: { 'FF-RR-BPR-43': 2, 'FF-RR-KBR-43': 1 } };
+  const floor = build({ mounting: 'floor', uprights: { 108: 4 }, depth: 43, spacing: 43, topStyle: 'basic', storage: picks });
+  check('floor 2 sections — storage counted', storageSkus(billOfMaterials(floor)), ['FF-RR-BPR-43', 'FF-RR-KBR-43']);
+
+  const wall = build(Object.assign({}, floor, { mounting: 'wall' }));
+  check('floor → wall — no storage in the build', storageSkus(billOfMaterials(wall)), []);
+
+  const oneSection = build(Object.assign({}, floor, { uprights: { 108: 2 } }));
+  check('2 → 1 section — no storage in the build', storageSkus(billOfMaterials(oneSection)), []);
+
+  const fixedSpan = build(Object.assign({}, floor, { spacing: 20 }));
+  check('43" → 20" spacing — no storage in the build', storageSkus(billOfMaterials(fixedSpan)), []);
+
+  const linked = share.decode(share.encode(wall), newState());
+  check('shared wall link carrying storage — no storage in the build', storageSkus(billOfMaterials(linked)), []);
+}
+
+console.log('Finding B — unknown top style');
+{
+  const zzz = build({ mounting: 'floor', uprights: { 108: 2 }, depth: 43, topStyle: 'zzz' });
+  check('unknown style adds no frame bars', rules.frameBars(zzz), {});
+
+  const decoded = share.decode(rawToken({ v: 1, m: 'floor', u: { 108: 2 }, d: 43, t: 'zzz' }), newState());
+  check('t=zzz decodes to an unset top style', decoded.topStyle, null);
+  check('t=zzz build asks for a top style again', outstanding(decoded).indexOf('Choose your depth bar style.') > -1, true);
+  check('t=zzz build has no monkey-bar SKUs', monkeyBarSkus(billOfMaterials(decoded)), []);
+  check('t=zzz build is not cart-eligible', cartEligible(decoded, emptyCatalog), false);
+
+  const wallMonkey = share.decode(rawToken({ v: 1, m: 'wall', u: { 108: 1 }, d: 43, t: 'monkey' }), newState());
+  check('wall + t=monkey decodes to an unset top style', wallMonkey.topStyle, null);
+  check('wall + t=monkey keeps the rest of the build', [wallMonkey.mounting, wallMonkey.uprights, wallMonkey.depth], ['wall', { 108: 1 }, 43]);
+  check('wall + t=monkey has no floor-only monkey-bar SKUs', monkeyBarSkus(billOfMaterials(wallMonkey)), []);
+
+  const floorMonkey = share.decode(rawToken({ v: 1, m: 'floor', u: { 108: 2 }, d: 43, t: 'monkey' }), newState());
+  check('floor + t=monkey still restores', floorMonkey.topStyle, 'monkey');
+
+  // byor-share.js keeps its own copy of the Step 5 styles; it must not drift.
+  const styleIds = rules.topStyles({ mounting: 'floor' }).map((s) => s.id).sort();
+  const accepted = styleIds.filter((id) => share.decode(rawToken({ v: 1, m: 'floor', u: { 108: 2 }, t: id }), newState()).topStyle === id);
+  check('share decode accepts every Step 5 style', accepted, styleIds);
+}
+
+console.log('Finding C — stale second-row bars');
+{
+  const secondRow = {
+    secondRow: true,
+    secondRowSectionBars: { 0: { 'FF-RR-MGPUB': 1, 'FF-RR-PB-43': 1 } },
+    secondRowGapBars: { 0: { 'FF-RR-MSGPUB': 1 } }
+  };
+  ['basic_cm', 'monkey'].forEach((from) => {
+    const before = build(Object.assign({ mounting: 'floor', uprights: { 108: 4 }, depth: 43, spacing: 43, topStyle: from }, secondRow));
+    check(from + ' — crossmember-only second-row bars counted', [billOfMaterials(before)['FF-RR-MGPUB'], billOfMaterials(before)['FF-RR-MSGPUB']], [1, 1]);
+
+    const after = build(Object.assign({}, before, { topStyle: 'basic' }));
+    const lines = billOfMaterials(after);
+    check(from + ' → basic — no crossmember-only second-row bars', [lines['FF-RR-MGPUB'], lines['FF-RR-MSGPUB']], [undefined, undefined]);
+    check(from + ' → basic — still-valid second-row bar kept', lines['FF-RR-PB-43'] >= 1, true);
+  });
+
+  const linked = share.decode(rawToken({ v: 1, m: 'floor', u: { 108: 4 }, d: 43, s: 43, t: 'basic', r2: 1, r2sb: { 0: { 'FF-RR-MGPUB': 1 } } }), newState());
+  check('shared basic link with a crossmember-only second-row bar — not in the build', billOfMaterials(linked)['FF-RR-MGPUB'], undefined);
+
+  const fixedSpan = build({ mounting: 'floor', uprights: { 108: 4 }, depth: 43, spacing: 20, topStyle: 'basic', secondRow: true, secondRowGapBars: { 0: { 'FF-RR-PB-43': 1 } } });
+  check('20" spacing — no second-row span bars', billOfMaterials(fixedSpan)['FF-RR-PB-43'], undefined);
+}
+
+console.log('Malformed share links');
+{
+  const blankKeys = Object.keys(newState()).sort();
+  const safeDecode = (encoded) => {
+    try {
+      return { value: share.decode(encoded, newState()) };
+    } catch (err) {
+      return { threw: err.message };
+    }
+  };
+
+  check('bad base64 — rejected', safeDecode('AAAAAAAAAAAAAAAA'), { value: null });
+  check('base64 of non-JSON — rejected', safeDecode(rawToken('hello')), { value: null });
+  check('JSON array payload — rejected', safeDecode(rawToken('[1,2]')), { value: null });
+  check('wrong version — rejected', safeDecode(rawToken({ v: 2, m: 'floor', u: { 108: 2 } })), { value: null });
+  check(
+    'wrong types and no usable build — rejected',
+    safeDecode(rawToken({ v: 1, m: ['floor'], u: '108', d: '43x', s: {}, t: 7, r2: 'yes', h: {}, su: '1', sb: [1], st: 'x', x: null })),
+    { value: null }
+  );
+
+  const wrongTypes = safeDecode(rawToken({ v: 1, m: 'floor', u: { 108: 2 }, d: '43x', s: {}, t: 7, r2: 'yes', h: {}, su: '1', sb: [1], st: 'x', x: null })).value;
+  check(
+    'wrong-typed fields are dropped, not guessed',
+    [wrongTypes.depth, wrongTypes.spacing, wrongTypes.topStyle, wrongTypes.secondRow, wrongTypes.hooks, wrongTypes.siteUncertain, wrongTypes.sectionBars, wrongTypes.storage, wrongTypes.extras],
+    [null, null, null, false, 'none', false, {}, {}, {}]
+  );
+  check('wrong-typed build is incomplete, not cart-eligible', cartEligible(wrongTypes, emptyCatalog), false);
+
+  const extra = safeDecode(rawToken({ v: 1, m: 'floor', u: { 108: 2 }, d: 43, t: 'basic', evil: '<script>', price: 1, constructor: { a: 1 } })).value;
+  check('extra fields are not carried into the build', Object.keys(extra).sort(), blankKeys);
+
+  const proto = safeDecode(rawToken('{"v":1,"m":"floor","u":{"108":2},"__proto__":{"polluted":1}}')).value;
+  check('__proto__ in a link pollutes nothing', [({}).polluted, proto.polluted], [undefined, undefined]);
+}
+
+console.log('Quote gates — not cart-eligible');
+{
+  const floorFour = build({ mounting: 'floor', uprights: { 108: 8 }, depth: 43, spacing: 43, topStyle: 'basic' });
+  check('floor 4 sections — not cart-eligible', cartEligible(floorFour, emptyCatalog), false);
+  const wallFour = build({ mounting: 'wall', uprights: { 108: 4 }, depth: 43, spacing: 43, topStyle: 'basic' });
+  check('wall 4 sections — quote gated', quoteReasons(wallFour, emptyCatalog, billOfMaterials(wallFour)).indexOf('4 or more sections') > -1, true);
+  check('wall 4 sections — not cart-eligible', cartEligible(wallFour, emptyCatalog), false);
+
+  // Scenario 1 is complete and cart-eligible with every part resolvable...
+  const starter = build({ mounting: 'wall', uprights: { 108: 1 }, depth: 43, topStyle: 'basic', sectionBars: { 0: { 'FF-RR-JBS-43-V1-CM': 1 } } });
+  check('complete 1-section build — cart-eligible', cartEligible(starter, rosterCatalog), true);
+
+  // ...but one SKU missing from the roster/catalog routes it to quote.
+  const missing = build(Object.assign({}, starter, { extras: { 'FF-RR-NOT-A-SKU': 1 } }));
+  check('SKU missing from the catalog — quote gated', quoteReasons(missing, rosterCatalog, billOfMaterials(missing)).length > 0, true);
+  check('SKU missing from the catalog — not cart-eligible', cartEligible(missing, rosterCatalog), false);
+
+  // An unlisted / unavailable product resolves but is not purchasable.
+  const unlistedCatalog = {
+    get: (sku) => (sku === 'FF-RR-JBS-43-V1-CM' ? { available: false, price: 0, variantId: 1 } : rosterCatalog.get(sku))
+  };
+  check('unavailable SKU — quote gated', quoteReasons(starter, unlistedCatalog, billOfMaterials(starter)).length > 0, true);
+  check('unavailable SKU — not cart-eligible', cartEligible(starter, unlistedCatalog), false);
+}
+
+console.log('Share round trip — logic-sheet scenarios');
+{
+  const scenarios = {
+    'Scenario 1': build({ mounting: 'wall', uprights: { 108: 1 }, depth: 43, topStyle: 'basic', sectionBars: { 0: { 'FF-RR-JBS-43-V1-CM': 1 } } }),
+    'Scenario 2': build({ mounting: 'floor', uprights: { 108: 2 }, depth: 71, topStyle: 'monkey' }),
+    'Scenario 3': build({ mounting: 'wall', uprights: { 108: 3 }, depth: 43, spacing: 43, topStyle: 'basic_cm' }),
+    'Scenario 4': build({ mounting: 'floor', uprights: { 108: 4 }, depth: 43, spacing: 71, topStyle: 'monkey' }),
+    'Scenario 5': build({
+      mounting: 'floor',
+      uprights: { 108: 4 },
+      depth: 43,
+      spacing: 20,
+      topStyle: 'basic',
+      sectionBars: { 0: { 'FF-RR-PB-43': 2 }, 1: { 'FF-RR-PB-43': 2 } }
+    }),
+    'second row + storage': build({
+      mounting: 'floor',
+      uprights: { 108: 4 },
+      depth: 43,
+      spacing: 43,
+      topStyle: 'basic_cm',
+      secondRow: true,
+      secondRowSectionBars: { 0: { 'FF-RR-MGPUB': 1 } },
+      secondRowGapBars: { 0: { 'FF-RR-PB-43': 1 } },
+      storage: { 0: { 'FF-RR-BPR-43': 2 } }
+    })
+  };
+  Object.keys(scenarios).forEach((name) => {
+    const original = scenarios[name];
+    const restored = share.decode(share.encode(original), newState());
+    check(name + ' — identical bill of materials after a share round trip', billOfMaterials(restored), billOfMaterials(original));
+    check(name + ' — same outstanding steps after a share round trip', outstanding(restored), outstanding(original));
+  });
+}
+
 console.log('');
 if (failures) {
   console.log(failures + ' check(s) failed.');
