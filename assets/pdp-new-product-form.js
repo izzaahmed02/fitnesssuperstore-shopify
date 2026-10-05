@@ -360,3 +360,4 @@ if (!customElements.get('pdp-new-product-form')) {
     },
   );
 }
+
