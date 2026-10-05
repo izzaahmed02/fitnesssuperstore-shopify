@@ -267,7 +267,10 @@
         return out;
       }
 
-      // Monkey bar (floor mounted only).
+      // Monkey bar (floor mounted only). Any other value is not a known style
+      // and adds nothing, so the build stays incomplete instead of guessing.
+      if (state.topStyle !== 'monkey') return out;
+
       var pullUpBars;
       if (n === 1) {
         pullUpBars = 3;

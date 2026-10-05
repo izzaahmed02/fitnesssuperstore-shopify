@@ -29,6 +29,9 @@ window.BYOR.share = (function () {
   /* SKUs and option ids we are willing to accept back out of a URL. */
   var TOKEN_RE = /^[A-Za-z0-9._-]{1,64}$/;
 
+  /* Step 5 top styles (Rules.topStyles in byor-configurator.js). */
+  var TOP_STYLES = ['basic', 'basic_cm', 'monkey'];
+
   /* ---------------------------------------------------------------------
    * Base64url over UTF-8, implemented locally so the same code runs in the
    * browser and in the node check harness (no btoa/Buffer dependency).
@@ -198,7 +201,10 @@ window.BYOR.share = (function () {
     state.uprights = qtyMap(payload.u);
     state.depth = num(payload.d);
     state.spacing = num(payload.s);
-    state.topStyle = token(payload.t);
+    /* Only a known top style survives, and monkey bars are floor mounted only.
+     * Anything else is unset so Step 5 is asked again. */
+    state.topStyle = TOP_STYLES.indexOf(payload.t) !== -1 ? payload.t : null;
+    if (state.topStyle === 'monkey' && state.mounting !== 'floor') state.topStyle = null;
     state.sectionBars = nestedQtyMap(payload.sb);
     state.gapBars = nestedQtyMap(payload.gb);
     state.secondRow = payload.r2 === 1;
