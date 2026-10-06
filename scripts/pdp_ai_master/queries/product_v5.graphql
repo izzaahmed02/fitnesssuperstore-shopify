@@ -1,0 +1,169 @@
+# PDP AI Master V5 - product read query.
+#
+# READ-ONLY BY CONSTRUCTION. This file must contain exactly one `query`
+# operation and no `mutation`. export.py refuses to run if that changes
+# (see guardrails.assert_read_only).
+#
+# Scopes required: read_products, read_metaobjects, read_inventory.
+# Nothing else. No write scope is used or needed. Validated against the
+# Admin GraphQL 2026-07 schema; see the scope note below before adding a
+# field, because scope cost is not obvious from the field name.
+#
+# WHY images/featuredImage RATHER THAN media/featuredMedia
+#
+# `media` is the current, non-deprecated field, but requesting it - even
+# bare, selecting nothing but `id` - costs seven scopes:
+#
+#   read_products, read_files, read_themes, read_orders,
+#   read_draft_orders, read_images, read_quick_sale
+#
+# The cost is on the `media` field itself, not on the sub-selections, so it
+# cannot be narrowed by trimming fragments. `images` and `featuredImage`
+# return the same image data for read_products alone.
+#
+# Holding read_orders and read_draft_orders on a PDP export credential is
+# an over-grant we are not willing to make for image URLs, so this lane
+# uses the narrow fields and does not export video links. Videos are not
+# in any acceptance gate for this package.
+#
+# TRADE-OFF, STATED PLAINLY: `images` and `featuredImage` are deprecated in
+# favour of `media`. They are valid and returning data on 2026-07. When
+# Shopify removes them this query must change, and that change is a scope
+# decision for Tim, not a mechanical fix - either accept the seven-scope
+# set or drop image export from this lane.
+
+query PdpAiMasterProduct($id: ID!) {
+  product(id: $id) {
+    id
+    handle
+    title
+    status
+    vendor
+    productType
+    tags
+    onlineStoreUrl
+    createdAt
+    updatedAt
+    publishedAt
+    descriptionHtml
+    seo {
+      title
+      description
+    }
+    category {
+      id
+      fullName
+    }
+    featuredImage {
+      url
+      altText
+    }
+    images(first: 50) {
+      nodes {
+        url
+        altText
+        width
+        height
+      }
+    }
+    collections(first: 100) {
+      nodes {
+        id
+        handle
+        title
+      }
+    }
+    # Namespace-scoped so app-owned review blobs (judgeme.*) stay out of the
+    # export. Those are volatile and never embedded anyway.
+    customFields: metafields(first: 100, namespace: "custom") {
+      nodes {
+        namespace
+        key
+        type
+        value
+        reference {
+          ...MetaobjectRef
+        }
+        references(first: 50) {
+          nodes {
+            ...MetaobjectRef
+            ... on Product {
+              id
+              handle
+              title
+            }
+          }
+        }
+      }
+    }
+    optionFields: metafields(first: 25, namespace: "options") {
+      nodes {
+        namespace
+        key
+        type
+        value
+        references(first: 50) {
+          nodes {
+            ...MetaobjectRef
+          }
+        }
+      }
+    }
+    googleFields: metafields(first: 25, namespace: "mm-google-shopping") {
+      nodes {
+        namespace
+        key
+        type
+        value
+      }
+    }
+    reviewFields: metafields(first: 10, namespace: "reviews") {
+      nodes {
+        namespace
+        key
+        type
+        value
+      }
+    }
+    variants(first: 100) {
+      nodes {
+        id
+        sku
+        title
+        barcode
+        price
+        compareAtPrice
+        inventoryQuantity
+        inventoryPolicy
+        availableForSale
+        selectedOptions {
+          name
+          value
+        }
+        inventoryItem {
+          unitCost {
+            amount
+          }
+          measurement {
+            weight {
+              value
+              unit
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+fragment MetaobjectRef on Metaobject {
+  id
+  handle
+  type
+  updatedAt
+  fields {
+    key
+    type
+    value
+  }
+}
