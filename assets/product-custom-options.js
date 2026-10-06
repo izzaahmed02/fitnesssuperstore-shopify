@@ -70,7 +70,9 @@ if (!window.__optionProp65Enhancement) {
 
     const willOpen = disclosure.hidden;
     disclosure.hidden = !willOpen;
-    trigger.setAttribute('aria-expanded', String(willOpen));
+    popup.querySelectorAll('[data-option-prop65-trigger]').forEach((item) => {
+      item.setAttribute('aria-expanded', String(willOpen));
+    });
   };
 
   const handleOptionProp65Event = (event) => {
