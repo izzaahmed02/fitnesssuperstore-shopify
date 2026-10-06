@@ -315,6 +315,29 @@ class SuppressionTests(unittest.TestCase):
         self.assertEqual(feed, [])
         self.assertEqual(report["exception_reason_counts"]["option_carrier_excluded"], 1)
 
+    def test_explicit_fft_dcc_apu_guard_survives_parent_changes(self):
+        node, variant = product(809, "FFT-DCC", "3499.00")
+        apu = dict(
+            variant,
+            id="gid://shopify/ProductVariant/8092",
+            sku="fft-dcc-apu",
+        )
+        _, report, feed = self.build([node, variant, apu])
+        self.assertEqual([r["id"] for r in feed], ["FFT-DCC"])
+        self.assertEqual(report["exception_reason_counts"]["sku_excluded"], 1)
+        self.assertEqual(report["counts"]["sku_excluded_rows"], 1)
+        self.assertEqual(report["counts"]["suppressed_products"], 0)
+
+    def test_catalog_link_ignores_seo_canonical_and_uses_own_product_url(self):
+        node, variant = product(
+            810,
+            "FFS-45DLLP",
+            "100.00",
+            mf_canonical={"value": "https://www.fitnesssuperstore.com/products/black-counterpart"},
+        )
+        _, _, feed = self.build([node, variant])
+        self.assertEqual(feed[0]["link"], node["onlineStoreUrl"])
+
     def test_suppressed_rows_are_still_accounted_for(self):
         ok_node, ok_variant = product(805, "OK-1", "10.00")
         sup_node, sup_variant = product(806, "SUP-1", "10.00", tags=["REMOVE FROM FEEDS"])
