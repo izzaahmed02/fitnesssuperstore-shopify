@@ -64,9 +64,20 @@
         {% endfor %}
       {% endif %}
       {% if text != blank %}
-        <div class="option-popup__text">
+        {% assign option_help_text_downcase = text | downcase %}
+        <div
+          class="option-popup__text"
+          {% if option_help_text_downcase contains 'prop 65' %}
+            data-option-prop65-text
+          {% endif %}
+        >
           {{ text }}
         </div>
+        {% if option_help_text_downcase contains 'prop 65' %}
+          <div class="option-prop65-disclosure" data-option-prop65-disclosure hidden>
+            {{ 'products.product.prop65_disclosure_html' | t }}
+          </div>
+        {% endif %}
       {% endif %}
     </div>
   </div>

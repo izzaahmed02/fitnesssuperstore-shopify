@@ -1,3 +1,120 @@
+if (!window.__optionProp65Enhancement) {
+  window.__optionProp65Enhancement = true;
+
+  const prop65TextPattern = /see Prop 65 WARNINGS?/gi;
+
+  const enhanceOptionProp65Text = (container) => {
+    if (!container || container.dataset.optionProp65Ready === 'true') return;
+    container.dataset.optionProp65Ready = 'true';
+
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      prop65TextPattern.lastIndex = 0;
+      if (prop65TextPattern.test(node.nodeValue || '')) textNodes.push(node);
+    }
+
+    textNodes.forEach((node) => {
+      const interactiveParent = node.parentElement?.closest('a, button');
+      if (interactiveParent && container.contains(interactiveParent)) {
+        interactiveParent.setAttribute('data-option-prop65-trigger', '');
+        interactiveParent.setAttribute('aria-expanded', 'false');
+        if (interactiveParent.tagName === 'A') interactiveParent.setAttribute('role', 'button');
+        return;
+      }
+
+      const source = node.nodeValue || '';
+      const fragment = document.createDocumentFragment();
+      let lastIndex = 0;
+      let match;
+
+      prop65TextPattern.lastIndex = 0;
+      while ((match = prop65TextPattern.exec(source)) !== null) {
+        if (match.index > lastIndex) {
+          fragment.append(document.createTextNode(source.slice(lastIndex, match.index)));
+        }
+
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = 'option-prop65-trigger';
+        trigger.setAttribute('data-option-prop65-trigger', '');
+        trigger.setAttribute('aria-expanded', 'false');
+        trigger.textContent = match[0];
+        fragment.append(trigger);
+
+        lastIndex = match.index + match[0].length;
+      }
+
+      if (lastIndex < source.length) {
+        fragment.append(document.createTextNode(source.slice(lastIndex)));
+      }
+
+      node.replaceWith(fragment);
+    });
+  };
+
+  const enhanceOptionProp65 = (root = document) => {
+    if (root.matches?.('[data-option-prop65-text]')) {
+      enhanceOptionProp65Text(root);
+    }
+
+    root.querySelectorAll?.('[data-option-prop65-text]').forEach(enhanceOptionProp65Text);
+  };
+
+  const toggleOptionProp65 = (trigger) => {
+    const popup = trigger.closest('.option-popup');
+    const disclosure = popup?.querySelector('[data-option-prop65-disclosure]');
+    if (!disclosure) return;
+
+    const willOpen = disclosure.hidden;
+    disclosure.hidden = !willOpen;
+    popup.querySelectorAll('[data-option-prop65-trigger]').forEach((item) => {
+      item.setAttribute('aria-expanded', String(willOpen));
+    });
+  };
+
+  const handleOptionProp65Event = (event) => {
+    const trigger = event.target.closest?.('[data-option-prop65-trigger]');
+    if (!trigger) return;
+
+    if (event.type === 'keydown') {
+      if (event.key !== ' ' || trigger.tagName === 'BUTTON') return;
+      event.preventDefault();
+      trigger.click();
+      return;
+    }
+
+    event.preventDefault();
+    toggleOptionProp65(trigger);
+  };
+
+  document.addEventListener('click', handleOptionProp65Event);
+  document.addEventListener('keydown', handleOptionProp65Event);
+
+  const prop65Observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeType === Node.ELEMENT_NODE) enhanceOptionProp65(node);
+      });
+    });
+  });
+
+  const initOptionProp65 = () => {
+    enhanceOptionProp65(document);
+    if (document.body) {
+      prop65Observer.observe(document.body, { childList: true, subtree: true });
+    }
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initOptionProp65, { once: true });
+  } else {
+    initOptionProp65();
+  }
+}
+
 if (!customElements.get('product-customization-options')) {
   customElements.define(
     'product-customization-options',
