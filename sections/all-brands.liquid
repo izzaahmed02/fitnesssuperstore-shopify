@@ -1,50 +1,37 @@
 {%- style -%}
-  .container_all_brands_{{ section.id }} {
-    padding: 30px 0 48px;
+  .container_all_brands_{{ section.id }}{
+    padding: 30px 0;
   }
-
-  .container_all_brands_{{ section.id }} .all-brand-page-title {
-    margin: 0 0 24px;
+  .container_all_brands_{{ section.id }} .all-brand-page-title{
     text-align: center;
     text-transform: uppercase;
   }
-
-  .container_all_brands_{{ section.id }} .all-brands-content {
+  .container_all_brands_{{ section.id }} .all-brands-content{
     width: 100%;
     overflow: visible;
   }
-
-  .container_all_brands_{{ section.id }} .all-brands-content::after {
-    display: block;
-    clear: both;
-    content: '';
-  }
-
-  .container_all_brands_{{ section.id }} .all_brands__list {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 5px;
-    padding: 30px 10px;
-    background-color: #fff;
-    border: 1px solid #e5e5e5;
-    border-radius: 12px;
-    margin: 0 8px;
-  }
-
-  .container_all_brands_{{ section.id }} .all_brands_wrapper {
+  .container_all_brands_{{ section.id }} .all_brands_wrapper{
     display: flex;
     align-items: center;
     gap: 10px;
     margin-bottom: 1.3rem;
   }
-
-  .container_all_brands_{{ section.id }} .brand-logos {
+  .container_all_brands_{{ section.id }} .all_brands__list{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+    padding: 30px 10px;
+    background-color: #fff;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    margin:0px 8px;
+  }
+  .container_all_brands_{{ section.id }} .brand-logos{
     width: 40px;
     height: 35px;
     object-fit: contain;
   }
-
-  .container_all_brands_{{ section.id }} .brand-title {
+  .container_all_brands_{{ section.id }} .brand-title{
     color: #3e77aa;
     font-family: Lato, sans-serif;
     font-size: 18px;
@@ -54,45 +41,39 @@
     margin: 0;
   }
 
-  @media (max-width: 1200px) {
-    .container_all_brands_{{ section.id }} .all_brands__list {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
+  .page-brands .grid-container{
+    justify-content: center;
   }
 
-  @media (max-width: 768px) {
-    .container_all_brands_{{ section.id }} {
-      padding-bottom: 36px;
+  @media(max-width:1200px){
+    .container_all_brands_{{ section.id }} .all_brands__list{
+      grid-template-columns: repeat(3, 1fr);
     }
-
-    .container_all_brands_{{ section.id }} .all_brands__list {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+   @media(max-width:768px){
+    .container_all_brands_{{ section.id }} .all_brands__list{
+      grid-template-columns: repeat(2, 1fr);
       gap: 15px 20px;
       align-items: flex-start;
       padding: 25px 20px;
     }
-
-    .container_all_brands_{{ section.id }} .all_brands_wrapper {
+    .container_all_brands_{{ section.id }} .all_brands_wrapper{
       flex-direction: column;
-      align-items: flex-start;
+      align-items: self-start;
     }
-
-    .container_all_brands_{{ section.id }} .brand-logos {
+    .container_all_brands_{{ section.id }} .brand-logos{
       width: 45px;
       height: 33px;
+      object-fit: contain;
     }
-  }
-
-  @media (max-width: 480px) {
-    .container_all_brands_{{ section.id }} .all_brands__list {
-      grid-template-columns: 1fr;
+    .container_all_brands_{{ section.id }} .all-brand-page-title{
+      text-align:center;
     }
   }
 {%- endstyle -%}
 
 <div class="container_all_brands container_all_brands_{{ section.id }} page-width">
   <h1 class="all-brand-page-title">{{ page.title }}</h1>
-
   {% if page.content != blank %}
     <div class="all-brands-content">
       {{ page.content }}
@@ -101,18 +82,16 @@
     <div class="all_brands__list">
       {% for block in section.blocks %}
         {% if block.settings.url != blank %}
-          <a href="{{ block.settings.url }}" {{ block.shopify_attributes }}>
+          <a href="{{ block.settings.url }}">
             <div class="all_brands_wrapper">
               {% if block.settings.image != blank %}
-                {{
-                  block.settings.image
-                  | image_url: width: 90
-                  | image_tag:
-                    class: 'brand-logos',
-                    width: 40,
-                    height: 35,
-                    alt: block.settings.image.alt
-                }}
+                <img
+                  class="brand-logos"
+                  src="{{ block.settings.image | img_url: '45x40' }}"
+                  width="{{ '40' }}"
+                  height="{{ '35' }}"
+                  alt="{{ block.settings.image.alt }}"
+                >
               {% endif %}
               <h2 class="brand-title">{{ block.settings.name }}</h2>
             </div>
@@ -134,7 +113,9 @@
       "footer"
     ]
   },
-  "settings": [],
+  "settings": [
+    
+  ],
   "blocks": [
     {
       "type": "brand",
