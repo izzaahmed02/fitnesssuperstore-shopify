@@ -480,6 +480,14 @@ product-customization-options {
   }
   
   .swatch {
+    /* P0-C: .swatch renders as a <button>; neutralise UA button styling so the
+       rendered swatch is visually unchanged. */
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    -webkit-appearance: none;
+    appearance: none;
     position: relative;
     width: 40px;
     height: 40px;
@@ -496,6 +504,13 @@ product-customization-options {
   
   .swatch:hover {
     border-color: #ff6600;
+  }
+
+  /* P0-C: keyboard users get the same affordance as hover. */
+  .swatch:focus-visible {
+    border-color: #ff6600;
+    outline: 2px solid #C9390D;
+    outline-offset: 2px;
   }
   
   .swatch::after {
@@ -520,11 +535,13 @@ product-customization-options {
   }
   
   @media (min-width: 750px) {
-    .swatch:hover::after {
+    .swatch:hover::after,
+    .swatch:focus-visible::after {
       opacity: 1;
     }
   
-    .swatch:hover::before {
+    .swatch:hover::before,
+    .swatch:focus-visible::before {
       opacity: 1;
     }
   }
@@ -993,3 +1010,26 @@ product-customization-options {
     }
   }
   
+
+/* P0-C: the custom-colour panel's close control is now a <button> wrapping the
+   existing close icon, so it is reachable and operable by keyboard. */
+.custom-color-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: none;
+    line-height: 0;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.custom-color-close:focus-visible {
+    outline: 2px solid #C9390D;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+

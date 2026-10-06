@@ -1,6 +1,7 @@
 {% comment %}
   custom-color-wrapper.liquid - Рефакторинг для отображения цветовых опций
 {% endcomment %}
+{{ 'custom-color-a11y.js' | asset_url | script_tag }}
 {% assign color_map = 'black:#000000,
 white:#FFFFFF,
 red:#660F0A,
@@ -96,7 +97,8 @@ burgundy:#800020' %}
               {% endcapture %}
         {% endif %}
 
-        <div
+        <button
+          type="button"
           class="swatch {% if is_unavailable %}unavailable{% endif %}{% if variant.id == default %} color-selected{% endif %}"
           data-color-name="{{ variant.title }}"
           data-group="{{ title | handleize }}"
@@ -108,8 +110,11 @@ burgundy:#800020' %}
           data-color-price="{% if variant.price != 0 %}{{ variant.price | money_without_currency }}{% else %}0{% endif %}"
           data-tool-tip="{% if is_unavailable %}{{ variant.title }} (unavailable or sold-out){% else %}{{ variant.title }} {{ variant.price | money }}{% endif %}"
           data-title="{{ variant.title }}"
+          aria-pressed="{% if variant.id == default %}true{% else %}false{% endif %}"
+          {% if is_unavailable %}aria-disabled="true"{% endif %}
+          aria-label="{{ title | escape }}: {{ variant.title | escape }}{% if is_unavailable %} (unavailable or sold out){% elsif variant.price != 0 %} {{ variant.price | money | escape }}{% endif %}"
           style="background: {{ background_color | replace: ');', ')' }}; {% if is_unavailable %}opacity: 0.6;{% endif %}"
-        ></div>
+        ></button>
       {% endif %}
     {% endfor %}
   {% endif %}
@@ -127,19 +132,25 @@ burgundy:#800020' %}
     data-price="{% if selected_price %}{{ selected_price }}{%else%}{{ default_option.price | divided_by: 100 }}{% endif %}"
   >
   {% if has_custom_color %}
-    <div
+    <button
+      type="button"
       class="swatch swatch--custom-trigger custom-color-trigger{% if custom_color_variant_id == default %} color-selected{% endif %}"
       data-color-name="Custom Color"
       data-tool-tip="Add custom color"
+      aria-label="{{ title | escape }}: add a custom color"
+      aria-expanded="false"
+      aria-controls="custom-color-panel-{{ group }}"
     >
       {{ plus_icon_svg }}
-    </div>
+    </button>
   {% endif %}
 
-  <div class="custom-color-input" style="display: none;">
+  <div class="custom-color-input" id="custom-color-panel-{{ group }}" style="display: none;">
     <div class="custom-color-input-header">
       <p>Custom color or code</p>
-      {{ close_icon_svg }}
+      <button type="button" class="custom-color-close" aria-label="Close custom color panel">
+        {{ close_icon_svg }}
+      </button>
     </div>
 
     <div class="custom-color-input-field">
@@ -158,14 +169,14 @@ burgundy:#800020' %}
       <button type="button" class="add-custom-color" data-group="{{ group }}">Add</button>
     </div>
 
-    <span class="custom-color-error_message" style="display: none;">
+    <span class="custom-color-error_message" role="alert" style="display: none;">
       {{ warning_icon_svg }}
       This color is not in the palette, check again and enter the correct color
     </span>
     {% if variant.product.tags contains 'can_only_paint_uprights' %}
       <div><span style="color:red;">*can only paint uprights</span></div>
     {% endif %}
-    <span class="custom-color-empty-error_message">
+    <span class="custom-color-empty-error_message" role="alert">
       {{ warning_icon_svg }}
       The color cannot be blank or empty
     </span>
