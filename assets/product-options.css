@@ -7,10 +7,13 @@ product-customization-options {
   .product-options__bar {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
+    /* One line at every width, per Tim 2026-10-05. The title and hint used to
+       wrap onto two rows below ~460px of column width, which is every phone.
+       Both stay on one row and the type scales down instead. */
+    flex-wrap: nowrap;
     justify-content: space-between;
     align-items: center;
-    gap: 4px 12px;
+    gap: 4px 8px;
     padding: 8px 12px;
     min-height: 42px;
     background: #23232A;
@@ -24,9 +27,10 @@ product-customization-options {
     font-family: 'Lato', sans-serif;
     font-style: normal;
     font-weight: 400;
-    font-size: 20px;
+    font-size: clamp(13px, 4.1vw, 20px);
     line-height: 26px;
     color: #ffffff;
+    white-space: nowrap;
   }
 
   .product-options__bar-hint {
@@ -37,7 +41,7 @@ product-customization-options {
     font-family: 'Lato', sans-serif;
     font-style: italic;
     font-weight: 500;
-    font-size: 16px;
+    font-size: clamp(10px, 3.3vw, 16px);
     line-height: 24px;
     color: #D12E06;
     white-space: nowrap;
@@ -49,9 +53,22 @@ product-customization-options {
 
   .product-options__bar-icon {
     flex-shrink: 0;
-    width: 16px;
-    height: 16px;
+    width: 1em;
+    height: 1em;
     color: #D12E06;
+  }
+
+  /* Below 390px the bar is only ~264px of content width, and
+     justify-content: space-between puts the hint hard against the right
+     padding. Scale the type a step further so the row keeps its gutter. */
+  @media (max-width: 389px) {
+    .product-options__bar-title {
+      font-size: clamp(12px, 3.6vw, 16px);
+    }
+
+    .product-options__bar-hint {
+      font-size: clamp(9.5px, 2.9vw, 13px);
+    }
   }
 
   .product-options__accordion {
