@@ -29,6 +29,7 @@ if (!customElements.get('product-customization-options')) {
       #cartUpdateUnsubscribe = null;
       #variantChangeUnsubscribe = null;
       #onPageShow = null;
+      #modifyClickHandler = null;
 
       get modifyID() {
         return this.dataset.productId;
@@ -95,6 +96,10 @@ if (!customElements.get('product-customization-options')) {
         if (this.#onPageShow) {
           window.removeEventListener('pageshow', this.#onPageShow);
           this.#onPageShow = null;
+        }
+        if (this.#modifyClickHandler) {
+          document.removeEventListener('click', this.#modifyClickHandler);
+          this.#modifyClickHandler = null;
         }
       }
 
@@ -1003,20 +1008,23 @@ if (!customElements.get('product-customization-options')) {
       // Method to open Modify popup in Cart
 
       openModifyHandler() {
-        setTimeout(() => {
-          const modifyButton = document.querySelector(`[data-key-modify="${this.modifyID}"]`) || this.cartDrawer?.querySelector(`[data-key-modify="${this.modifyID}"]`);
-          if (!modifyButton) return;
-          modifyButton.addEventListener('click', () => {
-            this.toggleAccordions();
-            this.dataset.stamp = this.htmlToBase64(this.innerHTML);
-            setTimeout(() => {
-              this.hideConditionalOptions();
-              this.setDefaultDisabledOptions();
-              this.classList.add('modify-opened');
-              document.body.style.overflow = 'hidden';
-            }, 200);
-          });
-        }, 150);
+        if (this.#modifyClickHandler) return;
+
+        this.#modifyClickHandler = (event) => {
+          const modifyButton = event.target.closest('[data-key-modify]');
+          if (!modifyButton || modifyButton.getAttribute('data-key-modify') !== this.modifyID) return;
+
+          this.toggleAccordions();
+          this.dataset.stamp = this.htmlToBase64(this.innerHTML);
+          setTimeout(() => {
+            this.hideConditionalOptions();
+            this.setDefaultDisabledOptions();
+            this.classList.add('modify-opened');
+            document.body.style.overflow = 'hidden';
+          }, 200);
+        };
+
+        document.addEventListener('click', this.#modifyClickHandler);
       }
 
       // Method to close Modify popup in Cart
