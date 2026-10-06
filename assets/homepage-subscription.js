@@ -7,9 +7,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function setupSubscriptionForm(subscriptionForm) {
-	let attempts = 0;
-	const maxAttempts = 10;
-	const interval = 1000;
 	const sectionRoot = subscriptionForm.closest('.shopify-section') || document;
 	const hiddenFormContainer = sectionRoot.querySelector('.homepage-subscription__original-form');
 	const thankWrapper = sectionRoot.querySelector('.homepage-subscription__message');
@@ -21,67 +18,59 @@ function setupSubscriptionForm(subscriptionForm) {
 		return;
 	}
 
-	emailInput.addEventListener('invalid', function () {
-		setEmailError(emailInput, errorMessage, 'Please enter a valid email address.');
-	});
+	function getKlaviyoForm() {
+		return hiddenFormContainer.querySelector('form') ||
+			document.querySelector('.klaviyo-form-Ud8shK form');
+	}
 
 	emailInput.addEventListener('input', function () {
-		if (emailInput.validity.valid) {
+		if (emailInput.validity.valid && validateEmail(emailInput.value.trim())) {
 			clearEmailError(emailInput, errorMessage);
 		}
 	});
 
-	const intervalId = setInterval(function () {
-		const hiddenForm = hiddenFormContainer.querySelector('form');
+	subscriptionForm.addEventListener('submit', function (e) {
+		e.preventDefault();
 
-		if (hiddenForm) {
-			clearInterval(intervalId);
+		const email = emailInput.value.trim();
 
-			const hiddenEmailInput = hiddenForm.querySelector('input[type="email"]');
-			if (!hiddenEmailInput) {
-				console.error('Hidden email input not found in the hidden form.');
-				return;
-			}
-
-			subscriptionForm.addEventListener('submit', function (e) {
-				e.preventDefault();
-
-				const email = emailInput.value.trim();
-
-				if (!emailInput.validity.valid || !validateEmail(email)) {
-					setEmailError(emailInput, errorMessage, 'Please enter a valid email address.');
-					emailInput.focus();
-					return;
-				}
-
-				clearEmailError(emailInput, errorMessage);
-
-				hiddenEmailInput.value = email;
-				hiddenEmailInput.dispatchEvent(new Event('input', { bubbles: true }));
-
-				const submitButton = hiddenForm.querySelector('button');
-				if (submitButton) {
-					setTimeout(function () {
-						submitButton.click();
-						sectionWrapper.style.display = 'none';
-						thankWrapper.style.display = 'block';
-						thankWrapper.focus({ preventScroll: true });
-
-						setTimeout(function () {
-							window.location.reload();
-						}, 2000);
-					}, 50);
-				} else {
-					console.error('Submit button not found in the hidden form.');
-				}
-			});
-		} else {
-			attempts++;
-			if (attempts >= maxAttempts) {
-				clearInterval(intervalId);
-			}
+		if (!emailInput.validity.valid || !validateEmail(email)) {
+			setEmailError(emailInput, errorMessage, 'Please enter a valid email address.');
+			emailInput.focus();
+			return;
 		}
-	}, interval);
+
+		const hiddenForm = getKlaviyoForm();
+		const hiddenEmailInput = hiddenForm && hiddenForm.querySelector('input[type="email"]');
+		const submitButton = hiddenForm && hiddenForm.querySelector('button[type="submit"], button');
+
+		if (!hiddenForm || !hiddenEmailInput || !submitButton) {
+			setEmailError(
+				emailInput,
+				errorMessage,
+				'Subscription service is still loading. Please try again in a moment.'
+			);
+			emailInput.focus();
+			return;
+		}
+
+		clearEmailError(emailInput, errorMessage);
+
+		hiddenEmailInput.value = email;
+		hiddenEmailInput.dispatchEvent(new Event('input', { bubbles: true }));
+		hiddenEmailInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+		setTimeout(function () {
+			submitButton.click();
+			sectionWrapper.style.display = 'none';
+			thankWrapper.style.display = 'block';
+			thankWrapper.focus({ preventScroll: true });
+
+			setTimeout(function () {
+				window.location.reload();
+			}, 2000);
+		}, 50);
+	});
 }
 
 /**
