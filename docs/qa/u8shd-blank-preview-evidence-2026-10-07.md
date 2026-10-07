@@ -56,6 +56,28 @@ Method: headless Chromium against the live pages, serving this branch's `assets/
 Screenshots: `before-child25-desktop.png`, `after-child25-desktop.png`, `after-child25-mobile.png`, `after-set550-desktop.png`. After the fix the page still shows "Out of stock" and a disabled Add to Cart.
 Not tested: real devices, preview theme from this branch, mixed in-stock/out-of-stock families, other combined families, keyboard use.
 
+## Preview theme verification (theme 189008838972, branch `claude/tender-fermi-0mn1sy`)
+Preview link: https://www.fitnesssuperstore.com/?preview_theme_id=189008838972 (unpublished theme; live theme 186120208700 is `main`).
+Method: headless Chromium, desktop 1440 px (mobile 375 px where noted), each page loaded on the live theme and on the preview theme; `window.Shopify.theme.id` confirmed which theme served each load. Plus two screenshots taken by Ilsaa in Chrome on the preview theme (`ilsaa-chrome-preview-*.webp`), showing the Weight row populated.
+
+| Page | Live (main) Weight pills | Preview theme Weight pills |
+|---|---|---|
+| Blank parent URL (lands on 5 lbs single) | 0 | 30 |
+| Blank 25 lbs single | 0 | 30 |
+| Blank 150 lbs single | 0 | 30 |
+| Blank 5-50 lbs set | 0 | 7 (Set selected) |
+| Blank 135-150 lbs set | 0 | 7 |
+| Blank 25 lbs single, mobile 375 | n/a | 30 |
+| Blank parent, mobile 375 | n/a | 30 |
+| Control: Rubber Coated Hex 12.5 lbs single (in stock) | 36 | 36 |
+| Control: Rubber Coated Hex set 55-75 lbs (in stock) | 12 | 12 |
+| Control: Cast Iron Kettlebell set 5-30 (different picker) | no Weight picker | no Weight picker |
+
+- Add to Cart stays disabled and the page stays "Out of stock" on all Blank pages in both themes; in-stock controls keep an enabled Add to Cart.
+- Full-page screenshots: `preview-parentLanding-*`, `preview-single25-*`, `preview-set550-desktop-fullpage.png`.
+- The first headless load of the 5-50 set on the preview theme returned an empty read (page had not rendered); a re-run of that page alone returned 7 pills with Set selected.
+- Not tested: real phones, mixed in-stock/out-of-stock families, Boost/collection pages, cart/checkout, feeds, other combined families beyond the controls above.
+
 ## Limits of this packet
 - Captured from a cloud browser, not from a physical iOS/Android device; Iqra/Saliha device QA is still required.
 - 4 of 6 page loads hit the 60 s `networkidle` wait; the content rendered and DOM facts were collected (see `httpStatus` in the report). A direct curl of the parent returned HTTP 200.
