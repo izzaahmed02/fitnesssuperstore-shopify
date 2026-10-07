@@ -1,6 +1,6 @@
 # FF-U8SHD-BLANK: preview evidence packet (read-only), 2026-10-07
 
-Scope: evidence only. No theme code, Shopify data, inventory, feed or publication change is made or proposed by this branch.
+Scope: evidence only. No theme code, Shopify data, inventory, feed or publication change is made by this branch.
 Parent (UNLISTED, template `combined-listings`): https://www.fitnesssuperstore.com/products/french-fitness-urethane-8-sided-hex-dumbbells-blank-no-logo-new
 
 ## Method
@@ -21,7 +21,7 @@ Parent (UNLISTED, template `combined-listings`): https://www.fitnesssuperstore.c
 ## Storefront capture (2026-10-07)
 | Page | Final URL | Add to Cart | Schema/meta availability | robots | Processing Time shown |
 |---|---|---|---|---|---|
-| Parent (desktop + mobile) | redirects to the 5 lbs single child | disabled | OutOfStock | noindex,nofollow | no (hidden while out of stock, by theme design) |
+| Parent (desktop + mobile) | redirects to the 5 lbs single child; Weight row empty | disabled | OutOfStock | noindex,nofollow | no (hidden while out of stock, by theme design) |
 | 25 lbs single | same URL | disabled | OutOfStock | noindex,nofollow | no |
 | 5-50 lbs set | same URL | disabled | OutOfStock | noindex,nofollow | no |
 
@@ -29,10 +29,22 @@ Parent (UNLISTED, template `combined-listings`): https://www.fitnesssuperstore.c
 - Search exposure: the family does not appear in predictive search (`urethane 8 sided blank`, `FF-U8SHD5-BLANK`) or full search (`FF-U8SHD25-BLANK`). Product sitemap not checked.
 - No JavaScript page errors were recorded on any capture.
 
-## Findings
-1. The Admin API reports the parent's 37 variants as availableForSale = true, but the live storefront does not reproduce a purchasable parent: the parent redirects to a child, Add to Cart is disabled, schema reads OutOfStock. This is evidence for Tim's Sept 1 parent/child risk, not a fix.
-2. An UNLISTED product is still reachable by direct URL (HTTP 200 via curl on 2026-10-07). It is noindex and out of stock. The earlier statement that the URL "does not open while Unlisted" is not accurate.
-3. The 1-2 week message cannot be shown in any preview while children are out of stock; it is hidden by `main-product-comb.liquid` (and the stored value is correct on all 38 records). Showing it needs positive inventory, which is a production change that needs Tim's written GO.
+## Findings (corrected 2026-10-07 after a real-browser report)
+Status: **HOLD**. The pages are not ready to show as a go-live preview.
+
+1. **Parent flashes, then redirects.** The parent URL first paints the parent page (full Weight picker), then navigates by JavaScript to the 5 lbs single child (Playwright recorded two main-frame navigations: parent, then `...5-lbs-single-blank-no-logo-new`).
+2. **Weight row is empty on every child page.** All 37 Weight options are rendered with the HTML `hidden` attribute. Cause chain, verified:
+   - `assets/custom.js` `setup()` hides a Weight pill unless it is in the family variants map (`script[data-product-variants-map]`); with no map it falls back to hiding pills that carry the `disabled` (sold-out) class.
+   - The live 25 lbs child emits **no** `data-product-variants-map` script (0 found), although `sections/main-product.liquid` emits one when `product.combined_listing.parent_product` is present.
+   - Every child is out of stock, so every pill is disabled, so all 37 are hidden.
+   - Not yet established: why `parent_product` is blank on the live child pages (parent UNLISTED is one candidate; untested). The live theme is `fitnesssuperstore-shopify/main` (role main), so this is the code in `main`.
+   - Whether the row appears once children have positive inventory is untested.
+3. **"As high as: $99.00 / You save $83.00" on the 5 lbs child** comes from `custom.retail_price` = 9900, not from compare-at (compare-at is null on all 38 records). The regular 5 lbs sibling `FF-U8SHD5` has the same value (9900), so this is not specific to the Blank family; it is a pricing-display decision for Tim.
+4. Admin API reports the parent's 37 variants as availableForSale = true, but the live storefront does not allow a purchase: Add to Cart is disabled and schema reads OutOfStock.
+5. An UNLISTED product is still reachable by direct URL (HTTP 200); it is noindex. The earlier note that the URL "does not open while Unlisted" is not accurate.
+6. The 1-2 week message is hidden by the theme while children are out of stock, so it cannot be previewed until inventory is positive (production change, needs Tim's written GO).
+
+No theme code is changed on this branch. Any fix for findings 1-2 touches shared picker code (`assets/custom.js`, `sections/main-product.liquid`) and needs Izza's review.
 
 ## Limits of this packet
 - Captured from a cloud browser, not from a physical iOS/Android device; Iqra/Saliha device QA is still required.
