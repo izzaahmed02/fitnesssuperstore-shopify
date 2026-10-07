@@ -1,6 +1,6 @@
 # FF-U8SHD-BLANK: preview evidence packet (read-only), 2026-10-07
 
-Scope: evidence only. No theme code, Shopify data, inventory, feed or publication change is made by this branch.
+Scope: evidence plus one scoped theme fix (`assets/custom.js`, Weight row). No Shopify data, inventory, feed or publication change.
 Parent (UNLISTED, template `combined-listings`): https://www.fitnesssuperstore.com/products/french-fitness-urethane-8-sided-hex-dumbbells-blank-no-logo-new
 
 ## Method
@@ -29,24 +29,34 @@ Parent (UNLISTED, template `combined-listings`): https://www.fitnesssuperstore.c
 - Search exposure: the family does not appear in predictive search (`urethane 8 sided blank`, `FF-U8SHD5-BLANK`) or full search (`FF-U8SHD25-BLANK`). Product sitemap not checked.
 - No JavaScript page errors were recorded on any capture.
 
-## Findings (corrected 2026-10-07 after a real-browser report)
-Status: **HOLD**. The pages are not ready to show as a go-live preview.
-
-1. **Parent flashes, then redirects.** The parent URL first paints the parent page (full Weight picker), then navigates by JavaScript to the 5 lbs single child (Playwright recorded two main-frame navigations: parent, then `...5-lbs-single-blank-no-logo-new`).
-2. **Weight row is empty on every child page.** All 37 Weight options are rendered with the HTML `hidden` attribute. Cause chain, verified:
-   - `assets/custom.js` `setup()` hides a Weight pill unless it is in the family variants map (`script[data-product-variants-map]`); with no map it falls back to hiding pills that carry the `disabled` (sold-out) class.
-   - The live 25 lbs child emits **no** `data-product-variants-map` script (0 found), although `sections/main-product.liquid` emits one when `product.combined_listing.parent_product` is present.
-   - Every child is out of stock, so every pill is disabled, so all 37 are hidden.
-   - Not yet established: why `parent_product` is blank on the live child pages (parent UNLISTED is one candidate; untested). The live theme is `fitnesssuperstore-shopify/main` (role main), so this is the code in `main`.
-   - Whether the row appears once children have positive inventory is untested.
-3. **"As high as: $99.00 / You save $83.00" on the 5 lbs child** comes from `custom.retail_price` = 9900, not from compare-at (compare-at is null on all 38 records). The regular 5 lbs sibling `FF-U8SHD5` has the same value (9900), so this is not specific to the Blank family; it is a pricing-display decision for Tim.
+## Findings (corrected 2026-10-07)
+1. **Parent redirect is by design.** `redirectCombinedListingToVariant()` in `assets/product-info.js` forwards a bare parent URL to the checked child (Playwright recorded parent, then 5 lbs single child). Not a defect; the brief first paint of the parent is part of that behaviour.
+2. **Weight row empty on every child page (defect, fixed on this branch, tested).**
+   - `assets/custom.js` `setup()` hides a Weight pill unless it is in the family variants map (`script[data-product-variants-map]`). With no map it falls back to hiding pills carrying the `disabled` class, which marks both non-existent and sold-out combinations.
+   - Live child pages emit no variants map (0 found on the Blank 25 lbs child and on a live Rubber Hex child), so the fallback is the normal path on this site.
+   - Every Blank child is out of stock, so all 37 pills are flagged and the whole row is hidden. In-stock families only lose their impossible combinations, so they look correct.
+   - Fix: when there is no map and every pill is flagged, infer existence from the option name (ranges such as "5-50 lbs" are Sets, plain weights are Singles). Families with any stock take the old path.
+3. **"As high as $99.00 / You save $83.00" on the 5 lbs child** comes from `custom.retail_price` = 9900 (compare-at is null on all 38 records). The regular 5 lbs sibling `FF-U8SHD5` has the same value, so it is not specific to the Blank family. Pricing-display decision for Tim.
 4. Admin API reports the parent's 37 variants as availableForSale = true, but the live storefront does not allow a purchase: Add to Cart is disabled and schema reads OutOfStock.
 5. An UNLISTED product is still reachable by direct URL (HTTP 200); it is noindex. The earlier note that the URL "does not open while Unlisted" is not accurate.
 6. The 1-2 week message is hidden by the theme while children are out of stock, so it cannot be previewed until inventory is positive (production change, needs Tim's written GO).
 
-No theme code is changed on this branch. Any fix for findings 1-2 touches shared picker code (`assets/custom.js`, `sections/main-product.liquid`) and needs Izza's review.
+## Weight-row fix test (`weight-row-fix/`)
+Method: headless Chromium against the live pages, serving this branch's `assets/custom.js` in place of the live file (route interception; request served once per page, so the patch was in effect). Live site and theme were not modified.
+
+| Page | Before (live code) | After (this branch) |
+|---|---|---|
+| Blank 25 lbs single, desktop 1440 | 0 Weight pills | 30 (5 lbs to 150 lbs, none are set ranges), 25 lbs selected |
+| Blank 5-50 lbs set, desktop 1440 | 0 | 7 (5-50 to 135-150) |
+| Blank 25 lbs single, mobile 375 | not run | 30 |
+| Rubber Hex 12.5 lbs single (in stock, control) | 36 | 36 (unchanged) |
+| Parent URL | lands on 5 lbs single child | same |
+| Click "10 lbs" pill after the fix | n/a | navigates to the 10 lbs single child |
+
+Screenshots: `before-child25-desktop.png`, `after-child25-desktop.png`, `after-child25-mobile.png`, `after-set550-desktop.png`. After the fix the page still shows "Out of stock" and a disabled Add to Cart.
+Not tested: real devices, preview theme from this branch, mixed in-stock/out-of-stock families, other combined families, keyboard use.
 
 ## Limits of this packet
 - Captured from a cloud browser, not from a physical iOS/Android device; Iqra/Saliha device QA is still required.
 - 4 of 6 page loads hit the 60 s `networkidle` wait; the content rendered and DOM facts were collected (see `httpStatus` in the report). A direct curl of the parent returned HTTP 200.
-- Not tested: child-to-child selector transitions, Back navigation, cart/checkout, feeds (Masum), Judge.me.
+- Not tested: Back navigation, cart/checkout, feeds (Masum), Judge.me.
