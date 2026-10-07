@@ -23,7 +23,7 @@
 
     // Check a Model form: in-place (AJAX) submit through the native contact form.
     // Falls back to a normal submit when JS or fetch is unavailable.
-    try { console.debug('sr-showroom form: native v7'); } catch (e) {}
+    try { console.debug('sr-showroom form: native v8'); } catch (e) {}
     var card0 = document.querySelector('[data-sr-form-card]');
     var formEl0 = card0 && card0.querySelector('form');
     // Cache the pristine form markup so "New Request" can restore it without a reload.
@@ -76,6 +76,18 @@
     document.addEventListener('change', function (e) {
       if (e.target && e.target.id === 'sr-method') syncPhoneRequirement(e.target);
     });
+
+    // Browsers can restore form-control values when navigating Back without firing
+    // a change event (including bfcache restores). Re-sync the marker + required
+    // attribute on initial load and every pageshow so a restored Phone selection
+    // cannot display "(optional)" or bypass required-phone validation.
+    function syncRestoredPhoneRequirement() {
+      var sel = document.querySelector('[data-sr-form-card] #sr-method');
+      if (sel) syncPhoneRequirement(sel);
+    }
+    syncRestoredPhoneRequirement();
+    setTimeout(syncRestoredPhoneRequirement, 0);
+    window.addEventListener('pageshow', syncRestoredPhoneRequirement);
 
     // NOTE: This store rejects scripted (fetch/XHR) POSTs to /contact with HTTP 400 — only
     // a real navigation submit is accepted — and X-Frame-Options: DENY blocks an iframe
