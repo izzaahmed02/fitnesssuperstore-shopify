@@ -30,6 +30,7 @@ if (!customElements.get('product-customization-options')) {
       #variantChangeUnsubscribe = null;
       #onPageShow = null;
       #modifyClickHandler = null;
+      #savedMarkup = null;
 
       get modifyID() {
         return this.dataset.productId;
@@ -42,6 +43,8 @@ if (!customElements.get('product-customization-options')) {
       }
 
       connectedCallback() {
+        // Server-rendered markup reflects the saved cart line; Cancel restores from it.
+        this.#savedMarkup = this.outerHTML;
         this.init();
         this.#cartUpdateUnsubscribe = subscribe(PUB_SUB_EVENTS.cartUpdate, () => {
           if (window.location.href.includes('/cart')) {
@@ -1039,9 +1042,17 @@ if (!customElements.get('product-customization-options')) {
         if (this.closeModifyButtons.length === 0) return;
         this.closeModifyButtons.forEach((button) => {
           button.addEventListener('click', () => {
+            const wasModifying = this.classList.contains('modify-opened');
             this.classList.remove('modify-opened');
             this.dataset.stamp = 'none';
             document.body.style.overflow = 'auto';
+            // Discard unsaved selections so the next Modify shows the saved line.
+            if (wasModifying && this.#savedMarkup && this.isConnected) {
+              const template = document.createElement('template');
+              template.innerHTML = this.#savedMarkup;
+              const fresh = template.content.firstElementChild;
+              if (fresh) this.replaceWith(fresh);
+            }
           });
         });
       }
