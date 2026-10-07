@@ -78,6 +78,57 @@ Method: headless Chromium, desktop 1440 px (mobile 375 px where noted), each pag
 - The first headless load of the 5-50 set on the preview theme returned an empty read (page had not rendered); a re-run of that page alone returned 7 pills with Set selected.
 - Not tested: real phones, mixed in-stock/out-of-stock families, Boost/collection pages, cart/checkout, feeds, other combined families beyond the controls above.
 
+## Tim's Oct 7 rulings and status
+| Item | Status |
+|---|---|
+| Processing-time update (1-2 weeks) | Closed; no repeat edit. See finding 7 for a separate add-on issue. |
+| $16 selling price | Unchanged. Retail reference ($99): Larianne owns; Tim approved her logic, then said retail prices are no longer entered and can be removed. Needs one clarification from Tim/Larianne before any edit. Not part of this PR. |
+| Warranty | Keep "1-Year Limited" as the short value; detailed text to use "1-year limited parts warranty (breakage or failure)" with the policy linked (https://www.fitnesssuperstore.com/pages/french-fitness-warranty). Not edited; exact location of the detailed text still to be confirmed. |
+| Release plan | See "Release plan (proposal)". Nothing assigned to the native parent. Children stay UNLISTED. |
+| PR, final commit, preview, rollback | See below. Branch reconciled with main on Oct 7. |
+| Mixed-stock selector check | Done (simulated; see below). |
+| Independent desktop + physical iOS/Android QA, Judge.me, Masum feed check | Pending (Iqra/Saliha, Masum). |
+| Matrix and row 1079 update | Pending; text prepared below. Preserve prior evidence. |
+| Stock/source mapping | BLOCKED: needs per-weight counts for the physical blanks (see below). |
+
+## Final commit, preview, rollback
+- Branch `claude/tender-fermi-0mn1sy`; reconciled with `main` (merge, no rebase) on Oct 7; branch is 0 commits behind main at the time of writing. Code difference from main: `assets/custom.js` only (+13/-1 lines).
+- Preview theme: https://www.fitnesssuperstore.com/?preview_theme_id=189008838972 (re-verified after the merge: Blank 25 lbs single 30 pills, 5-50 set 7, Rubber Hex control 36).
+- Rollback: revert the merge commit of this PR on main (restores the previous `assets/custom.js`); no data or settings change is involved in this PR.
+
+## Mixed-stock selector check (`mixed-stock/`)
+No live combined family currently has mixed stock (every Rubber Hex child is in stock; every Blank child is sold out), so this was simulated on the real Blank child pages: page HTML was edited in the browser to mark chosen weight options as in stock, then the page was run with `custom.js` from `main` and with this branch's file.
+
+| Case | main | this branch |
+|---|---|---|
+| All sold out (single page) | 0 pills | 30 pills (intended change) |
+| 10, 25, 50 lbs in stock (single page) | 3 pills | 3 pills (identical) |
+| Only 150 lbs in stock (single page) | 1 pill | 1 pill (identical) |
+| 5-50 and 5-100 sets in stock (set page) | 2 pills | 2 pills (identical) |
+
+Limit: simulated stock state, not real inventory; not run on a physical device. An early run returned zeros because the site throttled repeated requests; the final run used retries and shows HTTP 200 on every simulated case.
+
+## Additional finding 7: stale "4-6 Weeks" Processing Time add-on on the children
+- Each Blank child has `options.product_options` metaobjects with two mandatory, hidden options: Warranty ("1-Year Limited") and Processing Time. The Processing Time option points to variant 51461542904124 ("Ships from our Warehouse in 4-6 Weeks + Transit Time") of the shared add-on product "Processing Time (346)".
+- Checked: 29 of the 30 singles and the 5-50 and 5-60 sets have this value. The 80 lbs single has no option records at all. The other 5 sets (5-75, 5-100, 105-130, 5-150, 135-150) were not checked.
+- Why it matters: `assets/product-form-with-options.js` writes each selected `[data-select-option]` value into the cart line properties, so a purchase would carry "Processing Time: Ships from our Warehouse in 4-6 Weeks + Transit Time". Not tested with a real cart (items cannot be added while out of stock).
+- A matching variant already exists on the same add-on product: "Ships from our Warehouse in 1-2 Weeks + Transit Time" (variant 51461543756092). Do not edit the shared add-on product's variant titles; the scoped fix is to repoint the 37 children's Processing Time option records (`product_option_variants` and `product_option_sets_default`) from 51461542904124 to 51461543756092, with the before-values exported. Data change; needs Tim's written GO as its own request.
+
+## Release plan (proposal; each step is a separate approval request)
+Nothing below is authorized. Native parent: no inventory, no SKU, no price change.
+1. **R1 Code**: merge this PR (`assets/custom.js`) to main, tied to the exact final commit. Revert: revert the merge commit.
+2. **R2 Data, Processing Time add-on**: repoint the 37 children's Processing Time option to variant 51461543756092 (finding 7); also add the missing Warranty/Processing Time option records on the 80 lbs single (or confirm it is intentionally without). Before-state: variant 51461542904124 (exported per record). Revert: restore exported values.
+3. **R3 Data, retail reference and warranty detail**: per Tim's rulings and Larianne's scoped change; separate requests, not in this PR.
+4. **R4 Catalog and inventory release** (cannot be specified yet): child records with confirmed, allocatable stock get a positive quantity at the named location; children without stock stay at -99 / DENY; children stay UNLISTED unless a specific alternative is approved; the parent is only changed in status if Tim approves that exact step after QA. Needs the stock/source mapping below. Before-state: all 38 UNLISTED, children -99 / DENY.
+
+## Stock/source mapping: not available to me
+- Per-weight counts are not in any thread or file I can read (the ETA sheet is not shared with this account). Needed from Brian/Emil/Umer: counts per weight for the physical blanks that belong to this listing.
+- Tim's Sept 20 container note says WHITE blanks are for stock and photos and BLACK blanks are for customer order CX 48001 (do not list). Confirm which physical colour this listing represents, and exclude units allocated to CX 48001 before any quantity is set.
+
+## Matrix and row 1079 update text (for Larianne's matrix; preserve prior evidence, append)
+Column T "Current Combined PDP Owner / Acceptance Gate" (parent and all 37 children): `Owner: Ilsaa (combined-listing executor; Tim, Oct 1-2). Technical: Izza. QA: Iqra/Saliha (desktop + physical iOS/Android, Judge.me). Feed: Masum (read-only). Status: HOLD. Processing-time update (1-2 weeks) complete; no repeat edit. Selector fix on branch claude/tender-fermi-0mn1sy, PR open, preview theme 189008838972. Remaining gates: independent QA; stock/source mapping; add-on Processing Time repoint (finding 7); retail reference per Larianne/Tim; warranty detail wording; READY FOR TIM REVIEW; separate written GO for code (R1) and catalog/inventory (R4). No merge, publication, inventory change or deployment authorized.`
+Column S "Latest Processing-Time Execution / ETA Evidence": append `SUPERSEDED/UPDATED: 1-2 weeks applied 2026-09-11 (Saliha), verified 2026-10-06 (Ilsaa): Ships in 1-2 Weeks / Ships from our Warehouse in 1-2 Weeks + Transit Time / Ships in 2 weeks or less on parent + 37 children. Hidden Processing Time add-on option still reads 4-6 Weeks (see packet finding 7).`
+
 ## Limits of this packet
 - Captured from a cloud browser, not from a physical iOS/Android device; Iqra/Saliha device QA is still required.
 - 4 of 6 page loads hit the 60 s `networkidle` wait; the content rendered and DOM facts were collected (see `httpStatus` in the report). A direct curl of the parent returned HTTP 200.
