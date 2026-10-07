@@ -94,7 +94,11 @@
   {% endif %}
 {% endfor %}
 
-{% if show_product_options %}
+{%- comment -%}
+  Also load on product pages: a configured line added there via AJAX needs the
+  Modify assets even when the cart was empty at page load.
+{%- endcomment -%}
+{% if show_product_options or request.page_type == 'product' %}
   <link rel="stylesheet" href="{{ 'product-options.css' | asset_url }}" media="print" onload="this.media='all'">
   <noscript>{{ 'product-options.css' | asset_url | stylesheet_tag }}</noscript>
   {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
@@ -600,6 +604,6 @@
 	}
 </script>
 
-{% if show_product_options %}
+{% if show_product_options or request.page_type == 'product' %}
   <script src="{{ 'product-custom-options.js' | asset_url }}" defer></script>
 {% endif %}
