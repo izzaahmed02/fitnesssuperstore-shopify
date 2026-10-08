@@ -6,6 +6,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const container = document.querySelector(".product");
   if (!container) return null;
 
+  // Build Your Own Rig keeps its buy box in normal page flow. The configurator
+  // below it is taller than the viewport, so a fixed buy box floats over the
+  // builder and its summary. Other product pages have no .byor-section and
+  // keep the sticky buy box unchanged.
+  if (document.querySelector(".byor-section")) return null;
+
   const productInfo = container.querySelector(".product__info-wrapper");
   const productExtraInfo =
     container.querySelector(".product__extra_info") ||

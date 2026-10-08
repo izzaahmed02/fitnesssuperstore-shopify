@@ -197,26 +197,31 @@ try {
 			hideOrShowAfterPayLogo(() => clearInterval(afterPayIntervalTrigger));
 		}, 100);*/
 
-		var affirmPayIntervalTrigger = setInterval(() => {
-			hideOrShowAffirmLogo(() => clearInterval(affirmPayIntervalTrigger));
-		}, 100)
+		// The pay-later text reads the price from .pr_custom_price. A template without
+		// a price block (Build Your Own Rig) has nothing to read, so these pollers
+		// would never clear, and the second one throws on every tick.
+		if (document.querySelector('.pr_custom_price')) {
+			var affirmPayIntervalTrigger = setInterval(() => {
+				hideOrShowAffirmLogo(() => clearInterval(affirmPayIntervalTrigger));
+			}, 100)
 
-		const waitForPayLaterDependency = setInterval(() => {
-		  const payLaterText = generatePayLaterText();
-		  const affirmElement = document.querySelector('.affirm-as-low-as');
-		  const afterPayElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2');
+			const waitForPayLaterDependency = setInterval(() => {
+			  const payLaterText = generatePayLaterText();
+			  const affirmElement = document.querySelector('.affirm-as-low-as');
+			  const afterPayElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2');
 
-		  if (affirmElement || afterPayElement) {
-			 document.querySelectorAll('.paylater-container').forEach(container => {
-				container.style.display = 'block';
-			 });
-			 document.querySelectorAll('.paylater-text').forEach(container => {
-				 container.innerHTML = getPaylaterModal(payLaterText);
-			 });
+			  if (affirmElement || afterPayElement) {
+				 document.querySelectorAll('.paylater-container').forEach(container => {
+					container.style.display = 'block';
+				 });
+				 document.querySelectorAll('.paylater-text').forEach(container => {
+					 container.innerHTML = getPaylaterModal(payLaterText);
+				 });
 
-			 clearInterval(waitForPayLaterDependency);
-			}
-		  }, 100);
+				 clearInterval(waitForPayLaterDependency);
+				}
+			  }, 100);
+		}
 
 		if (typeof subscribe === 'function' && typeof PUB_SUB_EVENTS !== 'undefined' && PUB_SUB_EVENTS.variantChange) {
 			subscribe(PUB_SUB_EVENTS.variantChange, () => {
