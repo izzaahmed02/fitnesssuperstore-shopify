@@ -226,6 +226,74 @@
         }
     {% endif %}
 
+    {%- comment -%}
+      Sagi, Oct 6 2026: the image should fill its container without stretching. From
+      750px up the fixed 487/304 aspect box above left the image floating mid-column
+      with empty card above and below it whenever the text ran taller (205px image beside
+      332px of text at 1440, 130px beside 530px at 990). Stretch the image column to the
+      row's height and crop with object-fit: cover so the photo is never distorted.
+      Scoped to this section only — no global image rule changes. The inline
+      padding-bottom ratio on .image-with-text__media needs !important to drop.
+
+      Side-by-side only works from 1200px. Between 750 and 1199px the page's left nav
+      squeezes the card, and the image column shrank to a 208x530 sliver at 990
+      (box ratio 0.39 against the photo's 1.6). The cover crop turned that into a thin
+      vertical strip. .cgb-intro__grid--stack-tablet stacks the card in that band:
+      image full-width on top at Figma's 487/304 frame, text below, 24px apart (the
+      same gap .grid-column-reverse uses on mobile). Measured box ratios at 1200 /
+      1280 / 1440 are 0.88 / 0.98 / 0.99.
+    {%- endcomment -%}
+    {%- unless section.settings.original_image_proportions -%}
+    @media screen and (min-width: 1200px) {
+    #shopify-section-{{ section.id }} .image-with-text__grid {
+    align-items: stretch;
+    }
+    #shopify-section-{{ section.id }} .image-with-text__media-item {
+    align-self: stretch;
+    }
+    #shopify-section-{{ section.id }} .image-with-text__media {
+    height: 100%;
+    min-height: 240px;
+    }
+    }
+
+    @media screen and (min-width: 750px) and (max-width: 1199px) {
+    #shopify-section-{{ section.id }} .cgb-intro__grid--stack-tablet {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    row-gap: 24px;
+    }
+    #shopify-section-{{ section.id }} .cgb-intro__grid--stack-tablet > .grid__item {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 100%;
+    padding-right: 0;
+    }
+    #shopify-section-{{ section.id }} .cgb-intro__grid--stack-tablet .image-with-text__media {
+    height: auto;
+    aspect-ratio: 487 / 304;
+    }
+    }
+
+    @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .image-with-text__media {
+    position: relative;
+    padding-bottom: 0 !important;
+    }
+    #shopify-section-{{ section.id }} .image-with-text__media-item img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    aspect-ratio: auto;
+    object-fit: cover;
+    object-position: center;
+    }
+    }
+    {%- endunless -%}
+
     @media screen and (max-width: 750px) {
     .grid-column-reverse {
     flex-direction: column-reverse;
@@ -327,7 +395,7 @@
        {% unless section.settings.color_scheme == section.settings.section_color_scheme and settings.media_border_thickness > 0 and settings.text_boxes_shadow_opacity == 0 and settings.text_boxes_border_thickness == 0 or settings.text_boxes_border_opacity == 0 %} collapse-corners{% endunless %}
         {% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}
          {% if section.settings.dropdown %}image-with-text__dropdown-content{% endif %}">
-            <div class="image-with-text__grid grid {% if section.settings.mobile_layout == 'column-reverse' %}grid-column-reverse{% endif %} grid--1-col grid--{% if section.settings.desktop_image_width == 'medium' %}2-col-tablet{% elsif section.settings.desktop_image_width == 'full-screen' %}full{% else %}3-col-tablet{% endif %}{% if section.settings.layout == 'text_first' %} image-with-text__grid--reverse{% endif %} {% if section.settings.layout == 'column' %} image-with-text__grid--column{% endif %}">
+            <div class="image-with-text__grid cgb-intro__grid--stack-tablet grid {% if section.settings.mobile_layout == 'column-reverse' %}grid-column-reverse{% endif %} grid--1-col grid--{% if section.settings.desktop_image_width == 'medium' %}2-col-tablet{% elsif section.settings.desktop_image_width == 'full-screen' %}full{% else %}3-col-tablet{% endif %}{% if section.settings.layout == 'text_first' %} image-with-text__grid--reverse{% endif %} {% if section.settings.layout == 'column' %} image-with-text__grid--column{% endif %}">
                 <div class="image-with-text__media-item {% if section.settings.original_image_proportions %}original-proportions{% endif %} image-with-text__media-item--{{ section.settings.desktop_image_width }} image-with-text__media-item--{{ section.settings.desktop_content_position }} grid__item">
                     <div class="image-with-text__media image-with-text__media--{{ section.settings.height }} global-media-settings{% unless remove_color_classes %} gradient color-{{ section.settings.color_scheme }}{% else %} background-transparent{% endunless %}{% if section.settings.image != blank %} media{% else %} image-with-text__media--placeholder placeholder{% endif %}{% if section.settings.image_behavior != 'none' %} animate--{{ section.settings.image_behavior }}{% endif %}"
                     {% if section.settings.height == 'adapt' and section.settings.image != blank %}
@@ -341,10 +409,22 @@
                                     (min-width: 750px) calc((100vw - 130px) / 1.667), calc((100vw - 50px) / 1.667)
                                 {%- endcapture -%}
                             {%- else -%}
+                                {%- comment -%}
+                                  Matches the layout in the style block. From 1200px the image
+                                  fills a ~332px-tall column with object-fit: cover, so it
+                                  needs ~1.6 x 332 = 531px of source. From 750 to 1199px the
+                                  card stacks (.cgb-intro__grid--stack-tablet) and the image
+                                  spans the card's content box: 100vw less 470px beside the
+                                  990px+ left nav, or less 96px below it (both measured).
+                                  Below 750px it spans the card (100vw less 16px page +
+                                  16px card padding per side). The inherited "/ 2" picked a
+                                  165w file for a 311px box.
+                                {%- endcomment -%}
                                 {%- assign widths = '165, 360, 535, 750, 1070, 1500' -%}
                                 {%- capture sizes -%}
-                                    (min-width: {{ settings.page_width }}px) {{ settings.page_width | minus: 100 | divided_by: 2 }}px,
-                                    (min-width: 750px) calc((100vw - 130px) / 2), calc((100vw - 50px) / 2)
+                                    (min-width: 1200px) 560px,
+                                    (min-width: 990px) calc(100vw - 470px),
+                                    (min-width: 750px) calc(100vw - 96px), calc(100vw - 64px)
                                 {%- endcapture -%}
                             {%- endif -%}
                             {{
