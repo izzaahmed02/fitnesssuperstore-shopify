@@ -35,29 +35,26 @@ Product Type is an internal routing label, not a class. Promoting it to High and
 **(b) Description noise is real and larger than Boost described.**
 Example verified live: "French Fitness Urethane 8 Sided Hex Dumbbell" descriptions contain the phrase "traditional rubber dumbbells", which is why that product is admitted to "rubber hex dumbbell". Each description also carries a cross-link table listing every sibling weight ("5 lbs ... 45 lbs ... 150 lbs"), so one weight query matches the entire family through Description alone.
 
-## 4. Live storefront state today (indicative capture, 5 Oct, no session, cloud IP)
-Method: result order and totals read from the storefront-rendered search_submitted payload on https://www.fitnesssuperstore.com/search?q=... (the live Boost "Old SI" result set). Unauthenticated, no session, cloud IP. Indicative only — not a replacement for Arafat's controlled 16-query method.
+## 4. Live storefront state — RETRACTED 8 October 2026
+**The figures that stood here were wrong and must not be used.** They were captured from
+the `search_submitted` web-pixels payload and the page `<title>` on `/search?q=`, both of
+which are produced by **Shopify's native storefront search, not by Boost**. Boost's result
+grid on that page is a client-side placeholder (`<!-- TEMPLATE PRODUCT LIST PLACEHOLDER -->`)
+filled from `services.mybcapps.com`, which is blocked from the agent environment by network
+policy. The engine measured was not the engine customers see.
 
-Three defects from Andrew's August audit no longer reproduce:
-- "45 kettlebell" — both 45 lb kettlebells now rank 1 and 2. Andrew measured neither in the top six.
-- "bumper plate 45-pound" — correct 45 lb plates now hold ranks 1-6. Andrew measured nine sold-out sets and zero individual plates.
-- "assault bike" — now returns 6 results. Andrew measured zero, fifteen times.
+Retracted: the claims that "45 kettlebell", "bumper plate 45-pound" and "assault bike" had
+been fixed, and the entire result-count table (rubber hex dumbbell 380, bumper plate 45 lbs
+178, and the rest). A Shopify Admin check on 8 Oct positively contradicts one of them: zero
+active products carry "assault" in the title, so Andrew's original "assault bike returns
+nothing" finding has not been shown to be fixed.
 
-The failure has moved from under-retrieval to over-retrieval. Result totals today:
-| Query | Results |
-|---|---|
-| rubber hex dumbbell | 380 |
-| 45 lbs | 388 |
-| 45 lb | 374 |
-| bumper plate 45 | 298 |
-| bumper plate 45 lbs | 178 |
-| bumper plate 45 lb | 165 |
-| 45 kettlebell | 167 |
-| 45-pound | 32 |
-| smith machine | 139 |
-| fsr100 | 14 |
+Nothing in sections 1, 2, 3, 5, 6 or 7 depended on these figures. The Product Type finding,
+the Description-noise finding and the lb/lbs counts all came from the Shopify Admin API and
+stand unchanged.
 
-A "bumper plate 45 lbs" query returning 178 products is the tier-6 breach in Andrew's framework: personalization and semantic signals are changing the membership of the set, not just its order.
+The real Boost before-state is captured in `GO2_Runbook_2026-10-08.md` section 3, which must
+be run from a browser where Boost loads.
 
 ## 5. Where this sits in the approved sequence
 Tim's approved order is unchanged and this packet does not jump it. One variable at a time, each with a separate written GO.
