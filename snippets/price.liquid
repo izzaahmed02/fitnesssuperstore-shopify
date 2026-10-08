@@ -10,7 +10,13 @@
 
   Usage:
   {% render 'price', product: product %}
+
+  #775: on French Fitness products the crossed-out permanent reference price is
+  suppressed (the selling price and volume price range still render). Callers
+  that pass no product at all are unaffected: product.vendor is then nil, the
+  rule returns 'false', and this snippet behaves exactly as before.
 {% endcomment %}
+{%- capture hide_perm_price -%}{%- render 'ff-permanent-compare-hidden', product: product -%}{%- endcapture -%}
 {%- liquid
   if use_variant
     assign target = product.selected_or_first_available_variant
@@ -59,8 +65,15 @@
     price
     {%- if price_class %} {{ price_class }}{% endif -%}
     {%- if available == false %} price--sold-out{% endif -%}
-    {%- if compare_at_price > price and product.quantity_price_breaks_configured? != true %} price--on-sale{% endif -%}
-    {%- if compare_at_price > price and product.quantity_price_breaks_configured? %} volume-pricing--sale-badge{% endif -%}
+    {%- comment -%}
+      #775: the sale state is gated on the same guard as the reference-price display.
+      When the guard is on, the hidden compare-at difference must not be presented as an
+      ongoing sale, so the product keeps the regular-price presentation. Genuine
+      non-French-Fitness markdowns, volume pricing and approved promotions are unaffected
+      because hide_perm_price is 'false' for them.
+    {%- endcomment -%}
+    {%- if compare_at_price > price and product.quantity_price_breaks_configured? != true and hide_perm_price contains 'false' %} price--on-sale{% endif -%}
+    {%- if compare_at_price > price and product.quantity_price_breaks_configured? and hide_perm_price contains 'false' %} volume-pricing--sale-badge{% endif -%}
     {%- if product.price_varies == false and product.compare_at_price_varies %} price--no-compare{% endif -%}
     {%- if show_badges %} price--show-badge{% endif -%}
   "
@@ -73,7 +86,7 @@
     {%- endcomment -%}
     <div class="price__regular">
       {%- if product.quantity_price_breaks_configured? -%}
-        {%- if show_compare_at_price and compare_at_price -%}
+        {%- if show_compare_at_price and compare_at_price and hide_perm_price contains 'false' -%}
           {%- unless product.price_varies == false and product.compare_at_price_varies %}
             <span class="visually-hidden visually-hidden--inline">
               {{- 'products.product.price.regular_price' | t -}}
@@ -101,19 +114,25 @@
       {%- endif -%}
     </div>
     <div class="price__sale">
-      {%- unless product.price_varies == false and product.compare_at_price_varies %}
+      {%- comment -%}
+        #775: two things here.
+
+        The compare-at "Regular price" figure is deliberately not rendered in this block,
+        but its visually-hidden label was still emitted, so a screen reader announced a
+        regular price with no value before the sale price. That orphaned label and the
+        dead commented-out markup are removed.
+
+        The remaining label is gated on the guard. When the guard is on there is no sale
+        to announce - the compare-at difference is suppressed, not discounted - so the
+        product must announce the regular price, matching the regular-price presentation
+        the gated sale-state classes above now produce. Non-guarded products are
+        unaffected and still announce the sale price.
+      {%- endcomment -%}
+      {%- if hide_perm_price contains 'false' -%}
+        <span class="visually-hidden visually-hidden--inline">{{ 'products.product.price.sale_price' | t }}</span>
+      {%- else -%}
         <span class="visually-hidden visually-hidden--inline">{{ 'products.product.price.regular_price' | t }}</span>
-        {% comment %} <span>
-          <s class="price-item price-item--regular">
-            {% if settings.currency_code_enabled %}
-              {{ compare_at_price | money_with_currency }}
-            {% else %}
-              {{ compare_at_price | money }}
-            {% endif %}
-          </s>
-        </span> {% endcomment %}
-      {%- endunless -%}
-      <span class="visually-hidden visually-hidden--inline">{{ 'products.product.price.sale_price' | t }}</span>
+      {%- endif -%}
       <span class="price-item price-item--sale price-item--last">
         {{ money_price }}
       </span>

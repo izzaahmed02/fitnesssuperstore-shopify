@@ -176,6 +176,14 @@ customElements.get('product-info') ||
           (a('price'),
             a('LaborDaySaleCard'),
             a('LaborDaySaleCard-Desktop'),
+            // #799/#803: the customer-facing price block ("As high as", the package
+            // banner, the savings text) lives outside #price-<section>, so a variant
+            // change used to leave it showing the previously selected variant's
+            // figures. Re-render it from the section response like the other regions.
+            // The predicate preserves the desktop copy's `hidden lg:block` responsive
+            // state, which the default predicate would strip.
+            a('Product-Prices-Mobile', ({ classList: t }) => t.contains('hidden')),
+            a('Product-Prices-Desktop', ({ classList: t }) => t.contains('hidden')),
             a('Sku', ({ classList: t }) => t.contains('hidden')),
             a('Inventory', ({ innerText: t }) => '' === t),
             a('Volume'),
