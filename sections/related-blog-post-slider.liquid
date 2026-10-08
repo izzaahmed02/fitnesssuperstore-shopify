@@ -26,17 +26,22 @@ least `min_articles` published articles. blog.articles_count counts published
 articles only. On article pages this suppression never applies.
 {%- endcomment -%}
 {%- comment -%}
-A missing blog is not the same case as an under-threshold one. blogs[handle] is
-nil when the handle does not exist, and Liquid evaluates nil < min_articles as
-false, so the threshold test never fires and the section renders anyway: its
-heading, the "Please select a blog with articles." placeholder in place of the
-track, and the View All button pointing at a blog that is not there. Suppress
-it outright instead, in every context, since there is nothing to show or link
-to. An existing blog that is merely under the threshold keeps the hub-only
-behaviour below.
+A missing blog is not the same case as an under-threshold one. When the handle
+does not resolve, blog.articles_count does not compare as a number, so the
+threshold test below never fires and the section renders anyway. On the
+live preview that shows as the heading, a visible "Liquid error ... comparison
+of String with 0 failed" from the articles_count test below, and the View All
+button pointing at a blog that is not there.
+
+Test blog.handle rather than the blog itself: an unresolved blog setting is
+truthy on the storefront (the articles_count test below reaches its right-hand
+side, which is why it raises), so a truthiness or `== blank` test on the blog
+is not reliable. Only a real blog carries a handle. Suppress outright, in every
+context, since there is nothing to show or link to. An existing blog that is
+merely under the threshold keeps the hub-only behaviour below.
 {%- endcomment -%}
 {%- assign hub_hide = false -%}
-{%- if blog == blank -%}
+{%- if blog.handle == blank -%}
   {%- assign hub_hide = true -%}
 {%- elsif is_hub and blog.articles_count < min_articles -%}
   {%- assign hub_hide = true -%}
