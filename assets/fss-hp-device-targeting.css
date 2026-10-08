@@ -1,0 +1,40 @@
+/*
+ * Mobile Homepage A/B Test (Variant B) — device targeting.
+ * templates/index.json now contains BOTH the original Control modules and
+ * the compressed Variant B modules side by side; this file is the only
+ * thing deciding which set is visible at which breakpoint. Breakpoint
+ * matches the existing mobile convention used elsewhere in this theme
+ * (see sections/header.liquid's announcement-bar rule): 989px.
+ *
+ * Shopify renders JSON-template sections with a dynamic wrapper id
+ * (e.g. shopify-section-template--12345__homepage_section_hero_original),
+ * NOT a plain shopify-section-{key} id - confirmed against existing
+ * #shopify-section-template--...__key references elsewhere in this repo
+ * (templates/page.new-warehouse-page-v-1.json, page.shipping-information.json).
+ * An exact-match #id selector on the bare key never matches anything, so
+ * these use attribute "contains" selectors on the literal section keys
+ * from templates/index.json instead - robust to that dynamic prefix.
+ * Those keys only ever exist on the homepage, so this file cannot affect
+ * any other template even though it's a global asset.
+ */
+@media screen and (max-width: 989px) {
+  [id*="homepage_section_hero_original"],
+  [id*="homepage_browse_by_category_XB4keY"],
+  [id*="homepage_homepage_offers_bnKDwY"],
+  [id*="homepage_popular_fitness_hewqbb"],
+  [id*="17680069639c682e67"],
+  [id*="rich_text_kY8Ur3"],
+  [id*="homepage_homepage_offers_etpYBN"] {
+    display: none !important;
+  }
+}
+
+@media screen and (min-width: 990px) {
+  [id*="homepage_section_hero_t9WgKg"],
+  [id*="homepage_shop_by_condition_fss01"],
+  [id*="homepage_popular_categories_fss01"],
+  [id*="homepage_top_sellers_fss01"],
+  [id*="homepage_compact_proof_fss01"] {
+    display: none !important;
+  }
+}
