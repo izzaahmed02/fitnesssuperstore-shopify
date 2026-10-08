@@ -174,6 +174,14 @@ customElements.get('product-info') ||
             a && r && ((r.innerHTML = a.innerHTML), r.classList.toggle('hidden', i(a)));
           };
           (a('price'),
+            // The customer-facing price block ("As high as", package banner,
+            // savings) lives outside #price-<section>, so a variant change used
+            // to leave it showing the previously selected variant's figures.
+            // Re-render it from the section response like the other regions.
+            // The predicate preserves the desktop copy's `hidden lg:block`
+            // responsive state, which a bare toggle would strip.
+            a('Product-Prices-Mobile', ({ classList: t }) => t.contains('hidden')),
+            a('Product-Prices-Desktop', ({ classList: t }) => t.contains('hidden')),
             a('Sku', ({ classList: t }) => t.contains('hidden')),
             a('Inventory', ({ innerText: t }) => '' === t),
             a('Volume'),
