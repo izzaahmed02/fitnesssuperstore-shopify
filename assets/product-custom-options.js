@@ -945,6 +945,7 @@ if (!customElements.get('product-customization-options')) {
                 swatchesActiveContainer.innerHTML = this.setColorOptionHTML(swatch, false);
                 if (this.closest('cart-drawer')) return;
                 this.updatePrice();
+                this.showColorMedia(swatch.dataset.colorName);
               }
             });
           });
@@ -975,6 +976,34 @@ if (!customElements.get('product-customization-options')) {
             this.updatePrice();
           });
         });
+      }
+
+      showColorMedia(colorName) {
+        const normalize = (text) => (text || '').replace(/\s+/g, ' ').trim().toLowerCase();
+        const color = normalize((colorName || '').replace(/\s*\([^)]*\)\s*$/, ''));
+        if (!color) return;
+
+        const scope = this.closest('product-info') || document;
+        const mediaEl = scope.querySelector('[data-product-media]') || document.querySelector('[data-product-media]');
+        if (!mediaEl) return;
+
+        let mediaData;
+        try {
+          mediaData = JSON.parse(mediaEl.innerHTML.trim());
+        } catch (err) {
+          return;
+        }
+
+        const index = mediaData.findIndex((media) => (media.alt || '').split(' - ').some((part) => normalize(part) === color));
+        if (index === -1) return;
+
+        const gallery = scope.querySelector('product-gallery') || document.querySelector('product-gallery');
+        gallery?.setActiveMedia?.(mediaData[index].id);
+
+        const mobileGallery = scope.querySelector('mobile-gallery') || document.querySelector('mobile-gallery');
+        if (mobileGallery?.slider && window.jQuery && jQuery(mobileGallery.slider).hasClass('slick-initialized')) {
+          jQuery(mobileGallery.slider).slick('slickGoTo', index);
+        }
       }
 
       // Hepler to create custom color badge
