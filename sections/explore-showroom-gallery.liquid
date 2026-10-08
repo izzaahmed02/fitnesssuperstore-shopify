@@ -1,0 +1,242 @@
+{% comment %}
+  Section: Explore the Showroom
+  A heading, intro line, and a simple image grid of additional showroom views.
+
+  Images render at their native aspect ratio (no forced crop, no stretch) so the
+  framing decision stays with the edited exports rather than with CSS.
+
+  The two approved showroom blocks use their image-picker selection when set.
+  While the selectors remain blank in this unpublished preview, each approved
+  block falls back to its matching Shopify Files image by filename. The fallback
+  is scoped to the existing item_5877 and item_5878 block IDs only.
+{% endcomment %}
+
+{%- liquid
+  assign default_5877 = images['IMG_5877_showroom_web.webp']
+  assign default_5878 = images['IMG_5878_showroom_web.webp']
+  assign has_image = false
+
+  for block in section.blocks
+    if block.type == 'item'
+      assign item_image = block.settings.image
+
+      if item_image == blank
+        case block.id
+          when 'item_5877'
+            assign item_image = default_5877
+          when 'item_5878'
+            assign item_image = default_5878
+        endcase
+      endif
+
+      if item_image != blank
+        assign has_image = true
+        break
+      endif
+    endif
+  endfor
+-%}
+
+{%- if has_image -%}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    background-color: {{ section.settings.bg_color }};
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+  }
+
+  .explore-showroom-{{ section.id }} {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .explore-showroom-{{ section.id }} .es-heading {
+    font-size: 38px;
+    line-height: 50px;
+    text-align: center;
+    margin: 0 0 16px;
+  }
+
+  .explore-showroom-{{ section.id }} .es-intro {
+    max-width: 800px;
+    margin: 0 auto 40px;
+    text-align: center;
+  }
+
+  .explore-showroom-{{ section.id }} .es-grid {
+    display: grid;
+    grid-template-columns: repeat({{ section.settings.columns_desktop }}, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+
+  .explore-showroom-{{ section.id }} .es-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 24px;
+  }
+
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} {
+      padding-top: 24px;
+      padding-bottom: 24px;
+    }
+
+    .explore-showroom-{{ section.id }} {
+      padding: 0 16px;
+    }
+
+    .explore-showroom-{{ section.id }} .es-heading {
+      font-size: 28px;
+      line-height: 34px;
+      text-align: left;
+    }
+
+    .explore-showroom-{{ section.id }} .es-intro {
+      text-align: left;
+      margin-bottom: 24px;
+    }
+
+    .explore-showroom-{{ section.id }} .es-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .explore-showroom-{{ section.id }} .es-item img {
+      border-radius: 16px;
+    }
+  }
+{%- endstyle -%}
+
+<div class="explore-showroom-{{ section.id }}">
+  {%- if section.settings.heading != blank -%}
+    <h2 class="es-heading">{{ section.settings.heading | escape }}</h2>
+  {%- endif -%}
+
+  {%- if section.settings.intro != blank -%}
+    <p class="es-intro">{{ section.settings.intro | escape }}</p>
+  {%- endif -%}
+
+  <div class="es-grid">
+    {%- for block in section.blocks -%}
+      {%- if block.type == 'item' -%}
+        {%- liquid
+          assign item_image = block.settings.image
+
+          if item_image == blank
+            case block.id
+              when 'item_5877'
+                assign item_image = default_5877
+              when 'item_5878'
+                assign item_image = default_5878
+            endcase
+          endif
+
+          assign item_alt = block.settings.alt
+          if item_alt == blank and item_image != blank
+            assign item_alt = item_image.alt
+          endif
+        -%}
+
+        {%- if item_image != blank -%}
+          <div class="es-item" {{ block.shopify_attributes }}>
+            {{
+              item_image
+              | image_url: width: 1600
+              | image_tag:
+                alt: item_alt,
+                widths: '400, 600, 800, 1000, 1200, 1600',
+                sizes: '(min-width: 750px) 50vw, calc(100vw - 32px)',
+                loading: 'lazy'
+            }}
+          </div>
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+  </div>
+</div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Explore the Showroom",
+  "tag": "section",
+  "class": "explore-showroom-gallery",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Explore the Showroom"
+    },
+    {
+      "type": "textarea",
+      "id": "intro",
+      "label": "Intro line"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "label": "Columns on desktop",
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "default": 2
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": 44
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": 44
+    }
+  ],
+  "blocks": [
+    {
+      "type": "item",
+      "name": "Image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "textarea",
+          "id": "alt",
+          "label": "Alt text",
+          "info": "Describes the image for screen readers and search engines. Falls back to the alt text set on the file in Shopify Files. Do not state or imply that equipment shown is in stock."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Explore the Showroom",
+      "blocks": [{ "type": "item" }, { "type": "item" }]
+    }
+  ]
+}
+{% endschema %}
