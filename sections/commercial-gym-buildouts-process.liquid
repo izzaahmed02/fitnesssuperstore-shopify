@@ -242,6 +242,48 @@
     background-color: #fce6de;
     }
     }
+
+    /* Four steps across need a 718px row: the four cards' min-content widths
+       (182 + 161 + 176 + 163, longest word + 32px padding each side) plus 3 x 12px
+       gaps. Below that, flex can't shrink them further, so the row overflowed: off
+       the screen at 750px (document 758px), and at 990-1130px, where the left nav
+       narrows the row to 584-744px, the last card was cut off or pushed off-screen
+       (document 1039px at 990). This is keyed to the row's own width, not the
+       viewport, so it tracks the sidebar too. Under 760px of row the steps take the
+       mobile layout above (Figma 4612:88594: number left, text right, vertical
+       connector), keeping the desktop 28px heading gap. */
+    #shopify-section-{{ section.id }} .process-steps {
+    container-type: inline-size;
+    }
+
+    @container (max-width: 759px) {
+    #shopify-section-{{ section.id }} .process-steps__row {
+    flex-direction: column;
+    gap: 16px;
+    }
+    #shopify-section-{{ section.id }} .process-steps__row::before {
+    display: none;
+    }
+    #shopify-section-{{ section.id }} .process-steps__step {
+    flex-direction: row;
+    gap: 20px;
+    padding: 0;
+    }
+    #shopify-section-{{ section.id }} .process-steps__number {
+    margin-bottom: 0;
+    }
+    #shopify-section-{{ section.id }} .process-steps__step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    top: 25px;
+    left: 25px;
+    transform: translateX(-50%);
+    width: 4px;
+    height: calc(100% + 16px);
+    background-color: #fce6de;
+    }
+    }
 {%- endstyle -%}
 
 <div class="multicolumn{% if section.settings.title == blank %} no-heading{% endif %}">
@@ -260,6 +302,7 @@
             </div>
         {%- endunless -%}
 
+        <div class="process-steps">
         <div class="process-steps__row">
             {%- for block in section.blocks -%}
                 <div class="process-steps__step" {{ block.shopify_attributes }}>
@@ -274,6 +317,7 @@
                     </div>
                 </div>
             {%- endfor -%}
+        </div>
         </div>
 
         {%- unless section.settings.disclaimer == blank -%}
