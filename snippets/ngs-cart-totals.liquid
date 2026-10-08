@@ -1,0 +1,181 @@
+{%- comment -%}
+  Renders the cart totals, split so the customer can see what Fitness
+  Superstore charges today versus what National Gym Service will bill.
+
+  Per Tim, 2026-09-27: the single "Total" was the combined figure, which reads
+  as though Fitness Superstore is collecting all of it. The order he asked for
+  is: Total, being the Fitness Superstore amount and clearly marked as charged
+  today, then the National Gym Service amount, then the full purchase total.
+
+  When the cart holds no NGS service this renders exactly the theme's original
+  single Total row and nothing else changes.
+
+  THE deferralActive FLAG, AND WHY IT EXISTS
+
+  Where the NGS amount sits depends on whether the Cart Transform that defers
+  these services is deployed:
+
+    - not deployed: cart.total_price still INCLUDES the NGS amount, so the
+      amount charged today is cart.total_price minus the NGS amount.
+    - deployed:     the function has already zeroed those components, so
+      cart.total_price IS the amount charged today, and the full purchase
+      total is cart.total_price plus the NGS amount.
+
+  Subtracting in one state and adding in the other is the difference between a
+  correct total and a wrong one, and it cannot be guessed reliably from the
+  cart. It is therefore declared explicitly as `deferralActive` on the
+  `fs_bundle.ngs_allowlist` metafield. Absent or false means not deployed,
+  which is the state today. It must be flipped to true in the same release
+  that deploys the function.
+
+  Accepts:
+    - context: {String} 'drawer' or 'page'.
+{%- endcomment -%}
+
+{%- comment -%}
+  THE SIZE GATE. Shopify silently omits a metafield value over 10,000 bytes
+  from a FUNCTION's input; Liquid has no such limit. Without this check an
+  oversized allowlist makes the function charge every NGS service in full while
+  this block still splits the total and says "not charged today". The theme
+  therefore applies the function's own limit to itself and goes silent above it.
+  Reasoning in full in snippets/ngs-allowlist-data.liquid.
+{%- endcomment -%}
+{%- assign ngs_config = shop.metafields.fs_bundle.ngs_allowlist.value -%}
+{%- assign ngs_raw_size = ngs_config | json | size -%}
+{%- if ngs_raw_size > 10000 -%}
+  {%- assign ngs_config = nil -%}
+{%- endif -%}
+{%- assign ngs_options = ngs_config.options -%}
+{%- assign ngs_total_cents = 0 -%}
+{%- assign ngs_line_count = 0 -%}
+
+{%- if ngs_options.size > 0 -%}
+  {%- for item in cart.items -%}
+    {%- for property in item.properties -%}
+      {%- if property.first == '_functionOperation' -%}
+        {%- for selection in property.last -%}
+          {%- assign selected_id = selection.variantId | split: '/' | last -%}
+          {%- for entry in ngs_options -%}
+            {%- comment -%}
+              v2 is the compact tuple [variantId, priceMinorUnits, modeCode];
+              v1 is the verbose object. Both are read because v1 is what the
+              25 September preview wrote. Prices are held in cents either way,
+              so v1's major-unit price is scaled and v2's is used as-is.
+            {%- endcomment -%}
+            {%- if ngs_config.version == 2 -%}
+              {%- assign entry_id = entry[0] -%}
+              {%- assign entry_cents = entry[1] -%}
+            {%- else -%}
+              {%- assign entry_id = entry.variantId | split: '/' | last -%}
+              {%- assign entry_cents = entry.price | times: 100 -%}
+            {%- endif -%}
+            {%- if entry_id == selected_id -%}
+              {%- assign units = selection.quantity | default: 1 | times: item.quantity -%}
+              {%- assign line_cents = entry_cents | times: units -%}
+              {%- assign ngs_total_cents = ngs_total_cents | plus: line_cents -%}
+              {%- assign ngs_line_count = ngs_line_count | plus: 1 -%}
+              {%- break -%}
+            {%- endif -%}
+          {%- endfor -%}
+        {%- endfor -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endfor -%}
+{%- endif -%}
+
+{%- if ngs_line_count > 0 -%}
+  {%- if ngs_config.deferralActive -%}
+    {%- assign charged_today_cents = cart.total_price -%}
+    {%- assign purchase_total_cents = cart.total_price | plus: ngs_total_cents -%}
+  {%- else -%}
+    {%- assign charged_today_cents = cart.total_price | minus: ngs_total_cents -%}
+    {%- assign purchase_total_cents = cart.total_price -%}
+  {%- endif -%}
+  {%- if charged_today_cents < 0 -%}
+    {%- assign charged_today_cents = 0 -%}
+  {%- endif -%}
+
+  <style>
+    .ngs-totals { font-family: 'Lato', sans-serif; text-align: left; }
+    .ngs-totals__row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 15px;
+      line-height: 21px;
+      color: #23232b;
+    }
+    .ngs-totals__row--today { font-weight: 700; }
+    .ngs-totals__row--ngs {
+      margin-top: 4px;
+      padding: 10px 12px;
+      background-color: #eef4fb;
+      border: 1px solid #b9d2ea;
+      border-radius: 8px;
+    }
+    .ngs-totals__row--ngs .ngs-totals__value { color: #1c4e80; }
+    .ngs-totals__row--grand {
+      margin-top: 8px;
+      padding-top: 10px;
+      border-top: 1px solid #d7d7de;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    .ngs-totals__label { font-weight: inherit; }
+    .ngs-totals__value { font-weight: 700; white-space: nowrap; }
+    .ngs-totals__sub {
+      display: block;
+      font-weight: 400;
+      font-size: 13px;
+      line-height: 18px;
+      color: #4a4a55;
+    }
+    .ngs-totals__note {
+      margin: 6px 0 0;
+      font-size: 13px;
+      line-height: 18px;
+      color: #4a4a55;
+    }
+  </style>
+
+  <div class="ngs-totals ngs-totals--{{ context | default: 'page' }}" data-ngs-totals>
+    <div class="ngs-totals__row ngs-totals__row--today">
+      <span class="ngs-totals__label">
+        Total
+        <span class="ngs-totals__sub">Charged today by Fitness Superstore</span>
+      </span>
+      <span class="ngs-totals__value" data-ngs-charged-today>{{ charged_today_cents | money }}</span>
+    </div>
+
+    <div class="ngs-totals__row ngs-totals__row--ngs">
+      <span class="ngs-totals__label">
+        Due separately to National Gym Service
+        <span class="ngs-totals__sub">
+          Not charged today. National Gym Service LLC will contact you after your
+          order to arrange payment. Installation is scheduled, and a paid extended
+          warranty starts, once that payment is confirmed.
+        </span>
+      </span>
+      <span class="ngs-totals__value" data-ngs-due>{{ ngs_total_cents | money }}</span>
+    </div>
+
+    <div class="ngs-totals__row ngs-totals__row--grand">
+      <span class="ngs-totals__label">Total amount for this purchase</span>
+      <span class="ngs-totals__value" data-ngs-purchase-total>{{ purchase_total_cents | money }}</span>
+    </div>
+  </div>
+{%- else -%}
+  {%- comment -%} No NGS service in the cart: the theme's original total, unchanged. {%- endcomment -%}
+  {%- if context == 'drawer' -%}
+    <div class="total-wrapper">
+      Total <span class="cart-total">{{ cart.total_price | money }}</span>
+    </div>
+  {%- else -%}
+    <div class="totals" role="status">
+      <h2 class="totals__subtotal">Total</h2>
+      <p class="totals__subtotal-value total-price">{{ cart.total_price | money }}</p>
+    </div>
+  {%- endif -%}
+{%- endif -%}
