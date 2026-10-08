@@ -226,6 +226,42 @@
         }
     {% endif %}
 
+    {%- comment -%}
+      Sagi, Oct 6 2026: the image should fill its container without stretching. From
+      750px up the fixed 487/304 aspect box above left the image floating mid-column
+      with empty card above and below it whenever the text ran taller (205px image beside
+      332px of text at 1440, 130px beside 530px at 990). Stretch the image column to the
+      row's height and crop with object-fit: cover so the photo is never distorted.
+      Scoped to this section only — no global image rule changes. The inline
+      padding-bottom ratio on .image-with-text__media needs !important to drop.
+    {%- endcomment -%}
+    {%- unless section.settings.original_image_proportions -%}
+    @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .image-with-text__grid {
+    align-items: stretch;
+    }
+    #shopify-section-{{ section.id }} .image-with-text__media-item {
+    align-self: stretch;
+    }
+    #shopify-section-{{ section.id }} .image-with-text__media {
+    position: relative;
+    height: 100%;
+    min-height: 240px;
+    padding-bottom: 0 !important;
+    }
+    #shopify-section-{{ section.id }} .image-with-text__media-item img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    aspect-ratio: auto;
+    object-fit: cover;
+    object-position: center;
+    }
+    }
+    {%- endunless -%}
+
     @media screen and (max-width: 750px) {
     .grid-column-reverse {
     flex-direction: column-reverse;
