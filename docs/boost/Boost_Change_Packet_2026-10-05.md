@@ -45,9 +45,9 @@ policy. The engine measured was not the engine customers see.
 
 Retracted: the claims that "45 kettlebell", "bumper plate 45-pound" and "assault bike" had
 been fixed, and the entire result-count table (rubber hex dumbbell 380, bumper plate 45 lbs
-178, and the rest). A Shopify Admin check on 8 Oct positively contradicts one of them: zero
-active products carry "assault" in the title, so Andrew's original "assault bike returns
-nothing" finding has not been shown to be fixed.
+178, and the rest). A Shopify Admin check on 8 Oct positively contradicts one of them: no
+product in the catalog matches "assault" at all on title, SKU, vendor, type or tags, so
+Andrew's original "assault bike returns nothing" finding has not been shown to be fixed.
 
 Nothing in sections 1, 2, 3, 5, 6 or 7 depended on these figures. The Product Type finding,
 the Description-noise finding and the lb/lbs counts all came from the Shopify Admin API and
