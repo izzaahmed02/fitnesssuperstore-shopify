@@ -213,6 +213,12 @@
         endif
       endfor
     endif
+    assign show_option_color_selector = false
+    if product_title_lc contains 'p82 console'
+      unless show_variant_color_selector
+        assign show_option_color_selector = true
+      endunless
+    endif
   -%}
 
 
@@ -231,6 +237,8 @@
                 {%- endif -%}
                 {%- if show_variant_color_selector -%}
                   {% render 'variant-color-selector', product: product %}
+                {%- elsif show_option_color_selector -%}
+                  {% render 'option-color-selector', product: product %}
                 {%- endif -%}
 
               {% when 'price' %}
@@ -705,13 +713,13 @@
           assign mobile_gallery_featured_media = product.selected_or_first_available_variant.featured_media | default: product.featured_media | default: product.media.first
           assign mobile_gallery_aspect_ratio = mobile_gallery_featured_media.preview_image.aspect_ratio | default: mobile_gallery_featured_media.aspect_ratio | default: 1
         -%}
-        {%- if show_variant_color_selector -%}
+        {%- if show_variant_color_selector or show_option_color_selector -%}
           <style>
             mobile-gallery.mobile-gallery--square { --mobile-gallery-aspect-ratio: 1 !important; }
           </style>
         {%- endif -%}
         <mobile-gallery
-          {% if show_variant_color_selector %}class="mobile-gallery--square"{% endif %}
+          {% if show_variant_color_selector or show_option_color_selector %}class="mobile-gallery--square"{% endif %}
           style="--mobile-gallery-aspect-ratio: {{ mobile_gallery_aspect_ratio }};"
         >
           <div class="mobile-gallery-wrapper only-mobile">
@@ -899,6 +907,10 @@
                 {%- if show_variant_color_selector -%}
                   <div class="hidden lg:block">
                     {% render 'variant-color-selector', product: product %}
+                  </div>
+                {%- elsif show_option_color_selector -%}
+                  <div class="hidden lg:block">
+                    {% render 'option-color-selector', product: product %}
                   </div>
                 {%- endif -%}
               {% when 'price' %}

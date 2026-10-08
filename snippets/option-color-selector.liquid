@@ -1,0 +1,247 @@
+{%- comment -%}
+  Near-title Color selector for P82 products whose colors come from the product
+  options (Paint Colors), not from Shopify variants (e.g. TRM 885).
+
+  Same look and placement as variant-color-selector (UBK 885): descriptive buttons
+  under the title on desktop, one compact dropdown under the title on mobile.
+
+  Only the UI moves. Each choice clicks the matching color swatch in the product
+  options, so price, the selected-color badge, cart/order data and the gallery
+  image switch all run through the existing options code.
+
+  Labels are shortened on screen only; option names are unchanged:
+    "Silver / Gray Frame w/Black Console (Same as Primary Pic)"
+      -> "Silver/Gray Frame" (line 1) + "Black Console" (line 2)
+
+  Custom Color: opens the existing "Custom color or code" (+$300) popup in the
+  options and scrolls to it.
+
+  Accepts:
+    product - {Object} the product to render the selector for (required)
+{%- endcomment -%}
+
+{%- liquid
+  assign color_po = null
+  assign options = product.metafields.options.product_options.value
+  if product.selected_or_first_available_variant.metafields.options.product_options.value != blank
+    assign options = product.selected_or_first_available_variant.metafields.options.product_options.value
+  endif
+  for category in options
+    if category.hide_option
+      continue
+    endif
+    for product_option in category.product_options.value
+      assign po_title = product_option.product_option_title | downcase
+      if po_title == 'paint color' or po_title == 'paint colors' or po_title == 'color'
+        unless product_option.hide_values
+          assign color_po = product_option
+          break
+        endunless
+      endif
+    endfor
+    if color_po
+      break
+    endif
+  endfor
+
+  assign color_values = color_po.product_option_variants.value
+  assign default_id = color_po.product_option_sets_default.value.id
+  assign standard_count = 0
+  assign has_custom = false
+  assign has_two_lines = false
+  for value in color_values
+    if value.title contains 'Custom Color'
+      assign has_custom = true
+    else
+      assign standard_count = standard_count | plus: 1
+      if value.title contains ' w/'
+        assign has_two_lines = true
+      endif
+    endif
+  endfor
+-%}
+
+{%- if color_po and standard_count > 1 -%}
+  {%- style -%}
+    .option-color-selector .finish-selector{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:0 0 20px;}
+    .option-color-selector .finish-selector__label{font-family:"Lato",sans-serif;font-size:14px;font-weight:700;color:#23232B;margin-right:2px;}
+    .option-color-selector .finish-selector__option{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:72px;padding:8px 10px;border:1px solid #D4D4D8;border-radius:4px;background:#fff;font-family:"Lato",sans-serif;font-size:14px;font-weight:600;line-height:1.2;text-align:center;color:#23232B;cursor:pointer;transition:border-color .2s ease,color .2s ease,background .2s ease;}
+    .option-color-selector .finish-selector__option:hover{border-color:#D12E06;color:#D12E06;}
+    .option-color-selector .finish-selector__option.is-active{border-color:#D12E06;background:#D12E06;color:#fff;}
+    .option-color-selector .finish-selector__option.is-unavailable{opacity:.6;}
+    .option-color-selector .finish-selector--variant{align-items:flex-start;flex-wrap:nowrap;gap:8px;}
+    .option-color-selector .finish-selector--variant .finish-selector__label{flex:0 0 auto;display:flex;align-items:center;min-height:32px;}
+    .option-color-selector .finish-selector--variant.has-two-lines .finish-selector__label{min-height:56px;}
+    .option-color-selector .finish-selector--variant .finish-selector__options{display:flex;flex-wrap:wrap;gap:8px;flex:1 1 auto;min-width:0;}
+    .option-color-selector .finish-selector--variant.has-two-lines .finish-selector__option{min-height:56px;}
+    .option-color-selector .finish-selector__option > span{white-space:nowrap;}
+    .option-color-selector__mobile{margin:0 0 16px;}
+    .option-color-selector__mobile label{display:flex;align-items:center;gap:10px;width:100%;font-family:"Lato",sans-serif;font-size:14px;font-weight:700;color:#23232B;}
+    .option-color-selector__mobile select{flex:1 1 auto;min-width:0;height:44px;padding:0 36px 0 12px;border:1px solid #D4D4D8;border-radius:4px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2323232B' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") no-repeat right 12px center;-webkit-appearance:none;appearance:none;font-family:"Lato",sans-serif;font-size:14px;font-weight:600;color:#23232B;}
+    .option-color-selector__desktop{display:none;}
+    @media (min-width: 990px){
+      .option-color-selector__desktop{display:block;}
+      .option-color-selector__mobile{display:none;}
+    }
+    product-info product-customization-options .color-options{display:none;}
+  {%- endstyle -%}
+
+  <div class="option-color-selector" data-option-color-selector>
+    <div class="option-color-selector__desktop">
+      <div class="finish-selector finish-selector--variant{% if has_two_lines %} has-two-lines{% endif %}" role="group" aria-label="Choose Color">
+        <div class="finish-selector__label">Color:</div>
+        <div class="finish-selector__options">
+          {%- for value in color_values -%}
+            {%- liquid
+              assign is_custom = false
+              if value.title contains 'Custom Color'
+                assign is_custom = true
+              endif
+              assign label_main = value.title | split: ' w/' | first | split: '(' | first | replace: ' / ', '/' | strip
+              assign label_sub = ''
+              if value.title contains ' w/'
+                assign label_sub = value.title | split: ' w/' | last | split: '(' | first | strip
+              endif
+            -%}
+            {%- unless is_custom -%}
+              <button
+                type="button"
+                class="finish-selector__option{% if value.id == default_id %} is-active{% endif %}{% unless value.available %} is-unavailable{% endunless %}"
+                data-option-color-id="{{ value.id }}"
+                aria-pressed="{% if value.id == default_id %}true{% else %}false{% endif %}"
+                title="{{ value.title | escape }}"
+              >
+                <span>{{ label_main | escape }}</span>
+                {%- if label_sub != blank -%}<span>{{ label_sub | escape }}</span>{%- endif -%}
+              </button>
+            {%- endunless -%}
+          {%- endfor -%}
+          {%- if has_custom -%}
+            <button type="button" class="finish-selector__option" data-option-color-id="custom" aria-pressed="false">
+              <span>Custom Color</span>
+            </button>
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+
+    <div class="option-color-selector__mobile">
+      <label>
+        Color:
+        <select data-option-color-select>
+        {%- for value in color_values -%}
+          {%- unless value.title contains 'Custom Color' -%}
+            {%- assign option_label = value.title | split: '(' | first | strip -%}
+            <option value="{{ value.id }}"{% if value.id == default_id %} selected{% endif %}{% unless value.available %} disabled{% endunless %}>
+              {{- option_label | escape -}}
+            </option>
+          {%- endunless -%}
+        {%- endfor -%}
+        {%- if has_custom -%}
+          <option value="custom">Custom Color</option>
+        {%- endif -%}
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      if (window.__optionColorSelectorBound) return;
+      window.__optionColorSelectorBound = true;
+
+      function optionsEl() {
+        return document.querySelector('product-info product-customization-options') || document.querySelector('product-customization-options');
+      }
+
+      function customForm() {
+        var el = optionsEl();
+        return el && el.querySelector('.custom-color-input');
+      }
+
+      function customFormOpen() {
+        var form = customForm();
+        return !!form && form.style.display !== 'none';
+      }
+
+      // The selection the options code will actually send to the cart.
+      function currentValue() {
+        var el = optionsEl();
+        if (!el) return null;
+        var input = el.querySelector('[data-color-variant-input]');
+        var customInput = el.querySelector('.custom-color-value');
+        var id = input && input.dataset.variant;
+        if (customFormOpen() || (customInput && id && id === customInput.dataset.id)) return 'custom';
+        return id || null;
+      }
+
+      function sync() {
+        var value = currentValue();
+        if (!value) return;
+        document.querySelectorAll('[data-option-color-selector] [data-option-color-id]').forEach(function (btn) {
+          var on = btn.getAttribute('data-option-color-id') === value;
+          btn.classList.toggle('is-active', on);
+          btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        document.querySelectorAll('[data-option-color-select]').forEach(function (select) {
+          if (select.value !== value) select.value = value;
+        });
+      }
+
+      function selectColor(id) {
+        var el = optionsEl();
+        if (!el) return;
+        var swatch = el.querySelector('.color-options .swatch[data-id="' + id + '"]');
+        if (swatch) swatch.click();
+      }
+
+      // The page can hold more than one custom-color "+"; use the one the customer can see.
+      function visibleTrigger() {
+        return Array.prototype.find.call(document.querySelectorAll('.swatch--custom-trigger'), function (el) {
+          var r = el.getBoundingClientRect();
+          return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility === 'visible';
+        });
+      }
+
+      function openCustomColor() {
+        var trigger = visibleTrigger();
+        if (!trigger) return;
+        if (!customFormOpen()) trigger.click();
+        var top = trigger.getBoundingClientRect().top + window.pageYOffset - window.innerHeight / 3;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      }
+
+      function choose(value) {
+        if (value === 'custom') {
+          openCustomColor();
+        } else {
+          var form = customForm();
+          if (form) form.style.display = 'none';
+          selectColor(value);
+        }
+        sync();
+      }
+
+      document.addEventListener('click', function (event) {
+        var btn = event.target.closest && event.target.closest('[data-option-color-selector] [data-option-color-id]');
+        if (btn) {
+          choose(btn.getAttribute('data-option-color-id'));
+          return;
+        }
+        // Keep the top selector in step with changes made in the options themselves
+        // (swatch "+", Add, close).
+        if (event.target.closest && event.target.closest('product-customization-options')) setTimeout(sync, 0);
+      });
+
+      document.addEventListener('change', function (event) {
+        if (event.target.matches && event.target.matches('[data-option-color-select]')) choose(event.target.value);
+      });
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', sync);
+      } else {
+        sync();
+      }
+    })();
+  </script>
+{%- endif -%}
