@@ -92,6 +92,7 @@
         "price": {{ product.selected_or_first_available_variant.price | divided_by: 100.0 | json }},
         "priceCurrency": {{ shop.currency | default: 'USD' | json }},
 
+{% comment %} GMC/MSRP compliance (2026-08, Tim decision 2): schema.org/ListPrice reference-price emission suppressed. The Offer still carries the actual selling price above. Do not re-enable until the reference-price field contract and source dates are documented and approved.
         {% if product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
         "priceSpecification": [
           {
@@ -108,6 +109,7 @@
           }
         ],
         {% endif %}
+        {% endcomment %}
 
         "url": {{ request.origin | append: product.url | append: '?variant=' | append: product.selected_or_first_available_variant.id | json }},
         "offeredBy": {
@@ -163,6 +165,7 @@
             "price": {{ variant.price | divided_by: 100.0 | json }},
             "priceCurrency": {{ shop.currency | default: 'USD' | json }},
 
+{% comment %} GMC/MSRP compliance (2026-08, Tim decision 2): schema.org/ListPrice reference-price emission suppressed. The Offer still carries the actual selling price above. Do not re-enable until the reference-price field contract and source dates are documented and approved.
             {% if variant.compare_at_price > variant.price %}
             "priceSpecification": [
               {
@@ -179,6 +182,7 @@
               }
             ],
             {% endif %}
+            {% endcomment %}
 
             "url": {{ request.origin | append: product.url | append: '?variant=' | append: variant.id | json }},
             "sku": {{ variant.sku | default: product.handle | json }},

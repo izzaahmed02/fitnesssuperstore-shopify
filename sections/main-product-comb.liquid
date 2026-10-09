@@ -226,12 +226,14 @@
                   {%comment %}
                   {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
                    {%endcomment %}
+{% comment %} GMC/MSRP compliance (2026-04): reference "retail price" ("As high as") display hidden — show actual selling price only. Do not re-enable without a verified/substantiated reference price.
                     {% unless is_gift_cards_template %}
                       <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
                         >As high as:
                         <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                       </span>
                     {% endunless %}
+                    {% endcomment %}
                     {% comment %}
                   {% endif %}
                    {%endcomment %}
@@ -258,7 +260,7 @@
                        <div>
 
 
-                      <span class="you-save pm-empty"></span>
+                      {% comment %} GMC/MSRP compliance (2026-04): "You save $X" savings display hidden — show actual selling price only. Do not re-enable without a verified/substantiated reference price. <span class="you-save pm-empty"></span> {% endcomment %}
 
                     </div>
 
@@ -746,12 +748,14 @@
 
                 <div class="product__prices hidden lg:block">
 
+{% comment %} GMC/MSRP compliance (2026-04): reference "retail price" ("As high as") display hidden — show actual selling price only. Do not re-enable without a verified/substantiated reference price.
                      {% unless is_gift_cards_template %}
                       <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
                         >As high as:
                         <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                       </span>
                     {% endunless %}
+                    {% endcomment %}
 
                   {% if product.metafields.custom.saleprice_name != blank %}
                     {% render 'super-sale',
@@ -771,7 +775,7 @@
                        <div>
 
 
-                     <span class="you-save pm-empty"></span>
+                     {% comment %} GMC/MSRP compliance (2026-04): "You save $X" savings display hidden — show actual selling price only. Do not re-enable without a verified/substantiated reference price. <span class="you-save pm-empty"></span> {% endcomment %}
                     </div>
 
                       {% endif %}
@@ -893,6 +897,9 @@
                             >
                               {%- if product.selected_or_first_available_variant.quantity_price_breaks.size > 0 -%}
                                 {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                                {%- if product.id == 10269254254908 -%}
+                                  {%- assign variant_price_compare = nil -%}
+                                {%- endif -%}
                                 <div class="price-per-item">
                                   {%- if variant_price_compare -%}
                                     <dl class="price-per-item--current">
@@ -933,6 +940,9 @@
                                   | money_with_currency
                                 -%}
                                 {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                                {%- if product.id == 10269254254908 -%}
+                                  {%- assign variant_price_compare = nil -%}
+                                {%- endif -%}
                                 <div class="price-per-item">
                                   {%- if variant_price_compare -%}
                                     <dl class="price-per-item--current">
@@ -1176,7 +1186,7 @@
                         {%- endif -%}
                         {%- if shop.shipping_policy.body != blank -%}
                          Shipping calculated at checkout. Financing options available at checkout.<br>
-                         <span style="color: #D83D0E!important;font-weight: 600;">Need help? Call +1-925-215-2927</span>
+                         <span style="color: #D83D0E!important;font-weight: 600;">Need help? Call <a href="tel:+19252152927" class="pdp-help-call" style="color: inherit; text-decoration: underline;">+1-925-215-2927</a></span>
                         {%- endif -%}
                       </div>
                     {%- endif -%}
@@ -1397,6 +1407,9 @@
                       >
                         {%- if product.selected_or_first_available_variant.quantity_price_breaks.size > 0 -%}
                           {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                                {%- if product.id == 10269254254908 -%}
+                                  {%- assign variant_price_compare = nil -%}
+                                {%- endif -%}
                           <div class="price-per-item">
                             {%- if variant_price_compare -%}
                               <dl class="price-per-item--current">
@@ -1437,6 +1450,9 @@
                             | money_with_currency
                           -%}
                           {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
+                                {%- if product.id == 10269254254908 -%}
+                                  {%- assign variant_price_compare = nil -%}
+                                {%- endif -%}
                           <div class="price-per-item">
                             {%- if variant_price_compare -%}
                               <dl class="price-per-item--current">
