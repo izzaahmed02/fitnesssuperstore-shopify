@@ -14,29 +14,14 @@
   };
   var script = document.currentScript;
   var pageType = script ? script.getAttribute('data-page-type') : '';
-  var queued = [];
-
   function send(goal) {
     if (!Object.prototype.hasOwnProperty.call(goalIds, goal)) return;
-    var command = ['triggerConversion', goalIds[goal]];
-    if (!window.__fssConvertReady) {
-      queued.push(command);
-      return;
-    }
+    // Convert supports a pre-initialization command queue.
     window._conv_q = window._conv_q || [];
-    window._conv_q.push(command);
-  }
-
-  function flush() {
-    if (!window.__fssConvertReady || !queued.length) return;
-    window._conv_q = window._conv_q || [];
-    queued.forEach(function (command) { window._conv_q.push(command); });
-    queued.length = 0;
+    window._conv_q.push(['triggerConversion', goalIds[goal]]);
   }
 
   window.fssConvertTrack = send;
-  window.addEventListener('fss-convert-ready', flush);
-  flush();
 
   // Only fire page-view goals for their actual Shopify page types.
   if (pageType === 'product') send('viewItem');
