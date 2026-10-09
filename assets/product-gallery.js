@@ -172,18 +172,19 @@ class ProductGallery extends HTMLElement {
 
 
 
-      btn.addEventListener('click', (e) => {
+      let hoverTimer;
 
-        if (isVideoThumb || this.activeMediaId === mediaId) {
-
+      // A thumbnail click only selects. Enlarging is done by clicking the main image, so a
+      // hover that already switched the main image can no longer turn this click into an
+      // "open popup". Video thumbnails still open the popup, where the video plays.
+      btn.addEventListener('click', () => {
+        clearTimeout(hoverTimer);
+        if (isVideoThumb) {
           this.openPopup(mediaId);
         } else {
-
           this.setActiveMedia(mediaId);
         }
       });
-
-      let hoverTimer;
       btn.addEventListener('mouseenter', () => {
 
         if (this.activeMediaId === mediaId || isVideoThumb) {
