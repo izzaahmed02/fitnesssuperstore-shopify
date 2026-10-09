@@ -35,21 +35,25 @@
             {{ section.settings.button_text_1 }}
             {% render 'chevron-button' %}
         </a>
-        <a href="{{ section.settings.button_link_2 }}" class="bannerBtn button button--secondary emailFunction">
+        <a href="{{ section.settings.button_link_2 }}" class="bannerBtn button button--secondary">
             {{ section.settings.button_text_2 }}
             {% render 'chevron-button' %}
         </a>
-      
-        
+
+        {%- comment -%} Showroom Visit / Video Walkthrough render only when their text is set (blank on the contact page). {%- endcomment -%}
+        {%- if section.settings.button_text_3 != blank -%}
         <a href="{{ section.settings.button_link_3 }}" class="bannerBtn button button--secondary showroomVisit">
             {{ section.settings.button_text_3 }}
             {% render 'chevron-button' %}
         </a>
+        {%- endif -%}
+        {%- if section.settings.button_text_4 != blank -%}
         <a href="{{ section.settings.button_link_4 }}" class="bannerBtn button button--secondary showroomVisit">
             {{ section.settings.button_text_4 }}
             {% render 'chevron-button' %}
         </a>
-      
+        {%- endif -%}
+
       </div>
       <div class="showroom-callout">
      <p> Public showroom visitors should go to <strong>457 Industrial Way in Benicia.</strong>
@@ -58,106 +62,10 @@
       </div>
     </div>
   </div>
-
-  <div class="questions">
-    <div class="benefit-card">
-      <div class="text">
-       
-        <h2>Sales & Product Help</h2>
-        <p>{{ section.settings.why_choose_us }}</p>
-      </div>
-     
-    </div>
-    <div class="benefit-card">
-      <div class="text">
-        
-        <h2>Order & Shipping Support</h2>
-        <p>{{ section.settings.warranty_text }}</p>
-      </div>
-    
-    </div>
-    <div class="benefit-card">
-      <div class="text">
-      
-        <h2>Warranty & Service Help</h2>
-        <p>{{ section.settings.mission_text }}</p>
-      </div>
-     
-    </div>
-    <div class="benefit-card">
-      <div class="text">
-      
-        <h2>Showroom & Video Walkthroughs</h2>
-        <p>{{ section.settings.fourth_text }}</p>
-      </div>
-     
-    </div>
-  </div>
 </div>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    function initHeroCarousel() {
-      const $questions = $('.homepageHeroSection .questions');
-      
-      if (window.innerWidth <= 768) {
-        // Initialize Slick only on mobile
-        if (!$questions.hasClass('slick-initialized')) {
-          $questions.slick({
-            slidesToShow: 1,
-            slidesToScroll: 1,
-            centerMode: true,
-            centerPadding: '40px',
-            arrows: false,
-            dots: true,
-            infinite: true,
-            autoplay: false,
-            responsive: [
-              {
-                breakpoint: 480,
-                settings: {
-                  centerPadding: '30px'
-                }
-              }
-            ]
-          });
-        }
-      } else {
-        // Destroy Slick on desktop
-        if ($questions.hasClass('slick-initialized')) {
-          $questions.slick('unslick');
-        }
-      }
-    }
-
-    // Initialize on load
-    initHeroCarousel();
-
-    // Re-initialize on window resize
-    let resizeTimer;
-    $(window).on('resize', function() {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(function() {
-        initHeroCarousel();
-      }, 250);
-    });
-
-document.querySelectorAll('.emailFunction').forEach(function (btn) {
-  btn.addEventListener('click', function (e) {
-    e.preventDefault();
-    const form = document.querySelector('[id="globo-formbuilder-140088"]');
-    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    setTimeout(function () {
-      const select = document.querySelector('[id="140088-select-2"]');
-      if (select) {
-        select.value = 'Product Question / Sales Quote';
-        select.dispatchEvent(new Event('change', { bubbles: true }));
-        select.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-    }, 800);
-  });
-});
-
 // Existing button click functionality (unchanged)
 document.querySelectorAll('.showroomVisit').forEach(function (btn) {
   btn.addEventListener('click', function (e) {
@@ -207,42 +115,7 @@ if (params.get('service') === 'showroom') {
 
 }
 
-document.querySelectorAll('a.button').forEach(function (btn) {
-  const text = btn.textContent.trim();
-
-  if (text === 'Email Us') {
-    btn.addEventListener('click', function (e) {
-      e.preventDefault();
-      const form = document.querySelector('[id="globo-formbuilder-140088"]');
-      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      setTimeout(function () {
-        const select = document.querySelector('[id="140088-select-2"]');
-        if (select) {
-          select.value = 'Product Question / Sales Quote';
-          select.dispatchEvent(new Event('change', { bubbles: true }));
-          select.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-      }, 800);
-    });
-  }
-
-  /*if (text === 'Visit our Showroom') {
-    btn.addEventListener('click', function (e) {
-      e.preventDefault();
-      const form = document.querySelector('[id="globo-formbuilder-140088"]');
-      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      setTimeout(function () {
-        const select = document.querySelector('[id="140088-select-2"]');
-        if (select) {
-          select.value = 'Showroom Visit / Video Walkthrough';
-          select.dispatchEvent(new Event('change', { bubbles: true }));
-          select.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-      }, 800);
-    });
-  }*/
-});
-
+// "Email Us" buttons are plain mailto: links (no scroll-to-form interception).
 
   });
 </script>

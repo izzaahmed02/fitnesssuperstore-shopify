@@ -7,11 +7,40 @@ p, span, h2, h3, h4, h5 {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 32px;
+    /* Keyboard/reading order follows the visual grid (desktop: info then form; mobile: form then info).
+       Progressive enhancement: browsers without support fall back to DOM order (form first). */
+    reading-flow: grid-rows;
+}
+
+/* Desktop: contact info left, form right (form is first in the DOM for mobile order) */
+.contact-form > .contact-info {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.contact-form > .contact-form-wrapper {
+    grid-column: 2;
+    grid-row: 1;
 }
 
 .address-section {
     grid-column: 1 / span 2;
     padding-top: 56px;
+}
+
+/* Location: text is first in the DOM (mobile order); desktop shows map left, text right */
+.contact-form > .address-section {
+    reading-flow: grid-rows;
+}
+
+.contact-form > .address-section > .contact-location-map {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.contact-form > .address-section > .contact-location-text {
+    grid-column: 2;
+    grid-row: 1;
 }
 
 .contact-title {
@@ -144,8 +173,20 @@ p, span, h2, h3, h4, h5 {
         padding-bottom: 24px;
     }
 
+    /* Mobile: location text then map, in DOM order (replaces column-reverse) */
+    .contact-form > .address-section {
+        flex-direction: column;
+    }
+
+    /* Mobile: single column in DOM order, so the form sits right below the banner, above Contact Us */
+    .contact-form > .contact-info,
+    .contact-form > .contact-form-wrapper {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
     .contact-form-wrapper {
-       /* order: 1; */
+        margin-bottom: 32px;
         padding-top: 24px;
     }
 
@@ -191,20 +232,40 @@ p, span, h2, h3, h4, h5 {
         margin-bottom: 12px;
     }
 
+    /* Hours: one compact card per group, one row per day (day left, time right) */
     .contact_content_blocks {
         grid-template-columns: 1fr;
-        row-gap: 12px;
+        row-gap: 0;
         margin-bottom: 20px;
+        background-color: #EDEFF3;
+        border-radius: 12px;
+        padding: 0 16px;
     }
 
     .content_hours_block {
-        padding: 12px 16px;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 0;
+        background-color: transparent;
+        border-radius: 0;
+    }
+
+    .content_hours_block + .content_hours_block {
+        border-top: 1px solid #D3D9E5;
     }
 
     .content_hours_block p {
         font-size: 16px;
         line-height: 24px;
-        margin-bottom: 4px;
+        margin-bottom: 0;
+    }
+
+    .content_hours_block span {
+        font-size: 14px;
+        line-height: 24px;
+        text-align: right;
     }
 
     .contact-form-wrapper {
