@@ -77,20 +77,8 @@
             </div>
         </div>
         <div class="address-section">
-        {%- comment -%} Map and directions point to the public showroom (section setting), not the operations address. {%- endcomment -%}
-        <div>
-        <div class="map-scroll-outer">
-          <div class="map-scroll-inner">
-                <iframe title="Map: Public Showroom, {{ section.settings.map_address | escape }}" id="contact-us-map" width="598" height="410" style="border:0" loading="lazy" allowfullscreen
-                                src="https://www.google.com/maps/embed/v1/place?q={{ section.settings.map_address | url_encode }}&key=AIzaSyCxpuu9NKFdMHYGp8eCw19CYciM4JUoYaU"></iframe>
-          </div>
-        </div>
-        <a href="https://www.google.com/maps/dir/?api=1&destination={{ section.settings.map_address | url_encode }}" class="address_info_link contact-map-directions" target="_blank" rel="noopener">
-            Get Directions to Our Public Showroom
-            {% render 'icon-link-arrow' %}
-        </a>
-        </div>
-            <div>
+            {%- comment -%} Location text first in the DOM so mobile focus order matches the stacked layout; desktop puts the map left via CSS. {%- endcomment -%}
+            <div class="contact-location-text">
                 <h2 class="address_title">Location</h2>
                 {% for block in section.blocks %}
                     {% case block.type %}
@@ -131,6 +119,19 @@
                     {% endcase %}
                 {% endfor %}
             </div>
+        {%- comment -%} Map and directions point to the public showroom (section setting), not the operations address. {%- endcomment -%}
+        <div class="contact-location-map">
+        <div class="map-scroll-outer">
+          <div class="map-scroll-inner">
+                <iframe title="Map: Public Showroom, {{ section.settings.map_address | escape }}" id="contact-us-map" width="598" height="410" style="border:0" loading="lazy" allowfullscreen
+                                src="https://www.google.com/maps/embed/v1/place?q={{ section.settings.map_address | url_encode }}&key=AIzaSyCxpuu9NKFdMHYGp8eCw19CYciM4JUoYaU"></iframe>
+          </div>
+        </div>
+        <a href="https://www.google.com/maps/dir/?api=1&destination={{ section.settings.map_address | url_encode }}" class="address_info_link contact-map-directions" target="_blank" rel="noopener">
+            Get Directions to Our Public Showroom
+            {% render 'icon-link-arrow' %}
+        </a>
+        </div>
         </div>
     </div>
 </div>
