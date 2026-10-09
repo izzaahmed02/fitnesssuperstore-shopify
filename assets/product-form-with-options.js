@@ -71,6 +71,7 @@ if (!customElements.get('product-form-with-options')) {
           if (!response.ok) throw new Error('Failed to add to cart');
           if (!this.cart) window.location = window.routes.cart_url;
           const result = await response.json();
+          if (!result.status && typeof window.fssConvertTrack === 'function') window.fssConvertTrack('addToCart');
           !response.ok ? this.handleCartError(result) : this.handleCartSuccess(result);
         } catch (error) {
           console.error(error);
