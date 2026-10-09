@@ -1,0 +1,187 @@
+name: PSI945 isolated live verification
+on:
+  push:
+    branches: ['qa/945-live-verification-2026-10-09']
+    paths: ['.github/workflows/psi945-live-qa.yml']
+permissions:
+  contents: read
+jobs:
+  live-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Record current MAIN before tests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "MAIN_SHA_BEFORE=$(gh api repos/izzaahmed02/fitnesssuperstore-shopify/git/ref/heads/main --jq .object.sha)" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/fss-psi-qa/reports"
+          echo "CHROME_PATH=$(command -v google-chrome || command -v chromium)" >> "$GITHUB_ENV"
+      - name: Install audit tools without package scripts
+        working-directory: ${{ runner.temp }}/fss-psi-qa
+        run: |
+          npm init -y
+          npm install --ignore-scripts --save-exact lighthouse playwright axe-core
+          cp package-lock.json reports/audit-package-lock.json
+          npm ls --depth=0 > reports/audit-tool-versions.txt
+      - name: Run read-only browser QA and production baseline
+        working-directory: ${{ runner.temp }}/fss-psi-qa
+        run: |
+          cat > live-qa.mjs <<'JS'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import {spawnSync} from 'node:child_process';
+          import {createRequire} from 'node:module';
+          import {chromium} from 'playwright';
+          const require = createRequire(import.meta.url);
+          const out = path.resolve('reports');
+          fs.mkdirSync(out, {recursive:true});
+          const host = 'https://www.fitnesssuperstore.com';
+          const previewId = '189052682556';
+          const mainId = '186120208700';
+          const codeHead = '042bc87888afa3032d08260e5dc7c5223da4d5cd';
+          const fixtures = [ ['homepage',host+'/'], ['treadmills',host+'/collections/treadmills'], ['woodway',host+'/products/woodway-4front-treadmill-remanufactured'] ];
+          const chromePath = process.env.CHROME_PATH;
+          if (!chromePath) throw new Error('CHROME_PATH must name an installed Chrome executable');
+          const evidence = {startedAt:new Date().toISOString(), codeHead, mainShaBefore:process.env.MAIN_SHA_BEFORE || null, scope:'Read-only public storefront / unpublished preview; no publication, transaction or configuration changes', qa:[], baseline:[], errors:[]};
+          function save(name, data) {fs.writeFileSync(path.join(out,name),JSON.stringify(data,null,2));}
+          async function identity(page, expected) {
+            const data = await page.evaluate(() => ({url:location.href,title:document.title,theme:window.Shopify?.theme || null,h1:document.querySelector('h1')?.textContent?.trim() || null}));
+            data.expectedThemeId=expected;
+            data.themeMatches=String(data.theme?.id)===expected;
+            return data;
+          }
+          async function scan(page,name) {
+            await page.addScriptTag({path:require.resolve('axe-core/axe.min.js')});
+            const data=await page.evaluate(async()=>await axe.run(document,{runOnly:{type:'rule',values:['aria-allowed-role','color-contrast','heading-order','label-content-name-mismatch','link-name']}}));
+            save(name+'.axe.json',data);
+            return {violations:data.violations.map(v=>({id:v.id,count:v.nodes.length,targets:v.nodes.map(n=>n.target)})),incomplete:data.incomplete.map(v=>({id:v.id,count:v.nodes.length}))};
+          }
+          async function carouselState(page) {
+            return page.evaluate(()=>{
+              const root=document.querySelector('.homepage-browse-brand .category-tab-content');
+              if(!root?.slick) throw new Error('Expected live Slick instance missing');
+              const slides=[...root.querySelectorAll('.slick-slide:not(.slick-cloned)')];
+              const life=[...root.querySelectorAll('a[href]')].filter(a=>new URL(a.href).pathname==='/collections/life-fitness');
+              return {slidesToShow:root.slick.options.slidesToShow,slideCount:root.slick.slideCount,accessibility:root.slick.options.accessibility,
+                invalidAnchors:root.querySelectorAll('a[role="tabpanel"]').length,wrapperCount:root.querySelectorAll('.homepage-brand-slide').length,
+                slides:slides.map(s=>({tag:s.tagName,role:s.getAttribute('role'),active:s.classList.contains('slick-active')})),
+                lifeLinks:life.map(a=>({html:a.outerHTML,role:a.getAttribute('role'),tabindex:a.getAttribute('tabindex'),href:a.href})),
+                logos:[...root.querySelectorAll('.slick-active .brand-logo')].map(x=>({src:x.currentSrc,width:x.getBoundingClientRect().width,height:x.getBoundingClientRect().height,intrinsic:[x.getAttribute('width'),x.getAttribute('height')]}))};
+            });
+          }
+          async function checkPage(browser,lane,width) {
+            const context=await browser.newContext({viewport:{width,height:900}});
+            const page=await context.newPage();
+            const errors=[];
+            page.on('requestfailed',r=>errors.push({url:r.url(),error:r.failure()?.errorText}));
+            const url=host+'/' +(lane==='preview'?'?preview_theme_id='+previewId:'');
+            const item={lane,width,url,startedAt:new Date().toISOString()};
+            try {
+              const response=await page.goto(url,{waitUntil:'load',timeout:90000});
+              item.httpStatus=response?.status();
+              await page.waitForFunction(()=>Boolean(document.querySelector('.homepage-browse-brand .category-tab-content')?.slick),undefined,{timeout:30000});
+              await page.waitForTimeout(1500);
+              item.identity=await identity(page,lane==='preview'?previewId:mainId);
+              if(!item.identity.themeMatches) throw new Error('Wrong served theme; QA invalid');
+              item.initial=await carouselState(page);
+              item.audit=await scan(page,lane+'-'+width);
+              await page.locator('.homepage-browse-brand').screenshot({path:path.join(out,lane+'-'+width+'-brands.png')});
+              item.ctas=await page.locator('a[href]').evaluateAll(as=>as.filter(a=>['/pages/about-us','/pages/shipping-information','/pages/reviews'].includes(new URL(a.href).pathname)).map(a=>({text:a.innerText.trim(),label:a.getAttribute('aria-label'),href:a.href})));
+              item.header=await page.locator('a[href^="tel:"]').evaluateAll(as=>as.map(a=>({text:a.innerText.trim(),label:a.getAttribute('aria-label'),href:a.getAttribute('href')})));
+              if(lane==='preview') {
+                item.cycles=[];
+                for (const w of [1440,1299,1023,988,390,1440]) {
+                  await page.setViewportSize({width:w,height:900});
+                  await page.waitForTimeout(1200);
+                  const state=await carouselState(page);
+                  item.cycles.push({width:w,state});
+                }
+                await page.evaluate(()=>{const el=document.querySelector('.homepage-browse-brand .category-tab-content'); const settings={...el.slick.originalSettings}; window.jQuery(el).slick('unslick'); window.jQuery(el).slick(settings);});
+                await page.waitForTimeout(1200);
+                item.reinitialized=await carouselState(page);
+                item.reinitAudit=await scan(page,lane+'-'+width+'-reinit');
+                const controls=page.locator('.homepage-browse-brand .slick-next');
+                const before=await page.evaluate(()=>document.querySelector('.homepage-browse-brand .category-tab-content').slick.currentSlide);
+                await controls.first().focus();
+                await page.keyboard.press('Enter');
+                await page.waitForTimeout(800);
+                const after=await page.evaluate(()=>document.querySelector('.homepage-browse-brand .category-tab-content').slick.currentSlide);
+                item.keyboardControl={before,after,changed:before!==after};
+                const visibleLink=page.locator('.homepage-browse-brand .slick-active a[href]').first();
+                await visibleLink.focus();
+                item.linkFocus=await visibleLink.evaluate(a=>({focused:document.activeElement===a,href:a.href,outlineStyle:getComputedStyle(a).outlineStyle,outlineWidth:getComputedStyle(a).outlineWidth,boxShadow:getComputedStyle(a).boxShadow}));
+                await page.locator('.homepage-browse-brand').screenshot({path:path.join(out,lane+'-'+width+'-focus.png')});
+                const target=new URL(item.linkFocus.href);
+                if(target.origin!==host || !target.pathname.startsWith('/collections/')) throw new Error('Unexpected link destination; navigation test stopped');
+                await Promise.all([page.waitForURL(u=>u.pathname===target.pathname,{timeout:30000}),page.keyboard.press('Enter')]);
+                item.linkKeyboardNavigation={expectedPath:target.pathname,finalUrl:page.url(),pass:new URL(page.url()).pathname===target.pathname};
+                item.roleChecksPass=item.initial.invalidAnchors===0 && item.initial.wrapperCount>0 && item.cycles.every(x=>x.state.invalidAnchors===0 && x.state.accessibility===true) && item.reinitialized.invalidAnchors===0;
+              }
+            } catch(error) {item.error=String(error);}
+            item.failedRequests=errors;
+            evidence.qa.push(item);save('qa.json',evidence.qa);
+            await context.close();
+          }
+          async function preflight(browser,url) {
+            const context=await browser.newContext();const page=await context.newPage();
+            try {const r=await page.goto(url,{waitUntil:'domcontentloaded',timeout:60000});const id=await identity(page,mainId);return {...id,status:r?.status()};}
+            finally {await context.close();}
+          }
+          function suspicious(lhr) {
+            return lhr.runtimeError || lhr.categories?.performance?.score<0.9 || lhr.audits?.['largest-contentful-paint']?.numericValue>2500 || lhr.audits?.['cumulative-layout-shift']?.numericValue>0.1 || lhr.audits?.['total-blocking-time']?.numericValue>200;
+          }
+          const browser=await chromium.launch({executablePath:chromePath,headless:true,args:['--no-sandbox']});
+          evidence.browserVersion=browser.version();
+          try {
+            for(const lane of ['production','preview']) for(const width of [1440,390]) await checkPage(browser,lane,width);
+            for(const [name,url] of fixtures) {
+              let pre;
+              try {pre=await preflight(browser,url);if(pre.status!==200 || !pre.themeMatches || new URL(pre.url).pathname!==new URL(url).pathname) throw new Error('Fixture preflight failed: '+JSON.stringify(pre));}
+              catch(error) {evidence.errors.push({name,url,stage:'baseline-preflight',error:String(error)});continue;}
+              for(const device of ['desktop','mobile']) {
+                for(let run=1;run<=2;run++) {
+                  const stem=name+'-'+device+'-'+run;
+                  const args=[require.resolve('lighthouse/cli/index.js'),url,'--quiet','--chrome-flags=--headless --no-sandbox','--output=json','--output=html','--output-path='+path.join(out,stem),'--save-assets','--only-categories=performance,accessibility,seo,best-practices'];
+                  if(device==='desktop')args.push('--preset=desktop');
+                  const cp=spawnSync(process.execPath,args,{encoding:'utf8',timeout:240000,env:process.env,maxBuffer:20*1024*1024});
+                  fs.writeFileSync(path.join(out,stem+'.stderr.txt'),cp.stderr||String(cp.error||''));
+                  try {
+                    const lhr=JSON.parse(fs.readFileSync(path.join(out,stem+'.report.json'),'utf8'));
+                    const row={name,device,run,requestedUrl:url,finalUrl:lhr.finalDisplayedUrl||lhr.finalUrl,fetchTime:lhr.fetchTime,lighthouseVersion:lhr.lighthouseVersion,
+                      settings:lhr.configSettings,preflight:pre,scores:Object.fromEntries(Object.entries(lhr.categories||{}).map(([k,v])=>[k,v.score===null?null:v.score*100])),
+                      metrics:Object.fromEntries(['largest-contentful-paint','cumulative-layout-shift','total-blocking-time','first-contentful-paint','speed-index'].map(k=>[k,lhr.audits?.[k]?.numericValue??null])),runtimeError:lhr.runtimeError||null,runWarnings:lhr.runWarnings||[],report:stem+'.report.json'};
+                    evidence.baseline.push(row);save('baseline-summary.json',evidence.baseline);
+                    console.log('BASELINE_ROW '+JSON.stringify(row));
+                    if(run===1 && !suspicious(lhr))break;
+                  } catch(error) {evidence.errors.push({name,device,run,error:String(error),processStatus:cp.status});}
+                }
+              }
+            }
+          } finally {await browser.close();evidence.finishedAt=new Date().toISOString();save('evidence.json',evidence);}
+          const compact={head:codeHead,qa:evidence.qa.map(x=>({lane:x.lane,width:x.width,httpStatus:x.httpStatus,themeMatches:x.identity?.themeMatches,roleChecksPass:x.roleChecksPass,invalidAnchors:x.initial?.invalidAnchors,keyboardControl:x.keyboardControl,linkNavigation:x.linkKeyboardNavigation,error:x.error,audit:x.audit})),baseline:evidence.baseline.map(x=>({name:x.name,device:x.device,run:x.run,scores:x.scores,metrics:x.metrics,version:x.lighthouseVersion,fetchTime:x.fetchTime,runtimeError:x.runtimeError})),errors:evidence.errors};
+          save('compact-summary.json',compact);
+          console.log('QA_SUMMARY '+JSON.stringify(compact));
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY||path.join(out,'job-summary.md'),'## PSI #945 read-only verification\n\n```json\n'+JSON.stringify(compact,null,2)+'\n```\n');
+          if(evidence.qa.some(x=>x.error || (x.lane==='preview' && !x.roleChecksPass)) || evidence.errors.length || evidence.baseline.length<6)process.exitCode=1;
+          JS
+          node live-qa.mjs
+      - name: Verify MAIN remained unchanged
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          AFTER=$(gh api repos/izzaahmed02/fitnesssuperstore-shopify/git/ref/heads/main --jq .object.sha)
+          printf 'MAIN before: %s\nMAIN after: %s\n' "$MAIN_SHA_BEFORE" "$AFTER" | tee "$RUNNER_TEMP/fss-psi-qa/reports/main-ref-guard.txt"
+          test "$MAIN_SHA_BEFORE" = "$AFTER"
+      - name: Retain raw reports and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: psi945-live-042bc878
+          path: ${{ runner.temp }}/fss-psi-qa/reports/
+          retention-days: 14
+          if-no-files-found: error
