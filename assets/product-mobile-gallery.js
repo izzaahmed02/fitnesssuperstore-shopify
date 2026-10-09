@@ -1,5 +1,7 @@
 if (!customElements.get('mobile-gallery')) {
 const POPUP_THUMBS_VISIBLE = 4;
+const CHAT_BUBBLE_SELECTOR = '#gorgias-chat-container iframe#chat-button';
+const CHAT_BUBBLE_HIT_SIZE = 72;
 
 class MobileGallery extends HTMLElement {
   constructor() {
@@ -138,6 +140,12 @@ observePopup() {
     if (this.observer) {
       this.observer.disconnect();
     }
+    if (this.chatOverlapBound) {
+      window.removeEventListener('scroll', this.chatOverlapBound);
+      window.removeEventListener('resize', this.chatOverlapBound);
+      this.chatOverlapBound = null;
+      document.body.classList.remove('mobile-gallery-chat-overlap');
+    }
     this.hammerInstances.forEach((h) => h.destroy());
     this.hammerInstances = [];
     if (this.popupSlider && $(this.popupSlider).hasClass('slick-initialized')) {
@@ -173,8 +181,8 @@ observePopup() {
     if (shouldInit && !this.slickInitialized) {
       this.renderSlides(this.slider);
       $(this.slider).slick({
-        dots: true,
-        appendDots: this.dots,
+        // A thumbnail strip + "x of y" counter replaces slick's dots (see renderThumbStrip).
+        dots: false,
         arrows: true,
         infinite: false,
         adaptiveHeight: false,
@@ -186,9 +194,129 @@ observePopup() {
         waitForAnimate: false,
       });
       this.slickInitialized = true;
+      this.renderThumbStrip();
+      $(this.slider)
+        .off('afterChange.mobileGalleryStrip')
+        .on('afterChange.mobileGalleryStrip', (event, slick, currentSlide) => this.updateThumbStrip(currentSlide));
     } else if (!shouldInit && this.slickInitialized) {
+      $(this.slider).off('afterChange.mobileGalleryStrip');
       $(this.slider).slick('unslick');
       this.slickInitialized = false;
+      this.dots.innerHTML = '';
+      this.querySelector('.mobile-gallery-counter')?.remove();
+    }
+  }
+
+  // Thumbnail strip + "x of y" counter under the inline slider. Built from the slides that
+  // were actually rendered (renderSlides skips unrenderable media), so the count is real.
+  renderThumbStrip() {
+    const slides = this.slider.querySelectorAll('.mobile-gallery-slide-wrap');
+    this.dots.innerHTML = '';
+    this.querySelector('.mobile-gallery-counter')?.remove();
+    if (slides.length < 2) return; // one image: nothing to navigate
+
+    const strip = document.createElement('div');
+    strip.className = 'mobile-gallery-thumbs';
+    strip.setAttribute('aria-label', 'Product media');
+
+    slides.forEach((slide, index) => {
+      const mediaId = slide.querySelector('[data-media-id]')?.dataset.mediaId;
+      const media = this.mediaData.find((item) => String(item.id) === String(mediaId));
+      const isVideo = media && (media.media_type === 'video' || media.media_type === 'external_video');
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'mobile-gallery-thumb';
+      btn.dataset.slideIndex = index;
+      btn.setAttribute('aria-label', `${isVideo ? 'Video' : 'Image'} ${index + 1} of ${slides.length}`);
+      if (isVideo) btn.classList.add('is-video');
+
+      const src = media?.preview_image?.src;
+      if (src) {
+        const img = document.createElement('img');
+        img.src = /width=\d+/.test(src) ? src.replace(/width=\d+/, 'width=150') : `${src}${src.includes('?') ? '&' : '?'}width=150`;
+        img.alt = '';
+        img.width = 64;
+        img.height = 64;
+        img.loading = 'lazy';
+        btn.appendChild(img);
+      }
+      if (isVideo) {
+        const badge = document.createElement('span');
+        badge.className = 'mobile-gallery-thumb__play';
+        badge.setAttribute('aria-hidden', 'true');
+        btn.appendChild(badge);
+      }
+
+      btn.addEventListener('click', () => $(this.slider).slick('slickGoTo', index));
+      strip.appendChild(btn);
+    });
+    this.dots.appendChild(strip);
+
+    const counter = document.createElement('div');
+    counter.className = 'mobile-gallery-counter';
+    counter.setAttribute('aria-live', 'polite');
+    this.slider.parentElement.appendChild(counter);
+
+    this.updateThumbStrip($(this.slider).slick('slickCurrentSlide') || 0);
+    this.watchChatOverlap();
+  }
+
+  // The fixed chat bubble (Gorgias) sits bottom-right and covered thumbnails/arrows as the page
+  // scrolled. Fade it out only while it actually overlaps a gallery control.
+  watchChatOverlap() {
+    if (this.chatOverlapBound) return;
+    let frame = null;
+    const check = () => {
+      frame = null;
+      const bubble = document.querySelector(CHAT_BUBBLE_SELECTOR);
+      const overlapping = !!bubble && !this.closest('[hidden]') && this.isCoveringControls(bubble.getBoundingClientRect());
+      document.body.classList.toggle('mobile-gallery-chat-overlap', overlapping);
+    };
+    this.chatOverlapBound = () => {
+      if (!frame) frame = requestAnimationFrame(check);
+    };
+    window.addEventListener('scroll', this.chatOverlapBound, { passive: true });
+    window.addEventListener('resize', this.chatOverlapBound, { passive: true });
+    check();
+  }
+
+  isCoveringControls(frameRect) {
+    if (!frameRect.width || !frameRect.height) return false;
+    // The chat iframe (~300x150) is mostly transparent; the visible round button sits in its
+    // bottom-right corner, so only test that corner.
+    const size = Math.min(CHAT_BUBBLE_HIT_SIZE, frameRect.width, frameRect.height);
+    const bubbleRect = { left: frameRect.right - size, right: frameRect.right, top: frameRect.bottom - size, bottom: frameRect.bottom };
+    const controls = this.querySelectorAll('.mobile-gallery-thumbs, .slick-arrow, .mobile-gallery-counter');
+    return [...controls].some((el) => {
+      const r = el.getBoundingClientRect();
+      return r.width && r.left < bubbleRect.right && r.right > bubbleRect.left && r.top < bubbleRect.bottom && r.bottom > bubbleRect.top;
+    });
+  }
+
+  updateThumbStrip(currentSlide) {
+    const strip = this.dots.querySelector('.mobile-gallery-thumbs');
+    if (!strip) return;
+    const thumbs = strip.querySelectorAll('.mobile-gallery-thumb');
+    let active = null;
+    thumbs.forEach((thumb) => {
+      const isActive = Number(thumb.dataset.slideIndex) === currentSlide;
+      thumb.classList.toggle('is-active', isActive);
+      if (isActive) {
+        thumb.setAttribute('aria-current', 'true');
+        active = thumb;
+      } else {
+        thumb.removeAttribute('aria-current');
+      }
+    });
+
+    const counter = this.querySelector('.mobile-gallery-counter');
+    if (counter) counter.textContent = `${currentSlide + 1} of ${thumbs.length}`;
+
+    // Scroll the strip itself (not the page) so the selected thumbnail stays centred in view.
+    if (active) {
+      const left = active.offsetLeft - (strip.clientWidth - active.offsetWidth) / 2;
+      strip.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
     }
   }
 
