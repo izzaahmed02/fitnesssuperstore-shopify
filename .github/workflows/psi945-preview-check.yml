@@ -18,7 +18,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/fss-psi-preview/reports"
           cd "$RUNNER_TEMP/fss-psi-preview"
           npm init -y
-          npm install --ignore-scripts --save-exact lighthouse playwright chrome-launcher
+          npm install --ignore-scripts --save-exact lighthouse@13.5.0 playwright@1.64.0 chrome-launcher axe-core@4.14.0
           cp package-lock.json reports/audit-package-lock.json
           echo "CHROME_PATH=$(command -v google-chrome || command -v chromium)" >> "$GITHUB_ENV"
       - name: Verify eight source files, shared header and preview audits
@@ -28,11 +28,13 @@ jobs:
           import fs from 'node:fs';
           import path from 'node:path';
           import crypto from 'node:crypto';
+          import {createRequire} from 'node:module';
+          const require=createRequire(import.meta.url);
           import {chromium} from 'playwright';
           import lighthouse from 'lighthouse';
           import * as chromeLauncher from 'chrome-launcher';
           import desktopConfig from 'lighthouse/core/config/desktop-config.js';
-          const head='042bc87888afa3032d08260e5dc7c5223da4d5cd';
+          const head='c1f8417da28572b9b5200b9a62bf6e4098642ee4';
           const id='189052682556';
           const base='https://www.fitnesssuperstore.com';
           const out=path.resolve('reports');fs.mkdirSync(out,{recursive:true});
@@ -42,7 +44,7 @@ jobs:
            'sections/header.liquid':['629439cb89e65970a40a9f5b1058e4e8',60678],
            'sections/homepage-browse-by-brand.liquid':['8e961a50ce068a3ca9c17bb9fb8e5943',2757],
            'sections/homepage-homepage-offers.liquid':['796cbe4d735798823d7f84653f77a305',2418],
-           'sections/homepage-homepage-reviews.liquid':['76d770eeeb801ec80e6f2b8b9399a59f',11902],
+           'sections/homepage-homepage-reviews.liquid':['f8696d650246056cbd6a30406f3627d9',11872],
            'sections/homepage-popular-fitness.liquid':['56fc793a0b8ad2e2345a9bbbf0b5677c',15602],
            'templates/index.json':['2d1661b5e66814a2963cc451ffdc30e5',32808]
           };
@@ -52,11 +54,71 @@ jobs:
            try{const r=await fetch('https://raw.githubusercontent.com/izzaahmed02/fitnesssuperstore-shopify/'+head+'/'+file);if(!r.ok)throw new Error('HTTP '+r.status);const b=Buffer.from(await r.arrayBuffer());const actual=crypto.createHash('md5').update(b).digest('hex');data.source.push({file,expectedMd5:md5,actualMd5:actual,expectedSize:size,actualSize:b.length,pass:actual===md5&&size===b.length});}
            catch(error){data.errors.push({file,stage:'source',error:String(error)});}
           }
+          async function runtimeQA(browser) {
+            data.runtime=[];
+            for(const width of [1440,390]) {
+              const context=await browser.newContext({viewport:{width,height:900}});
+              const page=await context.newPage();
+              const row={width,cycles:[],reviews:[]};
+              try {
+                const response=await page.goto(base+'/?preview_theme_id='+id,{waitUntil:'load',timeout:90000});
+                row.status=response?.status();
+                row.theme=await page.evaluate(()=>window.Shopify?.theme);
+                if(String(row.theme?.id)!==id || row.status!==200)throw new Error('Wrong preview response');
+                await page.waitForFunction(()=>Boolean(document.querySelector('.homepage-browse-brand .category-tab-content')?.slick),undefined,{timeout:30000});
+                await page.addScriptTag({path:require.resolve('axe-core/axe.min.js')});
+                async function state(label) {
+                  const s=await page.evaluate(()=>{
+                    const el=document.querySelector('.homepage-browse-brand .category-tab-content');
+                    const slides=[...el.querySelectorAll('.slick-slide:not(.slick-cloned)')];
+                    return {width:innerWidth,invalidAnchors:el.querySelectorAll('a[role="tabpanel"]').length,accessibility:el.slick.options.accessibility,slidesToShow:el.slick.options.slidesToShow,slideCount:el.slick.slideCount,wrapperCount:el.querySelectorAll('.homepage-brand-slide').length,lifeLinks:[...el.querySelectorAll('a[href*="/collections/life-fitness"]')].map(a=>a.outerHTML),slides:slides.map(x=>({tag:x.tagName,role:x.getAttribute('role')}))};
+                  });
+                  row.cycles.push({label,...s});
+                }
+                await state('initial');
+                for(const w of [1440,1299,1023,988,390,1440]) {await page.setViewportSize({width:w,height:900});await page.waitForTimeout(700);await state('resize');}
+                await page.evaluate(()=>{const el=document.querySelector('.homepage-browse-brand .category-tab-content');const opts={...el.slick.originalSettings};jQuery(el).slick('unslick');jQuery(el).slick(opts);});
+                await page.waitForTimeout(700);await state('reinitialized');
+                const before=await page.evaluate(()=>document.querySelector('.homepage-browse-brand .category-tab-content').slick.currentSlide);
+                await page.locator('.homepage-browse-brand .slick-next').first().focus();await page.keyboard.press('Enter');await page.waitForTimeout(700);
+                const after=await page.evaluate(()=>document.querySelector('.homepage-browse-brand .category-tab-content').slick.currentSlide);
+                row.keyboardNext={before,after,pass:before!==after};
+                await page.setViewportSize({width,height:900});await page.waitForTimeout(700);
+                await page.locator('.homepage-browse-brand').screenshot({path:path.join(out,'final-brands-'+width+'.png')});
+                const link=page.locator('.homepage-browse-brand .slick-active a[href]').first();await link.focus();
+                row.focus=await link.evaluate(a=>({focused:document.activeElement===a,href:a.href,outline:getComputedStyle(a).outlineStyle,outlineWidth:getComputedStyle(a).outlineWidth,boxShadow:getComputedStyle(a).boxShadow}));
+                await page.locator('.homepage-browse-brand').screenshot({path:path.join(out,'final-focus-'+width+'.png')});
+                const buttons=page.locator('.homepage-reviews__item-copy-btn.active:visible');
+                const count=await buttons.count();if(!count)throw new Error('Expected visible review disclosure not found');
+                for(let i=0;i<Math.min(count,2);i++) {
+                  const button=buttons.nth(i);
+                  await button.focus();
+                  const capture=async()=>({text:(await button.innerText()).trim(),label:await button.getAttribute('aria-label'),snapshot:await button.ariaSnapshot(),collapsed:await button.evaluate(a=>a.previousElementSibling.classList.contains('hide'))});
+                  const initial=await capture();await page.keyboard.press('Enter');await page.waitForTimeout(100);const expanded=await capture();
+                  const a1=await page.evaluate(async()=>await axe.run('.homepage-reviews',{runOnly:{type:'rule',values:['label-content-name-mismatch']}}));
+                  await page.keyboard.press('Enter');await page.waitForTimeout(100);const collapsed=await capture();
+                  const a2=await page.evaluate(async()=>await axe.run('.homepage-reviews',{runOnly:{type:'rule',values:['label-content-name-mismatch']}}));
+                  row.reviews.push({initial,expanded,collapsed,expandedViolations:a1.violations.length,collapsedViolations:a2.violations.length,pass:initial.text==='Read More'&&expanded.text==='Read Less'&&collapsed.text==='Read More'&&!expanded.collapsed&&collapsed.collapsed&&a1.violations.length===0&&a2.violations.length===0});
+                }
+                await page.locator('.homepage-reviews').screenshot({path:path.join(out,'final-reviews-'+width+'.png')});
+                const audit=await page.evaluate(async()=>await axe.run(document,{runOnly:{type:'rule',values:['aria-allowed-role','label-content-name-mismatch','heading-order','color-contrast']}}));
+                save('final-axe-'+width+'.json',audit);row.violations=audit.violations.map(v=>({id:v.id,count:v.nodes.length,targets:v.nodes.map(n=>n.target)}));
+                row.ctas=await page.locator('a[href]').evaluateAll(as=>as.filter(a=>['/pages/about-us','/pages/shipping-information','/pages/reviews'].includes(new URL(a.href).pathname)).map(a=>({text:a.innerText.trim(),label:a.getAttribute('aria-label'),href:a.href})));
+                row.geometry=await page.evaluate(()=>({logos:[...document.querySelectorAll('.homepage-browse-brand .slick-active .brand-logo')].map(a=>({src:a.currentSrc,rect:{w:a.getBoundingClientRect().width,h:a.getBoundingClientRect().height},attrs:[a.getAttribute('width'),a.getAttribute('height')]})),reviews:[...document.querySelectorAll('.homepage-reviews__item-title,.homepage-reviews__item-product-title')].map(a=>({tag:a.tagName,font:getComputedStyle(a).font,lineHeight:getComputedStyle(a).lineHeight,margin:getComputedStyle(a).margin}))}));
+                const destination=new URL(row.focus.href);if(destination.origin!==base||!destination.pathname.startsWith('/collections/'))throw new Error('Unexpected brand destination');
+                await link.focus();await Promise.all([page.waitForURL(u=>u.pathname===destination.pathname,{timeout:30000}),page.keyboard.press('Enter')]);
+                row.linkNavigation={expected:destination.pathname,url:page.url(),pass:new URL(page.url()).pathname===destination.pathname};
+                row.pass=row.cycles.every(s=>s.invalidAnchors===0&&s.accessibility===true&&s.wrapperCount>0)&&row.keyboardNext.pass&&row.focus.focused&&row.reviews.every(r=>r.pass)&&row.violations.length===0&&row.linkNavigation.pass;
+              } catch(error) {row.error=String(error);row.pass=false;}
+              finally {data.runtime.push(row);save('runtime.json',data.runtime);await context.close();}
+            }
+          }
           const browser=await chromium.launch({executablePath:process.env.CHROME_PATH,headless:true,args:['--no-sandbox']});
           try{
-           for(const route of ['/collections/treadmills','/products/woodway-4front-treadmill-remanufactured'])for(const width of [1440,390]){
+           await runtimeQA(browser);
+           for(const route of ['/collections/treadmills','/products/woodway-4front-treadmill-remanufactured','/products/body-solid-bsld-apu-aluminum-pulley-upgrade'])for(const width of [1440,390]){
             const context=await browser.newContext({viewport:{width,height:900}});const page=await context.newPage();const row={route,width};
-            try{const r=await page.goto(base+route+'?preview_theme_id='+id,{waitUntil:'load',timeout:90000});row.status=r?.status();row.finalUrl=page.url();row.theme=await page.evaluate(()=>window.Shopify?.theme||null);row.phoneLinks=await page.locator('a[href^="tel:"]').evaluateAll(as=>as.map(a=>({text:a.innerText.trim(),label:a.getAttribute('aria-label'),href:a.getAttribute('href'),visible:a.getBoundingClientRect().width>0&&a.getBoundingClientRect().height>0})));row.pass=String(row.theme?.id)===id&&row.status===200&&new URL(row.finalUrl).pathname===route&&row.phoneLinks.some(a=>a.visible&&a.href==='tel:+1-925-215-2927');await page.screenshot({path:path.join(out,'header-'+(route.startsWith('/collections')?'collection':'pdp')+'-'+width+'.png')});}
+            try{const r=await page.goto(base+route+'?preview_theme_id='+id,{waitUntil:'load',timeout:90000});row.status=r?.status();row.finalUrl=page.url();row.theme=await page.evaluate(()=>window.Shopify?.theme||null);row.phoneLinks=await page.locator('a[href^="tel:"]').evaluateAll(as=>as.map(a=>({text:a.innerText.trim(),label:a.getAttribute('aria-label'),href:a.getAttribute('href'),visible:a.getBoundingClientRect().width>0&&a.getBoundingClientRect().height>0})));row.pass=String(row.theme?.id)===id&&row.status===200&&new URL(row.finalUrl).pathname===route&&row.phoneLinks.some(a=>a.visible&&a.href==='tel:+1-925-215-2927');await page.screenshot({path:path.join(out,'header-'+(route.startsWith('/collections')?'collection':route.includes('woodway')?'woodway':'apu')+'-'+width+'.png')});}
             catch(error){row.error=String(error);row.pass=false;}
             data.headers.push(row);await context.close();
            }
@@ -71,21 +133,21 @@ jobs:
             if(result.artifacts.Trace)save(device+'.trace.json',result.artifacts.Trace);
             if(result.artifacts.DevtoolsLog)save(device+'.devtoolslog.json',result.artifacts.DevtoolsLog);
             let theme=null;const match=/Shopify\.theme\s*=\s*(\{[^;]+\})\s*;/.exec(html);if(match){try{theme=JSON.parse(match[1]);}catch{}}
-            const row={device,fetchTime:lhr.fetchTime,lighthouseVersion:lhr.lighthouseVersion,settings:lhr.configSettings,requestedUrl:lhr.requestedUrl,finalUrl:lhr.finalDisplayedUrl,servedTheme:theme,themeMatches:String(theme?.id)===id,scores:Object.fromEntries(Object.entries(lhr.categories).map(([k,v])=>[k,v.score===null?null:v.score*100])),runtimeError:lhr.runtimeError||null,warnings:lhr.runWarnings||[],targetAudits:Object.fromEntries(Object.entries(lhr.audits).filter(([k,v])=>/aria|accessib|heading|contrast|link-text|unsized|agentic|tree/.test(k)).map(([k,v])=>[k,{title:v.title,score:v.score,scoreDisplayMode:v.scoreDisplayMode,details:v.details}]))};data.lighthouse.push(row);
+            const row={device,fetchTime:lhr.fetchTime,lighthouseVersion:lhr.lighthouseVersion,settings:lhr.configSettings,requestedUrl:lhr.requestedUrl,finalUrl:lhr.finalDisplayedUrl,servedTheme:theme,themeMatches:String(theme?.id)===id,scores:Object.fromEntries(Object.entries(lhr.categories).map(([k,v])=>[k,v.score===null?null:v.score*100])),runtimeError:lhr.runtimeError||null,warnings:lhr.runWarnings||[],targetAudits:Object.fromEntries(Object.entries(lhr.audits).filter(([k,v])=>/aria|accessib|heading|contrast|link-text|unsized|agentic|tree|target-size/.test(k)).map(([k,v])=>[k,{title:v.title,score:v.score,scoreDisplayMode:v.scoreDisplayMode,details:v.details}]))};data.lighthouse.push(row);
            }catch(error){data.errors.push({device,stage:'preview-lighthouse',error:String(error)});}
            finally{await chrome.kill();}
           }
           data.finishedAt=new Date().toISOString();save('preview-evidence.json',data);
           console.log('PREVIEW_SUMMARY '+JSON.stringify(data));
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY||path.join(out,'summary.md'),'## Exact-head preview verification\n\n```json\n'+JSON.stringify(data,null,2)+'\n```\n');
-          if(data.errors.length||data.source.length!==8||data.source.some(r=>!r.pass)||data.headers.some(r=>!r.pass)||data.lighthouse.length!==2||data.lighthouse.some(r=>!r.themeMatches||r.runtimeError))process.exitCode=1;
+          if(data.errors.length||data.runtime.some(r=>!r.pass)||data.source.length!==8||data.source.some(r=>!r.pass)||data.headers.some(r=>!r.pass)||data.lighthouse.length!==2||data.lighthouse.some(r=>!r.themeMatches||r.runtimeError))process.exitCode=1;
           JS
           node preview-check.mjs
       - name: Retain raw acceptance evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: psi945-preview-acceptance-042bc878
+          name: psi945-preview-acceptance-c1f8417d
           path: ${{ runner.temp }}/fss-psi-preview/reports/
           retention-days: 14
           if-no-files-found: error
