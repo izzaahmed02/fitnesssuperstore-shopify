@@ -75,15 +75,20 @@
     }
 
     /* Sub-accordion open/close transition */
-    #accordion-subcontent-{{ forloop.index }} {
-        overflow: hidden;
-        max-height: 0;
-        transition: max-height 0.3s ease;
-    }
+   
+[id^="accordion-subcontent-"] {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease;
+}
 
-    #accordion-subcontent-{{ forloop.index }}[aria-hidden="false"] {
-        max-height: 600px;
-    }
+        
+[id^="accordion-subcontent-"][aria-hidden="false"] {
+  max-height: 600px;
+}
+
+
+  
 
     /* Border override for sub item */
     .delivery-accordion-item:has(> .sub-accordion-header[aria-expanded="true"]) {
@@ -104,9 +109,8 @@
             min-height: 180px;
             object-fit: contain;
         }
-    }
+    
 </style>
-
 <div class="section-{{ section.id }} page-width scroll-trigger animate--slide-in">
     <div class="container">
         <div class="delivery-first-acc__wrapper">
@@ -137,7 +141,7 @@
                         >
                             <div class="accordion-content-inner">
                                 {{ block.settings.subcopy }}
-                                {% if forloop.index == 2 %}
+                                {% if forloop.index == 2 and block.settings.subtitle != blank %}
                                     <div class="delivery-accordion-item">
                                         <button
                                                 class="sub-accordion-header"
@@ -157,9 +161,15 @@
                                         >
                                             <div class="accordion-content-inner">
                                                 {% if block.settings.subimage != blank %}
-                                                    <img src="{{ block.settings.subimage | image_url: width: 600, height: 300 }}"
-                                                         alt="{{ block.settings.subimage.alt | escape }}"
-                                                         class="accordion-content-image">
+                                                    
+<img
+  src="{{ block.settings.subimage | image_url: width: 600, height: 300 }}"
+  alt="{{ block.settings.subimage.alt | escape }}"
+  width="600"
+  height="300"
+  class="accordion-content-image"
+>
+
                                                 {% endif %}
                                             </div>
                                         </div>
@@ -167,9 +177,15 @@
                                 {% endif %}
                                 {{ block.settings.copy }}
                                 {% if block.settings.image != blank %}
-                                    <img src="{{ block.settings.image | image_url: width: 600, height: 250 }}"
-                                         alt="{{ block.settings.image.alt | escape }}"
-                                         class="accordion-content-image">
+                                    
+<img
+  src="{{ block.settings.image | image_url: width: 600, height: 250 }}"
+  alt="{{ block.settings.image.alt | escape }}"
+  width="600"
+  height="250"
+  class="accordion-content-image"
+>
+
                                 {% endif %}
                             </div>
                         </div>
