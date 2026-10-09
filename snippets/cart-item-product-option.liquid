@@ -197,7 +197,15 @@
         <span class="product-options__swatch product-options__swatch--single">
           {% for variant in product_option.product_option_variants.value %}
             {% comment %} {% if variant.title != 'No Thanks' %} {% endcomment %}
-              {% render 'cart-item-option-variant', variant: variant, default_values: default_values, split: ',', product_option: product_option, hide_quantity: product_option.hide_quantity, line_item: line_item, options_data: options_data %}
+              {%
+                render 'cart-item-option-variant',
+                variant: variant,
+                default_values: default_values | split: ',',
+                product_option: product_option,
+                hide_quantity: product_option.hide_quantity,
+                line_item: line_item,
+                options_data: options_data
+              %}
             {% comment %} {% endif %} {% endcomment %}
           {% endfor %}
         </span>
@@ -314,24 +322,3 @@
     {% endfor %}
   </div>
 {% endif %}
-{% comment %}
-
-This file has been rewritten to preserve the original behavior.
-
----
-Changes:
-- from: |-
-    {%
-                    render 'cart-item-option-variant',
-                    variant: variant,
-                    default_values: default_values | split: ',',
-                    product_option: product_option,
-                    hide_quantity: product_option.hide_quantity,
-                    line_item: line_item,
-                    options_data: options_data
-                  %}
-  to: "{% render 'cart-item-option-variant', variant: variant, default_values: default_values,
-    split: ',', product_option: product_option, hide_quantity: product_option.hide_quantity,
-    line_item: line_item, options_data: options_data %}"
-  position: 9575..9803
-{% endcomment %}
