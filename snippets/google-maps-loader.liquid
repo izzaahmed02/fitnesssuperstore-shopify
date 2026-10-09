@@ -1,0 +1,77 @@
+{%- comment -%}
+  Loads the Google Maps JavaScript API once per page and exposes
+  window.googleMapsReady, a promise that settles when the outcome is known.
+
+  Render this from any section that needs the API, then wait on the promise.
+  Do not assume the API is present on window load - loading is deliberately
+  deferred for Core Web Vitals, so it is normally NOT ready by then.
+
+  Resolves when google.maps is usable. Rejects on script error, on load
+  timeout, and on the case where the script loads but google.maps never
+  appears (what a rejected referrer or a disabled API looks like from here).
+  Consumers must .catch() and degrade gracefully rather than leaving an
+  empty container.
+
+  Idempotent: rendering it more than once on a page is a no-op.
+
+  SINGLE POINT OF CHANGE for the credential: the key appears once, below.
+{%- endcomment -%}
+<script>
+  window.googleMapsReady = window.googleMapsReady || new Promise(function (resolve, reject) {
+    var LOAD_TIMEOUT_MS = 10000;
+    var requested = false;
+    var settled = false;
+
+    function fail(reason) {
+      if (settled) return;
+      settled = true;
+      reject(new Error('Google Maps failed to load: ' + reason));
+    }
+
+    function succeed() {
+      if (settled) return;
+      settled = true;
+      resolve(window.google.maps);
+    }
+
+    function loadGoogleMaps() {
+      if (requested) return;
+      requested = true;
+
+      var timer = window.setTimeout(function () {
+        fail('timed out after ' + LOAD_TIMEOUT_MS + 'ms');
+      }, LOAD_TIMEOUT_MS);
+
+      var mapsScript = document.createElement('script');
+      mapsScript.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyC1KAxFSFi-ORhUWVMuZfaHGyjAF-pmVDw";
+      mapsScript.defer = true;
+
+      mapsScript.onload = function () {
+        window.clearTimeout(timer);
+        // The script can load successfully and still leave google.maps
+        // undefined - a rejected referrer or a disabled API both look like
+        // this. Treat it as a failure so consumers can fall back.
+        if (window.google && window.google.maps) {
+          succeed();
+        } else {
+          fail('script loaded but google.maps is unavailable (check referrer and API restrictions)');
+        }
+      };
+
+      mapsScript.onerror = function () {
+        window.clearTimeout(timer);
+        fail('script request was blocked or failed');
+      };
+
+      document.head.appendChild(mapsScript);
+    }
+
+    ['scroll', 'mousemove', 'touchstart', 'keydown', 'click'].forEach(function (evt) {
+      window.addEventListener(evt, loadGoogleMaps, { once: true, passive: true });
+    });
+
+    window.addEventListener('load', function () {
+      window.setTimeout(loadGoogleMaps, 1200);
+    }, { once: true });
+  });
+</script>

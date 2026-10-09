@@ -7,8 +7,9 @@
     }
   }
 </style>
+{% render 'google-maps-loader' %}
 <script>
-  window.addEventListener('load', function () {
+  window.googleMapsReady.then(function () {
     const map = new google.maps.Map(document.getElementById('map-{{ section.id }}'), {
       center: { lat: 38.0764, lng: -122.1241 },
       zoom: 15,
@@ -47,6 +48,20 @@
         infoWindow.open(map, marker);
       });
     });
+  }).catch(function (err) {
+    // Loader rejected: blocked request, timeout, rejected referrer or disabled
+    // API. Replace the empty container with the address and a working link so
+    // the page still does its job without the map.
+    console.warn('[map-{{ section.id }}]', err && err.message ? err.message : err);
+    var el = document.getElementById('map-{{ section.id }}');
+    if (!el) return;
+    el.classList.add('map--unavailable');
+    el.innerHTML =
+      '<div class="map-fallback">' +
+      '<p>The interactive map could not be loaded.</p>' +
+      '<p><a href="https://www.google.com/maps/search/?api=1&query=537+Stone+Rd+STE+F+Benicia+CA+94510"' +
+      ' target="_blank" rel="noopener">537 Stone Rd STE F, Benicia, CA 94510 - open in Google Maps</a></p>' +
+      '</div>';
   });
 </script>
 
@@ -69,6 +84,17 @@
       height: 100%;
       border-radius: 24px;
     }
+
+    #map-{{ section.id }}.map--unavailable {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f4f4f4;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    #map-{{ section.id }} .map-fallback p { margin: 0 0 0.8rem; }
 
     @media screen and (min-width: 750px) {
       .section-{{ section.id }}-padding {
