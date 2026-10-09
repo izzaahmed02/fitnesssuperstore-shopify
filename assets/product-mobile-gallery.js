@@ -1,4 +1,6 @@
 if (!customElements.get('mobile-gallery')) {
+const POPUP_THUMBS_VISIBLE = 4;
+
 class MobileGallery extends HTMLElement {
   constructor() {
     super();
@@ -12,6 +14,11 @@ class MobileGallery extends HTMLElement {
     this.mediaData = null;
     this.slickInitialized = false;
     this.observer = null;
+    // One bound reference, so removeEventListener actually matches what was added.
+    // A fresh .bind(this) per call never matched, and close handlers piled up per open.
+    this.boundClosePopup = this.closePopup.bind(this);
+    // Incremented per openPopup call; a call that resumes after a newer one started bails out.
+    this.openToken = 0;
   }
 
   connectedCallback() {
@@ -60,8 +67,8 @@ class MobileGallery extends HTMLElement {
 
     // Setup MutationObserver to detect popup removal
     this.observePopup();
-
-    this.attachSlideClickHandlers();
+    // Slide click handlers are attached by renderSlides(); attaching them here as well
+    // made a single tap run openPopup() twice.
   }
 
   updatePopupReferences() {
@@ -190,71 +197,9 @@ observePopup() {
       this.createPopup();
       if (!this.popupSlider || !this.popupThumbnails || !this.popupDots) return;
     }
-    const shouldInit = !isDesktop();
-
-    if (shouldInit && !$(this.popupSlider).hasClass('slick-initialized')) {
-      this.popupSlider.innerHTML = '';
-      this.popupThumbnails.innerHTML = '';
-      this.renderPopupSlides(this.popupSlider, this.popupThumbnails);
-
-      $(this.popupSlider).slick({
-        dots: true,
-        appendDots: this.popupDots,
-        arrows: false,
-        infinite: false,
-        adaptiveHeight: false,
-        lazyLoad: 'ondemand',
-        speed: 250,
-        cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
-        swipeToSlide: true,
-        touchThreshold: 8,
-        waitForAnimate: false,
-      });
-
-      $(this.popupThumbnails).slick({
-        slidesToShow: 4,
-
-        arrows: false,
-        swipeToSlide: true,
-        infinite: false,
-        lazyLoad: 'ondemand',
-        speed: 250,
-        cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
-        variableWidth: false,
-        centerMode: false,
-      });
-
-
-
-      $(this.popupSlider).on('afterChange', (event, slick, currentSlide) => {
-        this.pauseAllMedia(this.popup);
-        const currentSlideEl = slick.$slides[currentSlide];
-        const iframe = currentSlideEl?.querySelector('iframe');
-        const overlay = currentSlideEl?.querySelector('.video-iframe-overlay');
-
-        if (iframe && iframe.src.includes('youtube.com') && overlay && overlay.style.display === 'none') {
-          iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-        }
-
-        this.popupSlider.querySelectorAll('.video-iframe-overlay').forEach((overlay) => {
-          overlay.style.display = 'block';
-          const iframe = overlay.nextElementSibling;
-          if (iframe) iframe.style.pointerEvents = 'none';
-        });
-      });
-
-      this.popupSlider.querySelectorAll('.video-iframe-overlay').forEach((overlay) => {
-        overlay.addEventListener('click', (e) => {
-          e.stopPropagation();
-          overlay.style.display = 'none';
-          const iframe = overlay.nextElementSibling;
-          if (iframe) {
-            iframe.style.pointerEvents = 'auto';
-            iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-          }
-        }, { once: true });
-      });
-    } else if (!shouldInit && $(this.popupSlider).hasClass('slick-initialized')) {
+    // openPopup() rebuilds and initialises the popup sliders on every open, so the only
+    // job left here is tearing them down when the viewport crosses into desktop.
+    if (isDesktop() && $(this.popupSlider).hasClass('slick-initialized')) {
       $(this.popupSlider).slick('unslick');
       $(this.popupThumbnails).slick('unslick');
     }
@@ -277,22 +222,19 @@ observePopup() {
   }
 
   async openPopup(index) {
+    const token = ++this.openToken;
     await this.ensureHammerLoaded();
+    // A newer openPopup() started while this one waited for Hammer; let that one build the popup.
+    if (token !== this.openToken) return;
 
     if (!this.popup || !this.popupSlider || !this.popupThumbnails || !this.popupDots) {
       console.warn('[MobileGallery] Popup elements missing, attempting to recreate');
       this.createPopup();
-      await this.ensureHammerLoaded();
       if (!this.popup || !this.popupSlider || !this.popupThumbnails || !this.popupDots) {
         console.error('[MobileGallery] Failed to create popup elements');
         return;
       }
     }
-
-    const preventPropagation = (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-    };
 
     this.hammerInstances.forEach((h) => h.destroy());
     this.hammerInstances = [];
@@ -300,11 +242,14 @@ observePopup() {
     const closeBtn = this.popup.querySelector('.mobile-popup-close');
     const backdrop = this.popup.querySelector('.mobile-popup-backdrop');
     if (closeBtn) {
-      closeBtn.removeEventListener('click', this.closePopup.bind(this));
+      closeBtn.removeEventListener('click', this.boundClosePopup);
     }
     if (backdrop) {
-      backdrop.removeEventListener('click', this.closePopup.bind(this));
+      backdrop.removeEventListener('click', this.boundClosePopup);
     }
+
+    // Namespaced so each open replaces the previous handler instead of stacking another one.
+    $(this.popupSlider).off('afterChange.mobileGallery');
 
     if ($(this.popupSlider).hasClass('slick-initialized')) {
       $(this.popupSlider).slick('unslick');
@@ -343,7 +288,7 @@ observePopup() {
       });
 
       $(this.popupThumbnails).slick({
-        slidesToShow: 4,
+        slidesToShow: POPUP_THUMBS_VISIBLE,
 
         arrows: false,
 
@@ -352,12 +297,16 @@ observePopup() {
         lazyLoad: 'ondemand',
         speed: 250,
         cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
-        initialSlide: index,
+        // Starting the strip at the opened slide left it mostly empty near the end
+        // (opening image 4 of 4 showed a single thumbnail), so clamp to a full window.
+        initialSlide: this.clampThumbStart(index),
         variableWidth: false,
         centerMode: false,
       });
 
-      $(this.popupSlider).on('afterChange', (event, slick, currentSlide) => {
+      this.syncPopupThumbs(index);
+
+      $(this.popupSlider).on('afterChange.mobileGallery', (event, slick, currentSlide) => {
         this.pauseAllMedia(this.popup);
         const currentSlideEl = slick.$slides[currentSlide];
         const iframe = currentSlideEl?.querySelector('iframe');
@@ -369,38 +318,70 @@ observePopup() {
 
         this.popupSlider.querySelectorAll('.video-iframe-overlay').forEach((overlay) => {
           overlay.style.display = 'block';
-          const iframe = overlay.nextElementSibling;
+          const iframe = this.overlayIframe(overlay);
           if (iframe) iframe.style.pointerEvents = 'none';
         });
 
-        // Highlight active thumbnail
-        this.popupThumbnails.querySelectorAll('.mobile-popup-thumb').forEach((thumb, idx) => {
-          thumb.classList.toggle('active', idx === currentSlide);
-        });
+        // Chrome can drop a paused video's decoded frame while its slide is off-screen,
+        // so on return it showed a blank/frozen frame with no controls for a few seconds.
+        // Seeking to the current time makes it repaint the frame.
+        const video = currentSlideEl?.querySelector('video');
+        if (video && video.readyState >= 2 && video.currentTime > 0) {
+          video.currentTime = video.currentTime;
+        }
+
+        this.syncPopupThumbs(currentSlide);
       });
 
       this.popupSlider.querySelectorAll('.video-iframe-overlay').forEach((overlay) => {
+        // Not { once: true }: the overlay is shown again after every slide change, so it
+        // has to keep working for play → change slide → return → replay.
         overlay.addEventListener('click', (e) => {
-          preventPropagation(e);
+          e.stopPropagation();
+          e.preventDefault();
           overlay.style.display = 'none';
-          const iframe = overlay.nextElementSibling;
+          const iframe = this.overlayIframe(overlay);
           if (iframe) {
             iframe.style.pointerEvents = 'auto';
             iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
           }
-        }, { once: true });
+        });
       });
     }
 
     if (closeBtn) {
-      closeBtn.addEventListener('click', this.closePopup.bind(this));
+      closeBtn.addEventListener('click', this.boundClosePopup);
     }
     if (backdrop) {
-      backdrop.addEventListener('click', this.closePopup.bind(this));
+      backdrop.addEventListener('click', this.boundClosePopup);
     }
+    // No document-level click/touchstart blocker here: it swallowed the customer's next tap
+    // wherever it landed, so Close or a thumbnail needed a second tap after opening.
+  }
 
-    document.addEventListener('click', preventPropagation, { capture: true, once: true });
-    document.addEventListener('touchstart', preventPropagation, { capture: true, once: true });
+  // The overlay is a sibling of .video-wrapper (which holds the iframe), not of the iframe itself.
+  overlayIframe(overlay) {
+    return overlay.parentElement?.querySelector('iframe') || null;
+  }
+
+  clampThumbStart(index) {
+    const count = this.popupThumbnails?.querySelectorAll('.mobile-popup-thumb').length || 0;
+    return Math.max(0, Math.min(index, count - POPUP_THUMBS_VISIBLE));
+  }
+
+  // Highlight the thumbnail for the current slide and scroll the strip only when it is out of view.
+  syncPopupThumbs(currentSlide) {
+    if (!this.popupThumbnails) return;
+    this.popupThumbnails.querySelectorAll('.mobile-popup-thumb').forEach((thumb) => {
+      thumb.classList.toggle('active', Number(thumb.dataset.slideIndex) === currentSlide);
+    });
+
+    const $thumbs = $(this.popupThumbnails);
+    if (!$thumbs.hasClass('slick-initialized')) return;
+    const start = $thumbs.slick('slickCurrentSlide');
+    if (currentSlide < start || currentSlide >= start + POPUP_THUMBS_VISIBLE) {
+      $thumbs.slick('slickGoTo', this.clampThumbStart(currentSlide));
+    }
   }
 
   closePopup(e) {
@@ -412,6 +393,9 @@ observePopup() {
     this.hammerInstances.forEach((h) => h.destroy());
     this.hammerInstances = [];
 
+    if (this.popupSlider) {
+      $(this.popupSlider).off('afterChange.mobileGallery');
+    }
     if (this.popupSlider && $(this.popupSlider).hasClass('slick-initialized')) {
       $(this.popupSlider).slick('unslick');
     }
@@ -422,10 +406,10 @@ observePopup() {
     const closeBtn = this.popup?.querySelector('.mobile-popup-close');
     const backdrop = this.popup?.querySelector('.mobile-popup-backdrop');
     if (closeBtn) {
-      closeBtn.removeEventListener('click', this.closePopup.bind(this));
+      closeBtn.removeEventListener('click', this.boundClosePopup);
     }
     if (backdrop) {
-      backdrop.removeEventListener('click', this.closePopup.bind(this));
+      backdrop.removeEventListener('click', this.boundClosePopup);
     }
 
     if (this.popup) {
@@ -538,7 +522,10 @@ observePopup() {
     const img = clone.querySelector('img');
     const originalImg = originalSlide.querySelector('img');
     const video = clone.querySelector('video');
-    const media = this.mediaData[index];
+    // Look media up by id: renderSlides() skips unrenderable media, so a slide's position
+    // doesn't always match its position in mediaData.
+    const slideMediaId = originalSlide.querySelector('[data-media-id]')?.dataset.mediaId;
+    const media = this.mediaData.find((item) => String(item.id) === String(slideMediaId));
 
     // Handle YouTube videos
     if (iframe && iframe.src.includes('youtube.com')) {
@@ -794,6 +781,7 @@ observePopup() {
       const thumbWrapper = document.createElement('div');
       thumbWrapper.className = 'mobile-popup-thumb';
       thumbWrapper.setAttribute('data-media-id', media.id);
+      thumbWrapper.dataset.slideIndex = index;
 
       const thumbSkeleton = document.createElement('div');
       thumbSkeleton.className = 'image-skeleton-wrapper';
