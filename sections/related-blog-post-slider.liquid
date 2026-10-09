@@ -2,6 +2,35 @@
 Related Blog Posts — JS driven slider with synced scrollbar
 {% endcomment %}
 
+{%- comment -%}
+Resolve context before the section wrapper so a below-threshold row can be
+suppressed entirely (no empty <section>, heading or anchor left behind).
+
+Hub context = not on an article page (no current article). The hub-only
+behaviors (top-N limit and minimum-articles threshold) apply only here; on
+article pages this section is reused as an unlimited related-posts slider and
+its output must stay unchanged.
+{%- endcomment -%}
+{%- assign blog = blogs[section.settings.blog] -%}
+{%- assign current_article_id = article.id -%}
+{%- assign is_hub = false -%}
+{%- if current_article_id == blank -%}
+  {%- assign is_hub = true -%}
+{%- endif -%}
+{%- assign articles_limit = section.settings.articles_limit | default: 3 -%}
+{%- assign min_articles = section.settings.min_articles | default: 3 -%}
+
+{%- comment -%}
+A2b: on the hub, do not render this category row at all unless its blog has at
+least `min_articles` published articles. blog.articles_count counts published
+articles only. On article pages this suppression never applies.
+{%- endcomment -%}
+{%- assign hub_hide = false -%}
+{%- if is_hub and blog.articles_count < min_articles -%}
+  {%- assign hub_hide = true -%}
+{%- endif -%}
+
+{%- unless hub_hide -%}
 <section
   id="RelatedBlogs-{{ section.id }}"
   class="section related-articles"
@@ -23,14 +52,6 @@ Related Blog Posts — JS driven slider with synced scrollbar
       </div>
     {% endif %}
 
-    {% assign blog = blogs[section.settings.blog] %}
-
-    {%- comment -%}
-    Capture the current article ID if we're on an article page,
-    so we can exclude it from the related posts loop below.
-    {%- endcomment -%}
-    {% assign current_article_id = article.id %}
-
     {% if blog and blog.articles_count > 0 %}
 
       {%- comment -%}
@@ -44,6 +65,16 @@ Related Blog Posts — JS driven slider with synced scrollbar
         {% endif %}
       {% endfor %}
 
+      {%- comment -%}
+      On the hub, cap the displayed count at the top-N limit so the scrollbar /
+      arrows and any "N slides" logic reflect what actually renders.
+      {%- endcomment -%}
+      {% assign display_count = slide_count %}
+      {% if is_hub and display_count > articles_limit %}
+        {% assign display_count = articles_limit %}
+      {% endif %}
+      {% assign rendered_count = 0 %}
+
       <div class="related-slider" data-slider>
 
         <div class="related-slider__track" data-track>
@@ -53,6 +84,7 @@ Related Blog Posts — JS driven slider with synced scrollbar
 1️⃣ Featured articles first — skip the current article if on an article page
 {%- endcomment -%}
 {% for article in blog.articles %}
+  {% if is_hub and rendered_count >= articles_limit %}{% break %}{% endif %}
   {% if article.tags contains featured_tag %}
     {% if current_article_id == blank or article.id != current_article_id %}
     <div class="related-slider__slide featured-article">
@@ -107,6 +139,7 @@ Related Blog Posts — JS driven slider with synced scrollbar
         </a>
       </article>
     </div>
+    {% assign rendered_count = rendered_count | plus: 1 %}
     {% endif %}
   {% endif %}
 {% endfor %}
@@ -115,6 +148,7 @@ Related Blog Posts — JS driven slider with synced scrollbar
 2️⃣ Remaining (non-featured) articles — skip the current article if on an article page
 {%- endcomment -%}
 {% for article in blog.articles %}
+  {% if is_hub and rendered_count >= articles_limit %}{% break %}{% endif %}
   {% unless article.tags contains featured_tag %}
     {% if current_article_id == blank or article.id != current_article_id %}
     <div class="related-slider__slide">
@@ -169,13 +203,14 @@ Related Blog Posts — JS driven slider with synced scrollbar
         </a>
       </article>
     </div>
+    {% assign rendered_count = rendered_count | plus: 1 %}
     {% endif %}
   {% endunless %}
 {% endfor %}
 
         </div>
 
-        {% if section.settings.show_scrollbar and slide_count > 3 %}
+        {% if section.settings.show_scrollbar and display_count > 3 %}
           
         {% else %}
           <style>
@@ -501,6 +536,7 @@ Related Blog Posts — JS driven slider with synced scrollbar
     syncThumb();
   })();
   </script>
+{%- endunless -%}
 
 {% schema %}
 {
@@ -529,6 +565,26 @@ Related Blog Posts — JS driven slider with synced scrollbar
       "id": "blog",
       "type": "blog",
       "label": "Select blog"
+    },
+    {
+      "id": "articles_limit",
+      "type": "range",
+      "min": 1,
+      "max": 12,
+      "step": 1,
+      "label": "Max articles to show (hub only)",
+      "info": "Top-N articles shown for this category row on the blog hub. Ignored where this section is used as a related-posts slider on an article page.",
+      "default": 3
+    },
+    {
+      "id": "min_articles",
+      "type": "range",
+      "min": 1,
+      "max": 12,
+      "step": 1,
+      "label": "Minimum published articles to show row (hub only)",
+      "info": "On the blog hub, this category row is hidden entirely unless its blog has at least this many published articles. Ignored on article pages.",
+      "default": 3
     },
     {
       "id": "show_scrollbar",
