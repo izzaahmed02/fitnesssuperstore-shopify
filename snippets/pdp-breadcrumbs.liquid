@@ -27,7 +27,9 @@
     <p><strong>Browse for more gym equipment in the same category as this item:</strong></p>
     {%- liquid
       assign brand_key = product.vendor | strip | downcase
+      assign brand_words = brand_key | prepend: ' ' | append: ' '
       assign product_type_names = '|'
+      assign product_type_word_sets = '|'
       assign shown_names = '|'
     -%}
     {%- for pass in (1..2) -%}
@@ -70,9 +72,22 @@
             assign is_brand_path = true
           endif
 
+          # Word set for near-match checks: lowercase, punctuation/"and"/brand words removed, order ignored.
+          assign raw_words = name_key | replace: '/', ' ' | replace: '&', ' ' | replace: ',', ' ' | replace: '(', ' ' | replace: ')', ' ' | replace: '-', ' ' | split: ' '
+          assign word_set = ' '
+          assign word_count = 0
+          for word in raw_words
+            assign padded_word = word | prepend: ' ' | append: ' '
+            unless word == 'and' or brand_words contains padded_word or word_set contains padded_word
+              assign word_set = word_set | append: word | append: ' '
+              assign word_count = word_count | plus: 1
+            endunless
+          endfor
+
           if pass == 1
             unless is_brand_path or product_type_names contains name_token
               assign product_type_names = product_type_names | append: name_key | append: '|'
+              assign product_type_word_sets = product_type_word_sets | append: word_set | append: '|'
             endunless
             continue
           endif
@@ -82,6 +97,42 @@
           endif
           if is_brand_path and product_type_names contains name_token
             continue
+          endif
+
+          # Brand-path near-match: a single word must match exactly; otherwise all of its words
+          # must appear in a Product Type name that has at most one extra word.
+          if is_brand_path and word_count > 0
+            assign near_match = false
+            assign own_words = word_set | strip | split: ' '
+            assign type_word_sets = product_type_word_sets | split: '|'
+            for type_set in type_word_sets
+              if word_count == 1
+                if type_set == word_set
+                  assign near_match = true
+                  break
+                endif
+              else
+                assign type_count = type_set | strip | split: ' ' | size
+                assign extra_words = type_count | minus: word_count
+                if extra_words >= 0 and extra_words <= 1
+                  assign all_found = true
+                  for own_word in own_words
+                    assign padded_own = own_word | prepend: ' ' | append: ' '
+                    unless type_set contains padded_own
+                      assign all_found = false
+                      break
+                    endunless
+                  endfor
+                  if all_found
+                    assign near_match = true
+                    break
+                  endif
+                endif
+              endif
+            endfor
+            if near_match
+              continue
+            endif
           endif
           assign shown_names = shown_names | append: name_key | append: '|'
         -%}
