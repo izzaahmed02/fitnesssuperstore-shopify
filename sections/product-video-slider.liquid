@@ -85,6 +85,9 @@
             <div
               class="video-thumbnail"
               data-video-url="{{ instructional_url }}"
+              role="button"
+              tabindex="0"
+              aria-label="Play instructional video"
             >
               <video
                 class="video-thumb-video"
@@ -106,7 +109,13 @@
     {% if video_file != blank %}
       <div class="video-slide other-videos">
         <div class="video-slide-inner">
-          <div class="video-thumbnail" data-video-url="{{ video_file.sources[0].url }}">
+          <div
+            class="video-thumbnail"
+            data-video-url="{{ video_file.sources[0].url }}"
+            role="button"
+            tabindex="0"
+            aria-label="Play {{ video_file.alt | default: 'product video' | escape }}"
+          >
             {% if video_file.preview_image.src %}
               <img 
                 class="video-thumb-image" 
@@ -145,6 +154,9 @@
             <div
               class="video-thumbnail"
               data-video-url="{{ assembly_url }}"
+              role="button"
+              tabindex="0"
+              aria-label="Play assembly video"
             >
               <video
                 class="video-thumb-video"
@@ -170,6 +182,9 @@
                 <div
                   class="video-thumbnail"
                   data-video-url="{{ other_url }}"
+                  role="button"
+                  tabindex="0"
+                  aria-label="Play training video"
                 >
                   <video
                     class="video-thumb-video"
@@ -196,6 +211,9 @@
                 <div
                   class="video-thumbnail"
                   data-video-url="{{ other_url }}"
+                  role="button"
+                  tabindex="0"
+                  aria-label="Play {{ link.text | default: 'video' | escape }}"
                 >
                   <video
                     class="video-thumb-video"
@@ -277,6 +295,11 @@
   .prodVideoSlider .extra-info-video-slider .video-thumbnail {
     position: relative;
     cursor: pointer;
+  }
+
+  .prodVideoSlider .extra-info-video-slider .video-thumbnail:focus-visible {
+    outline: 3px solid #1D4ED8;
+    outline-offset: 3px;
   }
 
   .prodVideoSlider .extra-info-video-slider .video-thumb-video {
@@ -630,6 +653,13 @@ document.addEventListener('DOMContentLoaded', function () {
   // Open popup when clicking thumbnail
   $slider.on('click', '.video-thumbnail', function () {
     openVideoPopup($(this));
+  });
+
+  $slider.on('keydown', '.video-thumbnail', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openVideoPopup($(this));
+    }
   });
 
   $container.on('click', '.video-modal-poster', function () {
