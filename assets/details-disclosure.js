@@ -47,6 +47,7 @@ class HeaderMenu extends DetailsDisclosure {
     // mobile-drawer summary never receives key events, so this costs nothing there.
     this.summary = this.mainDetailsToggle.querySelector('summary');
     this.summary?.addEventListener('keydown', this.onSummaryKeydown.bind(this));
+    this.summary?.addEventListener('click', this.onSummaryClick.bind(this));
 
     if (!window.matchMedia('(hover: hover) and (min-width: 990px)').matches) return;
 
@@ -59,6 +60,23 @@ class HeaderMenu extends DetailsDisclosure {
 
     // Stops Space scrolling the page, and stops any native or synthesized toggle
     // racing the explicit toggle below, so exactly one toggle happens per keypress.
+    event.preventDefault();
+
+    if (this.mainDetailsToggle.hasAttribute('open')) {
+      this.close();
+    } else {
+      this.open();
+    }
+  }
+
+  onSummaryClick(event) {
+    // Screen-reader activation (VoiceOver's VO+Space) arrives as a click with
+    // detail > 0 and no key events, so onSummaryKeydown never sees it, and the
+    // header.liquid hover script cancels every detail > 0 click because hover owns
+    // pointer opening. A real pointer click is always hovering the menu; leave that
+    // path, and keyboard-synthesized clicks (detail 0), exactly as they were.
+    if (event.detail === 0 || this.mainDetailsToggle.matches(':hover')) return;
+
     event.preventDefault();
 
     if (this.mainDetailsToggle.hasAttribute('open')) {
