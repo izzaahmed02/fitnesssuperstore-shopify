@@ -43,6 +43,7 @@ class ProductGallery extends HTMLElement {
     }
 
 
+    if (this.isDesktop()) this.buildThumbnailRow();
     this.initThumbnails();
 
 
@@ -75,6 +76,12 @@ class ProductGallery extends HTMLElement {
         }
       }
     }
+
+    // The Liquid only marks the first thumbnail active when the product has no 3D model, so
+    // highlight whichever thumbnail matches the main image that is actually showing.
+    this.querySelectorAll('.thumbnail-btn').forEach((btn) => {
+      btn.classList.toggle('is-active', btn.getAttribute('data-media-id') == this.activeMediaId);
+    });
 
     // Honour a pre-selected variant on first load (e.g. arriving via a
     // ?variant= URL or a 301 redirect from a now-consolidated product) by
@@ -162,6 +169,68 @@ class ProductGallery extends HTMLElement {
     });
   }
 
+  buildThumbnailRow() {
+    const row = this.querySelector('.custom-gallery-thumbnails.only-desktop');
+    if (!row || !this.mediaData.length) return;
+
+    const existing = new Map();
+    row.querySelectorAll('.thumbnail-btn').forEach((btn) => {
+      btn.querySelector('.thumbnail-overlay')?.remove();
+      existing.set(String(btn.getAttribute('data-media-id')), btn);
+    });
+
+    // Videos go right after the first thumbnail so they're never scrolled out of the row
+    // (on FSR90 the video was 20th of 21). Selection is by media id, so order is free here.
+    const isVideo = (m) => m.media_type === 'video' || m.media_type === 'external_video';
+    const [first, ...rest] = this.mediaData;
+    const ordered = [first, ...rest.filter(isVideo), ...rest.filter((m) => !isVideo(m))];
+
+    const buttons = ordered.map((media) => existing.get(String(media.id)) || this.createThumbnailButton(media)).filter(Boolean);
+    if (!buttons.length) return;
+    row.replaceChildren(...buttons);
+    row.classList.add('is-row');
+  }
+
+  createThumbnailButton(media) {
+    const src = media.preview_image?.src;
+    if (!src) return null;
+    const isVideo = media.media_type === 'video' || media.media_type === 'external_video';
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'thumbnail-btn';
+    btn.setAttribute('data-media-id', media.id);
+    if (isVideo) {
+      btn.classList.add('is-video');
+      btn.setAttribute('data-popup-open', 'video');
+    }
+    if (media.media_type === 'model') btn.classList.add('threeD-image');
+
+    const img = document.createElement('img');
+    img.src = /width=\d+/.test(src) ? src.replace(/width=\d+/, 'width=176') : `${src}${src.includes('?') ? '&' : '?'}width=176`;
+    img.alt = media.alt || '';
+    img.width = 88;
+    img.height = 88;
+    img.loading = 'lazy';
+
+    // Same wrappers the Liquid uses, so the existing video play overlay CSS applies.
+    const wrap = document.createElement('div');
+    wrap.className = isVideo ? 'thumbnail-btn__warp' : 'image-skeleton-wrapper loaded';
+    wrap.appendChild(img);
+    btn.appendChild(wrap);
+    return btn;
+  }
+
+  scrollThumbnailIntoView(btn) {
+    const row = btn?.closest('.custom-gallery-thumbnails.is-row');
+    if (!row) return;
+    const start = btn.offsetLeft;
+    const end = start + btn.offsetWidth;
+    if (start >= row.scrollLeft && end <= row.scrollLeft + row.clientWidth) return;
+    const left = start < row.scrollLeft ? start - 8 : end - row.clientWidth + 8;
+    row.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+  }
+
   initThumbnails() {
 
     const buttons = this.querySelectorAll('.thumbnail-btn');
@@ -192,8 +261,10 @@ class ProductGallery extends HTMLElement {
           return;
         }
         hoverTimer = setTimeout(() => {
-
+          // The hovered thumbnail is already under the mouse, so don't scroll the row for it.
+          this.skipThumbScroll = true;
           this.setActiveMedia(mediaId);
+          this.skipThumbScroll = false;
         }, 150);
       });
 
@@ -308,8 +379,8 @@ class ProductGallery extends HTMLElement {
       const btnId = btn.getAttribute('data-media-id');
       const isActive = btnId == String(id);
       btn.classList.toggle('is-active', isActive);
-      if (isActive) {
-
+      if (isActive && !this.skipThumbScroll) {
+        this.scrollThumbnailIntoView(btn);
       }
     });
 
