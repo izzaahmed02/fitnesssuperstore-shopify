@@ -76,7 +76,7 @@
   };
 
   const collapseOptionGroups = () => {
-    document.querySelectorAll('.product__info-wrapper .product-options__item').forEach((item) => {
+    document.querySelectorAll('.product__info-wrapper .product-option__item').forEach((item) => {
       if (optionStates.has(item)) return;
       const title = item.querySelector(':scope > .product-options__category-title');
       if (!title) return;
