@@ -5,9 +5,25 @@
     <div class="container">
         <div class="delivery-banner__wrapper">
             <h1 class="delivery-banner__title">{{ section.settings.heading }}</h1>
+            {%- liquid
+              assign banner_alt = section.settings.image_alt
+              if banner_alt == blank
+                assign banner_alt = section.settings.image.alt
+              endif
+            -%}
             <img src="{{ section.settings.image | image_url: width: 1300, height: 410 }}"
-                 alt="{{ section.settings.image.alt | escape }}" class="delivery-banner__img">
+                 alt="{{ banner_alt | escape }}" class="delivery-banner__img">
         </div>
+        {%- if section.settings.intro != blank -%}
+            <p class="delivery-banner__intro">{{ section.settings.intro | escape }}</p>
+        {%- endif -%}
+        {% render 'delivery-contact-links',
+          phone_label: section.settings.phone_label,
+          phone_link: section.settings.phone_link,
+          email_label: section.settings.email_label,
+          email_link: section.settings.email_link,
+          email_address: section.settings.email_address
+        %}
     </div>
 </div>
 
@@ -30,8 +46,50 @@
     },
     {
       "type": "text",
+      "id": "image_alt",
+      "label": "Image alt text",
+      "info": "Overrides the shared file's alt text on this section only."
+    },
+    {
+      "type": "text",
       "id": "heading",
       "label": "Heading"
+    },
+    {
+      "type": "textarea",
+      "id": "intro",
+      "label": "Introduction (below image)"
+    },
+    {
+      "type": "header",
+      "content": "Contact buttons"
+    },
+    {
+      "type": "text",
+      "id": "phone_label",
+      "label": "Phone button label"
+    },
+    {
+      "type": "text",
+      "id": "phone_link",
+      "label": "Phone button link",
+      "info": "Example: tel:+19252152927"
+    },
+    {
+      "type": "text",
+      "id": "email_label",
+      "label": "Email button label"
+    },
+    {
+      "type": "text",
+      "id": "email_link",
+      "label": "Email button link",
+      "info": "Example: mailto:sales@fitnesssuperstore.com?subject=..."
+    },
+    {
+      "type": "text",
+      "id": "email_address",
+      "label": "Visible email address"
     }
   ],
   "presets": [
