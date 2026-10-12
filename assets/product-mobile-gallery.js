@@ -2,6 +2,12 @@ if (!customElements.get('mobile-gallery')) {
 const POPUP_THUMBS_VISIBLE = 4;
 const CHAT_BUBBLE_SELECTOR = '#gorgias-chat-container iframe#chat-button';
 const CHAT_BUBBLE_HIT_SIZE = 72;
+// Popup image: phone-resolution display file, larger file fetched on zoom (capped at the original).
+const POPUP_DISPLAY_WIDTH = 1080;
+const POPUP_ZOOM_WIDTH = 2048;
+
+const sizedSrc = (src, width) =>
+  /width=\d+/.test(src) ? src.replace(/width=\d+/, `width=${width}`) : `${src}${src.includes('?') ? '&' : '?'}width=${width}`;
 
 class MobileGallery extends HTMLElement {
   constructor() {
@@ -19,6 +25,7 @@ class MobileGallery extends HTMLElement {
     // One bound reference, so removeEventListener actually matches what was added.
     // A fresh .bind(this) per call never matched, and close handlers piled up per open.
     this.boundClosePopup = this.closePopup.bind(this);
+    this.boundPopupKeydown = this.handlePopupKeydown.bind(this);
     // Incremented per openPopup call; a call that resumes after a newer one started bails out.
     this.openToken = 0;
   }
@@ -392,9 +399,20 @@ observePopup() {
 
     this.renderPopupSlides(this.popupSlider, this.popupThumbnails);
 
+    // Restored on close, so the customer lands back where they were on the page.
+    this.popupScrollY = window.scrollY;
+
     this.popup.hidden = false;
     this.popup.classList.add('is-active');
     document.body.style.overflow = 'hidden';
+
+    let counter = this.popup.querySelector('.mobile-popup-counter');
+    if (!counter) {
+      counter = document.createElement('div');
+      counter.className = 'mobile-popup-counter';
+      counter.setAttribute('aria-live', 'polite');
+      this.popup.appendChild(counter);
+    }
 
     const isDesktop = () => window.matchMedia('(min-width: 990px)').matches;
     const shouldInit = !isDesktop();
@@ -483,6 +501,8 @@ observePopup() {
     if (backdrop) {
       backdrop.addEventListener('click', this.boundClosePopup);
     }
+    document.removeEventListener('keydown', this.boundPopupKeydown);
+    document.addEventListener('keydown', this.boundPopupKeydown);
     // No document-level click/touchstart blocker here: it swallowed the customer's next tap
     // wherever it landed, so Close or a thumbnail needed a second tap after opening.
   }
@@ -500,9 +520,16 @@ observePopup() {
   // Highlight the thumbnail for the current slide and scroll the strip only when it is out of view.
   syncPopupThumbs(currentSlide) {
     if (!this.popupThumbnails) return;
-    this.popupThumbnails.querySelectorAll('.mobile-popup-thumb').forEach((thumb) => {
+    const thumbs = this.popupThumbnails.querySelectorAll('.mobile-popup-thumb');
+    thumbs.forEach((thumb) => {
       thumb.classList.toggle('active', Number(thumb.dataset.slideIndex) === currentSlide);
     });
+
+    const counter = this.popup?.querySelector('.mobile-popup-counter');
+    if (counter) {
+      counter.hidden = thumbs.length < 2;
+      counter.textContent = `${currentSlide + 1} of ${thumbs.length}`;
+    }
 
     const $thumbs = $(this.popupThumbnails);
     if (!$thumbs.hasClass('slick-initialized')) return;
@@ -540,6 +567,8 @@ observePopup() {
       backdrop.removeEventListener('click', this.boundClosePopup);
     }
 
+    document.removeEventListener('keydown', this.boundPopupKeydown);
+
     if (this.popup) {
       this.popup.hidden = true;
       this.popup.classList.remove('is-active');
@@ -547,6 +576,21 @@ observePopup() {
     }
     document.body.style.overflow = '';
     this.pauseAllMedia(this.popup);
+
+    if (typeof this.popupScrollY === 'number' && Math.abs(window.scrollY - this.popupScrollY) > 1) {
+      window.scrollTo(0, this.popupScrollY);
+    }
+  }
+
+  // Escape closes; arrow keys step slides (tablets / small laptop windows with a keyboard).
+  handlePopupKeydown(e) {
+    if (!this.popup || this.popup.hidden) return;
+    if (e.key === 'Escape') {
+      this.closePopup();
+    } else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && $(this.popupSlider).hasClass('slick-initialized')) {
+      e.preventDefault();
+      $(this.popupSlider).slick(e.key === 'ArrowRight' ? 'slickNext' : 'slickPrev');
+    }
   }
 
   renderSlides(container) {
@@ -737,7 +781,7 @@ observePopup() {
       zoomWrapper.style.overflow = 'hidden';
 
       const zoomImg = document.createElement('img');
-      zoomImg.src = media.preview_image.src.replace(/width=\d+/, 'width=750');
+      zoomImg.src = sizedSrc(media.preview_image.src, POPUP_DISPLAY_WIDTH);
       zoomImg.sizes = originalImg?.getAttribute('sizes') || '100vw';
       zoomImg.width = originalImg?.getAttribute('width') || media.preview_image.width || '';
       zoomImg.height = originalImg?.getAttribute('height') || media.preview_image.height || '';
@@ -754,16 +798,20 @@ observePopup() {
       clone.appendChild(wrapper);
       container.appendChild(clone);
 
-      const highResSrc = media.preview_image.src.replace(/width=\d+/, 'width=750');
-      if (zoomImg.src !== highResSrc) {
+      const originalWidth = Number(media.preview_image.width) || 0;
+      const highResWidth = originalWidth ? Math.min(POPUP_ZOOM_WIDTH, originalWidth) : POPUP_ZOOM_WIDTH;
+      const highResSrc = sizedSrc(media.preview_image.src, highResWidth);
+      let highResRequested = false;
+      const loadHighRes = () => {
+        if (highResRequested || highResWidth <= POPUP_DISPLAY_WIDTH) return;
+        highResRequested = true;
         const preload = new Image();
         preload.src = highResSrc;
         preload.onload = () => {
-          if (zoomImg.parentElement) {
-            zoomImg.src = highResSrc;
-          }
+          if (zoomImg.parentElement) zoomImg.src = highResSrc;
         };
-      }
+      };
+      let zoomReady = false;
 
       let scale = 1;
       let posX = 0, posY = 0;
@@ -784,6 +832,9 @@ observePopup() {
         if (skeletonWrapper && skeletonWrapper.parentElement && skeletonWrapper.classList) {
           skeletonWrapper.classList.add('loaded');
         }
+        // onload fires again when the high-res file swaps in; set up gestures only once.
+        if (zoomReady) return;
+        zoomReady = true;
         const allowZoom = zoomImg.naturalWidth > 300;
 
 
@@ -801,11 +852,10 @@ observePopup() {
         hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
 
         if (allowZoom) {
-          const maxScale = Math.min(
-            Math.max(750 / zoomImg.naturalWidth, 1.5),
-            Math.max(750 / zoomImg.naturalHeight, 1.5),
-            3
-          );
+          // Zoom as far as the source file has detail for (up to 3x); the old formula was
+          // built around a 750px file and capped most images at 1.5x.
+          const sourceRatio = (originalWidth || zoomImg.naturalWidth) / Math.max(1, zoomImg.clientWidth);
+          const maxScale = Math.min(3, Math.max(1.5, sourceRatio / 1.5));
 
 
           hammer.get('pinch').set({ enable: true });
@@ -813,6 +863,7 @@ observePopup() {
 
           hammer.on('pinchstart', () => {
             lastScale = scale;
+            loadHighRes();
           });
 
           hammer.on('pinchmove', (e) => {
@@ -828,21 +879,7 @@ observePopup() {
           });
 
           hammer.on('doubletap', () => {
-
-            if (zoomImg.src !== highResSrc) {
-              const preload = new Image();
-              preload.src = highResSrc;
-              preload.onload = () => {
-                if (zoomImg.parentElement) {
-                  zoomImg.src = highResSrc;
-                  zoomImg.style.opacity = '0';
-                  requestAnimationFrame(() => {
-                    zoomImg.style.transition = 'opacity 0.2s ease-in-out';
-                    zoomImg.style.opacity = '1';
-                  });
-                }
-              };
-            }
+            loadHighRes();
 
             if (scale < 1.5 && 1.5 <= maxScale) {
               scale = 1.5;
@@ -870,8 +907,9 @@ observePopup() {
             if (scale <= 1.01) return;
 
             const rect = wrapper.getBoundingClientRect();
-            const imgWidth = zoomImg.naturalWidth * scale;
-            const imgHeight = zoomImg.naturalHeight * scale;
+   
+            const imgWidth = zoomImg.clientWidth * scale;
+            const imgHeight = zoomImg.clientHeight * scale;
 
             const maxX = Math.max((imgWidth - rect.width) / 2, 0);
             const maxY = Math.max((imgHeight - rect.height) / 2, 0);
@@ -915,16 +953,23 @@ observePopup() {
       thumbSkeleton.className = 'image-skeleton-wrapper';
 
       const thumbImg = document.createElement('img');
-      thumbImg.src = media.preview_image.src.replace(/width=\d+/, 'width=100');
+      thumbImg.src = sizedSrc(media.preview_image.src, 200);
       thumbImg.alt = media.alt || '';
       thumbImg.width = 100;
       thumbImg.height = 100;
       thumbImg.loading = 'lazy';
-      thumbImg.style.objectFit = 'cover';
+      thumbImg.style.objectFit = 'contain';
       thumbImg.style.aspectRatio = '1/1';
 
       thumbSkeleton.appendChild(thumbImg);
       thumbWrapper.appendChild(thumbSkeleton);
+      if (media.media_type === 'video' || media.media_type === 'external_video') {
+        thumbWrapper.classList.add('is-video');
+        const badge = document.createElement('span');
+        badge.className = 'mobile-popup-thumb__play';
+        badge.setAttribute('aria-hidden', 'true');
+        thumbWrapper.appendChild(badge);
+      }
       thumbnailContainer.appendChild(thumbWrapper);
 
       thumbImg.onload = () => {

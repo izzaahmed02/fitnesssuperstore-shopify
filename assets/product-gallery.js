@@ -1,4 +1,7 @@
 if (!customElements.get('product-gallery')) {
+// Popup thumbnails render at 60px; previously they loaded each image at full size.
+const POPUP_THUMB_WIDTH = 160;
+
 class ProductGallery extends HTMLElement {
   constructor() {
     super();
@@ -625,6 +628,10 @@ class ProductGallery extends HTMLElement {
       return;
     }
 
+    // Remember where the customer was, so closing returns focus and page position.
+    this.popupOpener = document.activeElement;
+    this.popupScrollY = window.scrollY;
+
     // First, make the popup visible
     popup.hidden = false;
     document.body.style.overflow = 'hidden';
@@ -649,7 +656,7 @@ class ProductGallery extends HTMLElement {
 
           const skeletonWrapper = document.createElement('div');
           const img = document.createElement('img');
-          img.src = media.preview_image.src;
+          img.src = this.sizedSrc(media.preview_image.src, POPUP_THUMB_WIDTH);
           img.alt = media.alt || '';
           img.width = media.preview_image.width;
           img.height = media.preview_image.height;
@@ -729,7 +736,7 @@ class ProductGallery extends HTMLElement {
           skeletonWrapper.className = 'image-skeleton-wrapper';
 
           const img = document.createElement('img');
-          img.src = media.preview_image.src;
+          img.src = this.sizedSrc(media.preview_image.src, POPUP_THUMB_WIDTH);
           img.alt = media.alt || '3D preview';
           img.width = media.preview_image.width;
           img.height = media.preview_image.height;
@@ -852,7 +859,9 @@ class ProductGallery extends HTMLElement {
 
     popup.querySelector('.popup-close').onclick = this.closePopup.bind(this);
     popup.querySelector('.product-popup-backdrop').onclick = this.closePopup.bind(this);
+    document.removeEventListener('keydown', this.handleEscClose);
     document.addEventListener('keydown', this.handleEscClose);
+    popup.querySelector('.popup-close')?.focus({ preventScroll: true });
 
   }
   // --- End of modified openPopup ---
@@ -1107,6 +1116,33 @@ class ProductGallery extends HTMLElement {
 
       }
     });
+
+    this.updatePopupCounter(popup, mediaId);
+  }
+
+  // "x of y" within the open tab (Images or Videos).
+  updatePopupCounter(popup, mediaId) {
+    let counter = popup.querySelector('.popup-counter');
+    if (!counter) {
+      counter = document.createElement('div');
+      counter.className = 'popup-counter';
+      counter.setAttribute('aria-live', 'polite');
+      popup.querySelector('.product-popup')?.appendChild(counter);
+    }
+    const thumbs = this.visiblePopupThumbs(popup);
+    const index = thumbs.findIndex((t) => t.getAttribute('data-media-id') == String(mediaId));
+    counter.hidden = index < 0 || thumbs.length < 2;
+    if (index >= 0) counter.textContent = `${index + 1} of ${thumbs.length}`;
+  }
+
+  visiblePopupThumbs(popup) {
+    const list = popup.querySelector('.popup-thumbnails:not(.hidden)');
+    return list ? [...list.querySelectorAll('[data-media-id]')] : [];
+  }
+
+  sizedSrc(src, width) {
+    if (!src) return '';
+    return /width=\d+/.test(src) ? src.replace(/width=\d+/, `width=${width}`) : `${src}${src.includes('?') ? '&' : '?'}width=${width}`;
   }
 
   closePopup() {
@@ -1145,13 +1181,36 @@ class ProductGallery extends HTMLElement {
 
 
     document.removeEventListener('keydown', this.handleEscClose);
+
+    // Back to where the customer was: same page position, focus on what opened the popup.
+    if (typeof this.popupScrollY === 'number' && Math.abs(window.scrollY - this.popupScrollY) > 1) {
+      window.scrollTo(0, this.popupScrollY);
+    }
+    if (this.popupOpener && this.popupOpener !== document.body && this.popupOpener.isConnected) {
+      this.popupOpener.focus({ preventScroll: true });
+    }
+    this.popupOpener = null;
   }
 
+  // Escape closes; Left/Right arrows step through the open tab's thumbnails.
   handleEscClose = (e) => {
     if (e.key === 'Escape') {
 
       this.closePopup();
+      return;
     }
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    if (e.target.closest?.('input, textarea, select, model-viewer')) return;
+
+    const popup = document.getElementById('product-gallery-popup');
+    if (!popup || popup.hidden) return;
+    const thumbs = this.visiblePopupThumbs(popup);
+    const current = thumbs.findIndex((t) => t.classList.contains('is-active'));
+    const next = current + (e.key === 'ArrowRight' ? 1 : -1);
+    if (current < 0 || next < 0 || next >= thumbs.length) return;
+    e.preventDefault();
+    // Clicking the thumbnail reuses its handler, which also resets any zoom.
+    thumbs[next].click();
   };
 }
 
