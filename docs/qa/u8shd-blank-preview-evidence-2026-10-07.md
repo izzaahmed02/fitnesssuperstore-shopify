@@ -82,7 +82,7 @@ Method: headless Chromium, desktop 1440 px (mobile 375 px where noted), each pag
 | Item | Status |
 |---|---|
 | Processing-time update (1-2 weeks) | Closed; no repeat edit. See finding 7 for a separate add-on issue. |
-| $16 selling price | Unchanged. Retail reference ($99): Larianne owns; Tim approved her logic, then said retail prices are no longer entered and can be removed. Needs one clarification from Tim/Larianne before any edit. Not part of this PR. |
+| $16 selling price | Unchanged. Retail reference ($99 "As high as / You save"): main commit 6c511a4 (Yusra, Oct 9) hides MSRP/reference-price and savings displays on PDPs and cards sitewide, consistent with Tim's note that retail prices are no longer entered. Larianne's per-SKU retail_price change is therefore not needed for display; confirm with Tim/Larianne that it is withdrawn. Not part of this PR. |
 | Warranty | Keep "1-Year Limited" as the short value; detailed text to use "1-year limited parts warranty (breakage or failure)" with the policy linked (https://www.fitnesssuperstore.com/pages/french-fitness-warranty). Not edited; exact location of the detailed text still to be confirmed. |
 | Release plan | See "Release plan (proposal)". Nothing assigned to the native parent. Children stay UNLISTED. |
 | PR, final commit, preview, rollback | See below. Branch reconciled with main on Oct 7. |
@@ -91,9 +91,11 @@ Method: headless Chromium, desktop 1440 px (mobile 375 px where noted), each pag
 | Matrix and row 1079 update | Pending; text prepared below. Preserve prior evidence. |
 | Stock/source mapping | BLOCKED: needs per-weight counts for the physical blanks (see below). |
 
-## Final commit, preview, rollback
-- Branch `claude/tender-fermi-0mn1sy`; reconciled with `main` (merge, no rebase) on Oct 7; branch is 0 commits behind main at the time of writing. Code difference from main: `assets/custom.js` only (+13/-1 lines).
-- Preview theme: https://www.fitnesssuperstore.com/?preview_theme_id=189008838972 (re-verified after the merge: Blank 25 lbs single 30 pills, 5-50 set 7, Rubber Hex control 36).
+## Final commit, preview, rollback (updated 2026-10-13)
+- PR: https://github.com/izzaahmed02/fitnesssuperstore-shopify/pull/948 (draft). Branch `claude/tender-fermi-0mn1sy`, merged with `main` twice (Oct 7 and Oct 13, merge commits, no rebase); 0 commits behind main at the time of writing.
+- Code difference from main: `assets/custom.js` only (+13/-1 lines). Verified with `git diff origin/main HEAD -- . ':!docs'`.
+- Note: on Oct 8 `shopify[bot]` pushed one commit to this branch ("Update from Shopify for theme ...claude/tender-fermi-0...", 13 files) after someone edited the connected preview theme. It is Shopify's automatic Liquid rewrite ("This file has been rewritten to preserve the original behavior"). `main` already carries the same rewrites for `snippets/cart-item-product-option.liquid` and `snippets/product-variant-options.liquid`, so after the Oct 13 merge the branch has no difference from main in those files. Observation only, not investigated: some rewrites change argument syntax (for example `default_values | split: ','` became `default_values, split: ','` in `cart-item-product-option.liquid`); whether that changes cart-option behavior is untested and sits outside this PR.
+- Preview theme: https://www.fitnesssuperstore.com/?preview_theme_id=189008838972
 - Rollback: revert the merge commit of this PR on main (restores the previous `assets/custom.js`); no data or settings change is involved in this PR.
 
 ## Mixed-stock selector check (`mixed-stock/`)
