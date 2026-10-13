@@ -192,6 +192,16 @@ class ProductGallery extends HTMLElement {
     if (!buttons.length) return;
     row.replaceChildren(...buttons);
     row.classList.add('is-row');
+    row.addEventListener('scroll', () => this.updateRowScrollCue(row), { passive: true });
+    window.addEventListener('resize', () => this.updateRowScrollCue(row), { passive: true });
+    this.updateRowScrollCue(row);
+  }
+
+  // Fade the row edge that has more thumbnails, so it reads as scrollable.
+  updateRowScrollCue(row) {
+    const more = row.scrollWidth - row.clientWidth;
+    row.classList.toggle('has-more-left', more > 1 && row.scrollLeft > 1);
+    row.classList.toggle('has-more-right', more > 1 && row.scrollLeft < more - 1);
   }
 
   createThumbnailButton(media) {

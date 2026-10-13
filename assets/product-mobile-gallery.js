@@ -1,10 +1,17 @@
 if (!customElements.get('mobile-gallery')) {
 const POPUP_THUMBS_VISIBLE = 4;
+const POPUP_THUMB_SLOT = 68;
 const CHAT_BUBBLE_SELECTOR = '#gorgias-chat-container iframe#chat-button';
 const CHAT_BUBBLE_HIT_SIZE = 72;
 // Popup image: phone-resolution display file, larger file fetched on zoom (capped at the original).
 const POPUP_DISPLAY_WIDTH = 1080;
 const POPUP_ZOOM_WIDTH = 2048;
+
+const updateScrollCue = (el) => {
+  const more = el.scrollWidth - el.clientWidth;
+  el.classList.toggle('has-more-left', more > 1 && el.scrollLeft > 1);
+  el.classList.toggle('has-more-right', more > 1 && el.scrollLeft < more - 1);
+};
 
 const sizedSrc = (src, width) =>
   /width=\d+/.test(src) ? src.replace(/width=\d+/, `width=${width}`) : `${src}${src.includes('?') ? '&' : '?'}width=${width}`;
@@ -28,6 +35,7 @@ class MobileGallery extends HTMLElement {
     this.boundPopupKeydown = this.handlePopupKeydown.bind(this);
     // Incremented per openPopup call; a call that resumes after a newer one started bails out.
     this.openToken = 0;
+    this.popupThumbsVisible = POPUP_THUMBS_VISIBLE;
   }
 
   connectedCallback() {
@@ -259,6 +267,7 @@ observePopup() {
       strip.appendChild(btn);
     });
     this.dots.appendChild(strip);
+    strip.addEventListener('scroll', () => updateScrollCue(strip), { passive: true });
 
     const counter = document.createElement('div');
     counter.className = 'mobile-gallery-counter';
@@ -266,6 +275,7 @@ observePopup() {
     this.slider.parentElement.appendChild(counter);
 
     this.updateThumbStrip($(this.slider).slick('slickCurrentSlide') || 0);
+    updateScrollCue(strip);
     this.watchChatOverlap();
   }
 
@@ -433,8 +443,9 @@ observePopup() {
         waitForAnimate: false,
       });
 
+      this.popupThumbsVisible = Math.max(POPUP_THUMBS_VISIBLE, Math.floor((this.popupThumbnails.clientWidth || window.innerWidth) / POPUP_THUMB_SLOT));
       $(this.popupThumbnails).slick({
-        slidesToShow: POPUP_THUMBS_VISIBLE,
+        slidesToShow: this.popupThumbsVisible,
 
         arrows: false,
 
@@ -514,7 +525,7 @@ observePopup() {
 
   clampThumbStart(index) {
     const count = this.popupThumbnails?.querySelectorAll('.mobile-popup-thumb').length || 0;
-    return Math.max(0, Math.min(index, count - POPUP_THUMBS_VISIBLE));
+    return Math.max(0, Math.min(index, count - this.popupThumbsVisible));
   }
 
   // Highlight the thumbnail for the current slide and scroll the strip only when it is out of view.
@@ -534,7 +545,7 @@ observePopup() {
     const $thumbs = $(this.popupThumbnails);
     if (!$thumbs.hasClass('slick-initialized')) return;
     const start = $thumbs.slick('slickCurrentSlide');
-    if (currentSlide < start || currentSlide >= start + POPUP_THUMBS_VISIBLE) {
+    if (currentSlide < start || currentSlide >= start + this.popupThumbsVisible) {
       $thumbs.slick('slickGoTo', this.clampThumbStart(currentSlide));
     }
   }
