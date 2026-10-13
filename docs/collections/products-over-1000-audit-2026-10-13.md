@@ -5,26 +5,51 @@ Tim's item 4 on the condition-feed thread. Read against live Shopify
 
 ## What adds products to it
 
-**Nothing automatic. It is a manual collection.**
+**`productDuplicate` copies manual collection membership.** Every time
+someone duplicates a product — which this team does constantly for combined
+listings, test copies and variant splits — the duplicate silently inherits
+the original's place in `Products over $1000`.
+
+I demonstrated it today by accident and then on purpose, while building the
+kettlebell QA test family:
+
+| step | collection count |
+| --- | --- |
+| before duplicating | 2,548 |
+| after duplicating Set 5-80 lbs (9878967877948, $1,099) | **2,549** |
+| after removing the duplicate again | 2,548 |
+
+The control: the source Set 5-80 **is** a member of `Products over $1000`,
+and its duplicate arrived in the collection. The source Set 5-30 lbs
+(9878965125436, $159) is **not** a member, and its duplicate did not. So
+membership tracks the source, not the price.
+
+Nothing was tagged, no rule fired and no app ran — the duplication did it on
+its own. The duplicate also arrives with the original's price, so it looks
+plausible, which is why nobody has caught it.
+
+That also explains the shape of the junk in there. Duplicates are how test
+copies and QA records get made, so duplicates are exactly what the
+collection fills up with.
+
+### Why it never self-corrects
+
+The collection is manual:
 
 - Collection 511454740796, handle `products-over-1000`
-- `ruleSet: null` — there are no conditions at all
+- `ruleSet: null` — no conditions at all
 - `sortOrder: MANUAL`
 
-So membership only changes when something explicitly adds a product: a
-person in Admin, a Matrixify import, or one of the installed apps holding
-`write_products`. It has not gone quiet either — `updatedAt` reads
-**2026-10-13T07:59:19Z**, and the count moved by one between two reads I
-took this morning. Something is still writing to it.
+So nothing removes a product either, when its price drops, when it is
+archived, or when it was a test record all along. Additions are automatic
+(via duplication) and removals are manual. The count only goes up.
 
-I could not identify *which* writer from the API. `Collection.events` is
-empty for this collection, and Shopify does not attribute collection
-membership changes in the Admin API. Narrowing it further needs the Admin
-activity log, which is a UI-only view.
-
-That is the answer to the question as asked, and it is also the reason the
-collection drifts: a manual list cannot track a price, so nothing ever
-removes a product when its price, status or type changes.
+For completeness: `updatedAt` reads **2026-10-13T07:59:19Z**, so it was
+being written this morning before I touched anything. `Collection.events` is
+empty, and the Admin API does not attribute membership changes, so I cannot
+name the specific actor behind earlier additions — but the duplication
+mechanism above is demonstrated, repeatable, and sufficient on its own to
+produce the drift below.
 
 ## What the drift looks like today
 
