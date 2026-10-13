@@ -552,6 +552,7 @@ class TileCalculator extends HTMLElement {
     const response = await fetch(`${routes.cart_add_url}`, config);
 
     if (response.ok) {
+      if (typeof window.fssConvertTrack === 'function') window.fssConvertTrack('addToCart');
       await this.renderCartDrawer();
 
       // Reset loading states
