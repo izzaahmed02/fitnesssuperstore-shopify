@@ -19,6 +19,7 @@ class CartDrawer extends HTMLElement {
   }
   open(e) {
     e && this.setActiveElement(e);
+    this.loadOptionHelp();
     let t = this.querySelector('[id^="Details-"] summary');
     t && !t.hasAttribute('role') && this.setSummaryAccessibility(t),
       setTimeout(() => {
@@ -37,6 +38,46 @@ class CartDrawer extends HTMLElement {
   }
   close() {
     this.classList.remove('active'), removeTrapFocus(this.activeElement), document.body.classList.remove('overflow-hidden');
+  }
+  bindOptionHelpCloseHandlers(slot) {
+    slot.querySelectorAll('[data-close-popup]').forEach((button) => {
+      if (button.dataset.cartDrawerOptionHelpCloseBound === 'true') return;
+      button.dataset.cartDrawerOptionHelpCloseBound = 'true';
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        const popup = button.closest('.option-popup');
+        if (!popup) return;
+        popup.classList.remove('active');
+      });
+    });
+  }
+  async loadOptionHelp() {
+    const slot = this.querySelector('[data-cart-drawer-option-help]');
+    if (!slot || slot.dataset.loaded === 'true' || slot.dataset.loading === 'true') return;
+
+    slot.dataset.loading = 'true';
+
+    try {
+      const url = new URL(window.location.href);
+      url.search = '';
+      url.searchParams.set('section_id', 'cart-drawer-option-help');
+
+      const response = await fetch(url.toString());
+      if (!response.ok) return;
+
+      const html = await response.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const content = doc.querySelector('[data-cart-drawer-option-help-content]');
+
+      if (content) {
+        slot.innerHTML = content.innerHTML;
+        this.bindOptionHelpCloseHandlers(slot);
+        slot.dataset.loaded = 'true';
+      }
+    } catch (error) {
+    } finally {
+      delete slot.dataset.loading;
+    }
   }
   setSummaryAccessibility(e) {
     e.setAttribute('role', 'button'),
