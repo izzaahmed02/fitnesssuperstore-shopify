@@ -60,7 +60,10 @@
   }
 
   // Returns { predicted, budget, willExceed } or null when it cannot predict.
-  async function predict(newPaidOptionCount, newPublicPropertyCount) {
+  // `excludeLineKey` is the cart line being REPLACED by a modify flow. Without it
+  // the prediction counts both the old line and its replacement, so a cart near
+  // the budget is rejected on a total that never exists. Codex review, PR #931, P2.
+  async function predict(newPaidOptionCount, newPublicPropertyCount, excludeLineKey) {
     const k = K();
     const fns = FNS();
     if (!k || !fns) return null;
@@ -74,9 +77,14 @@
       return null;
     }
 
-    const ops = (cart.items || []).map((line) =>
-      syntheticOperation(paidOptionsOnLine(line), publicPropertyCount(line)),
-    );
+    // Only lines carrying a bundle payload produce a transform operation. Mapping
+    // every ordinary cart line created a synthetic parent for products that emit
+    // nothing, so enough plain items could push the estimate over budget and block
+    // a valid bundle. Codex review, PR #931, P2.
+    const ops = (cart.items || [])
+      .filter((line) => (line.properties || {})._functionOperation)
+      .filter((line) => !excludeLineKey || line.key !== excludeLineKey)
+      .map((line) => syntheticOperation(paidOptionsOnLine(line), publicPropertyCount(line)));
     ops.push(syntheticOperation(newPaidOptionCount, newPublicPropertyCount));
 
     const predicted = fns.estimateBytes(ops);

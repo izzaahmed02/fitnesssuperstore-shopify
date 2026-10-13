@@ -1069,10 +1069,15 @@ if (!customElements.get('product-customization-options')) {
         try {
           const guard = window.FSBundleGuard;
           if (guard) {
-            const ops = JSON.parse(this.prepareFunctionalProperties() || '[]');
+            // prepareFunctionalProperties() returns an ARRAY (or undefined), never a
+            // JSON string. JSON.parse() therefore stringified it to "[object Object]"
+            // and threw, and the catch below silently skipped the budget guard — on
+            // exactly the configurations the guard exists to protect. Codex review,
+            // PR #931, P1. Use the array as returned.
+            const ops = this.prepareFunctionalProperties() || [];
             const paid = Array.isArray(ops) ? ops.filter((o) => Number(o.priceAdjustment) > 0).length : 0;
             const visible = Object.keys(this.prepareOptions() || {}).length;
-            const verdict = await guard.predict(paid, visible);
+            const verdict = await guard.predict(paid, visible, this.modifyID ? this.modifyID.split(':')[0] : undefined);
             if (verdict && verdict.willExceed) {
               guard.render(this);
               this.submitButton?.classList.remove('loading');

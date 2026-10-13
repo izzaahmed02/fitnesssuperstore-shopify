@@ -48,12 +48,21 @@ if (!customElements.get('product-form-with-options')) {
         try {
           const guard = window.FSBundleGuard;
           if (guard) {
-            const ops = JSON.parse(this.prepareFunctionalProperties() || '[]');
+            // prepareFunctionalProperties() returns an ARRAY (or undefined), never a
+            // JSON string. JSON.parse() therefore stringified it to "[object Object]"
+            // and threw, and the catch below silently skipped the budget guard — on
+            // exactly the configurations the guard exists to protect. Codex review,
+            // PR #931, P1. Use the array as returned.
+            const ops = this.prepareFunctionalProperties() || [];
             const paid = Array.isArray(ops) ? ops.filter((o) => Number(o.priceAdjustment) > 0).length : 0;
             const visible = Object.keys(this.prepareOptions() || {}).length;
             const verdict = await guard.predict(paid, visible);
             if (verdict && verdict.willExceed) {
               guard.render(this);
+              // aria-disabled was set before prediction; the early return skips the
+              // finally block that normally clears it, so the form stayed permanently
+              // unusable after one rejection. Codex review, PR #931, P2.
+              this.submitButton?.removeAttribute('aria-disabled');
               this.submitButton?.classList.remove('loading');
               this.applyChangesButton?.classList.remove('loading');
               this.querySelector('.loading__spinner')?.classList.add('hidden');
