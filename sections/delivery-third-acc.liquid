@@ -76,14 +76,14 @@
 
     /* Sub-accordion open/close transition */
    
-[id^="accordion-subcontent-"] {
+[id^="delivery-subpanel-"] {
   overflow: hidden;
   max-height: 0;
   transition: max-height 0.3s ease;
 }
 
         
-[id^="accordion-subcontent-"][aria-hidden="false"] {
+[id^="delivery-subpanel-"][aria-hidden="false"] {
   max-height: 600px;
 }
 
@@ -109,7 +109,7 @@
             min-height: 180px;
             object-fit: contain;
         }
-    
+    }
 </style>
 <div class="section-{{ section.id }} page-width scroll-trigger animate--slide-in">
     <div class="container">
@@ -127,7 +127,7 @@
                                 class="accordion-header"
                                 type="button"
                                 aria-expanded="false"
-                                aria-controls="accordion-content-{{ forloop.index }}">
+                                aria-controls="delivery-panel-{{ section.id }}-{{ block.id }}">
                             <span class="accordion-title">
                                 {{ block.settings.title }}
                             </span>
@@ -135,19 +135,19 @@
                         </button>
 
                         <div
-                                id="accordion-content-{{ forloop.index }}"
+                                id="delivery-panel-{{ section.id }}-{{ block.id }}"
                                 class="accordion-content"
                                 aria-hidden="true"
                         >
                             <div class="accordion-content-inner">
                                 {{ block.settings.subcopy }}
-                                {% if forloop.index == 2 and block.settings.subtitle != blank %}
+                                {% if block.settings.subtitle != blank and block.settings.subimage != blank %}
                                     <div class="delivery-accordion-item">
                                         <button
                                                 class="sub-accordion-header"
                                                 type="button"
                                                 aria-expanded="false"
-                                                aria-controls="accordion-subcontent-{{ forloop.index }}">
+                                                aria-controls="delivery-subpanel-{{ section.id }}-{{ block.id }}">
                                             {% render 'subchevron' %}
                                             <span class="accordion-title">
                                                 {{ block.settings.subtitle }}
@@ -155,7 +155,7 @@
                                         </button>
 
                                         <div
-                                                id="accordion-subcontent-{{ forloop.index }}"
+                                                id="delivery-subpanel-{{ section.id }}-{{ block.id }}"
                                                 class="accordion-content"
                                                 aria-hidden="true"
                                         >
