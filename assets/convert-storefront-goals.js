@@ -52,18 +52,4 @@
   if (pageType === 'product') track('viewItem');
   if (pageType === 'cart') track('viewCart');
 
-  function subscribeToStandardProductForm() {
-    if (typeof subscribe !== 'function' || typeof PUB_SUB_EVENTS === 'undefined') return;
-    subscribe(PUB_SUB_EVENTS.cartUpdate, function (event) {
-      if (!event || event.source !== 'product-form' || !event.cartData ||
-          event.cartData.status) return;
-      track('addToCart');
-    });
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', subscribeToStandardProductForm, { once: true });
-  } else {
-    subscribeToStandardProductForm();
-  }
 })();
