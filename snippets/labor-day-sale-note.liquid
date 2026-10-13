@@ -1,6 +1,6 @@
 {% doc %}
-  Reusable PDP sale card. Dormant: renders nothing until a campaign fills
-  settings.sale_promo_ff / sale_promo_reman and sets a laborday_start/_end window.
+  Reusable PDP sale card. Renders only while settings.sale_promo_ff / sale_promo_reman are
+  filled and now is inside the laborday_start/_end window (Halloween 2026: Oct 13-30 PT).
   @param {product} product - Current product.
   @param {string} [section_id] - Section identifier used by variant refresh.
   @param {boolean} [hide_on_mobile] - Hide the desktop-layout copy on mobile.
@@ -8,14 +8,14 @@
 {% comment %}
   snippets/labor-day-sale-note.liquid
 
-  POST-SALE (Labor Day 2026 ended Sept 8, 11:59:59 p.m. PT): this snippet renders NOTHING.
-  settings.sale_promo_ff and settings.sale_promo_reman are both blank, which is the
-  per-branch kill switch documented below, so campaign_kind stays '' and the card is
-  skipped on every path - including the request.design_mode / laborday_force_preview
-  bypasses that the date window alone does not cover. The date window has also lapsed.
-  The file, its render calls and the two product-info.js refresh hooks are deliberately
-  left in place: they are the reusable card, not the campaign, and the next campaign turns
-  it back on by filling those two settings and setting a new laborday_start/_end window.
+  HALLOWEEN 2026 (Oct 13 12:00 a.m. - Oct 30 11:59:59 p.m. PT): live again for the Halloween
+  sale. sale_promo_ff / sale_promo_reman are filled, laborday_start/_end hold the Halloween
+  window (end exclusive at Oct 31 00:00 PT), and settings.sale_badge_label retitles the badge.
+  The card stops rendering on its own at the window end - no weekend teardown needed. To
+  turn it off early, blank sale_promo_ff and sale_promo_reman (the per-branch kill switch
+  documented below, which also covers the design_mode / force_preview bypasses).
+  (Labor Day 2026 used the same card, Sept 1-8.) The settings names keep their laborday_
+  prefix so the live settings_data keys do not change.
 
   Price-adjacent sale note on eligible PDPs, keyed to ACTUAL discount eligibility
   (collection membership), not the product title. Replaces the previous
@@ -41,8 +41,10 @@
   collections by ID, so this note matches exactly which products get discounted.
     French Fitness 10% (collection 519462814012, all must be true):
       vendor == 'French Fitness' AND type != 'Product (Hidden)' AND no 'july4-exclude' tag
-    Remanufactured 5% (collection 512180715836, all must be true):
-      title contains 'Remanufactured' AND type == 'Product Index'
+      AND no 'labor-day-price-marked' tag
+    Remanufactured 5% (Halloween 2026: collection 523320459580, all must be true):
+      title contains 'Remanufactured' AND type == 'Product Index' AND vendor != 'Power Plate'
+      (Power Plate stays on its own manufacturer promo, so it gets no 5% card.)
 
   DISPLAY: renders as a compact sale card, not a free-text paragraph. The card sits
   directly beneath the main price block so its struck-through "was" figure reads as the
@@ -70,13 +72,15 @@
   assign in_reman = false
 
   if product.vendor == 'French Fitness' and product.type != 'Product (Hidden)'
-    unless product.tags contains 'july4-exclude'
+    unless product.tags contains 'july4-exclude' or product.tags contains 'labor-day-price-marked'
       assign in_ff = true
     endunless
   endif
 
   if product.type == 'Product Index' and product.title contains 'Remanufactured'
-    assign in_reman = true
+    unless product.vendor == 'Power Plate'
+      assign in_reman = true
+    endunless
   endif
 
   comment
@@ -128,7 +132,7 @@
   >
     <div class="labor-day-sale-card">
       <div class="labor-day-sale-card__row">
-        <span class="labor-day-sale-card__badge">Labor day sale</span>
+        <span class="labor-day-sale-card__badge">{{ settings.sale_badge_label | default: 'Sale' }}</span>
         <span class="labor-day-sale-card__was"
           ><span class="visually-hidden">Regular price </span>{{ card_price | money }}</span
         >
