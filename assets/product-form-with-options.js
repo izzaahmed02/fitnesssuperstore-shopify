@@ -69,10 +69,17 @@ if (!customElements.get('product-form-with-options')) {
         try {
           const response = await fetch(url, config);
           if (!response.ok) throw new Error('Failed to add to cart');
-          if (!this.cart) window.location = window.routes.cart_url;
           const result = await response.json();
-          if (!result.status && typeof window.fssConvertTrack === 'function') window.fssConvertTrack('addToCart');
-          !response.ok ? this.handleCartError(result) : this.handleCartSuccess(result);
+          if (result.status) {
+            this.handleCartError(result);
+            return;
+          }
+          if (typeof window.fssConvertTrack === 'function') window.fssConvertTrack('addToCart');
+          if (!this.cart) {
+            window.location = window.routes.cart_url;
+            return;
+          }
+          this.handleCartSuccess(result);
         } catch (error) {
           console.error(error);
           this.handleErrorMessage('This configuration is currently out of stock. Please choose another configuration or contact us for availability.');
