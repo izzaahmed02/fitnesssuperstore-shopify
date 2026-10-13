@@ -42,8 +42,6 @@
           {% assign card_handle = block.settings.tab_handle | handleize %}
           {% if card_handle == handle %}
             {% assign product = block.settings.product %}
-            {%- comment -%} #775: French Fitness permanent comparison pricing is suppressed. {%- endcomment -%}
-            {%- capture hide_perm_price -%}{%- render 'ff-permanent-compare-hidden', product: product -%}{%- endcapture -%}
             {% comment %} Optional variant pin: card price and links follow that one variant {% endcomment %}
             {% assign card_variant = nil %}
             {% if product != blank and block.settings.variant_id != blank %}
@@ -106,11 +104,14 @@
       <div class="price-wrapper">
         <span class="price-value">{{ card_price | money }}</span>
       </div>
-      {% if card_variant == nil and product.metafields.custom.retail_price != blank and hide_perm_price contains 'false' %}
+      {% comment %} GMC/MSRP compliance: reference retail-price display hidden; selling price only. Do not re-enable without verified/substantiated reference price. {% endcomment %}
+      {% comment %}
+      {% if card_variant == nil and product.metafields.custom.retail_price != blank %}
         <div class="old-price-wrapper">
           {{ product.metafields.custom.retail_price | money }}
         </div>
       {% endif %}
+      {% endcomment %}
     </div>
  
     <a href="{{ card_url }}" class="shop-now-btn">

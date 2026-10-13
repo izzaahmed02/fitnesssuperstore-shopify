@@ -1,6 +1,4 @@
 {% assign product = product %}
-{%- comment -%} #775: French Fitness permanent comparison pricing is suppressed. {%- endcomment -%}
-{%- capture hide_perm_price -%}{%- render 'ff-permanent-compare-hidden', product: product -%}{%- endcapture -%}
 
 <div class="product-item card__inner" data-product-id="{{ product.id }}">
   <div class="image-container">
@@ -82,11 +80,15 @@
 
     <div class="product-item__price-container">
        
-            {% if product.metafields.custom.retail_price != blank and hide_perm_price contains 'false' %}
-                <div class="old-price-wrapper">
-                    <span>Retail Price:</span> {{ product.metafields.custom.retail_price | money }}
+{% comment %} GMC/MSRP compliance (2026-04): reference "Retail Price" display hidden — show actual selling price only. Do not re-enable without a verified/substantiated reference price.
+            {% if product.metafields.custom.retail_price != blank %}
+                <div class="old-price-wrapper {% unless product.metafields.custom.retail_price != blank %}retail-price-blank{% endunless %}">
+                    {% if product.metafields.custom.retail_price != blank %}
+                        <span>Retail Price:</span> {{ product.metafields.custom.retail_price | money }}
+                    {% endif %}
                 </div>
             {% endif %}
+            {% endcomment %}
             <div class="price-wrapper">
                 <span class="price-title">Price:</span>
                 <span class="price-value">{{ product.price | money }}</span>

@@ -13,7 +13,11 @@
   suppressed on these bulk/quick-order rows. The row's own selling price, the
   volume-pricing breaks and the cart quantity logic are untouched.
 {% endcomment %}
-{%- capture hide_perm_price -%}{%- render 'ff-permanent-compare-hidden', product: product -%}{%- endcapture -%}
+{%- liquid
+  capture hide_perm_price
+    render 'ff-permanent-compare-hidden', product: product
+  endcapture
+-%}
 
 {% # theme-check-disable %}
 {% assign cart_qty = cart | item_count_for_variant: variant.id %}
@@ -66,7 +70,7 @@
     </div>
 
     {%- assign item_price = item.price | money -%}
-    {%- if item.compare_at_price and hide_perm_price contains 'false' -%}
+    {%- if item.compare_at_price and show_compare_at_price != false and hide_perm_price contains 'false' -%}
       <dl class="variant-item__discounted-prices">
         <dt class="visually-hidden">
           {{ 'products.product.price.regular_price' | t }}
@@ -343,7 +347,7 @@
   </td>
   {%- assign item_price = item.price | money -%}
   <td class="variant-item__price small-hide medium-hide">
-    {%- if item.compare_at_price and hide_perm_price contains 'false' -%}
+    {%- if item.compare_at_price and show_compare_at_price != false and hide_perm_price contains 'false' -%}
       <dl class="variant-item__discounted-prices">
         <dt class="visually-hidden">
           {{ 'products.product.price.regular_price' | t }}

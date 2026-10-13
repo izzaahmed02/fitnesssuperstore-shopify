@@ -1,12 +1,3 @@
-{%- comment -%}
-  #775 feed / structured-data guardrail: the submitted offer price is, and stays,
-  the selling price (variant.price) - MSRP is never emitted as the offer price.
-  On French Fitness products the permanent ListPrice comparison is also dropped, so the
-  landing-page price, the structured-data price and the GMC/Bing feed price all agree and
-  no permanent comparison survives in markup after being removed from the page.
-  custom.retail_price is never referenced here and is left intact.
-{%- endcomment -%}
-{%- capture hide_perm_price -%}{%- render 'ff-permanent-compare-hidden', product: product -%}{%- endcapture -%}
 {%- assign domain_origin = request.origin -%}
 {%- assign seller_logo_url = settings.logo | image_url: width: 800 -%}
 {%- assign fallback_logo_url = 'logo.png' | asset_url -%}
@@ -101,7 +92,8 @@
         "price": {{ product.selected_or_first_available_variant.price | divided_by: 100.0 | json }},
         "priceCurrency": {{ shop.currency | default: 'USD' | json }},
 
-        {% if product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price and hide_perm_price contains 'false' %}
+{% comment %} GMC/MSRP compliance (2026-08, Tim decision 2): schema.org/ListPrice reference-price emission suppressed. The Offer still carries the actual selling price above. Do not re-enable until the reference-price field contract and source dates are documented and approved.
+        {% if product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
         "priceSpecification": [
           {
             "@type": "UnitPriceSpecification",
@@ -117,6 +109,7 @@
           }
         ],
         {% endif %}
+        {% endcomment %}
 
         "url": {{ request.origin | append: product.url | append: '?variant=' | append: product.selected_or_first_available_variant.id | json }},
         "offeredBy": {
@@ -172,7 +165,8 @@
             "price": {{ variant.price | divided_by: 100.0 | json }},
             "priceCurrency": {{ shop.currency | default: 'USD' | json }},
 
-            {% if variant.compare_at_price > variant.price and hide_perm_price contains 'false' %}
+{% comment %} GMC/MSRP compliance (2026-08, Tim decision 2): schema.org/ListPrice reference-price emission suppressed. The Offer still carries the actual selling price above. Do not re-enable until the reference-price field contract and source dates are documented and approved.
+            {% if variant.compare_at_price > variant.price %}
             "priceSpecification": [
               {
                 "@type": "UnitPriceSpecification",
@@ -188,6 +182,7 @@
               }
             ],
             {% endif %}
+            {% endcomment %}
 
             "url": {{ request.origin | append: product.url | append: '?variant=' | append: variant.id | json }},
             "sku": {{ variant.sku | default: product.handle | json }},
