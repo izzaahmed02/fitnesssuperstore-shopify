@@ -1,6 +1,7 @@
 if (!customElements.get('product-gallery')) {
 // Popup thumbnails render at 60px; previously they loaded each image at full size.
 const POPUP_THUMB_WIDTH = 160;
+const MODEL_THUMB_POSITION = 3;
 
 class ProductGallery extends HTMLElement {
   constructor() {
@@ -182,26 +183,52 @@ class ProductGallery extends HTMLElement {
       existing.set(String(btn.getAttribute('data-media-id')), btn);
     });
 
-    // Videos go right after the first thumbnail so they're never scrolled out of the row
-    // (on FSR90 the video was 20th of 21). Selection is by media id, so order is free here.
     const isVideo = (m) => m.media_type === 'video' || m.media_type === 'external_video';
+    const isModel = (m) => m.media_type === 'model';
     const [first, ...rest] = this.mediaData;
-    const ordered = [first, ...rest.filter(isVideo), ...rest.filter((m) => !isVideo(m))];
+    const ordered = [first, ...rest.filter(isVideo), ...rest.filter((m) => !isVideo(m) && !isModel(m))];
+    ordered.splice(Math.min(MODEL_THUMB_POSITION, ordered.length), 0, ...rest.filter(isModel));
 
     const buttons = ordered.map((media) => existing.get(String(media.id)) || this.createThumbnailButton(media)).filter(Boolean);
     if (!buttons.length) return;
     row.replaceChildren(...buttons);
     row.classList.add('is-row');
+    this.addRowNavigation(row);
     row.addEventListener('scroll', () => this.updateRowScrollCue(row), { passive: true });
     window.addEventListener('resize', () => this.updateRowScrollCue(row), { passive: true });
     this.updateRowScrollCue(row);
   }
 
-  // Fade the row edge that has more thumbnails, so it reads as scrollable.
+  // A plain mouse wheel only scrolls vertically, so with a mouse the row couldn't be scrolled
+  // at all. Add < > buttons, shown only when there is more in that direction.
+  addRowNavigation(row) {
+    const nav = document.createElement('div');
+    nav.className = 'custom-gallery-thumbnails-nav';
+    row.before(nav);
+    nav.appendChild(row);
+
+    [['prev', -1, 'Previous thumbnails', '‹'], ['next', 1, 'More thumbnails', '›']].forEach(([name, dir, label, glyph]) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `thumbnails-nav-btn thumbnails-nav-btn--${name}`;
+      btn.setAttribute('aria-label', label);
+      btn.textContent = glyph;
+      btn.addEventListener('click', () => {
+        row.scrollBy({ left: dir * Math.max(row.clientWidth * 0.8, 80), behavior: 'smooth' });
+      });
+      nav.appendChild(btn);
+    });
+  }
+
+  // Fade the row edge that has more thumbnails, and show the matching nav button.
   updateRowScrollCue(row) {
     const more = row.scrollWidth - row.clientWidth;
-    row.classList.toggle('has-more-left', more > 1 && row.scrollLeft > 1);
-    row.classList.toggle('has-more-right', more > 1 && row.scrollLeft < more - 1);
+    const left = more > 1 && row.scrollLeft > 1;
+    const right = more > 1 && row.scrollLeft < more - 1;
+    [row, row.parentElement].forEach((el) => {
+      el?.classList.toggle('has-more-left', left);
+      el?.classList.toggle('has-more-right', right);
+    });
   }
 
   createThumbnailButton(media) {
