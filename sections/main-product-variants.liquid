@@ -2193,21 +2193,50 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // Keep the hidden "Processing Time" option group in step with the selected
-  // variant. That group is what populates the _functionOperation line-item
-  // property, and the cart and checkout read the property - not the variant
-  // metafield. Without this the group keeps whatever was rendered at page load,
-  // so a direct ?variant= link or a picker change ships the wrong promise.
-  // No-op when the group is absent or offers no matching choice, so products
-  // that do not use a Processing Time option are unaffected.
+  // Keep the Processing Time option in step with the selected variant.
+  // The cart and checkout read the _functionOperation line-item property, not
+  // the variant metafield. That property is built in
+  // assets/product-form-with-options.js from whatever the option control held
+  // when the page rendered, so without this a direct ?variant= link, a height
+  // change or browser Back all ship the page-load value.
+  //
+  // Two render paths exist and both are handled. option_type "Select" renders a
+  // hidden <select data-select-option>; option_type "Accordion" renders radio
+  // inputs inside [data-option-accordion]. Products that use neither are
+  // untouched - every branch no-ops when its control or a matching choice is
+  // absent.
   function syncProcessingTimeOption(value) {
     if (!value) return;
-    const group = document.querySelector('[data-option-accordion][data-type="processing-time"]');
-    if (!group) return;
 
     const normalise = (text) => (text || '').replace(/\s+/g, ' ').trim().toLowerCase();
     const wanted = normalise(value);
     if (!wanted) return;
+
+    // Path 1: hidden <select> (option_type "Select").
+    const selects = Array.from(document.querySelectorAll('select[data-select-option]'));
+    const select = selects.find((element) => normalise(element.name) === 'processing-time')
+      || selects.find((element) => normalise(element.dataset.selectTitle) === 'processing time');
+
+    if (select) {
+      const option = Array.from(select.options).find(
+        (candidate) => normalise(candidate.textContent) === wanted
+      );
+      if (!option) {
+        console.log('No Processing Time option matches the selected variant:', value);
+        return;
+      }
+      if (select.value !== option.value) {
+        select.value = option.value;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        select.dispatchEvent(new Event('input', { bubbles: true }));
+        console.log('Processing Time select synced to:', value);
+      }
+      return;
+    }
+
+    // Path 2: accordion with radio inputs (option_type "Accordion").
+    const group = document.querySelector('[data-option-accordion][data-type="processing-time"]');
+    if (!group) return;
 
     let match = null;
     group.querySelectorAll('input.product-options__swatch-input').forEach((input) => {
@@ -2228,8 +2257,8 @@ document.addEventListener('DOMContentLoaded', function() {
       match.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
-    // Write the value the cart payload actually reads, in case no other handler
-    // owns this group on this template.
+    // Write the value the cart payload reads, in case no other handler owns
+    // this group on this template.
     const selectionHolder = group.querySelector('[data-selected-options]');
     if (selectionHolder && selectionHolder.dataset.selectedOptions !== match.value) {
       selectionHolder.dataset.selectedOptions = match.value;
@@ -2242,7 +2271,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    console.log('Processing Time option synced to:', value);
+    console.log('Processing Time accordion synced to:', value);
   }
 
   // Watch for SKU changes using MutationObserver
