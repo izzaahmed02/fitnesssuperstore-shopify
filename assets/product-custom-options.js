@@ -1077,7 +1077,18 @@ if (!customElements.get('product-customization-options')) {
             const ops = this.prepareFunctionalProperties() || [];
             const paid = Array.isArray(ops) ? ops.filter((o) => Number(o.priceAdjustment) > 0).length : 0;
             const visible = Object.keys(this.prepareOptions() || {}).length;
-            const verdict = await guard.predict(paid, visible, this.modifyID ? this.modifyID.split(':')[0] : undefined);
+            // Pass the FULL cart-line key. `modifyID` is `line_item.key` — see
+            // snippets/cart-item-product-options.liquid — and the guard compares it
+            // against `line.key`, which is also the full key. Passing
+            // `.split(':')[0]` handed the guard a bare variant ID that can never
+            // equal a line key, so the line being replaced was never excluded and
+            // the prediction counted it twice. Splitting is correct only on line
+            // 1124, where /cart/add.js wants a variant ID.
+            //
+            // The full key is also what makes two cart lines of the SAME variant
+            // with different configurations behave: a variant-ID comparison would
+            // exclude both of them, under-counting instead of over-counting.
+            const verdict = await guard.predict(paid, visible, this.modifyID || undefined);
             if (verdict && verdict.willExceed) {
               guard.render(this);
               this.submitButton?.classList.remove('loading');

@@ -593,5 +593,25 @@
 </script>
 
 {% if show_product_options %}
+  {%- comment -%}
+    Item C: generated estimator constants, estimator and UX guard. Must load
+    before the option script.
+
+    This snippet is rendered from layout/theme.liquid, so the drawer's Modify
+    flow is reachable on EVERY page, not only /cart. Without these three the
+    drawer ran product-custom-options.js with window.FSBundleEstimator absent:
+    prepareBundlePublicProperties() fails closed by design, so the replacement
+    line would carry no _bundlePublicProperties manifest and the transform would
+    treat it as a fault — and window.FSBundleGuard would be absent too, so the
+    budget guard never ran on that path at all.
+
+    Same defect class as the one Codex found in
+    sections/main-product-home-gym-packages.liquid. It survived that round
+    because the sweep covered sections/ only; tests/estimator-asset-sweep.test.mjs
+    now covers sections, snippets, layout and templates.
+  {%- endcomment -%}
+  <script src="{{ 'fs-bundle-estimator-constants.js' | asset_url }}" defer></script>
+  <script src="{{ 'fs-bundle-estimator.js' | asset_url }}" defer></script>
+  <script src="{{ 'fs-bundle-guard.js' | asset_url }}" defer></script>
   <script src="{{ 'product-custom-options.js' | asset_url }}" defer></script>
 {% endif %}

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PR #931 regression rig</title>
+<style>
+  body { font: 14px/1.5 -apple-system, system-ui, sans-serif; margin: 0; padding: 24px; background: #fff; color: #111; }
+  h1 { font-size: 16px; margin: 0 0 4px; }
+  .rig-note { color: #555; margin: 0 0 20px; }
+  .panel { border: 1px solid #ddd; border-radius: 6px; padding: 16px; margin-bottom: 16px; }
+  .panel > h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: #666; margin: 0 0 12px; }
+  button[type=submit], [data-apply-changes] { padding: 10px 18px; font: inherit; border: 1px solid #111; background: #111; color: #fff; border-radius: 4px; cursor: pointer; }
+  button[aria-disabled=true] { opacity: .45; }
+  .loading__spinner { display: inline-block; }
+  .hidden { display: none; }
+  .fs-bundle-guard { border: 2px solid #c00; background: #fff5f5; padding: 12px; border-radius: 4px; margin-bottom: 12px; }
+  .fs-bundle-guard__message { margin: 0 0 8px; }
+  .fs-bundle-guard__cta { color: #c00; font-weight: 600; }
+  #rig-state { font-family: ui-monospace, Menlo, monospace; font-size: 12px; white-space: pre-wrap; background: #f6f6f6; padding: 12px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<h1>PR #931 — regression rig</h1>
+<p class="rig-note">Real theme assets, real Chromium, real <code>fetch</code> to a real <code>/cart.js</code>. Nothing on this page stubs the guard or the estimator.</p>
+
+<!-- Theme globals the two option assets reach for. These are theme
+     infrastructure (pub/sub, Shopify routes), not anything under test. -->
+<script>
+  window.PUB_SUB_EVENTS = { cartUpdate: 'cart-update', cartError: 'cart-error', variantChange: 'variant-change' };
+  window.subscribe = function () { return function () {}; };
+  window.publish = function () {};
+  window.Shopify = { routes: { root: '/' } };
+  window.routes = { cart_url: '/cart' };
+  window.variantStrings = { addToCart: 'Add to cart' };
+  window.__rig = { consoleErrors: [] };
+  const _err = console.error.bind(console);
+  console.error = function (...a) {
+    try { window.__rig.consoleErrors.push(a.map((x) => (x && x.message) ? `${x.name}: ${x.message}` : String(x)).join(' ')); } catch (e) {}
+    _err(...a);
+  };
+</script>
+
+<div class="panel">
+  <h2>Product page — add to cart</h2>
+  <cart-notification id="cart-notification"></cart-notification>
+  <product-form-with-options id="pdp-form" data-section-id="main" data-hide-errors="false">
+    <form data-type="add-to-cart-form">
+      <input type="hidden" name="id" value="43190000001">
+      <input type="hidden" name="quantity" value="1">
+      <div class="product-form__error-message-wrapper" hidden>
+        <div class="product-form__error-message"></div>
+      </div>
+      <button type="submit"><span>Add to cart</span><span class="loading__spinner hidden">…</span></button>
+    </form>
+  </product-form-with-options>
+</div>
+
+<div class="panel">
+  <h2>Cart — modify an existing line</h2>
+  <!-- data-product-id is line_item.key, exactly as
+       snippets/cart-item-product-options.liquid renders it. -->
+  <product-customization-options id="cart-modify" data-product-id="" data-variant-id="43190000003" data-stamp="none">
+    <button data-apply-changes type="button">Apply changes</button>
+    <span class="loading__spinner hidden">…</span>
+  </product-customization-options>
+  <div id="main-cart-items" data-id="main-cart-items"><div class="section-cart-items">original</div></div>
+  <div id="main-cart-footer" data-id="main-cart-footer"><div class="footer-subtotal-value">original</div></div>
+</div>
+
+<div class="panel">
+  <h2>Rig state</h2>
+  <div id="rig-state">waiting</div>
+</div>
+</body>
+</html>
