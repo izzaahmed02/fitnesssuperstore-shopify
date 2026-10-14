@@ -94,6 +94,8 @@ class ProductGallery extends HTMLElement {
 
     window.addEventListener('resize', this.handleResize.bind(this));
 
+    window.matchMedia('(min-width: 990px)').addEventListener('change', () => this.handleResize());
+
 
     this.main.addEventListener('click', (e) => {
 
@@ -134,6 +136,16 @@ class ProductGallery extends HTMLElement {
   }
 
   handleResize() {
+    if (!this.isDesktop()) {
+      const popup = document.getElementById('product-gallery-popup');
+      if (popup && !popup.hidden) this.closePopup();
+    } else if (!this.querySelector('.custom-gallery-thumbnails.is-row')) {
+      this.buildThumbnailRow();
+      this.initThumbnails();
+      this.querySelectorAll('.thumbnail-btn').forEach((btn) => {
+        btn.classList.toggle('is-active', btn.getAttribute('data-media-id') == this.activeMediaId);
+      });
+    }
 
     const activeId = this.activeMediaId;
     const container = this.main?.querySelector('[data-zoom-container]');
@@ -275,6 +287,8 @@ class ProductGallery extends HTMLElement {
 
     const buttons = this.querySelectorAll('.thumbnail-btn');
     buttons.forEach((btn) => {
+      if (btn.dataset.thumbBound) return;
+      btn.dataset.thumbBound = 'true';
       const mediaId = btn.getAttribute('data-media-id');
       const media = this.mediaData.find(m => m.id == mediaId);
       const isVideoThumb = media && (media.media_type === 'video' || media.media_type === 'external_video');

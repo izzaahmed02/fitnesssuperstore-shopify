@@ -1,6 +1,4 @@
 if (!customElements.get('mobile-gallery')) {
-const POPUP_THUMBS_VISIBLE = 4;
-const POPUP_THUMB_SLOT = 68;
 const CHAT_BUBBLE_SELECTOR = '#gorgias-chat-container iframe#chat-button';
 const CHAT_BUBBLE_HIT_SIZE = 72;
 // Popup image: phone-resolution display file, larger file fetched on zoom (capped at the original).
@@ -11,6 +9,88 @@ const updateScrollCue = (el) => {
   const more = el.scrollWidth - el.clientWidth;
   el.classList.toggle('has-more-left', more > 1 && el.scrollLeft > 1);
   el.classList.toggle('has-more-right', more > 1 && el.scrollLeft < more - 1);
+};
+
+// A mouse can't drag a native scroll row, so drag-to-scroll it by hand. A drag that moved
+// more than a few pixels swallows the click that follows, so releasing over a thumbnail
+// doesn't also select it. Touch keeps native scrolling.
+const enableMouseDragScroll = (el) => {
+  let startX = 0;
+  let startScroll = 0;
+  let dragged = false;
+  let lastX = 0;
+  let lastT = 0;
+  let velocity = 0; // px per ms, smoothed
+  let glide = null;
+  let glideTimeout = null;
+
+  const stopGlide = () => {
+    if (glide) cancelAnimationFrame(glide);
+    glide = null;
+    clearTimeout(glideTimeout);
+  };
+  const onMove = (e) => {
+    const dx = e.clientX - startX;
+    if (!dragged && Math.abs(dx) > 5) {
+      dragged = true;
+      // Scroll-snap pulls the row back to the nearest thumbnail on every assignment, which
+      // made the drag stutter; switch it off while the mouse is held.
+      el.classList.add('is-drag-scrolling');
+    }
+    if (!dragged) return;
+    e.preventDefault();
+    el.scrollLeft = startScroll - dx;
+    const now = performance.now();
+    if (now > lastT) velocity = 0.8 * ((lastX - e.clientX) / (now - lastT)) + 0.2 * velocity;
+    lastX = e.clientX;
+    lastT = now;
+  };
+  // Page-level listeners only while the button is held, so rebuilt strips leave nothing behind.
+  const onUp = () => {
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    if (!dragged) return;
+    // Short glide in the drag direction, then hand back to scroll-snap.
+    let v = performance.now() - lastT > 80 ? 0 : velocity;
+    let prev = performance.now();
+    const step = (now) => {
+      const dt = now - prev;
+      prev = now;
+      el.scrollLeft += v * dt;
+      v *= Math.pow(0.95, dt / 16);
+      if (Math.abs(v) > 0.02) {
+        glide = requestAnimationFrame(step);
+      } else {
+        glide = null;
+        el.classList.remove('is-drag-scrolling');
+      }
+    };
+    glide = requestAnimationFrame(step);
+    // Animation frames pause in background tabs; never leave the strip stuck in drag mode.
+    clearTimeout(glideTimeout);
+    glideTimeout = setTimeout(() => {
+      stopGlide();
+      el.classList.remove('is-drag-scrolling');
+    }, 1200);
+  };
+  el.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    stopGlide();
+    dragged = false;
+    velocity = 0;
+    startX = lastX = e.clientX;
+    lastT = performance.now();
+    startScroll = el.scrollLeft;
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  });
+  el.addEventListener('click', (e) => {
+    if (!dragged) return;
+    dragged = false;
+    e.preventDefault();
+    e.stopPropagation();
+  }, true);
+  el.addEventListener('dragstart', (e) => e.preventDefault());
 };
 
 const sizedSrc = (src, width) =>
@@ -35,7 +115,6 @@ class MobileGallery extends HTMLElement {
     this.boundPopupKeydown = this.handlePopupKeydown.bind(this);
     // Incremented per openPopup call; a call that resumes after a newer one started bails out.
     this.openToken = 0;
-    this.popupThumbsVisible = POPUP_THUMBS_VISIBLE;
   }
 
   connectedCallback() {
@@ -268,6 +347,7 @@ observePopup() {
     });
     this.dots.appendChild(strip);
     strip.addEventListener('scroll', () => updateScrollCue(strip), { passive: true });
+    enableMouseDragScroll(strip);
 
     const counter = document.createElement('div');
     counter.className = 'mobile-gallery-counter';
@@ -443,25 +523,8 @@ observePopup() {
         waitForAnimate: false,
       });
 
-      this.popupThumbsVisible = Math.max(POPUP_THUMBS_VISIBLE, Math.floor((this.popupThumbnails.clientWidth || window.innerWidth) / POPUP_THUMB_SLOT));
-      $(this.popupThumbnails).slick({
-        slidesToShow: this.popupThumbsVisible,
-
-        arrows: false,
-
-        swipeToSlide: true,
-        infinite: false,
-        lazyLoad: 'ondemand',
-        speed: 250,
-        cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
-        // Starting the strip at the opened slide left it mostly empty near the end
-        // (opening image 4 of 4 showed a single thumbnail), so clamp to a full window.
-        initialSlide: this.clampThumbStart(index),
-        variableWidth: false,
-        centerMode: false,
-      });
-
-      this.syncPopupThumbs(index);
+      this.setUpPopupStrip();
+      this.syncPopupThumbs(index, true);
 
       $(this.popupSlider).on('afterChange.mobileGallery', (event, slick, currentSlide) => {
         this.pauseAllMedia(this.popup);
@@ -523,13 +586,40 @@ observePopup() {
     return overlay.parentElement?.querySelector('iframe') || null;
   }
 
-  clampThumbStart(index) {
-    const count = this.popupThumbnails?.querySelectorAll('.mobile-popup-thumb').length || 0;
-    return Math.max(0, Math.min(index, count - this.popupThumbsVisible));
+  // < > buttons (for a mouse) and mouse drag-scrolling on the popup strip, set up once per
+  // popup element; the strip itself is rebuilt on every open.
+  setUpPopupStrip() {
+    const strip = this.popupThumbnails;
+    if (!strip) return;
+    if (!strip.parentElement.classList.contains('mobile-popup-thumbs-nav')) {
+      const nav = document.createElement('div');
+      nav.className = 'mobile-popup-thumbs-nav';
+      strip.before(nav);
+      nav.appendChild(strip);
+      [['prev', -1, 'Previous thumbnails', '‹'], ['next', 1, 'More thumbnails', '›']].forEach(([name, dir, label, glyph]) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `thumbnails-nav-btn thumbnails-nav-btn--${name}`;
+        btn.setAttribute('aria-label', label);
+        btn.textContent = glyph;
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          strip.scrollBy({ left: dir * Math.max(strip.clientWidth * 0.8, 80), behavior: 'smooth' });
+        });
+        nav.appendChild(btn);
+      });
+    }
+    if (!strip.dataset.scrollReady) {
+      strip.dataset.scrollReady = 'true';
+      strip.addEventListener('scroll', () => updateScrollCue(strip), { passive: true });
+      enableMouseDragScroll(strip);
+    }
+    strip.scrollLeft = 0;
+    updateScrollCue(strip);
   }
 
   // Highlight the thumbnail for the current slide and scroll the strip only when it is out of view.
-  syncPopupThumbs(currentSlide) {
+  syncPopupThumbs(currentSlide, instant = false) {
     if (!this.popupThumbnails) return;
     const thumbs = this.popupThumbnails.querySelectorAll('.mobile-popup-thumb');
     thumbs.forEach((thumb) => {
@@ -542,12 +632,15 @@ observePopup() {
       counter.textContent = `${currentSlide + 1} of ${thumbs.length}`;
     }
 
-    const $thumbs = $(this.popupThumbnails);
-    if (!$thumbs.hasClass('slick-initialized')) return;
-    const start = $thumbs.slick('slickCurrentSlide');
-    if (currentSlide < start || currentSlide >= start + this.popupThumbsVisible) {
-      $thumbs.slick('slickGoTo', this.clampThumbStart(currentSlide));
-    }
+    const strip = this.popupThumbnails;
+    const active = [...thumbs].find((t) => Number(t.dataset.slideIndex) === currentSlide);
+    if (!active) return;
+    const start = active.offsetLeft;
+    const end = start + active.offsetWidth;
+    if (start >= strip.scrollLeft && end <= strip.scrollLeft + strip.clientWidth) return;
+    const left = start < strip.scrollLeft ? start - 8 : end - strip.clientWidth + 8;
+    strip.scrollTo({ left: Math.max(0, left), behavior: instant ? 'auto' : 'smooth' });
+    updateScrollCue(strip);
   }
 
   closePopup(e) {
