@@ -405,9 +405,10 @@ async function loadPricingReferenceHTML() {
 
   // Single-option families shown the same way (e.g. Turf Grade: V1 / V2 / V3),
   // in their existing order, with a "Compare all" link when the page has a
-  // comparison table. Empty until a family is approved for it ('Turf Grade' is
-  // the planned first entry).
-  const SINGLE_OPTION_FAMILIES = [];
+  // comparison table. 'Length' is the French Fitness Rack & Rig Uprights
+  // family (ten approved heights); without it that PDP fell through to the
+  // default Dawn pill styling instead of the approved orange selector.
+  const SINGLE_OPTION_FAMILIES = ['Length'];
 
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
