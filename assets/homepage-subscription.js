@@ -13,15 +13,61 @@ function setupSubscriptionForm(subscriptionForm) {
 	const sectionWrapper = sectionRoot.querySelector('.homepage-subscription__wrapper');
 	const emailInput = subscriptionForm.querySelector('input[type="email"]');
 	const errorMessage = subscriptionForm.querySelector('.error-message');
+	const submitButtonVisible = subscriptionForm.querySelector('button[type="submit"]');
+	const expectedKlaviyoFormId = 'Ud8shK';
+	let pendingEmail = '';
+	let confirmationTimer = null;
 
-	if (!hiddenFormContainer || !thankWrapper || !sectionWrapper || !emailInput || !errorMessage) {
+	if (!hiddenFormContainer || !thankWrapper || !sectionWrapper || !emailInput || !errorMessage || !submitButtonVisible) {
 		return;
 	}
 
 	function getKlaviyoForm() {
 		return hiddenFormContainer.querySelector('form') ||
-			document.querySelector('.klaviyo-form-Ud8shK form');
+			document.querySelector('.klaviyo-form-' + expectedKlaviyoFormId + ' form');
 	}
+
+	function setSubmitting(isSubmitting) {
+		subscriptionForm.setAttribute('aria-busy', isSubmitting ? 'true' : 'false');
+		submitButtonVisible.disabled = isSubmitting;
+	}
+
+	function resetPendingSubmission() {
+		pendingEmail = '';
+		setSubmitting(false);
+		if (confirmationTimer) {
+			window.clearTimeout(confirmationTimer);
+			confirmationTimer = null;
+		}
+	}
+
+	function showConfirmedSuccess() {
+		resetPendingSubmission();
+		sectionWrapper.style.display = 'none';
+		thankWrapper.style.display = 'block';
+		thankWrapper.focus({ preventScroll: true });
+	}
+
+	function handleKlaviyoFormEvent(event) {
+		if (!pendingEmail || !event.detail || event.detail.type !== 'submit') {
+			return;
+		}
+
+		if (event.detail.formId !== expectedKlaviyoFormId) {
+			return;
+		}
+
+		const metadata = event.detail.metaData || {};
+		const confirmedEmail = String(metadata.email || metadata.$email || '').trim().toLowerCase();
+
+		if (confirmedEmail && confirmedEmail !== pendingEmail.toLowerCase()) {
+			return;
+		}
+
+		showConfirmedSuccess();
+	}
+
+	window.addEventListener('klaviyoForms', handleKlaviyoFormEvent);
 
 	emailInput.addEventListener('input', function () {
 		if (emailInput.validity.valid && validateEmail(emailInput.value.trim())) {
@@ -42,9 +88,9 @@ function setupSubscriptionForm(subscriptionForm) {
 
 		const hiddenForm = getKlaviyoForm();
 		const hiddenEmailInput = hiddenForm && hiddenForm.querySelector('input[type="email"]');
-		const submitButton = hiddenForm && hiddenForm.querySelector('button[type="submit"], button');
+		const hiddenSubmitButton = hiddenForm && hiddenForm.querySelector('button[type="submit"], button');
 
-		if (!hiddenForm || !hiddenEmailInput || !submitButton) {
+		if (!hiddenForm || !hiddenEmailInput || !hiddenSubmitButton) {
 			setEmailError(
 				emailInput,
 				errorMessage,
@@ -55,21 +101,28 @@ function setupSubscriptionForm(subscriptionForm) {
 		}
 
 		clearEmailError(emailInput, errorMessage);
+		pendingEmail = email;
+		setSubmitting(true);
 
 		hiddenEmailInput.value = email;
 		hiddenEmailInput.dispatchEvent(new Event('input', { bubbles: true }));
 		hiddenEmailInput.dispatchEvent(new Event('change', { bubbles: true }));
 
-		setTimeout(function () {
-			submitButton.click();
-			sectionWrapper.style.display = 'none';
-			thankWrapper.style.display = 'block';
-			thankWrapper.focus({ preventScroll: true });
+		hiddenSubmitButton.click();
 
-			setTimeout(function () {
-				window.location.reload();
-			}, 2000);
-		}, 50);
+		confirmationTimer = window.setTimeout(function () {
+			if (!pendingEmail) {
+				return;
+			}
+
+			resetPendingSubmission();
+			setEmailError(
+				emailInput,
+				errorMessage,
+				'We could not confirm your subscription. Please try again.'
+			);
+			emailInput.focus();
+		}, 10000);
 	});
 }
 
