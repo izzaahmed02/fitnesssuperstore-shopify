@@ -55,12 +55,10 @@ class ProductGallery extends HTMLElement {
     const renderedMainId = this.main?.querySelector('.main-image-container')?.getAttribute('data-media-id');
     const renderedMainMatches = renderedMainId && this.mediaData.find((m) => m.id == renderedMainId);
 
-    if (!currentActiveThumbnail && renderedMainMatches) {
-      this.activeMediaId = renderedMainId;
-    } else if (!currentActiveThumbnail && this.mediaData.length > 0) {
+    if (!currentActiveThumbnail && !renderedMainMatches && this.mediaData.length > 0) {
       this.setActiveMedia(this.mediaData[0].id);
-    } else if (currentActiveThumbnail) {
-      this.activeMediaId = currentActiveThumbnail.getAttribute('data-media-id');
+    } else if (currentActiveThumbnail || renderedMainMatches) {
+      this.activeMediaId = currentActiveThumbnail ? currentActiveThumbnail.getAttribute('data-media-id') : renderedMainId;
 
 
       const firstMedia = this.mediaData.find(m => m.id == this.activeMediaId);
