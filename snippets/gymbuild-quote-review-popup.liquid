@@ -42,6 +42,9 @@
   the store's display unit once, at render. It is base + delta rather than
   a sum of components on purpose — custom.gymbuild_items does not claim to
   model every item in a package, so a sum would understate freight.
+  The visible "Total Package Weight" line is HIDDEN since 2026-10-14
+  (PR #781) until its physical-weight basis is verified; the math above
+  still runs and the data attributes still ship. See the Details list.
 
   UI ONLY, per explicit direction (2026-09-08): everything that's already
   real/live is wired dynamically (package name/price/SKU/weight, the live
@@ -219,12 +222,18 @@
         <ul class="gymbuild-quote-review-modal__details-list">
           <li>Shopify SKU: {{ current_variant.sku }}</li>
           {% comment %}
-            Server-rendered value is the base package weight; the JS below
-            replaces it on open with base + swap deltas + add-ons, so a heavier
-            swap or an extra add-on moves the number the freight quote is based
-            on. Falls back to the static value if the JS never runs.
+            "Total Package Weight" is HIDDEN (2026-10-14, PR #781) until its
+            physical-weight basis is verified: every source is Shopify variant
+            SHIPPING weight, which is not the same as physical weight. Only the
+            customer-facing line is removed. The weight data and math stay
+            intact (data-review-weight*, data-review-base-weight-grams,
+            data-item-weight, data-addon-weight and the grams calculation in
+            the script below, which skips the display while this element is
+            absent). To restore, put this line back inside the list:
+            <li>Total Package Weight: <span data-gymbuild-review-weight>{{ current_variant.weight | weight_with_unit: current_variant.weight_unit }}</span></li>
+            The server-rendered value is the base package weight; the JS
+            replaces it on open with base + swap deltas + add-ons.
           {% endcomment %}
-          <li>Total Package Weight: <span data-gymbuild-review-weight>{{ current_variant.weight | weight_with_unit: current_variant.weight_unit }}</span></li>
         </ul>
       </div>
 

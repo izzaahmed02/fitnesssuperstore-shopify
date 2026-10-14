@@ -318,14 +318,12 @@
 
                         # Test-product badge source: gymbuild_item.data_status (choices
                         # "test" / "approved"). It is ITEM-level, so the default and every
-                        # alternative in this item share one status. Blank or anything
-                        # other than "test" counts as approved (no badge) - decided
-                        # 2026-10-04.
-                        capture inclusion_status_raw
-                          echo card_item.data_status.value
-                        endcapture
-                        assign inclusion_status = inclusion_status_raw | strip
-                        if inclusion_status != 'test'
+                        # alternative in this item share one status. ONLY the exact value
+                        # "approved" hides the badge; "test", blank, missing and any other
+                        # value stay visibly unapproved (corrected 2026-10-14, PR #781 -
+                        # the 2026-10-04 rule treated blank/unknown as approved).
+                        assign inclusion_status = 'unapproved'
+                        if card_item.data_status.value == 'approved'
                           assign inclusion_status = 'approved'
                         endif
 
@@ -431,9 +429,9 @@
                         data-item-status="{{ inclusion_status }}"
                       >
                         {%- comment -%} TEST-PRODUCT BADGE — driven by gymbuild_item.data_status {%- endcomment -%}
-                        {% if inclusion_status == 'test' %}
+                        {% unless inclusion_status == 'approved' %}
                           <span class="gymbuild-test-badge">Test product only</span>
-                        {% endif %}
+                        {% endunless %}
                         <div class="gymbuild-customize-drawer__card-image-wrap">
                           {% if inclusion_image %}
                             {%- liquid
@@ -579,11 +577,12 @@
      A thin strip overlaid on the top edge of every product-bearing card
      in this popup — the "Package Inclusions" grid cards, the swap
      sub-view's alternate cards, and the swap sub-view's "currently
-     selected" thumbnail — shown only when the card's gymbuild_item has
-     data_status "test" (blank/"approved" = no badge). The status is
-     item-level, so it is carried on the card as data-item-status and a
-     swap never changes it. Set an item to "approved" in admin to clear
-     its badge — no code change needed.
+     selected" thumbnail — shown unless the card's gymbuild_item has
+     data_status exactly "approved" ("test", blank, missing or any other
+     value = badge; corrected 2026-10-14). The status is item-level, so
+     it is carried on the card as data-item-status and a swap never
+     changes it. Set an item to "approved" in admin to clear its badge —
+     no code change needed.
      ================================================================== */
   .gymbuild-customize-drawer__card,
   .gymbuild-customize-drawer__swap-card {
@@ -1725,8 +1724,9 @@
       activeCard = card;
 
       // TEST-PRODUCT BADGE — item-level (gymbuild_item.data_status), so the
-      // current product and every alternative share the card's status.
-      var isTestItem = card.dataset.itemStatus === 'test';
+      // current product and every alternative share the card's status. Only
+      // an exact "approved" hides it; a missing or unknown value keeps it.
+      var isTestItem = card.dataset.itemStatus !== 'approved';
 
       if (swapCurrentEl) {
         swapCurrentEl.innerHTML =
