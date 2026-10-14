@@ -75,15 +75,20 @@
     }
 
     /* Sub-accordion open/close transition */
-    #accordion-subcontent-{{ forloop.index }} {
-        overflow: hidden;
-        max-height: 0;
-        transition: max-height 0.3s ease;
-    }
+   
+[id^="delivery-subpanel-"] {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease;
+}
 
-    #accordion-subcontent-{{ forloop.index }}[aria-hidden="false"] {
-        max-height: 600px;
-    }
+        
+[id^="delivery-subpanel-"][aria-hidden="false"] {
+  max-height: 600px;
+}
+
+
+  
 
     /* Border override for sub item */
     .delivery-accordion-item:has(> .sub-accordion-header[aria-expanded="true"]) {
@@ -106,7 +111,6 @@
         }
     }
 </style>
-
 <div class="section-{{ section.id }} page-width scroll-trigger animate--slide-in">
     <div class="container">
         <div class="delivery-first-acc__wrapper">
@@ -123,7 +127,7 @@
                                 class="accordion-header"
                                 type="button"
                                 aria-expanded="false"
-                                aria-controls="accordion-content-{{ forloop.index }}">
+                                aria-controls="delivery-panel-{{ section.id }}-{{ block.id }}">
                             <span class="accordion-title">
                                 {{ block.settings.title }}
                             </span>
@@ -131,19 +135,19 @@
                         </button>
 
                         <div
-                                id="accordion-content-{{ forloop.index }}"
+                                id="delivery-panel-{{ section.id }}-{{ block.id }}"
                                 class="accordion-content"
                                 aria-hidden="true"
                         >
                             <div class="accordion-content-inner">
                                 {{ block.settings.subcopy }}
-                                {% if forloop.index == 2 %}
+                                {% if block.settings.subtitle != blank and block.settings.subimage != blank %}
                                     <div class="delivery-accordion-item">
                                         <button
                                                 class="sub-accordion-header"
                                                 type="button"
                                                 aria-expanded="false"
-                                                aria-controls="accordion-subcontent-{{ forloop.index }}">
+                                                aria-controls="delivery-subpanel-{{ section.id }}-{{ block.id }}">
                                             {% render 'subchevron' %}
                                             <span class="accordion-title">
                                                 {{ block.settings.subtitle }}
@@ -151,15 +155,21 @@
                                         </button>
 
                                         <div
-                                                id="accordion-subcontent-{{ forloop.index }}"
+                                                id="delivery-subpanel-{{ section.id }}-{{ block.id }}"
                                                 class="accordion-content"
                                                 aria-hidden="true"
                                         >
                                             <div class="accordion-content-inner">
                                                 {% if block.settings.subimage != blank %}
-                                                    <img src="{{ block.settings.subimage | image_url: width: 600, height: 300 }}"
-                                                         alt="{{ block.settings.subimage.alt | escape }}"
-                                                         class="accordion-content-image">
+                                                    
+<img
+  src="{{ block.settings.subimage | image_url: width: 600, height: 300 }}"
+  alt="{{ block.settings.subimage.alt | escape }}"
+  width="600"
+  height="300"
+  class="accordion-content-image"
+>
+
                                                 {% endif %}
                                             </div>
                                         </div>
@@ -167,9 +177,15 @@
                                 {% endif %}
                                 {{ block.settings.copy }}
                                 {% if block.settings.image != blank %}
-                                    <img src="{{ block.settings.image | image_url: width: 600, height: 250 }}"
-                                         alt="{{ block.settings.image.alt | escape }}"
-                                         class="accordion-content-image">
+                                    
+<img
+  src="{{ block.settings.image | image_url: width: 600, height: 250 }}"
+  alt="{{ block.settings.image.alt | escape }}"
+  width="600"
+  height="250"
+  class="accordion-content-image"
+>
+
                                 {% endif %}
                             </div>
                         </div>
@@ -177,6 +193,23 @@
                 {% endfor %}
             </div>
         </div>
+        {%- if section.settings.contact_heading != blank or section.settings.contact_copy != blank -%}
+            <div class="delivery-contact-strip">
+                {%- if section.settings.contact_heading != blank -%}
+                    <h2 class="delivery-first-acc__title">{{ section.settings.contact_heading }}</h2>
+                {%- endif -%}
+                {%- if section.settings.contact_copy != blank -%}
+                    <div class="delivery-contact-strip__copy">{{ section.settings.contact_copy }}</div>
+                {%- endif -%}
+                {% render 'delivery-contact-links',
+                  phone_label: section.settings.contact_phone_label,
+                  phone_link: section.settings.contact_phone_link,
+                  email_label: section.settings.contact_email_label,
+                  email_link: section.settings.contact_email_link,
+                  email_address: section.settings.contact_email_address
+                %}
+            </div>
+        {%- endif -%}
     </div>
 </div>
 
@@ -230,6 +263,47 @@
       "type": "richtext",
       "id": "copy",
       "label": "Section Copy"
+    },
+    {
+      "type": "header",
+      "content": "Final contact strip"
+    },
+    {
+      "type": "text",
+      "id": "contact_heading",
+      "label": "Contact heading"
+    },
+    {
+      "type": "richtext",
+      "id": "contact_copy",
+      "label": "Contact copy"
+    },
+    {
+      "type": "text",
+      "id": "contact_phone_label",
+      "label": "Phone button label"
+    },
+    {
+      "type": "text",
+      "id": "contact_phone_link",
+      "label": "Phone button link",
+      "info": "Example: tel:+19252152927"
+    },
+    {
+      "type": "text",
+      "id": "contact_email_label",
+      "label": "Email button label"
+    },
+    {
+      "type": "text",
+      "id": "contact_email_link",
+      "label": "Email button link",
+      "info": "Example: mailto:sales@fitnesssuperstore.com?subject=..."
+    },
+    {
+      "type": "text",
+      "id": "contact_email_address",
+      "label": "Visible email address"
     }
   ],
   "blocks": [
