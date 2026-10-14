@@ -1,6 +1,21 @@
 {{ 'comparison-main.css' | asset_url | stylesheet_tag }}
 {{ 'comparison-item.css' | asset_url | stylesheet_tag }}
 
+{%- comment -%}
+B2: Group the comparison-chart cards by equipment category.
+
+Category assignment is data-driven and editable by a non-developer: each block
+carries a "category" select (see schema). It is NOT hardcoded in markup and no
+card is tied to a group here. Blocks with no category fall into "Other", so the
+page renders correctly while the field is still being populated (all cards show
+under "Other" until someone categorizes them). Empty groups — and their jump-nav
+entries — are suppressed. Card copy/images are untouched; only grouping and the
+surrounding structure change.
+
+Group render order is fixed below.
+{%- endcomment -%}
+{%- assign category_order = "Treadmills|Ellipticals, AMT & Arc|Bikes|Steppers & Climbers|Rowers & Ski|Consoles|Strength & Home Gyms|Vibration|Other" | split: "|" -%}
+
 <div class="page-width">
 
 <div class="main-comparison__searchbar-wrapper" style="text-align:center; margin-bottom: 2rem;">
@@ -12,73 +27,197 @@
   >
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const searchInput = document.getElementById('comparisonSearch');
-  const items = document.querySelectorAll('.main-comparison__item-outer');
-  searchInput.addEventListener('input', function() {
-    const query = this.value.trim().toLowerCase();
-    items.forEach(item => {
-      const title = (item.getAttribute('data-title') || '').toLowerCase();
-      if (!query || title.includes(query)) {
-        item.style.display = '';
-      } else {
-        item.style.display = 'none';
-      }
-    });
-  });
-  // Typing animation for placeholder
-  const staticText = "Compare between our ";
-  const keywords = ["Adjustable Crossovers", "Home Gym Equipment", "Rowers", "Treadmills/Treadclimbers", "Home Gym", "Fitness Bikes", "Leg Press Machines"];
-  let keywordIndex = 0;
-  let charIndex = 0;
-  let typing = true;
-  function typePlaceholder() {
-    const currentWord = keywords[keywordIndex];
-    if (typing) {
-      if (charIndex <= currentWord.length) {
-        searchInput.placeholder = staticText + currentWord.slice(0, charIndex);
-        charIndex++;
-        setTimeout(typePlaceholder, 100);
-      } else {
-        typing = false;
-        setTimeout(typePlaceholder, 1200); // Pause before erasing
-      }
-    } else {
-      if (charIndex > 0) {
-        charIndex--;
-        searchInput.placeholder = staticText + currentWord.slice(0, charIndex);
-        setTimeout(typePlaceholder, 50);
-      } else {
-        typing = true;
-        keywordIndex = (keywordIndex + 1) % keywords.length;
-        setTimeout(typePlaceholder, 400);
-      }
-    }
-  }
-  typePlaceholder();
-});
-</script>
-
 <style>
 .main-comparison__item-outer{
     display: contents;
 }
+
+/* Jump nav */
+.comparison-jumpnav { margin: 0 0 28px; }
+.comparison-jumpnav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.comparison-jumpnav__item a {
+  display: inline-block;
+  padding: 8px 14px;
+  border: 1px solid #ddd;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 1;
+  color: #23232b;
+  background: #fff;
+  white-space: nowrap;
+}
+.comparison-jumpnav__item a:hover,
+.comparison-jumpnav__item a:focus {
+  border-color: #D83D0E;
+  color: #D83D0E;
+}
+
+/* Groups. scroll-margin-top keeps a jumped-to heading clear of any sticky
+   site header; the JS below measures the real header and sets the offset. */
+.comparison-group {
+  scroll-margin-top: var(--cmp-sticky-offset, 90px);
+  margin-bottom: 44px;
+}
+.comparison-group__title {
+  margin: 0 0 16px;
+}
+
+@media (max-width: 749px) {
+  .comparison-jumpnav__list {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+  }
+}
 </style>
 
-<div class="main-comparison__wrapper" style="
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 20px;
-">
-    {% for block in section.blocks %}
-<div class="main-comparison__item-outer" data-title="{{ block.settings.title | escape }}">
-        {% render 'comparison-item', block: block %}
+{%- comment -%}
+Build the groups (and, as a side effect, the nav list) in one pass. The group
+markup is captured so the nav can be emitted above it while empty groups stay
+suppressed.
+{%- endcomment -%}
+{%- assign nav_html = '' -%}
+{%- capture groups_html -%}
+  {%- for cat in category_order -%}
+    {%- assign cat_handle = cat | handle -%}
+    {%- assign cat_count = 0 -%}
+    {%- capture cards_html -%}
+      {%- for block in section.blocks -%}
+        {%- assign bcat = block.settings.category -%}
+        {%- if bcat == blank -%}{%- assign bcat = 'Other' -%}{%- endif -%}
+        {%- if bcat == cat -%}
+          {%- assign cat_count = cat_count | plus: 1 -%}
+          <div class="main-comparison__item-outer" data-title="{{ block.settings.title | escape }}" data-group="{{ cat_handle }}">
+            {% render 'comparison-item', block: block %}
+          </div>
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endcapture -%}
+    {%- if cat_count > 0 -%}
+      {%- capture nav_item -%}<li class="comparison-jumpnav__item" data-group="{{ cat_handle }}"><a href="#group-{{ cat_handle }}">{{ cat | escape }}</a></li>{%- endcapture -%}
+      {%- assign nav_html = nav_html | append: nav_item -%}
+      <section class="comparison-group" id="group-{{ cat_handle }}" data-group="{{ cat_handle }}">
+        <h2 class="comparison-group__title">{{ cat | escape }}</h2>
+        <div class="main-comparison__wrapper" style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:20px;">
+          {{ cards_html }}
+        </div>
+      </section>
+    {%- endif -%}
+  {%- endfor -%}
+{%- endcapture -%}
+
+{%- if nav_html != blank -%}
+  <nav class="comparison-jumpnav" aria-label="Jump to equipment category">
+    <ul class="comparison-jumpnav__list">{{ nav_html }}</ul>
+  </nav>
+{%- endif -%}
+
+<div class="main-comparison__groups">
+  {{ groups_html }}
 </div>
-    {% endfor %}
+
 </div>
-</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var searchInput = document.getElementById('comparisonSearch');
+
+  // ---- Jump-nav offset: keep anchored headings clear of a sticky site header ----
+  function setStickyOffset() {
+    var selectors = [
+      '.sticky-header--stick',
+      'header.header',
+      '.site-header',
+      '.section-header',
+      '[id^="shopify-section-header"]'
+    ];
+    var offset = 0;
+    for (var i = 0; i < selectors.length; i++) {
+      var el = document.querySelector(selectors[i]);
+      if (el) {
+        var pos = getComputedStyle(el).position;
+        if (pos === 'fixed' || pos === 'sticky') {
+          offset = el.getBoundingClientRect().height;
+          break;
+        }
+      }
+    }
+    document.documentElement.style.setProperty('--cmp-sticky-offset', (offset + 16) + 'px');
+  }
+  setStickyOffset();
+  window.addEventListener('resize', setStickyOffset);
+  window.addEventListener('load', setStickyOffset);
+
+  // ---- Search filter across groups ----
+  var items = Array.prototype.slice.call(document.querySelectorAll('.main-comparison__item-outer'));
+  var groups = Array.prototype.slice.call(document.querySelectorAll('.comparison-group'));
+
+  function applyFilter(query) {
+    items.forEach(function (item) {
+      var title = (item.getAttribute('data-title') || '').toLowerCase();
+      item.style.display = (!query || title.indexOf(query) !== -1) ? '' : 'none';
+    });
+    // Hide a group (and its nav entry) when all its cards are filtered out.
+    groups.forEach(function (group) {
+      var handle = group.getAttribute('data-group');
+      var groupItems = group.querySelectorAll('.main-comparison__item-outer');
+      var shown = 0;
+      Array.prototype.forEach.call(groupItems, function (it) {
+        if (it.style.display !== 'none') { shown++; }
+      });
+      group.style.display = shown > 0 ? '' : 'none';
+      var nav = document.querySelector('.comparison-jumpnav__item[data-group="' + handle + '"]');
+      if (nav) { nav.style.display = shown > 0 ? '' : 'none'; }
+    });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', function () {
+      applyFilter(this.value.trim().toLowerCase());
+    });
+
+    // Typing animation for placeholder
+    var staticText = "Compare between our ";
+    var keywords = ["Adjustable Crossovers", "Home Gym Equipment", "Rowers", "Treadmills/Treadclimbers", "Home Gym", "Fitness Bikes", "Leg Press Machines"];
+    var keywordIndex = 0;
+    var charIndex = 0;
+    var typing = true;
+    function typePlaceholder() {
+      var currentWord = keywords[keywordIndex];
+      if (typing) {
+        if (charIndex <= currentWord.length) {
+          searchInput.placeholder = staticText + currentWord.slice(0, charIndex);
+          charIndex++;
+          setTimeout(typePlaceholder, 100);
+        } else {
+          typing = false;
+          setTimeout(typePlaceholder, 1200); // Pause before erasing
+        }
+      } else {
+        if (charIndex > 0) {
+          charIndex--;
+          searchInput.placeholder = staticText + currentWord.slice(0, charIndex);
+          setTimeout(typePlaceholder, 50);
+        } else {
+          typing = true;
+          keywordIndex = (keywordIndex + 1) % keywords.length;
+          setTimeout(typePlaceholder, 400);
+        }
+      }
+    }
+    typePlaceholder();
+  }
+});
+</script>
 
 {% schema %}
 {
@@ -116,6 +255,24 @@ document.addEventListener('DOMContentLoaded', function() {
           "type": "url",
           "id": "url",
           "label": "Block URL"
+        },
+        {
+          "type": "select",
+          "id": "category",
+          "label": "Equipment category",
+          "info": "Controls which group this chart appears under on the comparison-charts hub. Leave as Other until it is categorized.",
+          "options": [
+            { "value": "Treadmills", "label": "Treadmills" },
+            { "value": "Ellipticals, AMT & Arc", "label": "Ellipticals, AMT & Arc" },
+            { "value": "Bikes", "label": "Bikes" },
+            { "value": "Steppers & Climbers", "label": "Steppers & Climbers" },
+            { "value": "Rowers & Ski", "label": "Rowers & Ski" },
+            { "value": "Consoles", "label": "Consoles" },
+            { "value": "Strength & Home Gyms", "label": "Strength & Home Gyms" },
+            { "value": "Vibration", "label": "Vibration" },
+            { "value": "Other", "label": "Other" }
+          ],
+          "default": "Other"
         }
       ]
     }
