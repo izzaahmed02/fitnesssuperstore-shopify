@@ -1850,6 +1850,13 @@
         recalcSubtotal();
         updateTabFades();
       }
+      // An add-on toggled while the drawer is already open must move the
+      // footer too, not wait for the next swap. ProductAddOnsQuote binds its
+      // click handler on the button itself, so by the time this document-level
+      // listener runs, data-addon-state already holds the new value.
+      if (event.target.closest('product-add-ons-quote [data-addon-toggle]')) {
+        recalcSubtotal();
+      }
     });
 
     recalcSubtotal();
