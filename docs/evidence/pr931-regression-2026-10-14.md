@@ -75,10 +75,14 @@ Re-running the sweep across **snippets, layout, templates and blocks** as well
 as sections found one more file loading an option script and none of the three
 assets: `snippets/cart-drawer.liquid`.
 
-It survived the PR #931 round because that sweep covered `sections/` only. This
-one matters more than the section did: the snippet is rendered from
-`layout/theme.liquid:47`, so the drawer's Modify flow is reachable on **every
-page of the store**, not only `/cart`. With the constants absent,
+It survived the PR #931 round because that sweep covered `sections/` only.
+
+**Exposure, stated precisely.** The snippet is rendered from `layout/theme.liquid:47`, so the
+drawer exists on every page, and its `show_product_options` branch turns on whenever the cart holds
+any line carrying `_functionOperation`. On a **product** page the three assets arrive anyway from
+`main-product*.liquid`, and on `/cart` from `main-cart-items.liquid`. **The gap is everywhere else:
+home, collection, search, blog** — a customer with a configured item in the cart opens the drawer
+there and hits Modify. With the constants absent,
 `prepareBundlePublicProperties()` fails closed by design — the replacement line
 carries no `_bundlePublicProperties` manifest and the transform treats it as a
 fault — and `window.FSBundleGuard` is absent too, so the budget guard never runs
