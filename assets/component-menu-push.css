@@ -1,0 +1,168 @@
+/* Mobile push menu inside the header drawer (snippets/header-drawer.liquid). */
+.menu-drawer--push {
+  --menu-push-gutter: 15px;
+  --menu-push-soft: #2b2b33;
+  padding-inline: 0;
+  overflow: hidden;
+}
+
+.menu-push {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.menu-push__stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.menu-push__panel {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 var(--menu-push-gutter) 16px;
+  background-color: var(--dark-blue);
+  transform: translateX(100%);
+  visibility: hidden;
+  transition: transform 0.28s ease, visibility 0s linear 0.28s;
+}
+
+.menu-push__panel.is-active {
+  transform: none;
+  visibility: visible;
+  transition: transform 0.28s ease, visibility 0s;
+}
+
+.menu-push__panel.is-active.is-behind {
+  transform: translateX(-30%);
+  visibility: hidden;
+  transition: transform 0.28s ease, visibility 0s linear 0.28s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-push__panel,
+  .menu-push__panel.is-active,
+  .menu-push__panel.is-active.is-behind {
+    transition: none;
+  }
+}
+
+.menu-push__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.menu-push__row,
+.menu-push__back {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+  padding: 12px 0;
+  border: 0;
+  border-bottom: 1px solid #3a3b42;
+  background: none;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.menu-push__row--top {
+  padding-block: 14px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 26px;
+}
+
+.menu-push__row--bold,
+.menu-push__row--all {
+  font-weight: 700;
+}
+
+.menu-push__row .icon-caret,
+.menu-push__back .icon-caret {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+
+.menu-push__row .icon-caret {
+  transform: rotate(-90deg);
+}
+
+.menu-push__back {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  justify-content: flex-start;
+  gap: 8px;
+  width: calc(100% + 2 * var(--menu-push-gutter));
+  margin-inline: calc(-1 * var(--menu-push-gutter));
+  padding: 14px var(--menu-push-gutter);
+  background-color: var(--menu-push-soft);
+  border-bottom-color: #4f4f55;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.menu-push__back .icon-caret {
+  transform: rotate(90deg);
+}
+
+.menu-push__label {
+  padding: 20px 0 4px;
+  color: #9b9ca3;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Footer spacing and type follow the approved prototype; Call and Email share a row per Sagi. */
+.menu-push__contact {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  padding: 4px var(--menu-push-gutter) calc(10px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid #4f4f55;
+  background-color: var(--menu-push-soft);
+  font-size: 14px;
+  line-height: 21px;
+}
+
+.menu-push__contact-label {
+  margin: 0;
+  padding: 16px 0 6px;
+  color: #9b9ca3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.menu-push__contact-row {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 32px;
+}
+
+.menu-push__contact a {
+  padding-block: 11px;
+  color: #f2f2f2;
+  text-decoration: none;
+}
