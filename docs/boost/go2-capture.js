@@ -57,6 +57,18 @@
   const out = { label, captured_utc: new Date().toISOString(), shop: SHOP, rows };
   const text = JSON.stringify(out, null, 1);
   console.log(text);
-  try { copy(text); console.log('>>> Copied to clipboard. Paste it into a file named ' + label + '.json'); }
-  catch (e) { console.log('>>> Clipboard copy unavailable. Copy the JSON printed above by hand.'); }
+
+  // Download it as a file. Clipboard access is blocked in some consoles, this is not.
+  try {
+    const blob = new Blob([text], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = label + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    console.log('>>> Downloaded ' + label + '.json to your Downloads folder.');
+  } catch (e) {
+    console.log('>>> Download failed (' + e + '). Copy the JSON printed above by hand.');
+  }
 })();
