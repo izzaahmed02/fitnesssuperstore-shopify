@@ -1,0 +1,29 @@
+{%- comment -%}
+  Call / email buttons and visible email address for the Northern California
+  Delivery page. Rendered by sections/delivery-banner.liquid (hero) and
+  sections/delivery-third-acc.liquid (final contact strip).
+
+  Accepts:
+  - phone_label / phone_link: e.g. "Call 925-215-2927" / "tel:+19252152927"
+  - email_label / email_link: e.g. "Email Delivery Questions" / "mailto:...?subject=..."
+  - email_address: visible address, linked with mailto:
+{%- endcomment -%}
+{%- if phone_label != blank or email_label != blank or email_address != blank -%}
+  <div class="delivery-contact">
+    {%- if phone_label != blank or email_label != blank -%}
+      <div class="delivery-contact__buttons">
+        {%- if phone_label != blank and phone_link != blank -%}
+          <a href="{{ phone_link | escape }}" class="button">{{ phone_label | escape }}</a>
+        {%- endif -%}
+        {%- if email_label != blank and email_link != blank -%}
+          <a href="{{ email_link | escape }}" class="button button--secondary">{{ email_label | escape }}</a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+    {%- if email_address != blank -%}
+      <p class="delivery-contact__email">
+        <a href="mailto:{{ email_address | escape }}">{{ email_address | escape }}</a>
+      </p>
+    {%- endif -%}
+  </div>
+{%- endif -%}
