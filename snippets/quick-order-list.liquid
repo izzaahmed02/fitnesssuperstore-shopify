@@ -14,6 +14,10 @@
 {% # theme-check-disable %}
 {%- assign items_in_cart = cart | line_items_for: product | sum: 'quantity' -%}
 {% # theme-check-enable %}
+{%- assign show_reference_price = true -%}
+{%- if product.id == 10269254254908 -%}
+  {%- assign show_reference_price = false -%}
+{%- endif -%}
 <div class="quick-order-list-container color-{{ section.settings.color_scheme }}{% unless is_modal %} gradient{% endunless %}">
   <quick-order-list
     class="page-width section-{{ section.id }}-padding"
@@ -81,7 +85,8 @@
                   variant: product.selected_or_first_available_variant,
                   show_image: show_image,
                   show_sku: show_sku,
-                  is_modal: is_modal
+                  is_modal: is_modal,
+                  show_compare_at_price: show_reference_price
                 -%}
               {%- else -%}
                 {%- for variant in product.variants -%}
@@ -92,7 +97,8 @@
                     variant: variant,
                     show_image: show_image,
                     show_sku: show_sku,
-                    is_modal: is_modal
+                    is_modal: is_modal,
+                  show_compare_at_price: show_reference_price
                   -%}
                 {%- endfor -%}
               {%- endif -%}
