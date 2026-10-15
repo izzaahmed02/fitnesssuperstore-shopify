@@ -18,6 +18,19 @@
   assign last_index = index
   assign has_color_option = false
 
+  # P82 products with colors in the options (not Shopify variants) get a color
+  # dropdown in the Colors row instead of the swatches; same check as main-product.
+  assign show_color_dropdown = false
+  if title_downcase contains 'p82 console'
+    assign show_color_dropdown = true
+    for option in product.options_with_values
+      assign option_handle = option.name | handleize
+      if option_handle == 'color' and option.values.size > 1
+        assign show_color_dropdown = false
+      endif
+    endfor
+  endif
+
   for category in options
     assign category_title_downcase = category.title | downcase
     if category_title_downcase contains 'color' or category_title_downcase contains 'colors'
@@ -133,7 +146,7 @@
       %}
 
       <div
-        class="product-option__item"
+        class="product-option__item{% if show_color_dropdown and color_counter == 1 %} has-color-dropdown{% endif %}"
         {% unless category.hide_option %}
           style="order:  {% if color_title != blank %}{{ color_index }}{% elsif category_title_downcase == 'warranty' %}{{ warranty_index }}{% elsif category_title_downcase == 'assembly & room of choice installation needed?' %}{{ assambly_index }}{% elsif quantity_option %}0{% else %}{{ index }}{% endif %};"
         {% endunless %}
@@ -213,6 +226,9 @@
           {% if title == 'paint color' or title == 'paint colors' or title == 'color' %}
             {% if product_option.product_option_sets_default.value.id %}
               {% assign default = product_option.product_option_sets_default.value.id %}
+            {% endif %}
+            {% if show_color_dropdown and color_counter == 1 %}
+              {% render 'option-color-selector', product_option: product_option %}
             {% endif %}
             {% render 'custom-color-picker',
               product: product_option.product_option_variants.value,
