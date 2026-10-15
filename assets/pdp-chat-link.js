@@ -8,22 +8,29 @@
   if (buttons.length === 0) return;
 
   // GorgiasChat.open() is the method Gorgias documents for custom "open chat" links.
-  // A tap right after page load can land before the widget exists or has rendered, and
-  // open() is ignored until it has, so retry briefly (max 10s) until it is rendered.
+  // A tap right after page load can land before the widget exists or has rendered.
+  // Until init() resolves, Gorgias throws on any other API member, so only init() is
+  // touched first; then retry briefly (max 10s) until the widget has rendered.
   function openChat() {
     var deadline = Date.now() + 10000;
     function attempt() {
       var chat = window.GorgiasChat;
-      if (!chat || typeof chat.open !== 'function') {
+      if (!chat) {
         if (Date.now() < deadline) window.setTimeout(attempt, 300);
         return;
       }
-      var ready = typeof chat.init === 'function' ? chat.init() : null;
-      Promise.resolve(ready).then(function () {
-        var rendered = typeof chat.isChatRendered !== 'function' || chat.isChatRendered();
-        chat.open();
-        if (!rendered && Date.now() < deadline) window.setTimeout(attempt, 400);
-      });
+      Promise.resolve()
+        .then(function () {
+          return chat.init();
+        })
+        .then(function () {
+          var rendered = chat.isChatRendered();
+          chat.open();
+          if (!rendered && Date.now() < deadline) window.setTimeout(attempt, 400);
+        })
+        .catch(function () {
+          if (Date.now() < deadline) window.setTimeout(attempt, 400);
+        });
     }
     attempt();
   }
