@@ -1,6 +1,8 @@
 {% doc %}
   Reusable PDP sale card. Renders only while settings.sale_promo_ff / sale_promo_reman are
   filled and now is inside the laborday_start/_end window (Halloween 2026: Oct 13-30 PT).
+  Power Plate products on a real price-based sale (compare-at above price) also get the card
+  inside their own fixed window (Halloween 2026: Oct 13-26 PT).
   @param {product} product - Current product.
   @param {string} [section_id] - Section identifier used by variant refresh.
   @param {boolean} [hide_on_mobile] - Hide the desktop-layout copy on mobile.
@@ -45,6 +47,15 @@
     Remanufactured 5% (Halloween 2026: collection 523320459580, all must be true):
       title contains 'Remanufactured' AND type == 'Product Index' AND vendor != 'Power Plate'
       (Power Plate stays on its own manufacturer promo, so it gets no 5% card.)
+    Power Plate sale (Halloween 2026, Oct 13-26 PT; Tim: "show ... on PDP for sale"):
+      vendor == 'Power Plate' AND the selected variant has compare_at_price > price.
+      This sale is a real price change (price = sale price, compare_at_price = MSRP), not an
+      automatic discount, so the card shows compare_at_price struck through and the live price
+      as-is (no "in cart" wording, no 5% / 10% maths). It is gated by the compare-at itself:
+      the scheduled Matrixify restore (Oct 26 11:59 p.m. PT) sets compare-at back to 0, which
+      removes the card on its own. A fixed window (Oct 13 00:00 to Oct 27 00:00 PT, end
+      exclusive) is a second guard. To end it early, restore the prices (compare-at 0).
+      Power Plate gets no site banner; this card is the only on-page sale marker.
 
   DISPLAY: renders as a compact sale card, not a free-text paragraph. The card sits
   directly beneath the main price block so its struck-through "was" figure reads as the
@@ -95,11 +106,27 @@
   elsif in_reman and settings.sale_promo_reman != blank
     assign campaign_kind = 'reman'
   endif
+
+  comment
+    Power Plate Oct 13-26 2026: price-based sale. Gated by the selected variant's own
+    compare-at, so only the products actually on sale get a card and it disappears when
+    the restore import zeroes compare-at. in_ff / in_reman never match Power Plate.
+  endcomment
+  assign pp_variant = product.selected_or_first_available_variant
+  if product.vendor == 'Power Plate' and pp_variant.price > 0 and pp_variant.compare_at_price > pp_variant.price
+    assign campaign_kind = 'power_plate'
+  endif
 -%}
 {%- comment -%} Date window (store timezone). Theme editor and force_preview both bypass it. {%- endcomment -%}
 {%- assign now_s = 'now' | date: '%s' | plus: 0 -%}
-{%- assign start_s = settings.laborday_start | date: '%s' | plus: 0 -%}
-{%- assign end_s = settings.laborday_end | date: '%s' | plus: 0 -%}
+{%- if campaign_kind == 'power_plate' -%}
+  {%- comment -%} Power Plate window: Oct 13 12:00 a.m. PT to Oct 26 11:59:59 p.m. PT (end exclusive). {%- endcomment -%}
+  {%- assign start_s = '2026-10-13 00:00:00 -0700' | date: '%s' | plus: 0 -%}
+  {%- assign end_s = '2026-10-27 00:00:00 -0700' | date: '%s' | plus: 0 -%}
+{%- else -%}
+  {%- assign start_s = settings.laborday_start | date: '%s' | plus: 0 -%}
+  {%- assign end_s = settings.laborday_end | date: '%s' | plus: 0 -%}
+{%- endif -%}
 {%- assign in_window = false -%}
 {%- if settings.laborday_force_preview or request.design_mode -%}
   {%- assign in_window = true -%}
@@ -113,7 +140,16 @@
       the family MINIMUM and would strike through a figure the shopper never sees.
     endcomment
     assign card_price = product.selected_or_first_available_variant.price | default: product.price
-    if campaign_kind == 'reman'
+    if campaign_kind == 'power_plate'
+      comment
+        Price-based sale: was = compare-at (MSRP), now = the live price. Percent is derived
+        from the two so it always matches what the shopper sees.
+      endcomment
+      assign card_price = pp_variant.compare_at_price
+      assign card_sale_price = pp_variant.price
+      assign pp_pct = card_price | minus: card_sale_price | times: 100.0 | divided_by: card_price | round
+      assign card_discount = pp_pct | append: '% off'
+    elsif campaign_kind == 'reman'
       assign card_discount = '5% off'
       assign card_sale_price = card_price | times: 0.95
     else
@@ -137,11 +173,11 @@
           ><span class="visually-hidden">Regular price </span>{{ card_price | money }}</span
         >
         <span class="labor-day-sale-card__now"
-          ><span class="visually-hidden">Sale price </span>{{ card_sale_price | money }} in cart</span
+          ><span class="visually-hidden">Sale price </span>{{ card_sale_price | money }}{% unless campaign_kind == 'power_plate' %} in cart{% endunless %}</span
         >
       </div>
       <p class="labor-day-sale-card__meta">
-        {{ card_discount }} applied automatically at checkout{% if end_s > 0 %} · Ends {{ last_day_s | date: "%b. %-d" }}{% endif %}
+        {% if campaign_kind == 'power_plate' %}{{ card_discount }} MSRP{% else %}{{ card_discount }} applied automatically at checkout{% endif %}{% if end_s > 0 %} · Ends {{ last_day_s | date: "%b. %-d" }}{% endif %}
       </p>
     </div>
   </div>
