@@ -1224,11 +1224,13 @@ product-customization-options {
     border-radius: 0 0 7px 7px;
   }
 
-  /* Warranty (select): the theme draws its border with !important, so removing the
-     box-in-box needs the same. Font, size, height and padding stay the theme's. */
+  /* Warranty (select): the theme draws its border and 14px size with !important, so
+     removing the box-in-box and the 16px readability size (Tim, 2026-10-16; also stops
+     iOS zooming on focus) need the same. Height and padding stay the theme's. */
   .product-options--pdp .product-option__item--card .product-options__select {
     border-color: transparent !important;
     box-shadow: none;
+    font-size: 16px !important;
   }
 
   /* Full-row tap target (min 44px); wraps so the value can take its own line. */
@@ -1296,9 +1298,12 @@ product-customization-options {
     display: none;
   }
 
-  /* "No accessories selected" until something is added (Accessories / Add Ons only).
-     Same type as the selected-value text. */
-  .product-options--pdp .product-option__item--accessories .product-options__accordion-header:not(:has([data-option-id])) .product-options__empty-value {
+  /* "No accessories selected" until something is added - single-tab Accessories / Add Ons
+     cards only. Multi-tab cards (any category) show no per-tab empty message: an empty
+     tab is its title + chevron, a tab with a selection shows its value (Tim, 2026-10-16:
+     no repeated empty-selection messages). "Selected" = a rendered badge
+     (p[data-option-id]), so defaults, clearing, resets and conditional tabs all follow. */
+  .product-options--pdp .product-option__item--accessories .product-options__accordion--single .product-options__accordion-header:not(:has([data-option-id])) .product-options__empty-value {
     display: block;
     order: 3;
     flex: 1 1 100%;
@@ -1427,8 +1432,10 @@ product-customization-options {
     color: #D83D0E;
   }
 
-  /* Readability (Tim, 2026-10-16): the small explanatory text is 16px on mobile.
+  /* Readability (Tim, 2026-10-16): the small explanatory text is 16px on mobile, and
+     tab titles in multi-tab cards match it so a title never reads smaller than its value.
      Size and line height only - family, weight and colour stay the theme's. */
+  .product-options--pdp .product-option__item--card .product-options__subcategory-title,
   .product-options--pdp .product-options__accordion-label-title,
   .product-options--pdp .product-options__accordion-label-price,
   .product-options--pdp .product-option__item--card .product-options__service-upgrade,
