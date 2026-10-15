@@ -119,6 +119,7 @@ if (!customElements.get('product-customization-options')) {
         this.handlePopupHelper();
         this.handleHelpPopupAccordions();
         this.handleMandatoryReset();
+        this.handleServiceUpgradeRows();
         this.relatedProductsSwitcher();
         this.colorSwatchHandler();
         this.addCustomColorHandler();
@@ -669,6 +670,31 @@ if (!customElements.get('product-customization-options')) {
             defaultInput.dispatchEvent(new Event('input', { bubbles: true }));
           });
         });
+      }
+
+      // Mobile options UI (display only): keeps the delivery card's "Service upgrade" row
+      // (product-option-accordion.liquid) in step with the checked radio. It only reads
+      // data-field-price and writes its own text; prices, totals and cart data are untouched.
+      // Radio `input` events bubble here after setCustomizationOption has run, including
+      // the synthetic one handleMandatoryReset dispatches.
+
+      handleServiceUpgradeRows() {
+        const rows = this.querySelectorAll('[data-service-upgrade]');
+        if (rows.length === 0) return;
+        const sync = () => {
+          rows.forEach((row) => {
+            const accordion = row.closest('[data-option-accordion]');
+            const value = row.querySelector('[data-service-upgrade-value]');
+            if (!accordion || !value) return;
+            const checked = accordion.querySelector('[data-customization-option]:checked');
+            row.style.display = checked ? '' : 'none';
+            if (!checked) return;
+            const price = checked.dataset.fieldPrice || row.dataset.zeroPrice || '';
+            value.textContent = price.startsWith('-') ? price : `+${price}`;
+          });
+        };
+        this.addEventListener('input', sync);
+        sync();
       }
 
       // Default option event lister (Add possibility to remove default)

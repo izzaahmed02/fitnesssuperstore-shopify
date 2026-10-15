@@ -1010,3 +1010,433 @@ product-customization-options {
     }
   }
   
+
+/* ==========================================================================
+   Mobile options UI (display only) — PDP-scoped via .product-options--pdp
+   (and the --card / --delivery / --accessories modifiers rendered with it).
+   Keep when reconciling with PR #837 (shared stylesheet with cart Modify).
+   Cart Modify renders its own markup, so none of these selectors match there,
+   and every visible change is inside max-width: 749px, so desktop is unchanged.
+   DATA: nothing below may display:none a [data-option-title] element -
+   prepareOptions() reads its innerText as the cart property key.
+   ========================================================================== */
+
+/* Mobile-only elements: hidden everywhere unless the mobile block shows them. */
+.product-options__mobile-heading,
+.product-options__mobile-label,
+.product-options__details-link,
+.product-options__optional-link,
+.product-options__optional-tag,
+.product-options__empty-value,
+.product-options__service-upgrade,
+.product-options__service-details,
+.product-options__swatch-price-zero {
+  display: none;
+}
+
+@media screen and (max-width: 749px) {
+  /* Banner -> "Choose your options" (a <p>, so the heading outline is unchanged). */
+  .product-options__bar {
+    display: none;
+  }
+
+  .product-options__mobile-heading {
+    display: block;
+    margin: 20px 0 12px;
+    font-family: 'Lato', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 30px;
+    color: #23232b;
+  }
+
+  /* One card per visible group: label row + field. */
+  .product-options--pdp .product-option__item--card {
+    position: relative;
+    margin-bottom: 12px;
+    padding: 10px 16px;
+    border: 1px solid #dcdce0;
+    border-radius: 12px;
+    background-color: #fff;
+  }
+
+  .product-options--pdp .product-option__item--card:has(.error) {
+    border-color: #D83D0E;
+  }
+
+  /* Header row: label left, "Details" / "Optional" right, no numbered circle. */
+  .product-options--pdp .product-option__item--card .product-options__category-title {
+    margin: 0 0 2px;
+    column-gap: 12px;
+    font-size: 17px;
+    line-height: 24px;
+    color: #23232b;
+  }
+
+  .product-options--pdp .product-options__category-title > span:first-child {
+    display: none;
+  }
+
+  /* Short label: the category title text node stays in the DOM, sized to 0. */
+  .product-options--pdp .product-options__category-title--short {
+    font-size: 0;
+  }
+
+  .product-options--pdp .product-options__category-title .product-options__mobile-label {
+    display: inline;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 24px;
+    text-align: left;
+    text-transform: none;
+    color: #23232b;
+  }
+
+  /* Help: "?" icons give way to text links that open the same popups. */
+  .product-options--pdp .product-options__category-title > .button--popup:has(+ .product-options__details-link) {
+    display: none;
+  }
+
+  /* Display only: the svg has no text, so hiding it inside [data-option-title] keeps innerText as is. */
+  .product-options--pdp .product-option__item--field-help-covered .product-options__subcategory-title .button--popup {
+    display: none;
+  }
+
+  .product-options--pdp .product-options__details-link,
+  .product-options--pdp .product-options__optional-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 44px;
+    min-height: 44px;
+    margin: -10px 0 -10px auto;
+    padding: 0 0 0 16px;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font-family: 'Lato', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 20px;
+    text-transform: none;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    color: #D83D0E;
+  }
+
+  .product-options--pdp .product-options__optional-link {
+    color: #6b6b70;
+    text-decoration-color: #b8b8bd;
+  }
+
+  .product-options--pdp .product-options__category-title .product-options__optional-tag {
+    display: inline;
+    width: auto;
+    height: auto;
+    margin: 0 0 0 auto;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 20px;
+    text-transform: none;
+    color: #6b6b70;
+  }
+
+  .product-options--pdp .product-options__details-link:focus-visible,
+  .product-options--pdp .product-options__optional-link:focus-visible,
+  .product-options--pdp .product-options__service-details:focus-visible {
+    outline: 2px solid #D83D0E;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Field inside the card: no second border; full-row tap target. */
+  .product-options--pdp .product-option__item--card .product-options__accordion {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__accordion + .product-options__accordion {
+    border-top: 1px solid #ececec;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__accordion-header {
+    flex-wrap: wrap;
+    align-items: center;
+    min-height: 44px;
+    padding: 0;
+    column-gap: 12px;
+    row-gap: 0;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__accordion-header[aria-expanded='true'] {
+    border-bottom: 0;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__subcategory-title {
+    order: 1;
+    flex: 1 1 0;
+    max-width: none;
+    font-size: 16px;
+    line-height: 22px;
+    color: #23232b;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__accordion-icon {
+    order: 2;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 24px;
+    min-height: 44px;
+    margin-left: auto;
+  }
+
+  /* Selected value on its own line, wrapping (no ellipsis). */
+  .product-options--pdp .product-option__item--card .product-options__accordion-label {
+    order: 3;
+    flex: 1 1 100%;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    margin: 0 0 8px;
+    overflow: visible;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__accordion-label p {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__accordion-label-title {
+    flex: 1 1 auto;
+    margin-right: 0;
+    font-size: 16px;
+    line-height: 22px;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    color: #23232b;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__accordion-label-price {
+    margin-right: 0;
+    font-size: 15px;
+    line-height: 22px;
+  }
+
+  /* x on optional selections stays; 44x44 hit area around the 16px icon. */
+  .product-options--pdp .product-option__item--card .product-options__accordion-label .close-option {
+    box-sizing: content-box;
+    padding: 14px;
+    margin: -14px -14px -14px 0;
+  }
+
+  .product-options--pdp .product-option__item--card [data-mandatory] .close-option {
+    display: none;
+  }
+
+  /* "No accessories selected" until something is added (Accessories / Add Ons only). */
+  .product-options--pdp .product-option__item--accessories .product-options__accordion-header:not(:has([data-option-id])) .product-options__empty-value {
+    display: block;
+    order: 3;
+    flex: 1 1 100%;
+    margin: 0 0 8px;
+    font-size: 16px;
+    line-height: 22px;
+    color: #23232b;
+  }
+
+  /* Single accessory field and the delivery field: the card label names the group, so the
+     field title is visually hidden (NOT display:none) and the value takes the full row.
+     DATA: prepareOptions() reads [data-option-title] innerText as the cart property key. */
+  .product-options--pdp .product-option__item--card .product-options__accordion--single .product-options__subcategory-title,
+  .product-options--pdp .product-option__item--card .product-options__accordion--delivery .product-options__subcategory-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__accordion--single .product-options__accordion-label,
+  .product-options--pdp .product-option__item--card .product-options__accordion--single .product-options__empty-value,
+  .product-options--pdp .product-option__item--card .product-options__accordion--delivery .product-options__accordion-label {
+    order: 1;
+    flex: 1 1 0;
+    margin: 0;
+  }
+
+  /* Delivery: price moves to the "Service upgrade" row. Clip-hidden, not display:none,
+     because the quantity handler writes into [data-option-price]. */
+  .product-options--pdp .product-options__accordion--delivery .product-options__accordion-label-price {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__service-upgrade {
+    display: flex;
+    order: 3;
+    flex: 1 1 100%;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 0 8px;
+    font-family: 'Lato', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: #6b6b70;
+  }
+
+  .product-options--pdp .product-options__service-upgrade-value {
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: #23232b;
+  }
+
+  /* Delivery expanded: the header row keeps its label, the chevron takes the "Details" spot,
+     and the list follows directly (concept state 02). "Service details" sits under the list. */
+  .product-options--pdp .product-option__item--delivery:has(.product-options__accordion--delivery [data-open-accordion][aria-expanded='true']) .product-options__category-title .product-options__details-link {
+    visibility: hidden;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__accordion--delivery .product-options__accordion-header[aria-expanded='true'] {
+    position: absolute;
+    top: 0;
+    right: 6px;
+    width: 44px;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__accordion--delivery .product-options__accordion-header[aria-expanded='true'] .product-options__accordion-label,
+  .product-options--pdp .product-option__item--card .product-options__accordion--delivery .product-options__accordion-header[aria-expanded='true'] .product-options__service-upgrade {
+    display: none;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__accordion--delivery .product-options__accordion-header[aria-expanded='true'] .product-options__accordion-icon {
+    margin: 0;
+    justify-content: center;
+  }
+
+  /* Option lists inside cards. */
+  .product-options--pdp .product-option__item--card .product-options__accordion-content {
+    background-color: transparent;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__swatch {
+    padding: 0 0 4px;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__swatch-wrapper {
+    min-height: 44px;
+    padding: 10px 8px;
+    gap: 12px;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__swatch-title {
+    font-size: 15px;
+    line-height: 21px;
+    color: #23232b;
+  }
+
+  /* Delivery list: single choice, qualifier on its own line, "+" prices right-aligned,
+     selected row tinted. Display only - data-field-name / data-option-price-raw untouched. */
+  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-input {
+    width: 20px;
+    height: 20px;
+  }
+
+  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-title {
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-title-sep {
+    display: none;
+  }
+
+  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-title-qualifier {
+    display: block;
+    font-size: 14px;
+    line-height: 20px;
+    color: #6b6b70;
+  }
+
+  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-price,
+  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-price-zero {
+    display: block;
+    order: 3;
+    margin: 0 0 0 auto;
+    padding-left: 8px;
+    font-family: Lato, sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 22px;
+    white-space: nowrap;
+    color: #23232b;
+  }
+
+  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-price::before,
+  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-price-zero::before {
+    content: '+';
+  }
+
+  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-wrapper:has(.product-options__swatch-input:checked) {
+    border-radius: 8px;
+    border-bottom-color: transparent;
+    background-color: #fdf0ea;
+  }
+
+  .product-options--pdp .product-options__accordion--delivery .product-options__service-details {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin: 0 0 2px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font-family: 'Lato', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 20px;
+    color: #D83D0E;
+  }
+
+  /* Warranty (select field): restyle only. 16px keeps iOS from zooming on focus. */
+  .product-options--pdp .product-option__item--card .product-options__select {
+    height: 44px;
+    padding: 10px 32px 10px 0;
+    border: 0 !important;
+    border-radius: 0;
+    box-shadow: none;
+    background-color: transparent;
+    background-position: right 4px center;
+    font-size: 16px !important;
+    color: #23232b;
+  }
+}

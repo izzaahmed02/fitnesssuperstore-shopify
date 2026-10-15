@@ -30,6 +30,32 @@
   if product_option.hide_values
     assign option_visible = false
   endif
+
+  # Mobile options UI (display only): card modifiers and the delivery help key.
+  # Nothing here is read by pricing, validation or prepareOptions().
+  assign is_delivery_option = false
+  assign is_accessories_option = false
+  assign is_single_accessory = false
+  assign service_popup_key = ''
+  if category_title_downcase == 'assembly & room of choice installation needed?'
+    assign is_delivery_option = true
+    if category.help_text.value != blank
+      assign service_popup_key = category.title
+    elsif product_option.help_text.value != blank
+      assign service_popup_key = product_option.product_option_title
+    endif
+  elsif category_title_downcase == 'accessories / add ons'
+    assign is_accessories_option = true
+    assign visible_accessory_options = 0
+    for accessory_option in category.product_options.value
+      unless accessory_option.hide_values
+        assign visible_accessory_options = visible_accessory_options | plus: 1
+      endunless
+    endfor
+    if visible_accessory_options == 1
+      assign is_single_accessory = true
+    endif
+  endif
 %}
 
 {% if option_type == 'Accordion' %}
@@ -39,7 +65,7 @@
     {% if product_option.product_option_sets_default.value.id %}
       data-default-option="{{ product_option.product_option_sets_default.value.id }}"
     {% endif %}
-    class="product-options__accordion"
+    class="product-options__accordion{% if is_delivery_option %} product-options__accordion--delivery{% endif %}{% if is_accessories_option %} product-options__accordion--accessories{% endif %}{% if is_single_accessory %} product-options__accordion--single{% endif %}"
     {% if conditions_to_render != blank %}
       data-conditions-to-render="{{ conditions_to_render | replace_last: ',', '' | strip }}"
     {% endif %}
@@ -101,6 +127,26 @@
         {% endif %}
       </span>
 
+      {%- comment -%}
+        Mobile options UI (display only). These sit outside .product-options__accordion-label because
+        JS rebuilds that element's innerHTML on every selection. No data-option-* hooks on purpose.
+      {%- endcomment -%}
+      {% if is_accessories_option %}
+        <span class="product-options__empty-value">No accessories selected</span>
+      {% endif %}
+      {% if is_delivery_option %}
+        {%- liquid
+          assign service_upgrade_price = 0
+          if product_option.product_option_sets_default.value.price > 0
+            assign service_upgrade_price = product_option.product_option_sets_default.value.price
+          endif
+        -%}
+        <span class="product-options__service-upgrade" data-service-upgrade data-zero-price="{{ 0 | money }}">
+          <span class="product-options__service-upgrade-label">Service upgrade</span>
+          <span class="product-options__service-upgrade-value" data-service-upgrade-value>+{{ service_upgrade_price | money }}</span>
+        </span>
+      {% endif %}
+
       <span class="product-options__accordion-icon">
         {% render 'product-option-chevron' %}
       </span>
@@ -124,9 +170,13 @@
 
         <span class="product-options__swatch product-options__swatch--single">
           {% for variant in product_option.product_option_variants.value %}
-            {% render 'product-option-variant', variant: variant, default: default, product_option: product_option, hide_quantity: product_option.hide_quantity %}
+            {% render 'product-option-variant', variant: variant, default: default, product_option: product_option, hide_quantity: product_option.hide_quantity, service_display: is_delivery_option %}
           {% endfor %}
         </span>
+        {%- comment -%} Mobile options UI: same popup as the card's "Details" (existing data-popup-open key). {%- endcomment -%}
+        {% if is_delivery_option and service_popup_key != blank %}
+          <button type="button" class="product-options__service-details" data-popup-open="{{ service_popup_key }}">Service details</button>
+        {% endif %}
       </div>
     </div>
   </div>
