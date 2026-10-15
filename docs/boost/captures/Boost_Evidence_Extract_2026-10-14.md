@@ -1,4 +1,4 @@
-# Fitness Superstore — search relevance evidence extract
+# Fitness Superstore: search relevance evidence extract
 Store 79ef8b-5e.myshopify.com. Captured 2026-10-14 01:54 UTC via the Boost search API,
 logged out, no session, relevance sort, no filters, page 1, limit 10.
 Current configuration at capture: Search Personalization enabled on the search page,
@@ -8,7 +8,7 @@ This extract is for sharing with Boost support. It contains query results only.
 
 ## 1. Wrong weights and multi-weight sets outrank the exact weight
 
-Query: **45 kettlebell** — 61 results
+Query: **45 kettlebell**, 61 results
 
 | Rank | Product |
 |---|---|
@@ -29,7 +29,7 @@ or other weights.
 
 ## 2. A weight-specific query returns only sets, and no individual product
 
-Query: **bumper plate 45-pound** — 9 results
+Query: **bumper plate 45-pound**, 9 results
 
 All nine results are plate-and-bar sets. Not one individual 45 lb bumper plate is returned,
 although individual 45 lb bumper plates exist and are active and published.
@@ -51,11 +51,11 @@ intent behaves very differently by category and by unit wording.
 
 ## 3. A common category term returns nothing
 
-Query: **assault bike** — 0 results
+Query: **assault bike**, 0 results
 
 ## 4. An exact product name does not return that product in the top ten
 
-Query: **French Fitness Rubber Coated Hex Dumbbells** — 52 results
+Query: **French Fitness Rubber Coated Hex Dumbbells**, 52 results
 
 The product with exactly that title exists, is active and is published to the online store.
 It is not in the top ten of its own exact-title query. The top ten are individual weights and
@@ -63,7 +63,7 @@ sets from the same family.
 
 ## 5. An exact product name is outranked by a different product class
 
-Query: **French Fitness FFS Silver Dual Adjustable Pulley** — 19 results
+Query: **French Fitness FFS Silver Dual Adjustable Pulley**, 19 results
 
 | Rank | Product |
 |---|---|
