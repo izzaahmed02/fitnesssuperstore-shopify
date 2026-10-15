@@ -57,17 +57,34 @@
               {% assign card_url = product.url %}
               {% assign card_price = product.price %}
             {% endif %}
+            {% comment %}
+              The condition tag is the only visible text inside the image link, so the
+              link name has to carry it as well, or the accessible name no longer
+              contains the visible label (PageSpeed: label-content-name-mismatch).
+            {% endcomment %}
+            {% assign card_condition_label = '' %}
+            {% if product != blank %}
+              {% if product.metafields.custom.condition_state contains "New" %}
+                {% assign card_condition_label = 'New' %}
+              {% else %}
+                {% assign card_condition_label = 'Remanufactured' %}
+              {% endif %}
+            {% endif %}
+            {% assign card_link_name = product.title | default: block.settings.title | default: handle %}
+            {% if card_condition_label != blank %}
+              {% assign card_link_name = card_link_name | append: ' - ' | append: card_condition_label %}
+            {% endif %}
             <div class="category-card">
 
               
-              <a style="position:relative;" aria-label="View {{ product.title | default: block.settings.title | default: handle }}" href="{{ card_url | default: block.settings.link }}">
+              <a style="position:relative;" aria-label="View {{ card_link_name | escape }}" href="{{ card_url | default: block.settings.link }}">
                 {% if product != blank %}
                   {% if product.featured_image %}
                     <img src="{{ product.featured_image | image_url: width: 300 }}" alt="{{ product.featured_image.alt | default: product.title }}" loading="lazy" decoding="async">
                   {% endif %}
 
                   <div class="tags-wrapper">
-      {% if product.metafields.custom.condition_state contains "New" %}
+      {% if card_condition_label == 'New' %}
         <div class="condition-tag">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd" clip-rule="evenodd"
