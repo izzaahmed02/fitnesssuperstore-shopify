@@ -1035,6 +1035,10 @@ product-customization-options {
 }
 
 @media screen and (max-width: 749px) {
+  /* Layout only: fonts, sizes and colours below are the theme's own values (the
+     elements keep the rules they already had); new elements reuse the type of the
+     element next to them. */
+
   /* Banner -> "Choose your options" (a <p>, so the heading outline is unchanged). */
   .product-options__bar {
     display: none;
@@ -1045,23 +1049,23 @@ product-customization-options {
     margin-bottom: 0;
   }
 
+  /* Same type as the banner title it replaces, in the banner's own dark colour. */
   .product-options__mobile-heading {
     display: block;
     margin: 20px 0 12px;
     font-family: 'Lato', sans-serif;
-    font-size: 24px;
-    font-weight: 700;
-    line-height: 30px;
-    color: #23232b;
+    font-size: clamp(13px, 4.1vw, 20px);
+    font-weight: 400;
+    line-height: 26px;
+    color: #23232B;
   }
 
-  /* One card per visible group: label row + field. */
+  /* One card per visible group: label row + field. Border, radius and background are
+     the accordion's existing values; the field inside drops its own border. */
   .product-options--pdp .product-option__item--card {
-    position: relative;
     margin-bottom: 12px;
-    padding: 10px 16px;
     border: 1px solid #dcdcdc;
-    border-radius: 12px;
+    border-radius: 8px;
     background-color: #fff;
   }
 
@@ -1069,26 +1073,27 @@ product-customization-options {
     border-color: #D83D0E;
   }
 
-  /* Header row: label left, "Details" / "Optional" right, no numbered circle. */
+  /* Header row: label left, "Details" / "Optional" right, no numbered circle.
+     12px side gutter = the theme's select and option-list padding. */
   .product-options--pdp .product-option__item--card .product-options__category-title {
-    margin: 0 0 2px;
-    column-gap: 12px;
-    font-size: 17px;
-    line-height: 24px;
+    margin: 0;
+    padding: 10px 12px 0;
   }
 
   .product-options--pdp .product-options__category-title > span:first-child {
     display: none;
   }
 
-  /* Short label: the category title text node stays in the DOM, sized to 0. */
-  /* column-gap 0: the zero-width title text is still a flex item and would indent the label.
-     "Details" / "Optional" keep their own left padding. */
+  /* Short label: the category title text node stays in the DOM, sized to 0.
+     column-gap 0: the zero-width text is still a flex item and would indent the label. */
   .product-options--pdp .product-option__item--card .product-options__category-title--short {
     font-size: 0;
     column-gap: 0;
   }
 
+  /* Same type as the category title (16px / 24px); the circle styles on
+     ".product-options__category-title span" are reset. text-transform: none keeps
+     the agreed wording "Delivery & setup". */
   .product-options--pdp .product-options__category-title .product-options__mobile-label {
     display: inline;
     width: auto;
@@ -1097,12 +1102,12 @@ product-customization-options {
     padding: 0;
     border-radius: 0;
     background: none;
-    font-size: 17px;
-    font-weight: 700;
+    font-size: 16px;
     line-height: 24px;
+    font-weight: inherit;
+    color: inherit;
     text-align: left;
     text-transform: none;
-    color: inherit;
   }
 
   /* Help: "?" icons give way to text links that open the same popups. */
@@ -1115,6 +1120,7 @@ product-customization-options {
     display: none;
   }
 
+  /* "Details" in the help-icon colour (#D83D0E); 44x44 hit area. */
   .product-options--pdp .product-options__details-link,
   .product-options--pdp .product-options__optional-link {
     display: inline-flex;
@@ -1127,10 +1133,10 @@ product-customization-options {
     border: 0;
     background: none;
     cursor: pointer;
-    font-family: 'Lato', sans-serif;
-    font-size: 15px;
+    font-family: inherit;
+    font-size: 16px;
     font-weight: 400;
-    line-height: 20px;
+    line-height: 24px;
     text-transform: none;
     text-decoration: underline;
     text-underline-offset: 3px;
@@ -1149,9 +1155,10 @@ product-customization-options {
     padding: 0;
     border-radius: 0;
     background: none;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 400;
-    line-height: 20px;
+    line-height: 24px;
+    text-align: right;
     text-transform: none;
     color: #666666;
   }
@@ -1164,7 +1171,7 @@ product-customization-options {
     border-radius: 4px;
   }
 
-  /* Field inside the card: no second border; full-row tap target. */
+  /* Field inside the card: no second border (the card is the box). */
   .product-options--pdp .product-option__item--card .product-options__accordion {
     margin: 0;
     border: 0;
@@ -1176,17 +1183,19 @@ product-customization-options {
     border-top: 1px solid #ececec;
   }
 
-  .product-options--pdp .product-option__item--card .product-options__accordion-header {
-    flex-wrap: wrap;
-    align-items: center;
-    min-height: 44px;
-    padding: 0;
-    column-gap: 12px;
-    row-gap: 0;
+  /* Warranty (select): the theme draws its border with !important, so removing the
+     box-in-box needs the same. Font, size, height and padding stay the theme's. */
+  .product-options--pdp .product-option__item--card .product-options__select {
+    border-color: transparent !important;
+    box-shadow: none;
   }
 
-  .product-options--pdp .product-option__item--card .product-options__accordion-header[aria-expanded='true'] {
-    border-bottom: 0;
+  /* Full-row tap target (min 44px); wraps so the value can take its own line. */
+  .product-options--pdp .product-option__item--card .product-options__accordion-header {
+    flex-wrap: wrap;
+    min-height: 44px;
+    padding: 5px 12px;
+    row-gap: 0;
   }
 
   /* Field titles wrap instead of ellipsizing (text and text-transform unchanged). */
@@ -1194,8 +1203,6 @@ product-customization-options {
     order: 1;
     flex: 1 1 0;
     max-width: none;
-    font-size: 16px;
-    line-height: 22px;
     white-space: normal;
     overflow: visible;
     text-overflow: clip;
@@ -1211,9 +1218,6 @@ product-customization-options {
     order: 2;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    min-width: 24px;
-    min-height: 44px;
     margin-left: auto;
   }
 
@@ -1224,29 +1228,19 @@ product-customization-options {
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    margin: 0 0 8px;
+    margin: 0 0 4px;
     overflow: visible;
   }
 
   .product-options--pdp .product-option__item--card .product-options__accordion-label p {
     width: 100%;
-    gap: 8px;
   }
 
   .product-options--pdp .product-option__item--card .product-options__accordion-label-title {
     flex: 1 1 auto;
-    margin-right: 0;
-    font-size: 16px;
-    line-height: 22px;
     white-space: normal;
     overflow: visible;
     text-overflow: clip;
-  }
-
-  .product-options--pdp .product-option__item--card .product-options__accordion-label-price {
-    margin-right: 0;
-    font-size: 15px;
-    line-height: 22px;
   }
 
   /* x on optional selections stays; 44x44 hit area around the 16px icon. */
@@ -1260,14 +1254,17 @@ product-customization-options {
     display: none;
   }
 
-  /* "No accessories selected" until something is added (Accessories / Add Ons only). */
+  /* "No accessories selected" until something is added (Accessories / Add Ons only).
+     Same type as the selected-value text. */
   .product-options--pdp .product-option__item--accessories .product-options__accordion-header:not(:has([data-option-id])) .product-options__empty-value {
     display: block;
     order: 3;
     flex: 1 1 100%;
-    margin: 0 0 8px;
-    font-size: 16px;
-    line-height: 22px;
+    margin: 0 0 4px;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
     color: #393940;
   }
 
@@ -1310,6 +1307,8 @@ product-customization-options {
     white-space: nowrap;
   }
 
+  /* "Service upgrade" row: label in the selected-value type, amount in the
+     selected-price type (both the theme's existing values). */
   .product-options--pdp .product-option__item--card .product-options__service-upgrade {
     display: flex;
     order: 3;
@@ -1317,98 +1316,49 @@ product-customization-options {
     align-items: baseline;
     justify-content: space-between;
     gap: 12px;
-    padding: 0 0 8px;
-    font-family: 'Lato', sans-serif;
-    font-size: 14px;
-    line-height: 20px;
-    color: #666666;
-  }
-
-  .product-options--pdp .product-options__service-upgrade-value {
-    font-size: 15px;
-    font-weight: 600;
-    white-space: nowrap;
+    padding: 0 0 4px;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
     color: #393940;
   }
 
-  /* Delivery expanded: the header row keeps its label, the chevron takes the "Details" spot,
-     and the list follows directly (concept state 02). "Service details" sits under the list. */
-  .product-options--pdp .product-option__item--delivery:has(.product-options__accordion--delivery [data-open-accordion][aria-expanded='true']) .product-options__category-title .product-options__details-link {
-    visibility: hidden;
+  .product-options--pdp .product-options__service-upgrade-value {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 18px;
+    white-space: nowrap;
+    color: #D83D0E;
   }
 
-  .product-options--pdp .product-option__item--card .product-options__accordion--delivery .product-options__accordion-header[aria-expanded='true'] {
-    position: absolute;
-    top: 0;
-    right: 6px;
-    width: 44px;
-    min-height: 44px;
-    justify-content: center;
-  }
-
-  .product-options--pdp .product-option__item--card .product-options__accordion--delivery .product-options__accordion-header[aria-expanded='true'] .product-options__accordion-label,
-  .product-options--pdp .product-option__item--card .product-options__accordion--delivery .product-options__accordion-header[aria-expanded='true'] .product-options__service-upgrade {
-    display: none;
-  }
-
-  .product-options--pdp .product-option__item--card .product-options__accordion--delivery .product-options__accordion-header[aria-expanded='true'] .product-options__accordion-icon {
-    margin: 0;
-    justify-content: center;
-  }
-
-  /* Option lists inside cards. */
-  .product-options--pdp .product-option__item--card .product-options__accordion-content {
-    background-color: transparent;
-  }
-
-  .product-options--pdp .product-option__item--card .product-options__swatch {
-    padding: 0 0 4px;
-  }
-
+  /* Option rows: theme padding and type; at least 44px tall. */
   .product-options--pdp .product-option__item--card .product-options__swatch-wrapper {
     min-height: 44px;
-    padding: 10px 8px;
-    gap: 12px;
   }
 
-  .product-options--pdp .product-option__item--card .product-options__swatch-title {
-    font-size: 15px;
-    line-height: 21px;
-  }
-
-  /* Delivery list: single choice, qualifier on its own line, "+" prices right-aligned,
-     selected row tinted. Display only - data-field-name / data-option-price-raw untouched. */
-  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-input {
-    width: 20px;
-    height: 20px;
-  }
-
-  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-title {
-    font-size: 16px;
-    line-height: 22px;
-  }
-
+  /* Delivery list: qualifier on its own line (muted colour already used for option
+     sub-text), "+" before every price, "+$0.00" for no-charge rows.
+     Display only - data-field-name / data-option-price-raw untouched. */
   .product-options--pdp .product-options__accordion--delivery .product-options__swatch-title-sep {
     display: none;
   }
 
   .product-options--pdp .product-options__accordion--delivery .product-options__swatch-title-qualifier {
     display: block;
-    font-size: 14px;
-    line-height: 20px;
-    color: #666666;
+    color: #929090e8;
   }
 
-  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-price,
   .product-options--pdp .product-options__accordion--delivery .product-options__swatch-price-zero {
     display: block;
     order: 3;
     margin: 0 0 0 auto;
     padding-left: 8px;
     font-family: Lato, sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    line-height: 22px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: right;
     white-space: nowrap;
     color: #D83D0E;
   }
@@ -1418,25 +1368,20 @@ product-customization-options {
     content: '+';
   }
 
-  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-wrapper:has(.product-options__swatch-input:checked) {
-    border-radius: 8px;
-    border-bottom-color: transparent;
-    background-color: #fce6de;
-  }
-
+  /* "Service details" under the list, in the option-price type. */
   .product-options--pdp .product-options__accordion--delivery .product-options__service-details {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
-    margin: 0 0 2px;
+    margin: 0 0 0 16px;
     padding: 0;
     border: 0;
     background: none;
     cursor: pointer;
-    font-family: 'Lato', sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    line-height: 20px;
+    font-family: Lato, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 18px;
     color: #D83D0E;
   }
 }
