@@ -7,24 +7,25 @@
   var buttons = document.querySelectorAll('[data-pdp-chat-open]');
   if (buttons.length === 0) return;
 
-  // GorgiasChat.open() is the method Gorgias documents for custom "open chat" links;
-  // init() resolves once the widget is ready.
+  // GorgiasChat.open() is the method Gorgias documents for custom "open chat" links.
+  // A tap right after page load can land before the widget exists or has rendered, and
+  // open() is ignored until it has, so retry briefly (max 10s) until it is rendered.
   function openChat() {
-    if (window.GorgiasChat && typeof window.GorgiasChat.open === 'function') {
-      var ready = typeof window.GorgiasChat.init === 'function' ? window.GorgiasChat.init() : null;
+    var deadline = Date.now() + 10000;
+    function attempt() {
+      var chat = window.GorgiasChat;
+      if (!chat || typeof chat.open !== 'function') {
+        if (Date.now() < deadline) window.setTimeout(attempt, 300);
+        return;
+      }
+      var ready = typeof chat.init === 'function' ? chat.init() : null;
       Promise.resolve(ready).then(function () {
-        window.GorgiasChat.open();
+        var rendered = typeof chat.isChatRendered !== 'function' || chat.isChatRendered();
+        chat.open();
+        if (!rendered && Date.now() < deadline) window.setTimeout(attempt, 400);
       });
-      return;
     }
-    var timer = window.setTimeout(function () {
-      window.removeEventListener('gorgias-widget-loaded', onLoaded);
-    }, 10000);
-    function onLoaded() {
-      window.clearTimeout(timer);
-      openChat();
-    }
-    window.addEventListener('gorgias-widget-loaded', onLoaded, { once: true });
+    attempt();
   }
 
   buttons.forEach(function (button) {
