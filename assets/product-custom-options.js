@@ -675,6 +675,7 @@ if (!customElements.get('product-customization-options')) {
       // Mobile options UI (display only): keeps the delivery card's "Service upgrade" row
       // (product-option-accordion.liquid) in step with the checked radio. It only reads
       // data-field-price and writes its own text; prices, totals and cart data are untouched.
+      // The row shows only for a paid service (no data-field-price = no charge, e.g. Curbside).
       // Radio `input` events bubble here after setCustomizationOption has run, including
       // the synthetic one handleMandatoryReset dispatches.
 
@@ -687,9 +688,9 @@ if (!customElements.get('product-customization-options')) {
             const value = row.querySelector('[data-service-upgrade-value]');
             if (!accordion || !value) return;
             const checked = accordion.querySelector('[data-customization-option]:checked');
-            row.style.display = checked ? '' : 'none';
-            if (!checked) return;
-            const price = checked.dataset.fieldPrice || row.dataset.zeroPrice || '';
+            const price = checked ? checked.dataset.fieldPrice || '' : '';
+            row.style.display = price ? '' : 'none';
+            if (!price) return;
             value.textContent = price.startsWith('-') ? price : `+${price}`;
           });
         };

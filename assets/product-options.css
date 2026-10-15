@@ -744,6 +744,42 @@ product-customization-options {
   .option-popup__text a {
     color: #D83D0E;
   }
+
+  /* Option help popups: the text is CMS rich text (metaobjects) with inline widths
+     (e.g. 1800px images, table cells set to width:800px) that made the popup scroll
+     sideways. Keep every piece inside the popup on all screens. The !important rules
+     only override inline styles inside that content. */
+  .option-popup__text {
+    overflow-wrap: break-word;
+  }
+
+  .option-popup__text img,
+  .option-popup__text video,
+  .option-popup__text iframe {
+    max-width: 100%;
+  }
+
+  .option-popup__text img {
+    height: auto;
+  }
+
+  .option-popup__text table {
+    max-width: 100%;
+  }
+
+  .option-popup__text td,
+  .option-popup__text th {
+    width: auto !important;
+  }
+
+  @media screen and (max-width: 749px) {
+    /* Phones: floated images stack above the text instead of squeezing it. */
+    .option-popup__text img {
+      float: none !important;
+      display: block;
+      margin: 0 auto 12px;
+    }
+  }
   
   @media screen and (max-width: 1023px) {
     .option-popup__container {
@@ -1268,9 +1304,9 @@ product-customization-options {
     flex: 1 1 100%;
     margin: 4px 0 4px;
     font-family: Lato, sans-serif;
-    font-size: 12px;
+    font-size: 16px;
     font-weight: 400;
-    line-height: 16px;
+    line-height: 22px;
     color: #393940;
   }
 
@@ -1389,5 +1425,19 @@ product-customization-options {
     font-weight: 700;
     line-height: 18px;
     color: #D83D0E;
+  }
+
+  /* Readability (Tim, 2026-10-16): the small explanatory text is 16px on mobile.
+     Size and line height only - family, weight and colour stay the theme's. */
+  .product-options--pdp .product-options__accordion-label-title,
+  .product-options--pdp .product-options__accordion-label-price,
+  .product-options--pdp .product-option__item--card .product-options__service-upgrade,
+  .product-options--pdp .product-options__service-upgrade-value,
+  .product-options--pdp .product-options__swatch-title,
+  .product-options--pdp .product-options__swatch-price,
+  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-price-zero,
+  .product-options--pdp .product-options__accordion--delivery .product-options__service-details {
+    font-size: 16px;
+    line-height: 22px;
   }
 }
