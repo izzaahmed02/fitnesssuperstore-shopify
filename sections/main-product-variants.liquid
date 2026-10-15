@@ -44,14 +44,14 @@
   data-product-id="{{ product.id }}"
   data-update-url="true"
   data-url="{{ product.url }}"
-  {% if template.suffix == 'variants' %}
+  {% if template.suffix == 'variants' or template.suffix == 'uprights-preview' %}
     data-pdp-template="variants"
   {% endif %}
   {% if section.settings.image_zoom == 'hover' %}
     data-zoom-on-hover
   {% endif %}
 >
-  {% if template.suffix == 'variants' %}
+  {% if template.suffix == 'variants' or template.suffix == 'uprights-preview' %}
     {%- comment -%}
       Slim variant map used by variant-fallback-intercept.js to detect an
       impossible combination (no variant matches the selected option values)
@@ -125,7 +125,7 @@
       }
     }
 
-    {% if template.suffix == 'variants' %}
+    {% if template.suffix == 'variants' or template.suffix == 'uprights-preview' %}
       .product-form__input--pill input[type=radio] + label,
       .product-form__input--swatch .swatch,
       .product-form__input--swatch .swatch-input__label {
@@ -197,7 +197,7 @@
   {%- endfor -%}
 
   <script src="{{ 'product-info.js' | asset_url }}" defer="defer"></script>
-  {% if template.suffix == 'variants' %}
+  {% if template.suffix == 'variants' or template.suffix == 'uprights-preview' %}
     <script src="{{ 'variant-fallback-intercept.js' | asset_url }}" defer="defer"></script>
   {% endif %}
   {% if enable_product_form_js %}
@@ -2166,6 +2166,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('Variant data:', variantData);
     console.log('New processing time:', newProcessingTime);
+
+    syncProcessingTimeOption(newProcessingTime);
     
     if (newProcessingTime) {
       const currentText = processingTimeElement.textContent.trim();
@@ -2191,6 +2193,87 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
+  // Keep the Processing Time option in step with the selected variant.
+  // The cart and checkout read the _functionOperation line-item property, not
+  // the variant metafield. That property is built in
+  // assets/product-form-with-options.js from whatever the option control held
+  // when the page rendered, so without this a direct ?variant= link, a height
+  // change or browser Back all ship the page-load value.
+  //
+  // Two render paths exist and both are handled. option_type "Select" renders a
+  // hidden <select data-select-option>; option_type "Accordion" renders radio
+  // inputs inside [data-option-accordion]. Products that use neither are
+  // untouched - every branch no-ops when its control or a matching choice is
+  // absent.
+  function syncProcessingTimeOption(value) {
+    if (!value) return;
+
+    const normalise = (text) => (text || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const wanted = normalise(value);
+    if (!wanted) return;
+
+    // Path 1: hidden <select> (option_type "Select").
+    const selects = Array.from(document.querySelectorAll('select[data-select-option]'));
+    const select = selects.find((element) => normalise(element.name) === 'processing-time')
+      || selects.find((element) => normalise(element.dataset.selectTitle) === 'processing time');
+
+    if (select) {
+      const option = Array.from(select.options).find(
+        (candidate) => normalise(candidate.textContent) === wanted
+      );
+      if (!option) {
+        console.log('No Processing Time option matches the selected variant:', value);
+        return;
+      }
+      if (select.value !== option.value) {
+        select.value = option.value;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        select.dispatchEvent(new Event('input', { bubbles: true }));
+        console.log('Processing Time select synced to:', value);
+      }
+      return;
+    }
+
+    // Path 2: accordion with radio inputs (option_type "Accordion").
+    const group = document.querySelector('[data-option-accordion][data-type="processing-time"]');
+    if (!group) return;
+
+    let match = null;
+    group.querySelectorAll('input.product-options__swatch-input').forEach((input) => {
+      if (match) return;
+      const label = input.closest('label');
+      const candidates = [input.dataset.fieldName, label ? label.textContent : ''];
+      if (candidates.some((candidate) => normalise(candidate) === wanted)) match = input;
+    });
+
+    if (!match) {
+      console.log('No Processing Time choice matches the selected variant:', value);
+      return;
+    }
+
+    if (!match.checked) {
+      match.checked = true;
+      match.dispatchEvent(new Event('change', { bubbles: true }));
+      match.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    // Write the value the cart payload reads, in case no other handler owns
+    // this group on this template.
+    const selectionHolder = group.querySelector('[data-selected-options]');
+    if (selectionHolder && selectionHolder.dataset.selectedOptions !== match.value) {
+      selectionHolder.dataset.selectedOptions = match.value;
+      const titleNode = selectionHolder.querySelector('[data-option-title]');
+      if (titleNode) titleNode.textContent = match.dataset.fieldName || value;
+      const idNode = selectionHolder.querySelector('[data-option-id]');
+      if (idNode) {
+        idNode.setAttribute('data-option-id', match.dataset.customizationOption || '');
+        idNode.setAttribute('data-option-variant-name', match.dataset.fieldName || value);
+      }
+    }
+
+    console.log('Processing Time accordion synced to:', value);
+  }
+
   // Watch for SKU changes using MutationObserver
   const observer = new MutationObserver(function(mutations) {
     console.log('SKU element changed, updating processing time...');
