@@ -24,6 +24,10 @@
   never presented as merely out of stock. The originating page keeps its own
   controlled header and introduction, and no substitute product is chosen.
 
+  Every rendered replacement card also carries material-difference and
+  verification guidance. A product-specific intro from the controlled
+  metaobject takes precedence; otherwise the conservative fallback is shown.
+
   Accepts:
     - replacement: {Object} the referenced replacement product (required)
     - intro: {Object} controlled rich-text introduction for this replacement (optional)
@@ -51,6 +55,14 @@
     {%- if intro.value != blank -%}
       <div class="discontinued-replacement__card-intro rte">
         {{ intro | metafield_tag }}
+      </div>
+    {%- else -%}
+      <div class="discontinued-replacement__card-intro discontinued-replacement__card-intro--fallback rte">
+        <p>
+          This may not be an identical replacement. Compare the frame, footprint, station layout,
+          intended use and product specifications, then confirm current availability, price,
+          delivery and installation before ordering.
+        </p>
       </div>
     {%- endif -%}
 
