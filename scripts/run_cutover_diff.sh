@@ -66,6 +66,16 @@ python3 scripts/check_under_100_scope.py \
   "$OUT/googleshoppingfrenchfitness.csv" "$OUT/googleshoppingfs.csv" || u100_rc=$?
 
 echo
+echo "== 4b/8 feed membership gate =="
+# Tim 2026-10-02: the run fails if any of the 28 excluded products (26 Other Machine
+# Attachments, two 12-stack jungle gyms) is in either generated feed, and proves the
+# required catalog additions (the three Rubber Hex sets) are present.
+member_rc=0
+python3 scripts/check_feed_membership.py \
+  --feed "googleshoppingfrenchfitness=$OUT/googleshoppingfrenchfitness.csv" \
+  --feed "googleshoppingfs=$OUT/googleshoppingfs.csv" || member_rc=$?
+
+echo
 echo "== 5/8  reason-coded id diffs =="
 # Each diff exits non-zero while any row is still unexplained. That is the gate
 # doing its job, not a failure, so don't let set -e kill the run before the
@@ -126,6 +136,11 @@ if (( u100_rc != 0 )); then
   echo "UNDER-\$100 SCOPE FAILED. The p_under_100 exception is outside Tim's ruling."
   echo "Fix the roster or the shipping handback before these feeds serve."
 fi
+if (( member_rc != 0 )); then
+  echo
+  echo "FEED MEMBERSHIP FAILED. An excluded product is in a feed, or a required addition is missing."
+  echo "Do not publish."
+fi
 if (( counts_rc != 0 )); then
   echo
   echo "COUNT GUARD FAILED. An output is short, or matched does not equal designed."
@@ -138,6 +153,6 @@ if (( ff_rc != 0 || fs_rc != 0 )); then
   echo "  grep -c unexplained $OUT/id_diff_ff.csv $OUT/id_diff_fs.csv"
   exit 1
 fi
-if (( promo_rc != 0 || u100_rc != 0 || counts_rc != 0 )); then exit 1; fi
+if (( promo_rc != 0 || u100_rc != 0 || counts_rc != 0 || member_rc != 0 )); then exit 1; fi
 echo
 echo "Every add and every drop carries a reason code. Clean to send."

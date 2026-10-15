@@ -41,6 +41,7 @@ EXCLUSION_CODES = [
     ("third party", "dropped:third_party_flag"),
     ("duplicate", "dropped:duplicate_sku"),
     ("discontinued template", "dropped:lifecycle_discontinued"),
+    ("sku blocklist", "dropped:sku_blocklist"),
 ]
 
 

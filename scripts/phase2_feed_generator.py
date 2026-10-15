@@ -712,10 +712,16 @@ def variant_rows(product, feed, rules, labels, titles, shipping, ground_estimate
     variants = product["variants"]["nodes"]
     multi = len(variants) > 1
     cfg = rules[feed]["exclude"]
+    # Tim 2026-10-02: SKU-specific, so no price or shipping change can let these back in.
+    blocked_skus = set(rules["shared"]["always_exclude"].get("skus", []))
 
     for variant in variants:
         sku = (variant["sku"] or "").strip()
         offer_id = f"{product_id}-{numeric_id(variant['id'])}" if multi else product_id
+
+        if sku in blocked_skus:
+            report.append((offer_id, sku, "excluded: sku blocklist"))
+            continue
 
         price = Decimal(variant["price"] or "0")
 
