@@ -40,7 +40,8 @@
     var summary = document.createElement('summary');
     summary.textContent = 'On this page';
     var nav = document.createElement('nav');
-    nav.setAttribute('aria-label', 'Payment page sections');
+    var navLabel = /\/pages\/financing\/?$/.test(window.location.pathname) ? 'Financing page sections' : 'Payment page sections';
+    nav.setAttribute('aria-label', navLabel);
     var list = document.createElement('ul');
     var links = items.map(function (item) {
       var li = document.createElement('li');

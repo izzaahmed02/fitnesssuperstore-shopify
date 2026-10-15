@@ -33,8 +33,16 @@
 <link rel="stylesheet" href="{{ 'slick.min.css' | asset_url }}">
 <link rel="stylesheet" href="{{ 'slick-theme.min.css' | asset_url }}">
 
-{% comment %}Bounded Payment Methods mobile navigation; no assets on other pages.{% endcomment %}
-{% if request.page_type == 'page' and page.handle == 'payment-methods' and template.suffix == 'payment-updated' %}
-  {{ 'payment-mobile-navigation.css' | asset_url | stylesheet_tag }}
-  <script src="{{ 'payment-mobile-navigation.js' | asset_url }}" defer></script>
-{% endif %}
+   {% comment %}Bounded "On this page" mobile navigation: Payment Methods and Financing only (#894); no assets on other pages. Liquid has no brackets in conditions, so each page is checked separately.{% endcomment %}
+   {% assign fss_load_jump_nav = false %}
+   {% if request.page_type == 'page' and page.handle == 'payment-methods' and template.suffix == 'payment-updated' %}
+     {% assign fss_load_jump_nav = true %}
+   {% endif %}
+   {% if request.page_type == 'page' and page.handle == 'financing' and template.suffix == 'financing-updated' %}
+     {% assign fss_load_jump_nav = true %}
+   {% endif %}
+   {% if fss_load_jump_nav %}
+     {{ 'payment-mobile-navigation.css' | asset_url | stylesheet_tag }}
+     <script src="{{ 'payment-mobile-navigation.js' | asset_url }}" defer></script>
+   {% endif %}
+
