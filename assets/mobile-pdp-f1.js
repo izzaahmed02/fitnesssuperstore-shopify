@@ -75,6 +75,19 @@
     state.toggle.setAttribute('aria-label', (open ? 'Collapse ' : 'Expand ') + state.label);
   };
 
+  // Visual-only annotations: preserve original selections and pricing logic.
+  const markFigmaStaticGroups = () => {
+    document.querySelectorAll('.product__info-wrapper .product-option__item').forEach((item) => {
+      const title = item.querySelector(':scope > .product-options__category-title');
+      if (!title) return;
+      const name = key(title.textContent);
+      const color = name.includes('colors') || name === 'color';
+      const assembly = name.includes('assembly') && (name.includes('room') || name.includes('installation'));
+      item.classList.toggle('f1-figma-static-option-group', color || assembly);
+      item.classList.toggle('f1-figma-color-option-group', color);
+    });
+  };
+
   const collapseOptionGroups = () => {
     document.querySelectorAll('.product__info-wrapper .product-option__item').forEach((item) => {
       if (optionStates.has(item)) return;
@@ -331,6 +344,7 @@
 
   const applyMode = () => {
     if (mobile.matches) {
+      markFigmaStaticGroups();
       collapseOptionGroups();
       buildDescriptionAccordions();
       setupGallery();
@@ -338,6 +352,7 @@
       restoreOptionGroups();
       restoreDescription();
       restoreGallery();
+      document.querySelectorAll('.f1-figma-static-option-group').forEach((item) => item.classList.remove('f1-figma-static-option-group', 'f1-figma-color-option-group'));
     }
   };
 
