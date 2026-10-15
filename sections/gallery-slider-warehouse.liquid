@@ -103,10 +103,34 @@ document.addEventListener('DOMContentLoaded', () => {
     margin-bottom: 16px;
   }
 
-  #shopify-section-{{ section.id }} p {
+  #shopify-section-{{ section.id }} .gallery-intro {
     text-align: center;
     margin-top: 0;
     margin-bottom: 52px;
+  }
+
+  #shopify-section-{{ section.id }} .gallery-intro p {
+    text-align: center;
+    margin: 0 0 12px;
+  }
+
+  /* Bulleted category list: block centres in the column, text stays flush left
+     so each item reads as its own line rather than a centred fragment. */
+  #shopify-section-{{ section.id }} .gallery-intro ul {
+    display: inline-block;
+    text-align: left;
+    list-style: disc outside;
+    margin: 0;
+    padding-left: 20px;
+  }
+
+  #shopify-section-{{ section.id }} .gallery-intro li {
+    margin-bottom: 6px;
+  }
+
+  #shopify-section-{{ section.id }} .gallery-intro > :last-child,
+  #shopify-section-{{ section.id }} .gallery-intro li:last-child {
+    margin-bottom: 0;
   }
 
   #shopify-section-{{ section.id }} .btn__link {
@@ -399,9 +423,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     .gallery-slider-warehouse .contact__heading,
-    .gallery-slider-warehouse p {
+    .gallery-slider-warehouse .gallery-intro,
+    .gallery-slider-warehouse .gallery-intro p {
       text-align: left !important;
       margin-bottom: 16px !important;
+    }
+
+    #shopify-section-{{ section.id }} .gallery-intro ul {
+      display: block;
+    }
+
+    .gallery-slider-warehouse .gallery-intro > :last-child {
+      margin-bottom: 0 !important;
     }
 
     .gallery-slider-warehouse .button.btn__link {
@@ -428,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
   <div class="container">
     <h2 class="contact__heading h1">{{ section.settings.heading }}</h2>
     {% if section.settings.text != blank %}
-      <p>{{ section.settings.text }}</p>
+      <div class="gallery-intro">{{ section.settings.text }}</div>
     {% endif %}
     {% if section.settings.link != blank %}
       <a href="{{ section.settings.href }}" class="button button--primary btn__link">
@@ -448,7 +481,20 @@ document.addEventListener('DOMContentLoaded', () => {
         {% case block.type %}
           {% when 'item' %}
             <div class="item">
-              {{ block.settings.image | image_url: width: auto | image_tag }}
+              {%- comment -%}
+                Alt text comes from the block override when set, otherwise from
+                the alt attribute on the file in Shopify Files. image_tag does
+                not pick that up on its own once the image has been piped
+                through image_url, so it has to be resolved and passed
+                explicitly.
+              {%- endcomment -%}
+              {%- liquid
+                assign item_alt = block.settings.alt
+                if item_alt == blank
+                  assign item_alt = block.settings.image.alt
+                endif
+              -%}
+              {{ block.settings.image | image_url: width: auto | image_tag: alt: item_alt }}
             </div>
         {% endcase %}
       {% endfor %}
@@ -470,7 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
   "class": "gallery-section gallery-slider-warehouse",
   "settings": [
     { "type": "text", "id": "heading", "label": "Heading" },
-    { "type": "text", "id": "text", "label": "Text" },
+    { "type": "richtext", "id": "text", "label": "Text" },
     { "type": "text", "id": "link", "label": "CTA Title" },
     { "type": "url", "id": "href", "label": "CTA Link" },
     {
@@ -499,7 +545,13 @@ document.addEventListener('DOMContentLoaded', () => {
       "type": "item",
       "name": "Slider item",
       "settings": [
-        { "type": "image_picker", "id": "image", "label": "Image" }
+        { "type": "image_picker", "id": "image", "label": "Image" },
+        {
+          "type": "textarea",
+          "id": "alt",
+          "label": "Alt text",
+          "info": "Optional. Overrides the alt text set on the file in Shopify Files. Do not state or imply that equipment shown is in stock."
+        }
       ]
     }
   ],
