@@ -6,6 +6,8 @@
   (three levels: category > subcategory > brand/type). Items linked to "#" with no children
   render as group labels (e.g. "Shop", "Company & Support"); rows before the first label use
   the large category style. See menu-push-panel for how Level 3 is filled.
+  The pinned footer (heading, phone, email) comes from the same block's "Mobile menu footer"
+  settings and is hidden when neither phone nor email is set.
 
   Until a mobile push menu is picked, it falls back to the header menu (with "Shop By Product
   Type" flattened) followed by the additional mobile menu, without group labels.
@@ -16,8 +18,10 @@
 {%- liquid
   assign push_menu = blank
   assign extra_menu = blank
+  assign menu_block = blank
   for block in section.blocks
     if block.type == 'menu'
+      assign menu_block = block
       assign push_menu = block.settings.mobile_push_menu
       assign extra_menu = block.settings.additional_mobile_menu
     endif
@@ -88,13 +92,34 @@
           {%- endfor -%}
         </nav>
 
-        <div class="menu-push__contact">
-          <p class="menu-push__contact-label">Need help?</p>
-          <div class="menu-push__contact-row">
-            <a href="tel:+19252152927">Call (925) 215-2927</a>
-            <a href="mailto:sales@fitnesssuperstore.com">Email Us</a>
+        {%- liquid
+          assign contact = menu_block.settings
+          assign has_phone = false
+          if contact.mobile_contact_phone != blank and contact.mobile_contact_phone_text != blank
+            assign has_phone = true
+          endif
+          assign has_email = false
+          if contact.mobile_contact_email != blank and contact.mobile_contact_email_text != blank
+            assign has_email = true
+          endif
+        -%}
+        {%- if has_phone or has_email -%}
+          <div class="menu-push__contact">
+            {%- if contact.mobile_contact_heading != blank -%}
+              <p class="menu-push__contact-label">{{ contact.mobile_contact_heading | escape }}</p>
+            {%- endif -%}
+            <div class="menu-push__contact-row">
+              {%- if has_phone -%}
+                <a href="tel:{{ contact.mobile_contact_phone | remove: ' ' | remove: '(' | remove: ')' | remove: '-' | remove: '.' }}">
+                  {{- contact.mobile_contact_phone_text | escape -}}
+                </a>
+              {%- endif -%}
+              {%- if has_email -%}
+                <a href="mailto:{{ contact.mobile_contact_email | strip }}">{{ contact.mobile_contact_email_text | escape }}</a>
+              {%- endif -%}
+            </div>
           </div>
-        </div>
+        {%- endif -%}
       </menu-push>
     </div>
   </details>
