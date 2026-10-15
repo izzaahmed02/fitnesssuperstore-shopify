@@ -851,23 +851,104 @@ if (!customElements.get('product-customization-options')) {
 
       // Method to update price when options are selected (increase/decrease)
 
+      // Reads the National Gym Service allowlist published by
+      // snippets/ngs-allowlist-data.liquid. Same shop metafield the Cart
+      // Transform reads, so the displayed split and the charged split cannot
+      // disagree. Parsed once per page and cached; any failure yields an empty
+      // map, which means every option is totalled exactly as it is today.
+      ngsAllowlist() {
+        if (ProductCustomizationOptions.ngsMap === undefined) {
+          const map = new Map();
+          try {
+            const tag = document.querySelector('[data-ngs-allowlist]');
+            if (tag) {
+              const parsed = JSON.parse(tag.textContent);
+              (parsed.options || []).forEach((entry) => {
+                if (entry && entry.id) {
+                  map.set(String(entry.id), { mode: entry.mode, price: Number(entry.price) });
+                }
+              });
+            }
+          } catch (e) {
+            // Leave the map empty: charge and display as today.
+          }
+          ProductCustomizationOptions.ngsMap = map;
+        }
+        return ProductCustomizationOptions.ngsMap;
+      }
+
+      // "defer" carries an approved amount we can show. "quote_required" is
+      // NGS-owned but has no approved automated amount, so it must be shown as
+      // a quote and never as a dollar figure.
+      ngsModeFor(variantId) {
+        if (!variantId) return null;
+        const entry = this.ngsAllowlist().get(String(variantId).trim());
+        return entry ? entry.mode : null;
+      }
+
+      // The amount owed to National Gym Service for one unit of this option.
+      //
+      // The ALLOWLIST price wins over the amount posted in the DOM, and the two
+      // can differ. The function reads its figure from this same shop metafield
+      // and writes it onto the order; the DOM value is whatever the option
+      // markup carries, which a customer can influence and which can drift from
+      // the approved mapping. Showing the DOM figure here would let the page
+      // state one amount owed to National Gym Service while the order records
+      // another, and NGS would then invoice against the order.
+      //
+      // Falls back to the posted amount only when the allowlist carries no
+      // price, which is the v1 shape with the field absent.
+      ngsAmountFor(variantId, postedAmount) {
+        const entry = this.ngsAllowlist().get(String(variantId || '').trim());
+        if (entry && Number.isFinite(entry.price)) return entry.price;
+        return postedAmount;
+      }
+
       updatePrice() {
         let priceAdjustment = 0;
+        // Amounts owed to National Gym Service. Kept out of priceAdjustment so
+        // the headline product price only ever reflects what Fitness Superstore
+        // actually collects at checkout.
+        let ngsDeferred = 0;
+        let ngsQuoteRequired = false;
         const activeOptions = this.querySelectorAll('[data-customization-option]:checked, [data-select-option], [data-quantity-option-input]');
         if (activeOptions.length === 0) return;
         activeOptions.forEach((option) => {
           const value = option.value;
+          let amount = 0;
+          let variantId = null;
           if (value.includes(':::')) {
+            variantId = value.split(':::')[0];
             const quantityInput = this.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
             if (quantityInput) {
-              priceAdjustment += Number(value.split(':::')[1]) * Number(quantityInput.value);
+              amount = Number(value.split(':::')[1]) * Number(quantityInput.value);
             } else {
-              priceAdjustment += Number(value.split(':::')[1]);
+              amount = Number(value.split(':::')[1]);
             }
           } else {
             if (option.dataset?.quantityOptionVariantPrice) {
-              priceAdjustment += Number(value) * Number(option.dataset?.quantityOptionVariantPrice);
+              variantId = option.dataset?.quantityOptionVariant;
+              amount = Number(value) * Number(option.dataset?.quantityOptionVariantPrice);
+            } else {
+              variantId = value;
             }
+          }
+          const ngsMode = this.ngsModeFor(variantId);
+          if (ngsMode === 'quote_required') {
+            ngsQuoteRequired = true;
+          } else if (ngsMode === 'defer') {
+            // Per-unit allowlist price, scaled by however many units the DOM
+            // amount represented. A quantity option posts price * quantity, so
+            // recovering the multiplier keeps quantities correct without
+            // trusting the posted price itself.
+            const perUnit = this.ngsAmountFor(variantId, amount);
+            const unitPosted = Number(
+              (value.includes(':::') ? value.split(':::')[1] : option.dataset?.quantityOptionVariantPrice) || 0,
+            );
+            const units = unitPosted > 0 ? Math.round(amount / unitPosted) : 1;
+            ngsDeferred += perUnit * (units > 0 ? units : 1);
+          } else {
+            priceAdjustment += amount;
           }
         });
 
@@ -877,12 +958,81 @@ if (!customElements.get('product-customization-options')) {
             const colorVariant = (input.dataset?.variant || '').trim();
             const colorPrice = input.dataset?.price;
             if (colorVariant !== '' && colorPrice !== '') {
+              // Colour options are physical product attributes and are never
+              // NGS services, so they always stay in the TJF total.
               priceAdjustment += Number(colorPrice || 0);
             }
           });
         }
 
+        this.renderNgsDue(ngsDeferred, ngsQuoteRequired);
         this.priceHelper(priceAdjustment);
+      }
+
+      // Shows what National Gym Service will bill, separately from the amount
+      // payable to Fitness Superstore today. Hidden entirely when no NGS
+      // service is selected.
+      // Per Tim, 2026-09-26: when a National Gym Service item is present the
+      // running total and the grand total must both say whose money it is, so
+      // the customer can tell the two apart. The qualifier is only added while
+      // an NGS item is actually selected; with none, the labels read exactly as
+      // they always have. Originals are captured on first use so toggling back
+      // restores the theme's own wording rather than a hardcoded guess.
+      setBilledTodayLabels(show) {
+        const QUALIFIER = ' (Billed Today by Fitness Superstore)';
+        const targets = [
+          ...document.querySelectorAll('.options-added-line__label'),
+          ...document.querySelectorAll('.product_price_with_options-heading'),
+        ];
+        targets.forEach((el) => {
+          if (el.dataset.ngsOriginalLabel === undefined) {
+            el.dataset.ngsOriginalLabel = el.textContent.trim();
+          }
+          const original = el.dataset.ngsOriginalLabel;
+          if (!show) {
+            el.textContent = original;
+            return;
+          }
+          // "Options added:" keeps its trailing colon after the qualifier.
+          if (original.endsWith(':')) {
+            el.textContent = original.slice(0, -1) + QUALIFIER + ':';
+          } else {
+            el.textContent = original + QUALIFIER;
+          }
+        });
+      }
+
+      renderNgsDue(ngsDeferred, ngsQuoteRequired) {
+        const blocks = document.querySelectorAll('[data-ngs-due-line]');
+        const amount0 = Number(ngsDeferred) || 0;
+        // Kept for priceHelper, which adds it to the Fitness Superstore total to
+        // produce the full purchase amount Tim asked to see alongside the two parts.
+        this.ngsDeferredAmount = amount0;
+        this.ngsHasService = amount0 > 0 || ngsQuoteRequired;
+        this.setBilledTodayLabels(this.ngsHasService);
+        if (blocks.length === 0) return;
+        const amount = Number(ngsDeferred) || 0;
+        const show = amount > 0 || ngsQuoteRequired;
+        blocks.forEach((block) => {
+          block.hidden = !show;
+          if (!show) return;
+          const valueEl = block.querySelector('[data-ngs-due-value]');
+          if (!valueEl) return;
+          const currency = valueEl.dataset.currency || '$';
+          if (amount > 0 && ngsQuoteRequired) {
+            valueEl.innerText = `${currency}${amount.toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })} + quote`;
+          } else if (ngsQuoteRequired) {
+            valueEl.innerText = 'Quote required';
+          } else {
+            valueEl.innerText = `${currency}${amount.toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`;
+          }
+        });
       }
 
       // Helper to create corect price HTML
@@ -904,6 +1054,29 @@ if (!customElements.get('product-customization-options')) {
         });
 
         this.renderOptionsAddedTotal(priceAdjustment);
+        this.renderPurchaseTotal(finalPrice);
+      }
+
+      // Total amount for the purchase: what Fitness Superstore charges today
+      // plus what National Gym Service will bill. Shown only when an NGS service
+      // is selected, so an ordinary order still sees a single total.
+      renderPurchaseTotal(fitnessSuperstoreTotal) {
+        const lines = document.querySelectorAll('[data-ngs-purchase-total-line]');
+        if (lines.length === 0) return;
+        const ngs = Number(this.ngsDeferredAmount) || 0;
+        const show = !!this.ngsHasService;
+        lines.forEach((line) => {
+          line.hidden = !show;
+          if (!show) return;
+          const el = line.querySelector('[data-ngs-purchase-total-value]');
+          if (!el) return;
+          const currency = el.dataset.currency || '$';
+          const total = (Number(fitnessSuperstoreTotal) || 0) + ngs;
+          el.innerText = `${currency}${total.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`;
+        });
       }
 
       renderOptionsAddedTotal(priceAdjustment) {
@@ -1068,6 +1241,31 @@ if (!customElements.get('product-customization-options')) {
         if (this.#isReplacing) return;
         const changeUrl = `${window.Shopify.routes.root}cart/change.js`;
         const addUrl = `${window.Shopify.routes.root}cart/add.js`;
+
+        // Item C guard — UX only. Warn and route to Sales BEFORE adding a cart
+        // the server-side validation would block at checkout. If the guard cannot
+        // predict (constants missing, cart unreadable) it returns null and we
+        // proceed: the server remains authoritative, so declining to guess here
+        // is safe, while a wrong guess would block a legitimate order.
+        try {
+          const guard = window.FSBundleGuard;
+          if (guard) {
+            const ops = JSON.parse(this.prepareFunctionalProperties() || '[]');
+            const paid = Array.isArray(ops) ? ops.filter((o) => Number(o.priceAdjustment) > 0).length : 0;
+            const visible = Object.keys(this.prepareOptions() || {}).length;
+            const verdict = await guard.predict(paid, visible);
+            if (verdict && verdict.willExceed) {
+              guard.render(this);
+              this.submitButton?.classList.remove('loading');
+              this.applyChangesButton?.classList.remove('loading');
+              this.querySelector('.loading__spinner')?.classList.add('hidden');
+              return;
+            }
+          }
+        } catch (e) {
+          console.error('[fs-bundle] guard prediction failed; deferring to server validation', e);
+        }
+
         if (!this.checkMandatoryFields()) {
           this.applyChangesButton?.classList.remove('loading');
           return alert('Please select your options before adding this item to cart');
@@ -1083,10 +1281,18 @@ if (!customElements.get('product-customization-options')) {
           sections = this.cartDrawer.getSectionsToRender().map((section) => section.id);
         }
 
+        const visibleOptions = this.prepareOptions();
         const productProperties = {
-          ...this.prepareOptions(),
+          ...visibleOptions,
           _functionOperation: this.prepareFunctionalProperties(),
         };
+        // A null manifest means "refuse to emit". OMIT the key rather than
+        // sending null: the transform treats an absent manifest as a fault and
+        // emits no operation, which the server validation then blocks. Sending a
+        // literal null would risk being coerced to the string "null" and parsed
+        // as a malformed manifest for the wrong reason.
+        const manifest = this.prepareBundlePublicProperties(visibleOptions);
+        if (manifest !== null) productProperties._bundlePublicProperties = manifest;
 
         const updateRequest = {
           items: [
@@ -1261,6 +1467,92 @@ if (!customElements.get('product-customization-options')) {
       }
 
       // Hepler to create Shopify Function logic
+
+      // Item D — the bounded, versioned presentation manifest.
+      //
+      // Built from EXACTLY the properties `prepareOptions()` already renders, in
+      // the same place and at the same time as `_functionOperation`, so the two
+      // cannot disagree about what the customer selected (§D.2).
+      //
+      // Why it exists: `lineExpand` REPLACES the parent cart line, and the
+      // expanded children carry only the attributes the transform writes. The
+      // customer's Warranty, Processing Time and every $0 selection never become
+      // child lines, so without this manifest they are lost from the order
+      // entirely — the second half of the loss mechanism in order #1004.
+      //
+      // Returns null to mean "emit no manifest", which makes the transform fail
+      // closed and the server validation block. That is the intended failure
+      // path: a blocked checkout is visible and recoverable, where a silently
+      // incomplete order is neither.
+      prepareBundlePublicProperties(lineItemProperties) {
+        const spec = window.FSBundleEstimator;
+
+        // FAIL CLOSED on the constants asset, per Tim 16 Aug.
+        //
+        // An earlier version fell back to hardcoded 1 / 64 / 255 when this asset
+        // was absent or late. That defeats the generated single source of truth
+        // and is worse than useless: if the real bounds ever change, the theme
+        // would keep emitting to the OLD limits and the transform would reject
+        // every manifest — turning a config drift into a total checkout outage
+        // with no signal pointing at the cause.
+        //
+        // Runtime can detect absent, late, and structurally invalid. It cannot
+        // verify the checksum against the spec by itself — that is the build-time
+        // job of `npm run check:estimator` and the drift test in this repo. What
+        // it can require is that a checksum is present and the shape is complete.
+        const required = [
+          'SPEC_CHECKSUM', 'MANIFEST_VERSION', 'MAX_PUBLIC_PROPERTIES',
+          'MAX_PUBLIC_KEY_LEN', 'MAX_PUBLIC_VALUE_LEN',
+        ];
+        const missing = !spec ? ['FSBundleEstimator'] : required.filter((k) => spec[k] == null);
+        if (missing.length || typeof spec.SPEC_CHECKSUM !== 'string' || spec.SPEC_CHECKSUM.length < 8) {
+          console.error(
+            '[fs-bundle] Refusing to build the bundle manifest: generated estimator constants are missing or invalid (' +
+              missing.join(', ') + '). Checkout will be blocked server-side rather than proceeding with unverified bounds.',
+          );
+          return null;
+        }
+
+        const entries = [];
+        const seenKeys = new Set();
+        for (const [rawKey, rawValue] of Object.entries(lineItemProperties || {})) {
+          if (!rawKey || String(rawKey).startsWith('_')) continue;   // private keys are never carried
+          if (rawValue == null || String(rawValue).trim() === '') continue;
+
+          // Lengths are clamped rather than rejected: truncating a long display
+          // string is cosmetic, and blocking a checkout over a verbose option
+          // label would be a poor trade.
+          const key = String(rawKey).slice(0, spec.MAX_PUBLIC_KEY_LEN);
+          const value = String(rawValue).slice(0, spec.MAX_PUBLIC_VALUE_LEN);
+
+          // Reject duplicate keys, INCLUDING collisions created by the clamp
+          // above — two different keys longer than the cap can truncate to the
+          // same string. Silently keeping one would drop a selection the customer
+          // made, which is precisely the loss this manifest exists to prevent, so
+          // fail closed and let the block surface it.
+          if (seenKeys.has(key)) {
+            console.error(
+              '[fs-bundle] Refusing to build the bundle manifest: duplicate public-property key "' + key +
+                '" (original "' + rawKey + '"). Two option titles collide at ' + spec.MAX_PUBLIC_KEY_LEN +
+                ' characters. Checkout will be blocked rather than silently dropping a selection.',
+            );
+            return null;
+          }
+          seenKeys.add(key);
+          entries.push({ key, value });
+        }
+
+        // The property COUNT is deliberately NOT clamped. Dropping selections to
+        // fit would silently lose exactly what this preserves. Over the cap the
+        // transform rejects and the checkout blocks.
+        // Stamp the manifest with the spec checksum this asset was generated
+        // against. The transform compares it to the checksum compiled into its
+        // own binary and fails closed on any mismatch, which is the only way to
+        // detect that the two sides were generated from DIFFERENT specs. A
+        // plausible-looking-string check cannot: a stale checksum of the right
+        // shape passes it.
+        return JSON.stringify({ v: spec.MANIFEST_VERSION, c: spec.SPEC_CHECKSUM, p: entries });
+      }
 
       prepareFunctionalProperties() {
         // See prepareOptions: non-accordion options (Select/Color/Quantity) have no

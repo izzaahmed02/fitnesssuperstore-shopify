@@ -40,11 +40,43 @@ if (!customElements.get('product-form-with-options')) {
         this.cart?.setActiveElement(document.activeElement);
         const url = `${window.Shopify.routes.root}cart/add.js`;
 
+        // Item C guard — UX only. Warn and route to Sales BEFORE adding a cart
+        // the server-side validation would block at checkout. If the guard cannot
+        // predict (constants missing, cart unreadable) it returns null and we
+        // proceed: the server remains authoritative, so declining to guess here
+        // is safe, while a wrong guess would block a legitimate order.
+        try {
+          const guard = window.FSBundleGuard;
+          if (guard) {
+            const ops = JSON.parse(this.prepareFunctionalProperties() || '[]');
+            const paid = Array.isArray(ops) ? ops.filter((o) => Number(o.priceAdjustment) > 0).length : 0;
+            const visible = Object.keys(this.prepareOptions() || {}).length;
+            const verdict = await guard.predict(paid, visible);
+            if (verdict && verdict.willExceed) {
+              guard.render(this);
+              this.submitButton?.classList.remove('loading');
+              this.applyChangesButton?.classList.remove('loading');
+              this.querySelector('.loading__spinner')?.classList.add('hidden');
+              return;
+            }
+          }
+        } catch (e) {
+          console.error('[fs-bundle] guard prediction failed; deferring to server validation', e);
+        }
+
+
+        const visibleOptions = { ...this.prepareDefaultProperties(), ...this.prepareOptions() };
         const productProperties = {
-          ...this.prepareDefaultProperties(),
-          ...this.prepareOptions(),
+          ...visibleOptions,
           _functionOperation: this.prepareFunctionalProperties(),
         };
+        // A null manifest means "refuse to emit". OMIT the key rather than
+        // sending null: the transform treats an absent manifest as a fault and
+        // emits no operation, which the server validation then blocks. Sending a
+        // literal null would risk being coerced to the string "null" and parsed
+        // as a malformed manifest for the wrong reason.
+        const manifest = this.prepareBundlePublicProperties(visibleOptions);
+        if (manifest !== null) productProperties._bundlePublicProperties = manifest;
 
         const bodyRequest = {
           items: [
@@ -205,6 +237,92 @@ if (!customElements.get('product-form-with-options')) {
         }
 
         return lineItemProperties;
+      }
+
+      // Item D — the bounded, versioned presentation manifest.
+      //
+      // Built from EXACTLY the properties `prepareOptions()` already renders, in
+      // the same place and at the same time as `_functionOperation`, so the two
+      // cannot disagree about what the customer selected (§D.2).
+      //
+      // Why it exists: `lineExpand` REPLACES the parent cart line, and the
+      // expanded children carry only the attributes the transform writes. The
+      // customer's Warranty, Processing Time and every $0 selection never become
+      // child lines, so without this manifest they are lost from the order
+      // entirely — the second half of the loss mechanism in order #1004.
+      //
+      // Returns null to mean "emit no manifest", which makes the transform fail
+      // closed and the server validation block. That is the intended failure
+      // path: a blocked checkout is visible and recoverable, where a silently
+      // incomplete order is neither.
+      prepareBundlePublicProperties(lineItemProperties) {
+        const spec = window.FSBundleEstimator;
+
+        // FAIL CLOSED on the constants asset, per Tim 16 Aug.
+        //
+        // An earlier version fell back to hardcoded 1 / 64 / 255 when this asset
+        // was absent or late. That defeats the generated single source of truth
+        // and is worse than useless: if the real bounds ever change, the theme
+        // would keep emitting to the OLD limits and the transform would reject
+        // every manifest — turning a config drift into a total checkout outage
+        // with no signal pointing at the cause.
+        //
+        // Runtime can detect absent, late, and structurally invalid. It cannot
+        // verify the checksum against the spec by itself — that is the build-time
+        // job of `npm run check:estimator` and the drift test in this repo. What
+        // it can require is that a checksum is present and the shape is complete.
+        const required = [
+          'SPEC_CHECKSUM', 'MANIFEST_VERSION', 'MAX_PUBLIC_PROPERTIES',
+          'MAX_PUBLIC_KEY_LEN', 'MAX_PUBLIC_VALUE_LEN',
+        ];
+        const missing = !spec ? ['FSBundleEstimator'] : required.filter((k) => spec[k] == null);
+        if (missing.length || typeof spec.SPEC_CHECKSUM !== 'string' || spec.SPEC_CHECKSUM.length < 8) {
+          console.error(
+            '[fs-bundle] Refusing to build the bundle manifest: generated estimator constants are missing or invalid (' +
+              missing.join(', ') + '). Checkout will be blocked server-side rather than proceeding with unverified bounds.',
+          );
+          return null;
+        }
+
+        const entries = [];
+        const seenKeys = new Set();
+        for (const [rawKey, rawValue] of Object.entries(lineItemProperties || {})) {
+          if (!rawKey || String(rawKey).startsWith('_')) continue;   // private keys are never carried
+          if (rawValue == null || String(rawValue).trim() === '') continue;
+
+          // Lengths are clamped rather than rejected: truncating a long display
+          // string is cosmetic, and blocking a checkout over a verbose option
+          // label would be a poor trade.
+          const key = String(rawKey).slice(0, spec.MAX_PUBLIC_KEY_LEN);
+          const value = String(rawValue).slice(0, spec.MAX_PUBLIC_VALUE_LEN);
+
+          // Reject duplicate keys, INCLUDING collisions created by the clamp
+          // above — two different keys longer than the cap can truncate to the
+          // same string. Silently keeping one would drop a selection the customer
+          // made, which is precisely the loss this manifest exists to prevent, so
+          // fail closed and let the block surface it.
+          if (seenKeys.has(key)) {
+            console.error(
+              '[fs-bundle] Refusing to build the bundle manifest: duplicate public-property key "' + key +
+                '" (original "' + rawKey + '"). Two option titles collide at ' + spec.MAX_PUBLIC_KEY_LEN +
+                ' characters. Checkout will be blocked rather than silently dropping a selection.',
+            );
+            return null;
+          }
+          seenKeys.add(key);
+          entries.push({ key, value });
+        }
+
+        // The property COUNT is deliberately NOT clamped. Dropping selections to
+        // fit would silently lose exactly what this preserves. Over the cap the
+        // transform rejects and the checkout blocks.
+        // Stamp the manifest with the spec checksum this asset was generated
+        // against. The transform compares it to the checksum compiled into its
+        // own binary and fails closed on any mismatch, which is the only way to
+        // detect that the two sides were generated from DIFFERENT specs. A
+        // plausible-looking-string check cannot: a stale checksum of the right
+        // shape passes it.
+        return JSON.stringify({ v: spec.MANIFEST_VERSION, c: spec.SPEC_CHECKSUM, p: entries });
       }
 
       prepareFunctionalProperties() {
