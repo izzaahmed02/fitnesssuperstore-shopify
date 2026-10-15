@@ -243,6 +243,27 @@
             {% render 'product-option-accordion', category: category, default: default, product_option: product_option, forloop_index: forloop.index, product_id: product.id %}
           {% endif %}
         {% endfor %}
+       
+        {% if category_title_downcase == 'warranty' and category.hide_option != true %}
+          {% liquid
+            assign show_included_note = false
+            for product_option in category.product_options.value
+              assign default_title = product_option.product_option_sets_default.value.title | downcase
+              if default_title contains 'included' and default_title contains 'residential' and default_title contains 'commercial'
+                assign show_included_note = true
+                break
+              endif
+            endfor
+          %}
+          {% if show_included_note %}
+            <p class="product-options__warranty-included-note">
+              Included coverage: Residential: 1 year parts &amp; on-site labor.
+              Commercial/light-commercial: 6 months parts &amp; on-site labor. On-site labor applies in the USA
+              and Canada. Commercial includes business and shared-facility use. All warranty periods are total
+              coverage from delivery.
+            </p>
+          {% endif %}
+        {% endif %}
       </div>
     {% endfor %}
 
