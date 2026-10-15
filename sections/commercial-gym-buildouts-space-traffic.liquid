@@ -256,6 +256,24 @@
     margin: 0;
     }
 
+    /* CTA row (Sagi, Sept 29 2026) — no Figma node. Sizing mirrors the rich-text
+       "Plan Your Gym Your Way" buttons it replaces: 220px min, 48px tall, 10px apart,
+       centred, full-width stacked on mobile (see the mobile block below). */
+    #shopify-section-{{ section.id }} .space-traffic__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 28px;
+    }
+    #shopify-section-{{ section.id }} .space-traffic__buttons .button {
+    min-width: 220px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    }
+
     @media screen and (min-width: 750px) {
     .section-{{ section.id }}-padding {
     padding-top: {{ section.settings.padding_top }}px;
@@ -306,6 +324,14 @@
        desktop node uses. */
     #shopify-section-{{ section.id }} .space-traffic__disclaimer {
     margin-top: 20px;
+    }
+
+    #shopify-section-{{ section.id }} .space-traffic__buttons {
+    flex-direction: column;
+    margin-top: 20px;
+    }
+    #shopify-section-{{ section.id }} .space-traffic__buttons .button {
+    width: 100%;
     }
     }
 {%- endstyle -%}
@@ -458,6 +484,31 @@
             {%- endcomment -%}
             <div class="space-traffic__disclaimer">{{ section.settings.disclaimer }}</div>
         {%- endunless -%}
+        {%- comment -%}
+          Sagi, Sept 29 2026: two CTAs inside this section, visible at every breakpoint
+          (button_label above only renders in the mobile slider). Reuses the theme's
+          .button--primary / --secondary classes, same as the rich-text block it replaces.
+        {%- endcomment -%}
+        {%- if section.settings.cta_label_1 != blank or section.settings.cta_label_2 != blank -%}
+            <div class="space-traffic__buttons">
+                {%- if section.settings.cta_label_1 != blank -%}
+                    <a
+                        {% if section.settings.cta_link_1 == blank %}role="link" aria-disabled="true"{% else %}href="{{ section.settings.cta_link_1 }}"{% endif %}
+                        class="button{% if section.settings.cta_secondary_1 %} button--secondary{% else %} button--primary{% endif %}"
+                    >
+                        {{- section.settings.cta_label_1 | escape -}}
+                    </a>
+                {%- endif -%}
+                {%- if section.settings.cta_label_2 != blank -%}
+                    <a
+                        {% if section.settings.cta_link_2 == blank %}role="link" aria-disabled="true"{% else %}href="{{ section.settings.cta_link_2 }}"{% endif %}
+                        class="button{% if section.settings.cta_secondary_2 %} button--secondary{% else %} button--primary{% endif %}"
+                    >
+                        {{- section.settings.cta_label_2 | escape -}}
+                    </a>
+                {%- endif -%}
+            </div>
+        {%- endif -%}
     </div>
 </div>
 
@@ -627,6 +678,44 @@
       "id": "disclaimer",
       "default": "<p>Conceptual equipment placement only. Final layouts require on-site verification and, where applicable, review by qualified professionals.</p>",
       "label": "Disclaimer text"
+    },
+    {
+      "type": "header",
+      "content": "Buttons"
+    },
+    {
+      "type": "text",
+      "id": "cta_label_1",
+      "default": "See More Gym Packages",
+      "label": "Button 1 label"
+    },
+    {
+      "type": "url",
+      "id": "cta_link_1",
+      "label": "Button 1 link"
+    },
+    {
+      "type": "checkbox",
+      "id": "cta_secondary_1",
+      "default": true,
+      "label": "Button 1 secondary style"
+    },
+    {
+      "type": "text",
+      "id": "cta_label_2",
+      "default": "Design My Gym",
+      "label": "Button 2 label"
+    },
+    {
+      "type": "url",
+      "id": "cta_link_2",
+      "label": "Button 2 link"
+    },
+    {
+      "type": "checkbox",
+      "id": "cta_secondary_2",
+      "default": false,
+      "label": "Button 2 secondary style"
     },
     {
       "type": "color_scheme",
