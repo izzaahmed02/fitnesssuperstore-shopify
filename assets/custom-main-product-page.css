@@ -345,3 +345,159 @@
 .product-form__input--single-value .variant-help-icon {
   vertical-align: middle;
 }
+
+/* --------------------------------------------------------------------------
+   Mobile options UI (display only) — purchase area under the options
+   (.product-form--options-mobile, rendered only when the section has the
+   product_options block). Same elements, ids and data hooks as before:
+   #Options-Added-*, [data-options-added-value], .pr_custom_price[data-price-value],
+   the quantity input and #ProductSubmitButton-* are only re-laid-out.
+   Desktop (750px+) is unchanged.
+   -------------------------------------------------------------------------- */
+.product_price_with_options-heading-mobile,
+.options-added-line__label-mobile,
+.pdp-chat-link {
+  display: none;
+}
+
+@media screen and (max-width: 749px) {
+  /* Flatten the price container so "Item + options" and the price share one row,
+     then quantity + Add to Cart, then "Chat with us". */
+  .product-form--options-mobile {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 12px;
+  }
+
+  .product-form--options-mobile > * {
+    flex: 0 0 100%;
+    min-width: 0;
+  }
+
+  .product-form--options-mobile .product_price_with_options-contaniner {
+    display: contents;
+  }
+
+  /* Quiet summary row instead of the yellow box. */
+  .product-form--options-mobile .options-added-line {
+    margin: 4px 0 8px;
+    padding: 12px 0 0;
+    border: 0;
+    border-top: 1px solid #e5e5e5;
+    border-radius: 0;
+    background-color: transparent;
+    font-size: 15px;
+    line-height: 22px;
+  }
+
+  .product-form--options-mobile .options-added-line__label,
+  .product-form--options-mobile .options-added-line__value {
+    font-weight: 400;
+    color: #6b6b70;
+  }
+
+  .product-form--options-mobile .options-added-line__label-desktop,
+  .product-form--options-mobile .product_price_with_options-heading-desktop {
+    display: none;
+  }
+
+  .product-form--options-mobile .options-added-line__label-mobile,
+  .product-form--options-mobile .product_price_with_options-heading-mobile {
+    display: inline;
+  }
+
+  .product-form--options-mobile .product_price_with_options-heading {
+    flex: 1 1 auto;
+    margin: 0;
+    font-size: 18px;
+    line-height: 24px;
+    text-transform: none;
+    color: #23232b;
+  }
+
+  .product-form--options-mobile .product_prices {
+    position: static;
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+
+  .product-form--options-mobile .pr_custom_price-container {
+    margin-top: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .product-form--options-mobile .pr_custom_price {
+    color: #23232b;
+  }
+
+  .product-form--options-mobile .product_price_with_options_atc {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .product-form--options-mobile .product_price_with_options_atc > .product-form__quantity {
+    flex: 0 0 auto;
+  }
+
+  .product-form--options-mobile .product_price_with_options_atc > div:last-child {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .product-form--options-mobile .product_price_with_options_atc .quantity {
+    margin-left: 0;
+  }
+
+  .product-form--options-mobile .product_price_with_options_atc .product-form__submit {
+    padding: 12px 16px;
+  }
+
+  .product-form--options-mobile .product_price_with_options_atc .product-form__submit .icon-cart {
+    display: none;
+  }
+
+  /* Inline chat entry under Add to Cart. */
+  .product-form--options-mobile .pdp-chat-link {
+    display: flex;
+    justify-content: center;
+    margin: 8px 0 4px;
+  }
+
+  .pdp-chat-link__button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 22px;
+    color: #23232b;
+  }
+
+  .pdp-chat-link__button:focus-visible {
+    outline: 2px solid #D83D0E;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  .pdp-chat-link__icon {
+    flex-shrink: 0;
+  }
+
+  /* While the purchase area is on screen (pdp-chat-link.js), the floating Gorgias
+     launcher steps aside so it never covers the price or Add to Cart. */
+  html.pdp-purchase-in-view #chat-button {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+}
