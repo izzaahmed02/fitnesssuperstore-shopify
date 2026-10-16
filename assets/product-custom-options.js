@@ -30,16 +30,21 @@ if (!customElements.get('product-customization-options')) {
       #variantChangeUnsubscribe = null;
       #onPageShow = null;
       #modifyClickHandler = null;
+      #savedMarkup = null;
 
       get modifyID() {
         return this.dataset.productId;
       }
 
       get quantityInput() {
-        return document.querySelector(`[data-quantity-variant-id="${this.dataset.variantId}"]`);
+        const trigger = [...document.querySelectorAll('[data-key-modify]')].find((el) => el.dataset.keyModify === this.modifyID);
+        const row = trigger?.closest('.cart-item, tr');
+        return row?.querySelector('[data-quantity-variant-id]') || document.querySelector(`[data-quantity-variant-id="${this.dataset.variantId}"]`);
       }
 
       connectedCallback() {
+        // Server-rendered markup reflects the saved cart line; Cancel restores from it.
+        this.#savedMarkup = this.outerHTML;
         this.init();
         this.#cartUpdateUnsubscribe = subscribe(PUB_SUB_EVENTS.cartUpdate, () => {
           if (window.location.href.includes('/cart')) {
@@ -942,6 +947,8 @@ if (!customElements.get('product-customization-options')) {
                 colorForm.style.display = 'none';
                 colorInput.dataset.variant = swatch.dataset.id;
                 colorInput.dataset.price = swatch.dataset.colorPrice;
+                colorInput.value = swatch.dataset.id;
+                colorInput.setAttribute('value', swatch.dataset.id);
                 swatchesActiveContainer.innerHTML = this.setColorOptionHTML(swatch, false);
                 if (this.closest('cart-drawer')) return;
                 this.updatePrice();
@@ -968,6 +975,8 @@ if (!customElements.get('product-customization-options')) {
             if (!input) return;
             colorInput.dataset.variant = input.dataset.id;
             colorInput.dataset.price = input.dataset.price;
+            colorInput.value = input.dataset.id;
+            colorInput.setAttribute('value', input.dataset.id);
             swatchesActiveContainer.innerHTML = this.setColorOptionHTML(input, true);
             colorForm.style.display = 'none';
             input.value = '';
@@ -1033,9 +1042,17 @@ if (!customElements.get('product-customization-options')) {
         if (this.closeModifyButtons.length === 0) return;
         this.closeModifyButtons.forEach((button) => {
           button.addEventListener('click', () => {
+            const wasModifying = this.classList.contains('modify-opened');
             this.classList.remove('modify-opened');
             this.dataset.stamp = 'none';
             document.body.style.overflow = 'auto';
+            // Discard unsaved selections so the next Modify shows the saved line.
+            if (wasModifying && this.#savedMarkup && this.isConnected) {
+              const template = document.createElement('template');
+              template.innerHTML = this.#savedMarkup;
+              const fresh = template.content.firstElementChild;
+              if (fresh) this.replaceWith(fresh);
+            }
           });
         });
       }
@@ -1067,7 +1084,6 @@ if (!customElements.get('product-customization-options')) {
       async replaceItem() {
         if (this.#isReplacing) return;
         const changeUrl = `${window.Shopify.routes.root}cart/change.js`;
-        const addUrl = `${window.Shopify.routes.root}cart/add.js`;
         if (!this.checkMandatoryFields()) {
           this.applyChangesButton?.classList.remove('loading');
           return alert('Please select your options before adding this item to cart');
@@ -1083,59 +1099,51 @@ if (!customElements.get('product-customization-options')) {
           sections = this.cartDrawer.getSectionsToRender().map((section) => section.id);
         }
 
+        const preservedProperties = {};
+        try {
+          const preserved = JSON.parse(this.dataset.keepProperties || '{}');
+          Object.keys(preserved).forEach((key) => {
+            if (preserved[key] !== null && preserved[key] !== '') preservedProperties[key] = preserved[key];
+          });
+        } catch (error) {
+          console.error(error);
+        }
+
         const productProperties = {
+          ...preservedProperties,
           ...this.prepareOptions(),
           _functionOperation: this.prepareFunctionalProperties(),
         };
 
-        const updateRequest = {
-          items: [
-            {
-              id: this.modifyID.split(':')[0],
-              quantity: this.quantityInput?.value || 1,
-              properties: productProperties,
-            },
-          ],
+        const changeRequest = {
+          id: this.modifyID,
+          quantity: Number(this.quantityInput?.value || 1),
+          properties: productProperties,
           sections: sections,
           sections_url: window.location.pathname,
         };
 
-        const updateConfig = {
+        const changeConfig = {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(updateRequest),
+          body: JSON.stringify(changeRequest),
         };
 
         try {
-          const updateResponse = await this.cartFetchWithRetry(addUrl, updateConfig);
-          await updateResponse.json();
-          if (!updateResponse.ok) throw new Error('Failed to add to cart');
-
-          const changeRequest = {
-            id: this.modifyID,
-            quantity: 0,
-            sections: sections,
-            sections_url: window.location.pathname,
-          };
-
-          const changeConfig = {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(changeRequest),
-          };
-
           const response = await this.cartFetchWithRetry(changeUrl, changeConfig);
           const changeResult = await response.json();
-          if (!response.ok) throw new Error('Failed to remove original cart line');
+          if (!response.ok) {
+            const error = new Error(changeResult?.description || changeResult?.message || 'Failed to update cart item');
+            error.cartStatus = response.status;
+            throw error;
+          }
 
           if (window.location.href.includes('/cart')) {
             this.getSectionsToRender().forEach((section) => {
               const elementToReplace = document.querySelector(section.selector) || document.getElementById(section.id);
-
+              if (!elementToReplace || !changeResult.sections?.[section.section]) return;
               elementToReplace.innerHTML = this.getSectionInnerHTML(changeResult.sections[section.section], section.selector);
             });
           } else {
@@ -1150,6 +1158,8 @@ if (!customElements.get('product-customization-options')) {
           console.error(error);
           if (error && error.isRateLimited) {
             alert('The cart is busy right now. Please wait a moment and try again.');
+          } else {
+            alert('We could not save these cart changes. Your existing cart item was left unchanged. Please try again.');
           }
         } finally {
           this.#isReplacing = false;
