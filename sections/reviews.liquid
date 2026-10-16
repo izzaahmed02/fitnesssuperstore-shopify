@@ -1,4 +1,5 @@
 {{ 'reviews.css' | asset_url | stylesheet_tag }}
+{{ 'category-tabs-a11y.js' | asset_url | script_tag }}
 
 <div class="browse-by-category">
 
@@ -23,12 +24,21 @@
 
   {% assign tab_list = tab_data | split: "|" | compact %}
 <div class="categoryHeader">
-      <div class="category-tabs">
+      <div class="category-tabs" role="tablist" aria-label="Review categories">
     {% for tab in tab_list %}
       {% assign parts = tab | split: "::" %}
       {% assign handle = parts[0] %}
       {% assign title = parts[1] %}
-      <button type="button" class="{% if forloop.first %}active{% endif %}" data-tab="tab-{{ handle }}">
+      <button
+        type="button"
+        role="tab"
+        id="tabbtn-{{ handle }}"
+        aria-controls="tab-{{ handle }}"
+        aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+        tabindex="{% if forloop.first %}0{% else %}-1{% endif %}"
+        class="{% if forloop.first %}active{% endif %}"
+        data-tab="tab-{{ handle }}"
+      >
         {{ title }}
       </button>
     {% endfor %}
@@ -50,7 +60,13 @@
   {% for tab in tab_list %}
     {% assign parts = tab | split: "::" %}
     {% assign handle = parts[0] %}
-    <div class="category-tab-content {% if forloop.first %}active{% endif %}" id="tab-{{ handle }}">
+    <div
+      class="category-tab-content {% if forloop.first %}active{% endif %}"
+      id="tab-{{ handle }}"
+      role="tabpanel"
+      aria-labelledby="tabbtn-{{ handle }}"
+      tabindex="0"
+    >
       <div class="slider-tab-{{ handle }}">
         {% for block in section.blocks %}
           {% assign card_handle = block.settings.tab_handle | handleize %}
@@ -72,7 +88,7 @@
 
                      {% if block.settings.copy != blank %}
                       <p class="homepage-reviews__item-copy">{{ block.settings.copy }}</p>
-                      <a href="#" class="homepage-reviews__item-copy-btn">Read More</a>
+                      <button type="button" class="homepage-reviews__item-copy-btn" aria-expanded="false">Read More</button>
                     {% endif %}
 
 

@@ -85,9 +85,11 @@ document.addEventListener("DOMContentLoaded", function () {
       if (copy.classList.contains('expanded')) {
         copy.classList.remove('expanded');
         this.textContent = 'Read More';
+        this.setAttribute('aria-expanded', 'false');
       } else {
         copy.classList.add('expanded');
         this.textContent = 'Read Less';
+        this.setAttribute('aria-expanded', 'true');
       }
     });
   });

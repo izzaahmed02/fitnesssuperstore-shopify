@@ -145,9 +145,11 @@ function truncateIfTooManyLines(element, maxLines) {
 		if (element.classList.contains('hide')) {
 			element.classList.remove('hide');
 			btn.textContent = 'Read Less';
+			btn.setAttribute('aria-expanded', 'true');
 		} else {
 			element.classList.add('hide');
 			btn.textContent = 'Read More';
+			btn.setAttribute('aria-expanded', 'false');
 		}
 	});
 }
