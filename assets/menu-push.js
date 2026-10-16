@@ -1,17 +1,39 @@
 // Mobile push menu inside the header drawer: each level slides in as its own panel.
 // Panels keep their own scroll position, so going back returns to the same spot.
+// The panels ship inside a <template> and are only built the first time the drawer opens.
 class MenuPush extends HTMLElement {
   connectedCallback() {
-    this.stack = [this.querySelector('.menu-push__panel.is-active')];
+    if (this.connected) return;
+    this.connected = true;
+    this.details = this.closest('details');
 
     // Capture phase on purpose: MenuDrawer (global.js) closes the drawer on any <button> click
     // inside it, so stop our clicks here before they reach those listeners.
     this.addEventListener('click', this.onClick.bind(this), true);
 
-    this.details = this.closest('details');
+    // Build the panels before MenuDrawer's summary handler opens the drawer and sets its focus trap.
+    this.details?.addEventListener(
+      'click',
+      (event) => {
+        if (event.target.closest('summary')) this.render();
+      },
+      true
+    );
     this.details?.addEventListener('toggle', () => {
       if (!this.details.open) this.reset();
     });
+
+    // The drawer was opened before this script finished loading.
+    if (this.details?.open) this.render();
+  }
+
+  render() {
+    if (this.stack) return;
+    const template = this.querySelector('template[data-menu-push-content]');
+    if (!template) return;
+
+    template.replaceWith(template.content.cloneNode(true));
+    this.stack = [this.querySelector('.menu-push__panel.is-active')];
   }
 
   onClick(event) {
@@ -56,6 +78,7 @@ class MenuPush extends HTMLElement {
 
   // Runs after the drawer has closed, so the next open starts at the root panel.
   reset() {
+    if (!this.stack) return;
     while (this.stack.length > 1) {
       const panel = this.stack.pop();
       panel.classList.remove('is-active');

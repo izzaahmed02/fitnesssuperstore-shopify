@@ -1,6 +1,7 @@
 {% comment %}
   Renders the header drawer: a mobile push menu where each level slides in as its own panel.
-  Hidden at 990px+ while the desktop header uses the mega menu.
+  Hidden at 990px+ while the desktop header uses the mega menu. Its CSS/JS are fetched only below
+  990px, and the markup sits in a <template> that menu-push.js stamps on first open.
 
   Content comes from the "Mobile push menu" picked on the header's Additional menu block
   (three levels: category > subcategory > brand/type). Items linked to "#" with no children
@@ -44,8 +45,36 @@
     endif
   endif
 -%}
-{{ 'component-menu-push.css' | asset_url | stylesheet_tag }}
-<script src="{{ 'menu-push.js' | asset_url }}" defer="defer"></script>
+{%- liquid
+  assign menu_push_media = '(max-width: 989px)'
+  if section.settings.menu_type_desktop == 'drawer'
+    assign menu_push_media = 'all'
+  endif
+-%}
+<script>
+  // Fetch the push menu's CSS and JS only where the drawer is shown, so desktop downloads neither.
+  (function () {
+    var mq = window.matchMedia({{ menu_push_media | json }});
+    function load() {
+      if (window.menuPushRequested) return;
+      window.menuPushRequested = true;
+      var css = document.createElement('link');
+      css.rel = 'stylesheet';
+      css.href = {{ 'component-menu-push.css' | asset_url | json }};
+      document.head.appendChild(css);
+      var js = document.createElement('script');
+      js.src = {{ 'menu-push.js' | asset_url | json }};
+      document.head.appendChild(js);
+    }
+    if (mq.matches) {
+      load();
+    } else if (mq.addEventListener) {
+      mq.addEventListener('change', function (event) {
+        if (event.matches) load();
+      });
+    }
+  })();
+</script>
 <header-drawer data-breakpoint="{% if section.settings.menu_type_desktop == 'drawer' %}desktop{% else %}tablet{% endif %}">
   <details id="Details-menu-drawer-container" class="menu-drawer-container">
     <summary class="header__icon header__icon--menu header__icon--summary link focus-inset" aria-label="{{ 'sections.header.menu' | t }}">
@@ -53,73 +82,76 @@
     </summary>
     <div id="menu-drawer" class="gradient menu-drawer menu-drawer--push page-width motion-reduce color-{{ section.settings.menu_color_scheme }}">
       <menu-push class="menu-push">
-        <nav class="menu-push__stage" aria-label="{{ 'sections.header.menu' | t }}">
-          <div class="menu-push__panel is-active" id="MenuPush-root">
-            <ul class="menu-push__list" role="list">
-              {%- assign row_class = 'menu-push__row menu-push__row--top' -%}
-              {%- for link in root_links -%}
-                {%- if link.links == blank and link.url == '#' -%}
-                  {%- assign row_class = 'menu-push__row menu-push__row--bold' -%}
-                  <li class="menu-push__label">{{ link.title | escape }}</li>
-                  {%- continue -%}
-                {%- endif -%}
-                <li>
-                  {%- if link.links != blank -%}
-                    <button
-                      type="button"
-                      class="{{ row_class }}"
-                      data-menu-push="MenuPush-{{ forloop.index }}"
-                      aria-controls="MenuPush-{{ forloop.index }}"
-                      aria-expanded="false"
-                    >
-                      <span>{{ link.title | escape }}</span>
-                    </button>
-                  {%- else -%}
-                    <a href="{{ link.url }}" class="{{ row_class }}"{% if link.current %} aria-current="page"{% endif %}>
-                      {{- link.title | escape -}}
-                    </a>
+        {%- comment -%} Inert until menu-push.js stamps it on first open, so desktop never builds these nodes. {%- endcomment -%}
+        <template data-menu-push-content>
+          <nav class="menu-push__stage" aria-label="{{ 'sections.header.menu' | t }}">
+            <div class="menu-push__panel is-active" id="MenuPush-root">
+              <ul class="menu-push__list" role="list">
+                {%- assign row_class = 'menu-push__row menu-push__row--top' -%}
+                {%- for link in root_links -%}
+                  {%- if link.links == blank and link.url == '#' -%}
+                    {%- assign row_class = 'menu-push__row menu-push__row--bold' -%}
+                    <li class="menu-push__label">{{ link.title | escape }}</li>
+                    {%- continue -%}
                   {%- endif -%}
-                </li>
-              {%- endfor -%}
-            </ul>
-          </div>
-
-          {%- for link in root_links -%}
-            {%- if link.links != blank -%}
-              {%- assign panel_id = 'MenuPush-' | append: forloop.index -%}
-              {%- render 'menu-push-panel', link: link, panel_id: panel_id -%}
-            {%- endif -%}
-          {%- endfor -%}
-        </nav>
-
-        {%- liquid
-          assign contact = menu_block.settings
-          assign has_phone = false
-          if contact.mobile_contact_phone != blank and contact.mobile_contact_phone_text != blank
-            assign has_phone = true
-          endif
-          assign has_email = false
-          if contact.mobile_contact_email != blank and contact.mobile_contact_email_text != blank
-            assign has_email = true
-          endif
-        -%}
-        {%- if has_phone or has_email -%}
-          <div class="menu-push__contact">
-            {%- if contact.mobile_contact_heading != blank -%}
-              <p class="menu-push__contact-label">{{ contact.mobile_contact_heading | escape }}</p>
-            {%- endif -%}
-            <div class="menu-push__contact-row">
-              {%- if has_phone -%}
-                <a href="tel:{{ contact.mobile_contact_phone | remove: ' ' | remove: '(' | remove: ')' | remove: '-' | remove: '.' }}">
-                  {{- contact.mobile_contact_phone_text | escape -}}
-                </a>
-              {%- endif -%}
-              {%- if has_email -%}
-                <a href="mailto:{{ contact.mobile_contact_email | strip }}">{{ contact.mobile_contact_email_text | escape }}</a>
-              {%- endif -%}
+                  <li>
+                    {%- if link.links != blank -%}
+                      <button
+                        type="button"
+                        class="{{ row_class }}"
+                        data-menu-push="MenuPush-{{ forloop.index }}"
+                        aria-controls="MenuPush-{{ forloop.index }}"
+                        aria-expanded="false"
+                      >
+                        <span>{{ link.title | escape }}</span>
+                      </button>
+                    {%- else -%}
+                      <a href="{{ link.url }}" class="{{ row_class }}"{% if link.current %} aria-current="page"{% endif %}>
+                        {{- link.title | escape -}}
+                      </a>
+                    {%- endif -%}
+                  </li>
+                {%- endfor -%}
+              </ul>
             </div>
-          </div>
-        {%- endif -%}
+
+            {%- for link in root_links -%}
+              {%- if link.links != blank -%}
+                {%- assign panel_id = 'MenuPush-' | append: forloop.index -%}
+                {%- render 'menu-push-panel', link: link, panel_id: panel_id -%}
+              {%- endif -%}
+            {%- endfor -%}
+          </nav>
+
+          {%- liquid
+            assign contact = menu_block.settings
+            assign has_phone = false
+            if contact.mobile_contact_phone != blank and contact.mobile_contact_phone_text != blank
+              assign has_phone = true
+            endif
+            assign has_email = false
+            if contact.mobile_contact_email != blank and contact.mobile_contact_email_text != blank
+              assign has_email = true
+            endif
+          -%}
+          {%- if has_phone or has_email -%}
+            <div class="menu-push__contact">
+              {%- if contact.mobile_contact_heading != blank -%}
+                <p class="menu-push__contact-label">{{ contact.mobile_contact_heading | escape }}</p>
+              {%- endif -%}
+              <div class="menu-push__contact-row">
+                {%- if has_phone -%}
+                  <a href="tel:{{ contact.mobile_contact_phone | remove: ' ' | remove: '(' | remove: ')' | remove: '-' | remove: '.' }}">
+                    {{- contact.mobile_contact_phone_text | escape -}}
+                  </a>
+                {%- endif -%}
+                {%- if has_email -%}
+                  <a href="mailto:{{ contact.mobile_contact_email | strip }}">{{ contact.mobile_contact_email_text | escape }}</a>
+                {%- endif -%}
+              </div>
+            </div>
+          {%- endif -%}
+        </template>
       </menu-push>
     </div>
   </details>
