@@ -1,113 +1,89 @@
 document.addEventListener('DOMContentLoaded', function () {
-	let attempts = 0;
-	const maxAttempts = 10;
-	const interval = 1000; // Interval in milliseconds
+  const section = document.querySelector('.homepage-subscription');
+  if (!section) return;
 
-	const intervalId = setInterval(function () {
-		const subscriptionForm = document.querySelector('.homepage-subscription__form');
-		const hiddenFormContainer = document.querySelector('.homepage-subscription__original-form');
-		const thankWrapper = document.querySelector('.homepage-subscription__message');
-		const sectionWrapper = document.querySelector('.homepage-subscription__wrapper');
+  const visibleForm = section.querySelector('.homepage-subscription__form');
+  const hiddenFormContainer = section.querySelector('.homepage-subscription__original-form');
+  const thankWrapper = section.querySelector('.homepage-subscription__message');
+  const sectionWrapper = section.querySelector('.homepage-subscription__wrapper');
 
-		if (subscriptionForm && hiddenFormContainer) {
-			const hiddenForm = hiddenFormContainer.querySelector('form');
-            
-			if (hiddenForm) {
-				clearInterval(intervalId);
-	
-				const hiddenEmailInput = hiddenForm.querySelector('input[type="email"]');
-				if (!hiddenEmailInput) {
-					console.error('Hidden email input not found in the hidden form.');
-					return;
-				}
-	
-				// Add submit handler for the visible form
-				subscriptionForm.addEventListener('submit', function (e) {
-					e.preventDefault(); // Prevent the default form submission
-	
-					// Extract the email value from the visible form
-					const emailInput = subscriptionForm.querySelector('input[type="email"]');
-					if (!emailInput) {
-						console.error('Email input not found in the subscription form.');
-						return;
-					}
-					const email = emailInput.value.trim();
-	
-					// Validate the email
-					if (!validateEmail(email)) {
-						emailInput.classList.add('error');
-						displayErrorMessage(emailInput, 'Please enter a valid email address.');
-						return;
-					} else {
-						emailInput.classList.remove('error');
-						removeErrorMessage(emailInput);
-					}
-	
-					// Pass the value to the hidden email input using the standard "input" event
-					hiddenEmailInput.value = email;
-					hiddenEmailInput.dispatchEvent(new Event('input', { bubbles: true }));
-					console.log('Email value passed to hidden input via input event:', email);
-	
-					// Programmatically simulate a click on the hidden form's submit button
-					const submitButton = hiddenForm.querySelector('button');
-					if (submitButton) {
-						setTimeout(() => {
-							submitButton.click();
-							sectionWrapper.style.display = 'none';
-							thankWrapper.style.display = 'block';
-							setTimeout(() => {
-								window.location.reload();
-							}, 2000);
-						}, 50);
-					} else {
-						console.error('Submit button not found in the hidden form.');
-					}
-				});
-			}
-		} else {
-			attempts++;
-			if (attempts >= maxAttempts) {
-				console.log('Form elements not found after maximum attempts.');
-				clearInterval(intervalId);
-			} else {
-				console.log('Attempt', attempts, ': form elements not found, retrying...');
-			}
-		}
-	}, interval);
+  if (!visibleForm || !hiddenFormContainer || !thankWrapper || !sectionWrapper) return;
+
+  const emailInput = visibleForm.querySelector('input[type="email"]');
+  const submitButton = visibleForm.querySelector('button[type="submit"]');
+  const errorMessage = visibleForm.querySelector('.error-message');
+  const klaviyoEmbed = hiddenFormContainer.querySelector('[class*="klaviyo-form-"]');
+  const klaviyoClass = Array.from(klaviyoEmbed?.classList || []).find((className) =>
+    className.startsWith('klaviyo-form-')
+  );
+  const formId = klaviyoClass ? klaviyoClass.replace('klaviyo-form-', '') : '';
+  let failureTimer;
+
+  function clearError() {
+    if (!errorMessage) return;
+    errorMessage.hidden = true;
+    errorMessage.textContent = '';
+    emailInput?.classList.remove('error');
+  }
+
+  function showError(message) {
+    if (!emailInput || !errorMessage) return;
+    emailInput.classList.add('error');
+    errorMessage.textContent = message;
+    errorMessage.hidden = false;
+    emailInput.focus();
+  }
+
+  function setPending(isPending) {
+    if (submitButton) submitButton.disabled = isPending;
+    visibleForm.setAttribute('aria-busy', isPending ? 'true' : 'false');
+  }
+
+  function showSuccess() {
+    window.clearTimeout(failureTimer);
+    setPending(false);
+    clearError();
+    sectionWrapper.style.display = 'none';
+    thankWrapper.style.display = 'block';
+    thankWrapper.setAttribute('tabindex', '-1');
+    thankWrapper.focus();
+  }
+
+  window.addEventListener('klaviyoForms', function (event) {
+    if (!event.detail || event.detail.type !== 'submit') return;
+    if (formId && event.detail.formId !== formId) return;
+    showSuccess();
+  });
+
+  visibleForm.addEventListener('submit', function (event) {
+    event.preventDefault();
+    clearError();
+
+    if (!emailInput || !emailInput.checkValidity()) {
+      emailInput?.reportValidity();
+      return;
+    }
+
+    const hiddenForm = hiddenFormContainer.querySelector('form');
+    const hiddenEmailInput = hiddenForm?.querySelector('input[type="email"]');
+    const hiddenSubmitButton = hiddenForm?.querySelector('button[type="submit"], button');
+
+    if (!hiddenForm || !hiddenEmailInput || !hiddenSubmitButton) {
+      showError(visibleForm.dataset.errorMessage);
+      return;
+    }
+
+    hiddenEmailInput.value = emailInput.value.trim();
+    hiddenEmailInput.dispatchEvent(new Event('input', { bubbles: true }));
+    hiddenEmailInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+    setPending(true);
+    hiddenSubmitButton.click();
+
+    window.clearTimeout(failureTimer);
+    failureTimer = window.setTimeout(function () {
+      setPending(false);
+      showError(visibleForm.dataset.errorMessage);
+    }, 15000);
+  });
 });
-
-/**
- * Validates the email address.
- * @param {string} email - The email address to validate.
- * @returns {boolean} - Returns true if the email is valid, otherwise false.
- */
-function validateEmail(email) {
-	const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-	return regex.test(email);
-}
-
-/**
- * Displays an error message below the specified input element.
- * @param {HTMLElement} inputElement - The input element to display the error for.
- * @param {string} message - The error message text.
- */
-function displayErrorMessage(inputElement, message) {
-	let errorDiv = inputElement.parentElement.querySelector('.error-message');
-	if (!errorDiv) {
-		errorDiv = document.createElement('div');
-		errorDiv.className = 'error-message';
-		inputElement.parentElement.insertBefore(errorDiv, inputElement.nextElementSibling);
-	}
-	errorDiv.textContent = message;
-}
-
-/**
- * Removes the error message for the specified input element.
- * @param {HTMLElement} inputElement - The input element for which the error message should be removed.
- */
-function removeErrorMessage(inputElement) {
-	const errorDiv = inputElement.parentElement.querySelector('.error-message');
-	if (errorDiv) {
-		errorDiv.remove();
-	}
-}
