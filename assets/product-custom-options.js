@@ -709,8 +709,9 @@ if (!customElements.get('product-customization-options')) {
 
       // Mobile options UI (display only): category-level collapse (product-options.liquid renders
       // [data-category-toggle] + [data-category-body] on cards with 2+ fields or a colour picker).
-      // Only the wrapper is hidden - never an accordion - so checkMandatoryFields(), the
-      // conditional-option logic and prepareOptions() see exactly the same DOM state as before.
+      // Only the wrapper is collapsed (height 0, still rendered) - never an accordion - so
+      // checkMandatoryFields(), the conditional-option logic and prepareOptions() (innerText)
+      // see exactly the same DOM state as before.
       // The summary only reads the fields' own selected-value elements; nothing here selects,
       // clears or prices an option. At 750px and up the toggle is hidden and the body is
       // display: contents, so the open/closed state has no effect there.
@@ -733,9 +734,17 @@ if (!customElements.get('product-customization-options')) {
             return field ? field.dataset.selectedOptions === '' : false;
           });
 
+        // The closed state only applies at <=749px (CSS); there the clipped body is made inert.
+        // Never inert on desktop, where the body is display: contents and fully usable.
+        const mobileQuery = window.matchMedia('(max-width: 749px)');
+        const syncInert = (item) => {
+          bodyOf(item).inert = mobileQuery.matches && item.classList.contains('product-option__item--collapsed');
+        };
+
         const setOpen = (item, open) => {
           item.classList.toggle('product-option__item--collapsed', !open);
           toggleOf(item).setAttribute('aria-expanded', open ? 'true' : 'false');
+          syncInert(item);
         };
 
         const parsePrice = (text) => {
@@ -806,15 +815,6 @@ if (!customElements.get('product-customization-options')) {
           summary.replaceChildren(...lines);
         };
 
-        let summaryFrame = null;
-        const scheduleSummaries = () => {
-          if (summaryFrame) return;
-          summaryFrame = window.requestAnimationFrame(() => {
-            summaryFrame = null;
-            items.forEach(updateSummary);
-          });
-        };
-
         items.forEach((item) => {
           setOpen(item, needsAttention(item));
           updateSummary(item);
@@ -843,12 +843,15 @@ if (!customElements.get('product-customization-options')) {
           }
 
           // Selections, quantity prices, conditional visibility and "x" removals all change the
-          // fields' DOM; refresh the summaries from there rather than hooking each handler.
-          const observer = new MutationObserver(scheduleSummaries);
+          // fields' DOM; refresh the summary from there rather than hooking each handler.
+          // MutationObserver already batches a handler's changes into one callback.
+          const observer = new MutationObserver(() => updateSummary(item));
           observer.observe(bodyOf(item), { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'data-selected-options'] });
           this.#categoryObservers.push(observer);
         });
-        this.addEventListener('change', scheduleSummaries);
+        // <select> changes only move the selected option, which the observer does not see.
+        this.addEventListener('change', () => items.forEach(updateSummary));
+        mobileQuery.addEventListener('change', () => items.forEach(syncInert));
 
         // Add to Cart with a required choice missing: product-form-with-options still validates
         // and alerts as before; this only opens the first such card (in visual order) and brings

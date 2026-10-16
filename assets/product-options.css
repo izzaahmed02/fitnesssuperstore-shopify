@@ -1523,8 +1523,14 @@ product-customization-options {
     color: #D83D0E;
   }
 
+  /* Closed: still rendered (height 0, clipped), never display: none - prepareOptions() reads
+     innerText of titles, colour names and prices inside, and innerText of a non-rendered
+     element returns raw textContent (cart property values would change). The JS makes the
+     closed body inert on mobile so its controls are out of the tab order and a11y tree. */
   .product-options--pdp .product-option__item--collapsed > .product-options__category-body {
-    display: none;
+    display: block;
+    height: 0;
+    overflow: hidden;
   }
 
   /* Bring an opened card (invalid Add to Cart) into view below the sticky header. */
