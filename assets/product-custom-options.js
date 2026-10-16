@@ -783,24 +783,37 @@ if (!customElements.get('product-customization-options')) {
       // Tooltip popup handler
 
       handlePopupHelper() {
-        if (this.openPopupButtons.length === 0) return;
-        this.openPopupButtons.forEach((button) => {
-          button.addEventListener('click', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            const popup = document.querySelector(`[data-popup="${button.dataset?.popupOpen}"]`);
-            if (!popup) return;
-            popup.classList.add('active');
+        if (this.openPopupButtons.length > 0) {
+          this.openPopupButtons.forEach((button) => {
+            button.addEventListener('click', async (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              const popupKey = button.dataset?.popupOpen;
+              if (!popupKey) return;
+
+              if (window.FSSOptionHelp?.openPopup) {
+                const opened = await window.FSSOptionHelp.openPopup(button, popupKey);
+                if (opened) return;
+              }
+
+              const scope = button.closest('cart-drawer') || document;
+              const popup = Array.from(scope.querySelectorAll('[data-popup]')).find(
+                (item) => item.dataset.popup === popupKey,
+              );
+              if (popup) popup.classList.add('active');
+            });
           });
-        });
+        }
 
         if (this.closePopupButtons.length === 0) return;
         this.closePopupButtons.forEach((button) => {
           button.addEventListener('click', (event) => {
             event.preventDefault();
-            const popup = document.querySelector(`[data-popup="${button.dataset?.closePopup}"]`);
-            if (!popup) return;
-            popup.classList.remove('active');
+            const popup = button.closest('.option-popup') ||
+              Array.from(document.querySelectorAll('[data-popup]')).find(
+                (item) => item.dataset.popup === button.dataset?.closePopup,
+              );
+            if (popup) popup.classList.remove('active');
           });
         });
       }
