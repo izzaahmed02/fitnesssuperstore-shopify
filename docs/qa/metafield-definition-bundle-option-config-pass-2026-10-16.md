@@ -103,15 +103,15 @@ Verified against Shopify's current reference and against this store.
 
 `custom` is a merchant-owned namespace, so `access.admin` is not something we set: merchant-owned
 metafields are readable and writable by the merchant and by every app holding the matching scope.
-All 219 existing `custom` PRODUCT definitions on this store read back
+All 243 existing `custom` PRODUCT definitions on this store read back
 `admin: PUBLIC_READ_WRITE`, which is that default surfacing. The cart transform therefore reads
 it without any access configuration, and so does the writer.
 
 | Setting | Recommended | House convention on this store | Why |
 |---|---|---|---|
-| `access.admin` | not set (resolves to `PUBLIC_READ_WRITE`) | `PUBLIC_READ_WRITE` on all 219 | Merchant-owned default. The Function and the writer both need it. |
-| `access.storefront` | **`NONE`** | `PUBLIC_READ` on all 219 | **Divergence, deliberate.** See below. |
-| `access.customerAccount` | `NONE` | `NONE` on all 219 | Nothing in Customer Accounts reads it. |
+| `access.admin` | not set (resolves to `PUBLIC_READ_WRITE`) | `PUBLIC_READ_WRITE` on all 243 | Merchant-owned default. The Function and the writer both need it. |
+| `access.storefront` | **`NONE`** | `PUBLIC_READ` on all 243 | **Divergence, deliberate.** See below. |
+| `access.customerAccount` | `NONE` | `NONE` on all 243 | Nothing in Customer Accounts reads it. |
 
 **The storefront divergence.** Every other `custom` PRODUCT definition here is `PUBLIC_READ`,
 so `NONE` breaks the pattern. Three reasons it is still the right call, and one reason it is
@@ -139,7 +139,7 @@ Full evidence, including every bulk-operation id and byte count:
 `docs/qa/evidence/2026-10-16/bundle-option-config-existing-state-2026-10-16.json`
 
 **Conflicting definition: none.** Queried by exact key on `PRODUCT` and `PRODUCTVARIANT` — both
-empty — and then enumerated every PRODUCT definition in the `custom` namespace. 219 definitions,
+empty — and then enumerated every PRODUCT definition in the `custom` namespace. 243 definitions,
 `hasNextPage: false`, no `bundle_option_config` among them. There is also no key collision inside
 the namespace.
 
