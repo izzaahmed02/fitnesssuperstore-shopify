@@ -200,8 +200,40 @@
         endif
       %}
 
+      {% liquid
+        # Mobile options UI (display only): category-level collapse for cards with two or more
+        # visible fields, or a colour picker. Single-field cards keep their field row as is.
+        # The fields are wrapped, never hidden themselves: the mandatory, conditional and
+        # add-to-cart checks read each accordion's own display and must see the same state.
+        # A card with a required field that has no default renders open.
+        assign is_collapsible = false
+        assign collapsible_starts_open = false
+        if category.title != blank
+          unless category.hide_option
+            assign collapsible_field_count = 0
+            assign collapsible_has_color = false
+            for product_option in category.product_options.value
+              assign po_title_downcase = product_option.product_option_title | downcase
+              if po_title_downcase == 'paint color' or po_title_downcase == 'paint colors' or po_title_downcase == 'color' or po_title_downcase == 'vinyl color' or po_title_downcase == 'vinyl colors'
+                assign collapsible_has_color = true
+              endif
+              unless product_option.hide_values
+                assign collapsible_field_count = collapsible_field_count | plus: 1
+                if product_option.mandatory and product_option.product_option_sets_default.value == blank and product_option.tier_parent_products.value == blank
+                  assign collapsible_starts_open = true
+                endif
+              endunless
+            endfor
+            if collapsible_field_count > 1 or collapsible_has_color
+              assign is_collapsible = true
+            endif
+          endunless
+        endif
+        assign category_body_id = 'ProductOptionsCategory-' | append: section.id | append: '-' | append: forloop.index
+      %}
+
       <div
-        class="product-option__item{% if category.title != blank %}{% unless category.hide_option %} product-option__item--card{% endunless %}{% endif %}{% if is_delivery_category %} product-option__item--delivery{% endif %}{% if is_accessories_category %} product-option__item--accessories{% endif %}{% if field_help_covered %} product-option__item--field-help-covered{% endif %}"
+        class="product-option__item{% if category.title != blank %}{% unless category.hide_option %} product-option__item--card{% endunless %}{% endif %}{% if is_delivery_category %} product-option__item--delivery{% endif %}{% if is_accessories_category %} product-option__item--accessories{% endif %}{% if field_help_covered %} product-option__item--field-help-covered{% endif %}{% if is_collapsible %} product-option__item--collapsible{% unless collapsible_starts_open %} product-option__item--collapsed{% endunless %}{% endif %}"
         {% unless category.hide_option %}
           style="order:  {% if color_title != blank %}{{ color_index }}{% elsif category_title_downcase == 'warranty' %}{{ warranty_index }}{% elsif category_title_downcase == 'assembly & room of choice installation needed?' %}{{ assambly_index }}{% elsif quantity_option %}0{% else %}{{ index }}{% endif %};"
         {% endunless %}
@@ -301,6 +333,27 @@
             {% endif %}
           </div>
         {% endif %}
+        {%- if is_collapsible -%}
+          {%- comment -%}
+            Mobile options UI: the card's open/close row. Hidden at 750px and up, where the body
+            below is display: contents, so desktop renders exactly as before. The summary is
+            filled by handleCategoryCollapse() from the fields' own selected values.
+          {%- endcomment -%}
+          <button
+            type="button"
+            class="product-options__category-toggle"
+            aria-expanded="{% if collapsible_starts_open %}true{% else %}false{% endif %}"
+            aria-controls="{{ category_body_id }}"
+            data-category-toggle
+          >
+            <span class="visually-hidden">{{ category.title }}:</span>
+            <span class="product-options__category-summary" data-category-summary></span>
+            <span class="product-options__accordion-icon">
+              {%- render 'product-option-chevron' -%}
+            </span>
+          </button>
+          <div class="product-options__category-body" id="{{ category_body_id }}" data-category-body>
+        {%- endif -%}
         <div class="product-options__category-notification"></div>
         {% for product_option in category.product_options.value %}
           {% assign title = product_option.product_option_title | downcase %}
@@ -337,6 +390,9 @@
             {% render 'product-option-accordion', category: category, default: default, product_option: product_option, forloop_index: forloop.index, product_id: product.id %}
           {% endif %}
         {% endfor %}
+        {%- if is_collapsible -%}
+          </div>
+        {%- endif -%}
       </div>
     {% endfor %}
 

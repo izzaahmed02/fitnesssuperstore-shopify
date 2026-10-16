@@ -1066,8 +1066,15 @@ product-customization-options {
 .product-options__empty-value,
 .product-options__service-upgrade,
 .product-options__service-details,
-.product-options__swatch-price-zero {
+.product-options__swatch-price-zero,
+.product-options__category-toggle {
   display: none;
+}
+
+/* Category collapse wrapper: no box of its own, so the fields lay out exactly as before
+   (desktop always; mobile while the card is open). */
+.product-options__category-body {
+  display: contents;
 }
 
 @media screen and (max-width: 749px) {
@@ -1446,5 +1453,82 @@ product-customization-options {
   .product-options--pdp .product-options__accordion--delivery .product-options__service-details {
     font-size: 16px;
     line-height: 22px;
+  }
+
+  /* Category-level collapse (Tim / Sagi, 2026-10-16): cards with several fields or a colour
+     picker show one row - selection summary + chevron - under the card label; the fields
+     open below it. Same row geometry as a field header (44px, 5px 12px) and the type of a
+     field's selected value / price. Only the wrapper is display: none, never a field. */
+  .product-options--pdp .product-option__item--collapsible > .product-options__category-title {
+    cursor: pointer;
+  }
+
+  .product-options--pdp .product-option__item--collapsible > .product-options__category-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 44px;
+    margin: 0;
+    padding: 5px 12px;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+    color: inherit;
+  }
+
+  .product-options--pdp .product-option__item--collapsible > .product-options__category-toggle[aria-expanded='true'] {
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .product-options--pdp .product-options__category-toggle .product-options__accordion-icon {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+  }
+
+  .product-options--pdp .product-options__category-toggle[aria-expanded='true'] .product-options__accordion-icon svg {
+    transform: rotate(180deg);
+  }
+
+  .product-options--pdp .product-options__category-summary {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .product-options--pdp .product-options__category-summary-line {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    font-family: Lato, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 22px;
+    color: #393940;
+  }
+
+  .product-options--pdp .product-options__category-summary-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .product-options--pdp .product-options__category-summary-price {
+    flex-shrink: 0;
+    font-weight: 700;
+    white-space: nowrap;
+    color: #D83D0E;
+  }
+
+  .product-options--pdp .product-option__item--collapsed > .product-options__category-body {
+    display: none;
+  }
+
+  /* Bring an opened card (invalid Add to Cart) into view below the sticky header. */
+  .product-options--pdp .product-option__item--collapsible {
+    scroll-margin-top: 120px;
   }
 }

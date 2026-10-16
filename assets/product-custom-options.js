@@ -30,6 +30,8 @@ if (!customElements.get('product-customization-options')) {
       #variantChangeUnsubscribe = null;
       #onPageShow = null;
       #modifyClickHandler = null;
+      #categorySubmitHandler = null;
+      #categoryObservers = [];
 
       get modifyID() {
         return this.dataset.productId;
@@ -101,6 +103,12 @@ if (!customElements.get('product-customization-options')) {
           document.removeEventListener('click', this.#modifyClickHandler);
           this.#modifyClickHandler = null;
         }
+        if (this.#categorySubmitHandler) {
+          document.removeEventListener('submit', this.#categorySubmitHandler, true);
+          this.#categorySubmitHandler = null;
+        }
+        this.#categoryObservers.forEach((observer) => observer.disconnect());
+        this.#categoryObservers = [];
       }
 
       init() {
@@ -120,6 +128,7 @@ if (!customElements.get('product-customization-options')) {
         this.handleHelpPopupAccordions();
         this.handleMandatoryReset();
         this.handleServiceUpgradeRows();
+        this.handleCategoryCollapse();
         this.relatedProductsSwitcher();
         this.colorSwatchHandler();
         this.addCustomColorHandler();
@@ -696,6 +705,173 @@ if (!customElements.get('product-customization-options')) {
         };
         this.addEventListener('input', sync);
         sync();
+      }
+
+      // Mobile options UI (display only): category-level collapse (product-options.liquid renders
+      // [data-category-toggle] + [data-category-body] on cards with 2+ fields or a colour picker).
+      // Only the wrapper is hidden - never an accordion - so checkMandatoryFields(), the
+      // conditional-option logic and prepareOptions() see exactly the same DOM state as before.
+      // The summary only reads the fields' own selected-value elements; nothing here selects,
+      // clears or prices an option. At 750px and up the toggle is hidden and the body is
+      // display: contents, so the open/closed state has no effect there.
+
+      handleCategoryCollapse() {
+        const items = Array.from(this.querySelectorAll('.product-option__item--collapsible')).filter(
+          (item) => item.querySelector(':scope > [data-category-toggle]') && item.querySelector(':scope > [data-category-body]'),
+        );
+        if (items.length === 0) return;
+
+        const isShown = (el) => window.getComputedStyle(el).display !== 'none';
+        const toggleOf = (item) => item.querySelector(':scope > [data-category-toggle]');
+        const bodyOf = (item) => item.querySelector(':scope > [data-category-body]');
+
+        // Same rule as checkMandatoryFields(): a visible mandatory field with nothing selected.
+        const needsAttention = (item) =>
+          Array.from(bodyOf(item).querySelectorAll('[data-option-accordion]')).some((accordion) => {
+            if (!isShown(accordion)) return false;
+            const field = accordion.querySelector('[data-selected-options][data-mandatory]');
+            return field ? field.dataset.selectedOptions === '' : false;
+          });
+
+        const setOpen = (item, open) => {
+          item.classList.toggle('product-option__item--collapsed', !open);
+          toggleOf(item).setAttribute('aria-expanded', open ? 'true' : 'false');
+        };
+
+        const parsePrice = (text) => {
+          const value = Number((text || '').replace(/[^0-9.-]/g, ''));
+          return Number.isFinite(value) ? value : 0;
+        };
+
+        const formatPrice = (value) =>
+          `${value < 0 ? '-' : '+'}$${Math.abs(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+        const collectSelections = (item) => {
+          const body = bodyOf(item);
+          const selections = [];
+          body.querySelectorAll('[data-option-accordion]').forEach((accordion) => {
+            if (!isShown(accordion)) return;
+            accordion.querySelectorAll('[data-selected-options] [data-option-id]').forEach((badge) => {
+              const name = badge.querySelector('[data-option-title]')?.textContent.trim();
+              if (!name) return;
+              selections.push({ name, price: badge.querySelector('[data-option-price]')?.textContent.trim() || '' });
+            });
+          });
+          body.querySelectorAll('[data-select-option]').forEach((select) => {
+            if (!isShown(select)) return;
+            const name = select.selectedOptions[0]?.dataset.selectVariantTitle;
+            if (name) selections.push({ name, price: '' });
+          });
+          body.querySelectorAll('[data-selected-color-option] [data-color-selected-title]').forEach((color) => {
+            const text = color.textContent.trim();
+            const name = text.includes(':') ? text.split(':')[1].trim() : text;
+            if (!name) return;
+            const container = color.closest('[data-selected-color-option]');
+            selections.push({ name, price: container?.querySelector('.option_selected-price')?.textContent.trim() || '' });
+          });
+          return selections;
+        };
+
+        const summaryLine = (name, price) => {
+          const line = document.createElement('span');
+          line.className = 'product-options__category-summary-line';
+          const nameEl = document.createElement('span');
+          nameEl.className = 'product-options__category-summary-name';
+          nameEl.textContent = name;
+          line.appendChild(nameEl);
+          if (price) {
+            const priceEl = document.createElement('span');
+            priceEl.className = 'product-options__category-summary-price';
+            priceEl.textContent = price;
+            line.appendChild(priceEl);
+          }
+          return line;
+        };
+
+        // 0 selections: "None selected"; 1-2: each value as the field rows show it;
+        // 3+: "N selected" and the summed add-on amount (from the same price elements).
+        const updateSummary = (item) => {
+          const summary = item.querySelector('[data-category-summary]');
+          if (!summary) return;
+          const selections = collectSelections(item);
+          const lines = [];
+          if (selections.length === 0) {
+            lines.push(summaryLine('None selected', ''));
+          } else if (selections.length <= 2) {
+            selections.forEach((selection) => lines.push(summaryLine(selection.name, selection.price)));
+          } else {
+            const total = selections.reduce((sum, selection) => sum + parsePrice(selection.price), 0);
+            lines.push(summaryLine(`${selections.length} selected`, total !== 0 ? formatPrice(total) : ''));
+          }
+          summary.replaceChildren(...lines);
+        };
+
+        let summaryFrame = null;
+        const scheduleSummaries = () => {
+          if (summaryFrame) return;
+          summaryFrame = window.requestAnimationFrame(() => {
+            summaryFrame = null;
+            items.forEach(updateSummary);
+          });
+        };
+
+        items.forEach((item) => {
+          setOpen(item, needsAttention(item));
+          updateSummary(item);
+
+          const toggle = toggleOf(item);
+          toggle.addEventListener('click', (event) => {
+            event.preventDefault();
+            const open = toggle.getAttribute('aria-expanded') !== 'true';
+            if (open) {
+              // One card open at a time, but never close one that still needs a required choice.
+              items.forEach((other) => {
+                if (other !== item && !needsAttention(other)) setOpen(other, false);
+              });
+            }
+            setOpen(item, open);
+          });
+
+          // The whole label row opens the card too; its own buttons (Details, Optional, "?") keep their action.
+          const titleRow = item.querySelector(':scope > .product-options__category-title');
+          if (titleRow) {
+            titleRow.addEventListener('click', (event) => {
+              if (event.target.closest('button, a, input, select, label, [data-popup-open]')) return;
+              if (!isShown(toggle)) return;
+              toggle.click();
+            });
+          }
+
+          // Selections, quantity prices, conditional visibility and "x" removals all change the
+          // fields' DOM; refresh the summaries from there rather than hooking each handler.
+          const observer = new MutationObserver(scheduleSummaries);
+          observer.observe(bodyOf(item), { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'data-selected-options'] });
+          this.#categoryObservers.push(observer);
+        });
+        this.addEventListener('change', scheduleSummaries);
+
+        // Add to Cart with a required choice missing: product-form-with-options still validates
+        // and alerts as before; this only opens the first such card (in visual order) and brings
+        // it into view afterwards. Capture phase so the card is open before the alert shows.
+        this.#categorySubmitHandler = (event) => {
+          const productForm = event.target.closest?.('product-form-with-options');
+          if (!productForm) return;
+          const container = document.getElementById(`MainProduct-${productForm.dataset.sectionId}`);
+          if (!container || !container.contains(this)) return;
+          const pending = items
+            .filter(needsAttention)
+            .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+          if (pending.length === 0) return;
+          pending.forEach((item) => setOpen(item, true));
+          const first = pending[0];
+          window.setTimeout(() => {
+            const toggle = toggleOf(first);
+            if (!isShown(toggle)) return;
+            first.scrollIntoView({ block: 'start', behavior: 'smooth' });
+            toggle.focus({ preventScroll: true });
+          });
+        };
+        document.addEventListener('submit', this.#categorySubmitHandler, true);
       }
 
       // Default option event lister (Add possibility to remove default)
