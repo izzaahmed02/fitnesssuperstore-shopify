@@ -1,0 +1,290 @@
+{
+  "generatedAt": "2026-10-14T15:32:51.121Z",
+  "browser": "Chromium (playwright-core 1.56.1, /opt/pw-browsers/chromium)",
+  "specChecksum": "a5e3004509fedddc",
+  "budget": 19500,
+  "perOperationBytes": 3853,
+  "total": 16,
+  "passed": 16,
+  "failed": 0,
+  "results": [
+    {
+      "id": "F1.before",
+      "finding": "F1",
+      "build": "before (d771adf^)",
+      "claim": "the guard never runs: no cart.js read, nothing rendered, the over-budget cart is posted anyway",
+      "expected": {
+        "cartJsFetches": 0,
+        "guardRendered": false,
+        "cartAddPosts": 1
+      },
+      "observed": {
+        "cartJsFetches": 0,
+        "guardRendered": false,
+        "cartAddPosts": 1
+      },
+      "consoleErrors": [
+        "[fs-bundle] guard prediction failed; deferring to server validation SyntaxError: Unexpected token 'o', \"[object Obj\"... is not valid JSON"
+      ],
+      "screenshot": "out/f1-prefix.png",
+      "pass": true
+    },
+    {
+      "id": "F1.after",
+      "finding": "F1",
+      "build": "after (working tree)",
+      "claim": "the guard runs, reads the cart, blocks, and nothing is posted",
+      "expected": {
+        "cartJsFetches": 1,
+        "guardRendered": true,
+        "cartAddPosts": 0
+      },
+      "observed": {
+        "cartJsFetches": 1,
+        "guardRendered": true,
+        "cartAddPosts": 0,
+        "message": "We can’t complete this configuration through online checkout. Please contact our Sales team so we can confirm your selections and help complete your order.",
+        "cta": "https://www.fitnesssuperstore.com/pages/contact"
+      },
+      "consoleErrors": [],
+      "screenshot": "out/f1-assets.png",
+      "pass": true
+    },
+    {
+      "id": "F2.assets-present",
+      "finding": "F2",
+      "build": "after (working tree)",
+      "claim": "the three assets the section now loads define the whole chain, at the committed spec checksum",
+      "expected": {
+        "estimator": "object",
+        "fns": "object",
+        "guard": "object",
+        "checksum": "a5e3004509fedddc",
+        "budget": 19500
+      },
+      "observed": {
+        "estimator": "object",
+        "fns": "object",
+        "guard": "object",
+        "checksum": "a5e3004509fedddc",
+        "budget": 19500
+      },
+      "screenshot": "out/f2-home-gym-packages.png",
+      "pass": true
+    },
+    {
+      "id": "F2.guard-runs",
+      "finding": "F2",
+      "build": "after (working tree)",
+      "claim": "with those assets loaded the guard runs on this path and renders the approved copy",
+      "expected": {
+        "guardRendered": true
+      },
+      "observed": {
+        "guardRendered": true,
+        "message": "We can’t complete this configuration through online checkout. Please contact our Sales team so we can confirm your selections and help complete your order.",
+        "cta": "https://www.fitnesssuperstore.com/pages/contact"
+      },
+      "pass": true
+    },
+    {
+      "id": "F3.before",
+      "finding": "F3",
+      "build": "before (d771adf^)",
+      "claim": "40 ordinary lines inflate the estimate past budget and block a cart holding one bundle",
+      "expected": {
+        "predicted": 24546,
+        "willExceed": true,
+        "budget": 19500
+      },
+      "observed": {
+        "predicted": 24546,
+        "budget": 19500,
+        "willExceed": true
+      },
+      "pass": true
+    },
+    {
+      "id": "F3.after",
+      "finding": "F3",
+      "build": "after (working tree)",
+      "claim": "the same 40 ordinary lines contribute nothing; only the two bundle operations are counted",
+      "expected": {
+        "predicted": 7706,
+        "willExceed": false,
+        "budget": 19500
+      },
+      "observed": {
+        "predicted": 7706,
+        "budget": 19500,
+        "willExceed": false
+      },
+      "pass": true
+    },
+    {
+      "id": "F4.before",
+      "finding": "F4",
+      "build": "before (working tree with finding 4's one line removed)",
+      "claim": "after one rejection aria-disabled is still set, so the second submit returns at the top and never re-predicts",
+      "expected": {
+        "ariaDisabledAfterFirst": "true",
+        "cartReadsOnSecondSubmit": 0
+      },
+      "observed": {
+        "ariaDisabledAfterFirst": "true",
+        "cartReadsOnSecondSubmit": 0,
+        "guardRenderedFirst": true,
+        "guardRenderedSecond": true
+      },
+      "screenshot": "out/f4-mutant.png",
+      "pass": true
+    },
+    {
+      "id": "F4.after",
+      "finding": "F4",
+      "build": "after (working tree)",
+      "claim": "aria-disabled is cleared on the rejection path, so the second submit re-runs the guard",
+      "expected": {
+        "ariaDisabledAfterFirst": null,
+        "cartReadsOnSecondSubmit": 1
+      },
+      "observed": {
+        "ariaDisabledAfterFirst": null,
+        "cartReadsOnSecondSubmit": 1,
+        "guardRenderedFirst": true,
+        "guardRenderedSecond": true
+      },
+      "screenshot": "out/f4-assets.png",
+      "pass": true
+    },
+    {
+      "id": "F5.a.before",
+      "finding": "F5",
+      "build": "before (d771adf^)",
+      "claim": "predict() has no exclusion parameter at all, so modifying a line counts it and its replacement",
+      "expected": {
+        "predicted": 23118,
+        "willExceed": true
+      },
+      "observed": {
+        "predicted": 23118,
+        "budget": 19500,
+        "willExceed": true
+      },
+      "pass": true
+    },
+    {
+      "id": "F5.b.splitkey",
+      "finding": "F5",
+      "build": "split key (d771adf)",
+      "claim": "the bare variant id can never equal a cart-line key, so the old line is still counted and a cart that fits is wrongly blocked",
+      "expected": {
+        "guardRendered": true,
+        "cartAddPosts": 0,
+        "cartChangePosts": 0
+      },
+      "observed": {
+        "guardRendered": true,
+        "cartAddPosts": 0,
+        "cartChangePosts": 0,
+        "cartItemsRerendered": "original"
+      },
+      "consoleErrors": [],
+      "screenshot": "out/f5-splitkey.png",
+      "pass": true
+    },
+    {
+      "id": "F5.b.assets",
+      "finding": "F5",
+      "build": "full key (working tree)",
+      "claim": "the full cart-line key excludes the line being replaced, the cart fits, and the replacement is carried out",
+      "expected": {
+        "guardRendered": false,
+        "cartAddPosts": 1,
+        "cartChangePosts": 1
+      },
+      "observed": {
+        "guardRendered": false,
+        "cartAddPosts": 1,
+        "cartChangePosts": 1,
+        "cartItemsRerendered": "rerendered by the rig"
+      },
+      "consoleErrors": [],
+      "screenshot": "out/f5-assets.png",
+      "pass": true
+    },
+    {
+      "id": "F5.b.change-key",
+      "finding": "F5",
+      "build": "full key (working tree)",
+      "claim": "the removal of the old line still uses the full cart-line key",
+      "expected": {
+        "id": "43190000003:33333333333333333333333333333333",
+        "quantity": 0
+      },
+      "observed": {
+        "id": "43190000003:33333333333333333333333333333333",
+        "quantity": 0
+      },
+      "pass": true
+    },
+    {
+      "id": "F5.b.add-key",
+      "finding": "F5",
+      "build": "full key (working tree)",
+      "claim": "the add of the new line still uses the bare variant id, which is what /cart/add.js wants",
+      "expected": {
+        "id": "43190000003"
+      },
+      "observed": {
+        "id": "43190000003"
+      },
+      "pass": true
+    },
+    {
+      "id": "F5b.full-key",
+      "finding": "F5b",
+      "build": "after (working tree)",
+      "claim": "excluding by full key removes exactly the line being modified; the OTHER line of the same variant is still counted",
+      "expected": {
+        "predicted": 19265,
+        "ops": 5
+      },
+      "observed": {
+        "predicted": 19265,
+        "ops": 5
+      },
+      "pass": true
+    },
+    {
+      "id": "F5b.split-key",
+      "finding": "F5b",
+      "build": "the value the old call site passed",
+      "claim": "the bare variant id matches no line key, so neither same-variant line is excluded and the estimate over-counts by one operation",
+      "expected": {
+        "predicted": 23118,
+        "ops": 6
+      },
+      "observed": {
+        "predicted": 23118,
+        "ops": 6
+      },
+      "pass": true
+    },
+    {
+      "id": "F5b.prefix-match-would-undercount",
+      "finding": "F5b",
+      "build": "hypothetical variant-id comparison",
+      "claim": "had the guard been loosened to compare variant ids instead, BOTH same-variant lines would drop out and the estimate would under-count by one operation",
+      "expected": {
+        "predicted": 15412,
+        "ops": 4
+      },
+      "observed": {
+        "predicted": 15412,
+        "ops": 4
+      },
+      "pass": true
+    }
+  ]
+}
