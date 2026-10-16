@@ -50,6 +50,7 @@ class CartDrawer extends HTMLElement {
   renderContents(e) {
     this.querySelector('.drawer__inner').classList.contains('is-empty') && this.querySelector('.drawer__inner').classList.remove('is-empty'),
       (this.productId = e.id),
+      window.FSSOptionHelp?.invalidateCart?.(),
       this.getSectionsToRender().forEach((t) => {
         let r = t.selector ? document.querySelector(t.selector) : document.getElementById(t.id);
         r.innerHTML = this.getSectionInnerHTML(e.sections[t.id], t.selector);
