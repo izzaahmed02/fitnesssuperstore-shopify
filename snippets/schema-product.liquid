@@ -51,8 +51,12 @@
       ],
       "name": {{ product.title | json }},
       "color": {{ product.metafields.custom.product_color | default: 'Not specified' | json }},
-      "countryOfAssembly": {{ product.metafields.custom.country_of_assembly | default: 'US' | json }},
-      "countryOfLastProcessing": {{ product.metafields.custom.country_of_last_processing | default: 'US' | json }},
+      {% if product.metafields.custom.country_of_assembly != blank %}
+        "countryOfAssembly": {{ product.metafields.custom.country_of_assembly | json }},
+      {% endif %}
+      {% if product.metafields.custom.country_of_last_processing != blank %}
+        "countryOfLastProcessing": {{ product.metafields.custom.country_of_last_processing | json }},
+      {% endif %}
       "hasMeasurement": {
         "@type": "QuantitativeValue",
         "@id": {{ request.origin | append: product.url | append: '#measurement' | json }},
