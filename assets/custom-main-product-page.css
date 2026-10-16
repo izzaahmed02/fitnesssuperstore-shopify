@@ -346,6 +346,460 @@
   vertical-align: middle;
 }
 
+/* Mobile PDP gallery: thumbnail strip + "x of y" counter (replaces the dot row).
+   Built by product-mobile-gallery.js renderThumbStrip(). */
+@media screen and (max-width: 989px) {
+  mobile-gallery .mobile-gallery-wrapper {
+    position: relative;
+  }
+
+  mobile-gallery .mobile-gallery-thumbs {
+    position: relative;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 4px 2px;
+    margin-top: 4px;
+  }
+
+  mobile-gallery .mobile-gallery-thumbs::-webkit-scrollbar {
+    display: none;
+  }
+
+  mobile-gallery .mobile-gallery-thumb {
+    position: relative;
+    flex: 0 0 64px;
+    width: 64px;
+    height: 64px;
+    padding: 0;
+    border: 2px solid #e5e5e5;
+    border-radius: 6px;
+    background: #fff;
+    overflow: hidden;
+    cursor: pointer;
+    scroll-snap-align: center;
+  }
+
+  mobile-gallery .mobile-gallery-thumb.is-active {
+    border-color: #23232b;
+  }
+
+  mobile-gallery .mobile-gallery-thumb img {
+    width: 100%;
+    height: 100%;
+    /* contain, not cover: full-product shots and dimension diagrams stay whole */
+    object-fit: contain;
+    display: block;
+  }
+
+  mobile-gallery .mobile-gallery-thumb__play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 28px;
+    height: 28px;
+    margin: -14px 0 0 -14px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+  }
+
+  mobile-gallery .mobile-gallery-thumb__play::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: -6px 0 0 -3px;
+    border-style: solid;
+    border-width: 6px 0 6px 10px;
+    border-color: transparent transparent transparent #fff;
+  }
+
+  mobile-gallery .mobile-gallery-counter {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: rgba(35, 35, 43, 0.75);
+    color: #fff;
+    font-size: 12px;
+    line-height: 20px;
+    pointer-events: none;
+  }
+
+  /* Fade the fixed chat bubble while it would cover a gallery control (toggled by JS). */
+  body.mobile-gallery-chat-overlap #gorgias-chat-container iframe#chat-button {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.2s;
+  }
+
+  /* 44px tap targets for the slide arrows (were 30-36px) */
+  mobile-gallery .mobile-gallery-slider .slick-prev.slick-arrow,
+  mobile-gallery .mobile-gallery-slider .slick-next.slick-arrow {
+    width: 44px !important;
+    height: 44px !important;
+  }
+}
+
+@media (min-width: 990px) {
+  product-gallery {
+    --pdp-gallery-sticky-top: 170px;
+    --pdp-gallery-thumb: 72px;
+    --pdp-gallery-row: calc(var(--pdp-gallery-thumb) + 20px);
+    /* square main image: no wider than the column, no taller than the space left on screen */
+    --pdp-gallery-max: min(700px, max(320px, calc(100vh - var(--pdp-gallery-sticky-top) - var(--pdp-gallery-row) - 16px)));
+  }
+
+  product-gallery .custom-gallery-wrapper {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: var(--pdp-gallery-max);
+    margin: 0 auto;
+  }
+
+  product-gallery .custom-gallery-main {
+    order: 1;
+    width: 100%;
+    max-width: none;
+  }
+
+  product-gallery .custom-gallery-thumbnails.only-desktop {
+    order: 2;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 10px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    /* room for the 2px active outline */
+    padding: 4px 3px 6px;
+  }
+
+  product-gallery .custom-gallery-thumbnails.only-desktop .thumbnail-btn {
+    flex: 0 0 var(--pdp-gallery-thumb) !important;
+    width: var(--pdp-gallery-thumb) !important;
+    min-width: var(--pdp-gallery-thumb) !important;
+    height: var(--pdp-gallery-thumb) !important;
+  }
+
+  product-gallery .custom-gallery-thumbnails.only-desktop .thumbnail-btn img {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+@media (min-width: 990px) {
+  #product-gallery-popup .product-popup {
+    max-width: min(1400px, 96vw);
+    height: 94vh;
+    padding: 12px 16px 16px;
+  }
+
+  #product-gallery-popup .popup-media-viewer {
+    flex: 1 1 auto;
+    border-width: 8px;
+    padding: 0.8rem;
+  }
+
+  #product-gallery-popup .popup-sidebar {
+    width: 220px;
+    flex: 0 0 220px;
+    padding: 1.2rem;
+  }
+
+  #product-gallery-popup .popup-thumbnails {
+    gap: 0.8rem;
+  }
+
+  #product-gallery-popup .popup-close {
+    top: 12px;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #23232b;
+    color: #fff;
+    font-size: 28px;
+    line-height: 1;
+    z-index: 20;
+  }
+
+  #product-gallery-popup .popup-close:hover,
+  #product-gallery-popup .popup-close:focus-visible {
+    background: #D83D0E;
+    outline: 2px solid #23232b;
+    outline-offset: 2px;
+  }
+
+  #product-gallery-popup .popup-counter {
+    position: absolute;
+    bottom: 24px;
+    left: 28px;
+    z-index: 20;
+    padding: 2px 12px;
+    border-radius: 12px;
+    background: rgba(35, 35, 43, 0.75);
+    color: #fff;
+    font-size: 13px;
+    line-height: 22px;
+    pointer-events: none;
+  }
+}
+
+/* Mobile gallery popup: obvious 44px Close, "x of y" counter and a play badge on video
+   thumbnails, matching the inline gallery. */
+@media screen and (max-width: 989px) {
+  #mobile-gallery-popup .mobile-popup-close {
+    top: 10px;
+    right: 10px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(35, 35, 43, 0.85);
+    color: #fff;
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  #mobile-gallery-popup .mobile-popup-counter {
+    position: absolute;
+    top: 20px;
+    left: 16px;
+    z-index: 10000;
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: rgba(35, 35, 43, 0.85);
+    color: #fff;
+    font-size: 12px;
+    line-height: 20px;
+    pointer-events: none;
+  }
+
+  #mobile-gallery-popup .mobile-popup-thumb__play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 26px;
+    height: 26px;
+    margin: -13px 0 0 -13px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+  }
+
+  #mobile-gallery-popup .mobile-popup-thumb__play::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: -5px 0 0 -3px;
+    border-style: solid;
+    border-width: 5px 0 5px 9px;
+    border-color: transparent transparent transparent #fff;
+  }
+}
+
+mobile-gallery .mobile-gallery-thumbs.has-more-right,
+product-gallery .custom-gallery-thumbnails.has-more-right {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+}
+mobile-gallery .mobile-gallery-thumbs.has-more-left,
+product-gallery .custom-gallery-thumbnails.has-more-left {
+  -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent);
+  mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent);
+}
+mobile-gallery .mobile-gallery-thumbs.has-more-left.has-more-right,
+product-gallery .custom-gallery-thumbnails.has-more-left.has-more-right {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent);
+}
+
+@media screen and (max-width: 989px) {
+  /* Slide arrows sit inside the image, never flush on (or past) its edge. */
+  mobile-gallery .mobile-gallery-slider .slick-prev.slick-arrow {
+    left: 8px;
+  }
+  mobile-gallery .mobile-gallery-slider .slick-next.slick-arrow {
+    right: 8px;
+  }
+
+  #mobile-gallery-popup.mobile-popup-overlay {
+    justify-content: flex-start;
+    padding-top: 64px;
+  }
+  #mobile-gallery-popup .mobile-popup-slider {
+    height: auto;
+    max-height: none;
+  }
+  #mobile-gallery-popup .mobile-popup-slider .mobile-gallery-slide {
+    padding-top: 0;
+    height: min(calc(100vw - 2rem), calc(100vh - 190px));
+    height: min(calc(100vw - 2rem), calc(100dvh - 190px));
+  }
+
+  /* Compact popup thumbnails: about 56px, still easy to tap */
+  #mobile-gallery-popup .mobile-popup-thumbnails {
+    margin: 8px auto 0;
+    padding: 6px;
+  }
+  #mobile-gallery-popup .mobile-popup-thumb {
+    padding: 3px;
+    margin: 0 3px;
+  }
+}
+
+/* Desktop thumbnail row: < > buttons for mouse users (a vertical wheel can't scroll a sideways row).*/
+@media (min-width: 990px) {
+  product-gallery .custom-gallery-thumbnails-nav {
+    order: 2;
+    position: relative;
+    min-width: 0;
+  }
+
+  product-gallery .thumbnails-nav-btn {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    width: 32px;
+    height: 32px;
+    margin-top: -16px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0 3px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(35, 35, 43, 0.85);
+    color: #fff;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  product-gallery .thumbnails-nav-btn:hover,
+  product-gallery .thumbnails-nav-btn:focus-visible {
+    background: #D83D0E;
+  }
+
+  product-gallery .thumbnails-nav-btn--prev { left: 2px; }
+  product-gallery .thumbnails-nav-btn--next { right: 2px; }
+
+  product-gallery .custom-gallery-thumbnails-nav.has-more-left .thumbnails-nav-btn--prev,
+  product-gallery .custom-gallery-thumbnails-nav.has-more-right .thumbnails-nav-btn--next {
+    display: flex;
+  }
+}
+
+@media screen and (max-width: 989px) {
+  #mobile-gallery-popup .mobile-popup-thumbs-nav {
+    position: relative;
+    width: 100%;
+    z-index: 1;
+  }
+
+  #mobile-gallery-popup .mobile-popup-thumbnails {
+    position: relative;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  #mobile-gallery-popup .mobile-popup-thumbnails::-webkit-scrollbar {
+    display: none;
+  }
+
+  #mobile-gallery-popup .mobile-popup-thumb {
+    flex: 0 0 56px;
+    width: 56px;
+    height: 56px;
+    margin: 0;
+    padding: 2px;
+    border: 2px solid transparent !important;
+    scroll-snap-align: center;
+    user-select: none;
+  }
+
+  #mobile-gallery-popup .mobile-popup-thumb.active {
+    border-color: #D83D0E !important;
+  }
+
+  #mobile-gallery-popup .mobile-popup-thumb img {
+    pointer-events: none;
+  }
+
+  #mobile-gallery-popup .mobile-popup-thumbnails.has-more-right {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+  }
+  #mobile-gallery-popup .mobile-popup-thumbnails.has-more-left {
+    -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent);
+    mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent);
+  }
+  #mobile-gallery-popup .mobile-popup-thumbnails.has-more-left.has-more-right {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent);
+  }
+
+  #mobile-gallery-popup .thumbnails-nav-btn {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    width: 32px;
+    height: 32px;
+    margin-top: -16px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0 3px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(35, 35, 43, 0.85);
+    color: #fff;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  #mobile-gallery-popup .thumbnails-nav-btn--prev { left: 4px; }
+  #mobile-gallery-popup .thumbnails-nav-btn--next { right: 4px; }
+
+  /* Shown on every device (touch too), whenever there are more thumbnails that way. */
+  #mobile-gallery-popup .mobile-popup-thumbs-nav:has(.has-more-left) .thumbnails-nav-btn--prev,
+  #mobile-gallery-popup .mobile-popup-thumbs-nav:has(.has-more-right) .thumbnails-nav-btn--next {
+    display: flex;
+  }
+}
+
+mobile-gallery .mobile-gallery-thumbs,
+#mobile-gallery-popup .mobile-popup-thumbnails {
+  cursor: grab;
+}
+mobile-gallery .mobile-gallery-thumbs.is-drag-scrolling,
+#mobile-gallery-popup .mobile-popup-thumbnails.is-drag-scrolling {
+  cursor: grabbing;
+  scroll-snap-type: none !important;
+  scroll-behavior: auto !important;
+}
+
 /* --------------------------------------------------------------------------
    Mobile options UI (display only) — purchase area under the options
    (.product-form--options-mobile, rendered only when the section has the
