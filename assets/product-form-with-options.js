@@ -196,6 +196,15 @@ if (!customElements.get('product-form-with-options')) {
           });
         }
 
+        const coverageNote = this.productContainer.querySelector('.product-options__warranty-included-note');
+        if (coverageNote) {
+          const warrantySelect = coverageNote.closest('.product-option__item')?.querySelector('[data-select-option]');
+          const selectedWarranty = warrantySelect?.selectedOptions[0]?.dataset.selectVariantTitle || '';
+          if (selectedWarranty.toLowerCase().includes('included')) {
+            lineItemProperties['Included Coverage'] = coverageNote.innerText.replace(/^Included coverage:\s*/i, '').trim();
+          }
+        }
+
         const quanityOptions = this.productContainer.querySelectorAll('[data-quantity-option-input]');
         if (quanityOptions.length > 0) {
           quanityOptions.forEach((option) => {
