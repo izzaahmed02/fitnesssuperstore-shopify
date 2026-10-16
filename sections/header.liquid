@@ -58,17 +58,21 @@
     display: none;
     }
 
-    {%- if section.settings.sticky_header_type == 'none' -%}
-        /* Mobile: when the merchant hasn't opted into any sticky header type,
-           don't let .section-header stay pinned - the wrapper below already
-           renders as a plain div (not the sticky-header custom element) in
-           that case, so CSS shouldn't force sticky behavior on top of it. */
-        .section-header {
-        position: static;
-        top: auto;
-        }
-
-    {%- endif -%}
+    /* FINAL SCOPE: mobile-only adaptive sticky wrapper. Desktop merchant setting
+       remains unchanged; no icon, menu, Boost or content markup is modified. */
+    .section-header {
+      position: sticky;
+      top: 0;
+      transition: transform 180ms ease;
+      will-change: transform;
+    }
+    .section-header.fss-mobile-header--hidden {
+      transform: translateY(-100%);
+      pointer-events: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .section-header { transition: none; }
+    }
 
     /* The upper bar is hidden here, so give the logo room below the viewport edge. */
     .header {
@@ -101,13 +105,29 @@
        .custom-header-search (the wrapper) to height:44px!important at
        <=749px. A taller min-height here would overflow that fixed parent.
        44px still clears the WCAG 2.5.5 AAA target size. */
+    /* FINAL HEADER ONLY: 44px form is the visual/tap target. Its existing
+       4px vertical padding leaves 36px for the input. A 42px input overflows
+       the form and creates the double background seen in 390px preview. */
     .custom-header-search--input {
-    min-height: 32px;
+      box-sizing: border-box;
+      min-height: 36px;
+      height: 36px;
+      width: 100%;
+      background: transparent;
+      border-radius: 0;
+      font-size: 16px;
+      line-height: 1.25;
+      -webkit-font-smoothing: antialiased;
     }
 
     .custom-header-search-container {
-    margin-top: 10px;
-    margin-bottom: 10px;
+      margin-top: 6px;
+      margin-bottom: 6px;
+    }
+    @media (max-width: 749px) {
+      .custom-header-search-container {
+        margin-inline: 12px;
+      }
     }
 
     /* padding-top is intentionally not set here: the earlier
@@ -745,6 +765,71 @@
 
     customElements.define('sticky-header', StickyHeader);
     {% endjavascript %}
+
+    <script>
+    /* FINAL SCOPE: mobile scrolling only. Preserve the original search field,
+       icon markup, icon links, cart/menu events and all desktop interactions. */
+    (() => {
+      const init = () => {
+        const section = document.getElementById('shopify-section-{{ section.id }}');
+        if (!section || section.dataset.fssMobileStickyInit === 'true') return;
+        section.dataset.fssMobileStickyInit = 'true';
+        const mobile = window.matchMedia('(max-width: 989px)');
+        let previous = window.scrollY;
+        let downAccum = 0;
+        let upAccum = 0;
+        let scheduled = false;
+        const show = () => section.classList.remove('fss-mobile-header--hidden');
+        const overlayOpen = () => {
+          const active = document.activeElement;
+          const focused = active && section.contains(active);
+          const openDetails = section.querySelector('details[open]');
+          const drawer = document.querySelector('cart-drawer.active, cart-drawer[open], .drawer.active, .menu-drawer-container[open]');
+          return Boolean(focused || openDetails || drawer);
+        };
+        const tick = () => {
+          scheduled = false;
+          const y = Math.max(0, window.scrollY);
+          const delta = y - previous;
+          previous = y;
+          if (!mobile.matches || y < 100 || overlayOpen()) {
+            downAccum = 0;
+            upAccum = 0;
+            show();
+            return;
+          }
+          // Ignore small bounce/jitter without accumulating opposite direction.
+          if (delta > 0) {
+            downAccum += delta;
+            upAccum = 0;
+            if (downAccum >= 16) section.classList.add('fss-mobile-header--hidden');
+          } else if (delta < 0) {
+            upAccum -= delta;
+            downAccum = 0;
+            if (upAccum >= 16) show();
+          }
+        };
+        window.addEventListener('scroll', () => {
+          if (!scheduled) { scheduled = true; requestAnimationFrame(tick); }
+        }, { passive: true });
+        mobile.addEventListener('change', () => {
+          previous = window.scrollY;
+          downAccum = 0;
+          upAccum = 0;
+          show();
+        });
+        section.addEventListener('focusin', show);
+        section.addEventListener('pointerdown', show, { passive: true });
+        section.addEventListener('toggle', show, true);
+        document.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape') show();
+        });
+        show();
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+      else init();
+    })();
+    </script>
 
 {% if section.settings.enable_hover_dropdowns %}
 <script>
