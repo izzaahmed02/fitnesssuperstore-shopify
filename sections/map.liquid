@@ -7,25 +7,33 @@
     }
   }
 </style>
+{% render 'google-maps-loader' %}
 <script>
-  window.addEventListener('load', function () {
-    const map = new google.maps.Map(document.getElementById('map-{{ section.id }}'), {
+    const locations = [
+    {
+      position: { lat: 38.07726, lng: -122.12476 },
+      title: 'Fitness Superstore',
+      address: '537 Stone Rd Suite F, Benicia, CA 94510, USA',
+    },
+    {
+      position: { lat: 38.0755, lng: -122.1235 },
+      title: 'French Fitness HQ',
+      address: '457 Industrial Way, Benicia, CA 94510',
+    },
+  ];
+
+  window.googleMapsReady.then(function () {
+    const mapDiv = document.getElementById('map-{{ section.id }}');
+    if (!mapDiv) {
+      console.warn('[map-{{ section.id }}] map container not found; skipping init');
+      return;
+    }
+
+    const map = new google.maps.Map(mapDiv, {
       center: { lat: 38.0764, lng: -122.1241 },
       zoom: 15,
     });
 
-    const locations = [
-      {
-        position: { lat: 38.07726, lng: -122.12476 },
-        title: 'Fitness Superstore',
-        address: '537 Stone Rd Suite F, Benicia, CA 94510, USA',
-      },
-      {
-        position: { lat: 38.0755, lng: -122.1235 },
-        title: 'French Fitness HQ',
-        address: '457 Industrial Way, Benicia, CA 94510',
-      },
-    ];
 
     locations.forEach((location) => {
       const marker = new google.maps.Marker({
@@ -47,6 +55,34 @@
         infoWindow.open(map, marker);
       });
     });
+  }).catch(function (err) {
+    // Loader rejected: blocked request, load timeout, rejected referrer or
+    // disabled API. Render every mapped location as text with a Directions
+    // link so the page still does its job without the map.
+    //
+    // Addresses come from the same `locations` array the markers use, so the
+    // fallback cannot drift from the map and cannot show an address the map
+    // does not plot.
+    console.warn('[map-{{ section.id }}]', err && err.message ? err.message : err);
+    var el = document.getElementById('map-{{ section.id }}');
+    if (!el) return;
+
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    el.classList.add('map--unavailable');
+    el.innerHTML =
+      '<div class="map-fallback">' +
+      '<p>The interactive map could not be loaded.</p>' +
+      locations.map(function (loc) {
+        return '<p><strong>' + esc(loc.title) + '</strong><br>' + esc(loc.address) +
+          '<br><a href="https://www.google.com/maps/dir/?api=1&destination=' +
+          encodeURIComponent(loc.address) + '" target="_blank" rel="noopener">Get Directions</a></p>';
+      }).join('') +
+      '</div>';
   });
 </script>
 
@@ -69,6 +105,17 @@
       height: 100%;
       border-radius: 24px;
     }
+
+    #map-{{ section.id }}.map--unavailable {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f4f4f4;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    #map-{{ section.id }} .map-fallback p { margin: 0 0 0.8rem; }
 
     @media screen and (min-width: 750px) {
       .section-{{ section.id }}-padding {
