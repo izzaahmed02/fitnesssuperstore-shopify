@@ -2,7 +2,8 @@
   Reusable PDP sale card. Renders only while settings.sale_promo_ff / sale_promo_reman are
   filled and now is inside the laborday_start/_end window (Halloween 2026: Oct 13-30 PT).
   Power Plate products on a real price-based sale (compare-at above price) also get the card
-  inside their own fixed window (Halloween 2026: Oct 13-26 PT).
+  inside their own fixed window (Halloween 2026: Oct 13-26 PT). Power Plate products carrying the
+  halloween-power-plate-20 tag get the French Fitness style card (regular price, "in cart" price).
   @param {product} product - Current product.
   @param {string} [section_id] - Section identifier used by variant refresh.
   @param {boolean} [hide_on_mobile] - Hide the desktop-layout copy on mobile.
@@ -56,6 +57,15 @@
       removes the card on its own. A fixed window (Oct 13 00:00 to Oct 27 00:00 PT, end
       exclusive) is a second guard. To end it early, restore the prices (compare-at 0).
       Power Plate gets no site banner; this card is the only on-page sale marker.
+    Power Plate checkout discount (Halloween 2026, Oct 16-26 PT; Tim Oct 15: "make power plate
+      appear like the french fitness items do"): vendor == 'Power Plate' AND tag
+      'halloween-power-plate-20'. These products stay at their regular price and get a 20%
+      automatic discount at checkout, exactly like French Fitness, so the card reads
+      "$regular -> $price in cart / 20% off applied automatically at checkout". The tag is the
+      on/off switch: add it when the discount goes live, remove it with the discount. The fixed
+      window (end Oct 27 00:00 PT, exclusive) is a second guard. If a tagged product still has
+      compare-at above its price (prices not yet restored), the compare-at kind above wins, so
+      the card can never apply 20% on top of an already-reduced price.
 
   DISPLAY: renders as a compact sale card, not a free-text paragraph. The card sits
   directly beneath the main price block so its struck-through "was" figure reads as the
@@ -116,10 +126,18 @@
   if product.vendor == 'Power Plate' and pp_variant.price > 0 and pp_variant.compare_at_price > pp_variant.price
     assign campaign_kind = 'power_plate'
   endif
+
+  comment
+    Power Plate checkout-discount model (same as French Fitness / remanufactured): regular
+    price in Shopify, 20% automatic discount at checkout. Switched on by the product tag.
+  endcomment
+  if product.vendor == 'Power Plate' and product.tags contains 'halloween-power-plate-20' and campaign_kind != 'power_plate'
+    assign campaign_kind = 'power_plate_auto'
+  endif
 -%}
 {%- comment -%} Date window (store timezone). Theme editor and force_preview both bypass it. {%- endcomment -%}
 {%- assign now_s = 'now' | date: '%s' | plus: 0 -%}
-{%- if campaign_kind == 'power_plate' -%}
+{%- if campaign_kind == 'power_plate' or campaign_kind == 'power_plate_auto' -%}
   {%- comment -%} Power Plate window: Oct 13 12:00 a.m. PT to Oct 26 11:59:59 p.m. PT (end exclusive). {%- endcomment -%}
   {%- assign start_s = '2026-10-13 00:00:00 -0700' | date: '%s' | plus: 0 -%}
   {%- assign end_s = '2026-10-27 00:00:00 -0700' | date: '%s' | plus: 0 -%}
@@ -140,7 +158,14 @@
       the family MINIMUM and would strike through a figure the shopper never sees.
     endcomment
     assign card_price = product.selected_or_first_available_variant.price | default: product.price
-    if campaign_kind == 'power_plate'
+    if campaign_kind == 'power_plate_auto'
+      comment
+        Checkout discount, French Fitness style: was = the regular price the shopper sees,
+        now = 20% off it, shown "in cart".
+      endcomment
+      assign card_discount = '20% off'
+      assign card_sale_price = card_price | times: 0.8
+    elsif campaign_kind == 'power_plate'
       comment
         Price-based sale: was = compare-at (MSRP), now = the live price. Percent is derived
         from the two so it always matches what the shopper sees.
