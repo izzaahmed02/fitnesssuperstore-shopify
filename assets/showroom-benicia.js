@@ -23,8 +23,9 @@
 
     // Check a Model form: in-place (AJAX) submit through the native contact form.
     // Falls back to a normal submit when JS or fetch is unavailable.
+    try { console.debug('sr-showroom form: native v8'); } catch (e) {}
     var card0 = document.querySelector('[data-sr-form-card]');
-    var formEl0 = card0 && card0.querySelector('#ShowroomCheckModel');
+    var formEl0 = card0 && card0.querySelector('form');
     // Cache the pristine form markup so "New Request" can restore it without a reload.
     if (card0 && formEl0 && formEl0.querySelector('button[type="submit"]')) {
       window.__srFormHTML = card0.innerHTML;
@@ -42,14 +43,8 @@
       if (succ) { try { succ.focus(); } catch (e) {} }
     }
 
-    function showErrors(form, html) {
+    function showErrors(form, msgHTML) {
       var box = form.querySelector('[data-sr-errors]');
-      var msg = '';
-      try {
-        var doc = new DOMParser().parseFromString(html, 'text/html');
-        var node = doc.querySelector('#ShowroomCheckModel [data-sr-errors]') || doc.querySelector('#ShowroomCheckModel .sr-form-errors');
-        if (node) msg = node.innerHTML;
-      } catch (e) {}
       if (!box) {
         box = document.createElement('div');
         box.className = 'sr-form-errors';
@@ -57,51 +52,80 @@
         box.setAttribute('role', 'alert');
         form.insertBefore(box, form.firstChild);
       }
-      box.innerHTML = msg || 'Sorry, something went wrong. Please review the form and try again.';
+      box.innerHTML = msgHTML || 'Sorry, something went wrong. Please review the form and try again.';
       box.hidden = false;
       box.setAttribute('tabindex', '-1');
       try { box.focus(); } catch (e) {}
     }
 
-    if (window.fetch) {
-      document.addEventListener('submit', function (e) {
-        var form = e.target;
-        if (!form || form.id !== 'ShowroomCheckModel') return;
-        // Let native HTML5 validation handle invalid input (submit won't fire when invalid).
-        e.preventDefault();
-        var card = form.closest('[data-sr-form-card]');
-        var btn = form.querySelector('button[type="submit"]');
-        if (btn) btn.disabled = true;
-        var action = form.getAttribute('action') || '/contact';
-        fetch(action, {
-          method: 'POST',
-          body: new FormData(form),
-          headers: { 'X-Requested-With': 'XMLHttpRequest' },
-          credentials: 'same-origin'
-        })
-          .then(function (res) { return res.text().then(function (t) { return { url: res.url, text: t }; }); })
-          .then(function (o) {
-            var ok = /[?&]contact_posted=true/.test(o.url) || /[?&]contact_posted=true/.test(o.text);
-            if (ok && card) { showSuccess(card); }
-            else { showErrors(form, o.text); if (btn) btn.disabled = false; }
-          })
-          .catch(function () { if (btn) btn.disabled = false; form.submit(); });
-      });
-
-      // "New Request" — restore the form in the same card, no page reload.
-      document.addEventListener('click', function (e) {
-        var nr = e.target.closest('[data-sr-new-request]');
-        if (!nr) return;
-        e.preventDefault();
-        var card = nr.closest('[data-sr-form-card]');
-        if (card && window.__srFormHTML) {
-          card.innerHTML = window.__srFormHTML;
-          var f = card.querySelector('#ShowroomCheckModel');
-          var first = f && f.querySelector('input:not([type="hidden"]), select, textarea');
-          if (first) { try { first.focus(); } catch (e) {} }
-        }
-      });
+    // Phone is required only when "Phone" is the preferred contact method.
+    function syncPhoneRequirement(sel) {
+      var form = sel.closest('form');
+      if (!form) return;
+      var phone = form.querySelector('#sr-phone');
+      var marker = form.querySelector('[data-sr-phone-marker]');
+      if (!phone) return;
+      if (sel.value === 'Phone') {
+        phone.required = true;
+        if (marker) { marker.textContent = '*'; marker.className = 'sr-req'; }
+      } else {
+        phone.required = false;
+        if (marker) { marker.textContent = '(optional)'; marker.className = 'sr-opt'; }
+      }
     }
+    document.addEventListener('change', function (e) {
+      if (e.target && e.target.id === 'sr-method') syncPhoneRequirement(e.target);
+    });
+
+    // Browsers can restore form-control values when navigating Back without firing
+    // a change event (including bfcache restores). Re-sync the marker + required
+    // attribute on initial load and every pageshow so a restored Phone selection
+    // cannot display "(optional)" or bypass required-phone validation.
+    function syncRestoredPhoneRequirement() {
+      var sel = document.querySelector('[data-sr-form-card] #sr-method');
+      if (sel) syncPhoneRequirement(sel);
+    }
+    syncRestoredPhoneRequirement();
+    setTimeout(syncRestoredPhoneRequirement, 0);
+    window.addEventListener('pageshow', syncRestoredPhoneRequirement);
+
+    // NOTE: This store rejects scripted (fetch/XHR) POSTs to /contact with HTTP 400 — only
+    // a real navigation submit is accepted — and X-Frame-Options: DENY blocks an iframe
+    // submit. So an in-place (no-reload) submit is not possible with the native contact
+    // form here. The form submits natively and Shopify redirects back to the page with
+    // ?contact_posted=true, where the section renders the success card.
+    // Fire the conversion event once, only on that accepted-submission page.
+    if (/[?&]contact_posted=true/.test(window.location.search) &&
+        document.querySelector('[data-sr-form-card] [data-sr-success]')) {
+      push('check_model_submit', { location: 'check_model_form' });
+      // Strip the flag so refreshing the confirmation page does not re-fire the event
+      // (and a refresh then shows a clean form rather than re-confirming).
+      try {
+        var u = new URL(window.location.href);
+        u.searchParams.delete('contact_posted');
+        window.history.replaceState({}, document.title, u.pathname + (u.search || '') + u.hash);
+      } catch (e) {}
+    }
+
+    // "New Request" — reload a fresh, empty form.
+    // The confirmation is a full server render (native submit + reload), and the
+    // conversion block above strips ?contact_posted from the URL, so the success
+    // anchor would otherwise point at the current URL and only scroll. Force a
+    // reload of the page WITHOUT the success flag so the default form renders.
+    // Capture phase so it wins over any theme click handler on the control.
+    document.addEventListener('click', function (e) {
+      var nr = e.target.closest('[data-sr-new-request]');
+      if (!nr) return;
+      e.preventDefault();
+      var path = window.location.pathname;
+      if (/[?&]contact_posted=true/.test(window.location.search)) {
+        // Flag still present (replaceState did not run): navigate to the clean path.
+        window.location.href = path;
+      } else {
+        // Flag already stripped on load: reload the current (clean) URL for a fresh form.
+        window.location.reload();
+      }
+    }, true);
 
     // Video walkthrough: click-to-play overlay (no autoplay)
     document.querySelectorAll('[data-sr-video]').forEach(function (wrap) {
@@ -123,46 +147,78 @@
       var prev = root.querySelector('[data-sr-prev]');
       var next = root.querySelector('[data-sr-next]');
 
-      function centerFor(sl) { return sl.offsetLeft - (track.clientWidth - sl.offsetWidth) / 2; }
+      // Build the dots from actual reachable scroll stops ("pages"), not one per
+      // slide: when several slides are visible at once the scroll range is small,
+      // so a per-slide model leaves some dots pointing at the same position and
+      // looking dead (Tim/QA: 2nd and 4th dots not clickable). Each stop is a
+      // distinct scroll position, so every dot moves the scroller. Recomputed on
+      // resize because clientWidth/scrollWidth change with viewport.
+      function maxScroll() { return Math.max(0, track.scrollWidth - track.clientWidth); }
+
+      var stops = [];
+      var dots = [];
+      function computeStops() {
+        var ms = maxScroll();
+        if (ms <= 1) { stops = [0]; return; }
+        var step = Math.max(1, track.clientWidth * 0.9); // advance ~one viewport per page
+        var list = [];
+        for (var x = 0; x < ms - 1; x += step) list.push(Math.round(x));
+        if (list[list.length - 1] !== Math.round(ms)) list.push(Math.round(ms));
+        stops = list;
+      }
       function current() {
-        var mid = track.scrollLeft + track.clientWidth / 2, best = 0, bd = Infinity;
-        slides.forEach(function (sl, i) {
-          var m = sl.offsetLeft + sl.offsetWidth / 2, d = Math.abs(m - mid);
+        var s = track.scrollLeft, best = 0, bd = Infinity;
+        for (var i = 0; i < stops.length; i++) {
+          var d = Math.abs(stops[i] - s);
           if (d < bd) { bd = d; best = i; }
-        });
+        }
         return best;
       }
       function go(i) {
-        i = Math.max(0, Math.min(slides.length - 1, i));
-        track.scrollTo({ left: centerFor(slides[i]), behavior: 'smooth' });
+        i = Math.max(0, Math.min(stops.length - 1, i));
+        track.scrollTo({ left: stops[i], behavior: 'smooth' });
       }
       if (prev) prev.addEventListener('click', function () { go(current() - 1); });
       if (next) next.addEventListener('click', function () { go(current() + 1); });
 
-      var dots = [];
-      if (dotsWrap) {
-        slides.forEach(function (_, i) {
+      function renderDots() {
+        if (!dotsWrap) return;
+        dotsWrap.innerHTML = '';
+        dots = [];
+        if (stops.length < 2) return; // everything fits — no paging needed
+        stops.forEach(function (_, i) {
           var b = document.createElement('button');
           b.type = 'button';
-          b.setAttribute('aria-label', 'Go to photo ' + (i + 1));
-          if (i === 0) b.setAttribute('aria-current', 'true');
+          b.setAttribute('aria-label', 'Go to view ' + (i + 1));
           b.addEventListener('click', function () { go(i); });
           dotsWrap.appendChild(b);
           dots.push(b);
         });
-        var raf;
-        track.addEventListener('scroll', function () {
-          if (raf) return;
-          raf = requestAnimationFrame(function () {
-            raf = null;
-            var c = current();
-            dots.forEach(function (d, i) {
-              if (i === c) { d.setAttribute('aria-current', 'true'); }
-              else { d.removeAttribute('aria-current'); }
-            });
-          });
+        syncDots();
+      }
+      function syncDots() {
+        if (!dots.length) return;
+        var c = current();
+        dots.forEach(function (d, i) {
+          if (i === c) { d.setAttribute('aria-current', 'true'); }
+          else { d.removeAttribute('aria-current'); }
         });
       }
+
+      computeStops();
+      renderDots();
+
+      var raf;
+      track.addEventListener('scroll', function () {
+        if (raf) return;
+        raf = requestAnimationFrame(function () { raf = null; syncDots(); });
+      });
+
+      var rz;
+      window.addEventListener('resize', function () {
+        clearTimeout(rz);
+        rz = setTimeout(function () { computeStops(); renderDots(); }, 150);
+      });
     });
   }
 
