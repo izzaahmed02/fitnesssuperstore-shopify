@@ -19,50 +19,68 @@
       {% if collection.metafields.custom.subcategories_custom_titles != blank %}
   {% assign current_url = collection.url %}
   <div class="collection-hero__related-collections-wrapper">
-    <button class="collection-hero__related-collections-toggle" aria-expanded="false">
-      <span>{{ section.settings.related_collections_toggle | default: "Browse subcategories" }}</span>
-      <svg class="icon icon-caret" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z" fill="#B3B3B3"></path>
-      </svg>
+    <button type="button" class="collection-hero__related-collections-toggle" aria-expanded="false" aria-haspopup="dialog" aria-controls="CategoriesPopup-{{ section.id }}-1">
+      <span>Categories</span>
     </button>
 
-    <ul class="collection-hero__related-collections">
-     {% for subcat in collection.metafields.custom.subcategories_custom_titles.value %}
-  {% if subcat.collection != blank %}
-    {% assign sub_handle = subcat.collection.value.handle %}
-    <li>
-      <a href="/collections/{{ sub_handle }}"
-         class="collection-hero__related-collection {% if request.path contains sub_handle %}active{% endif %}">
-        {{ subcat.custom_title | default: sub_handle }}
-      </a>
-    </li>
-  {% endif %}
-{% endfor %}
-
-    </ul>
+    <div id="CategoriesPopup-{{ section.id }}-1" class="collection-categories-popup" hidden>
+      <div class="collection-categories-popup__backdrop" data-categories-popup-close></div>
+      <div class="collection-categories-popup__panel" role="dialog" aria-modal="true" aria-label="Categories" tabindex="-1">
+        <div class="collection-categories-popup__header">
+          <button type="button" class="collection-categories-popup__back" data-categories-popup-close aria-label="Back">
+            <svg width="7" height="12" viewBox="0 0 7 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6.58942 0.610713C6.26398 0.285274 5.73635 0.285274 5.41091 0.610713L0.611415 5.41021C0.455135 5.56649 0.366829 5.77895 0.366829 5.99996C0.366829 6.22098 0.454629 6.43294 0.610909 6.58922L5.41091 11.3892C5.73635 11.7147 6.26398 11.7147 6.58942 11.3892C6.91486 11.0638 6.91486 10.5362 6.58942 10.2107L2.37867 5.99996L6.58942 1.78922C6.91486 1.46379 6.91486 0.936153 6.58942 0.610713Z" fill="#222222"></path>
+            </svg>
+          </button>
+          <p class="collection-categories-popup__title">Categories</p>
+        </div>
+        <ul class="collection-hero__related-collections">
+         {% for subcat in collection.metafields.custom.subcategories_custom_titles.value %}
+      {% if subcat.collection != blank %}
+        {% assign sub_handle = subcat.collection.value.handle %}
+        <li>
+          <a href="/collections/{{ sub_handle }}"
+             class="collection-hero__related-collection {% if request.path contains sub_handle %}active{% endif %}">
+            {{ subcat.custom_title | default: sub_handle }}
+          </a>
+        </li>
+      {% endif %}
+    {% endfor %}
+        </ul>
+      </div>
+    </div>
   </div>
-{% endif %} 
+{% endif %}
 
       {% if section.metafields.custom.related_collections != blank %}
         <div class="collection-hero__related-collections-wrapper">
-          <button class="collection-hero__related-collections-toggle" aria-expanded="false">
-            <span>{{ section.settings.related_collections_toggle | default: "Browse subcategories" }}</span>
-            <svg class="icon icon-caret" width="24" height="24" viewBox="0 0 24 24" fill="none"
-              xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd"
-              d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z"
-              fill="#B3B3B3"></path></svg>
+          <button type="button" class="collection-hero__related-collections-toggle" aria-expanded="false" aria-haspopup="dialog" aria-controls="CategoriesPopup-{{ section.id }}-2">
+            <span>Categories</span>
           </button>
 
-          <ul class="collection-hero__related-collections">
-            {% assign current_url = collection.url %}
-            {% for related in collection.metafields.custom.related_collections.value %}
-              {% assign active_class = '' %}
-              {% if related.url == current_url %}
-                {% assign active_class = 'active' %}
-              {% endif %}
-              <li><a href="{{ related.url }}" class="collection-hero__related-collection {{ active_class }}">{{ related.title }}</a></li>
-            {% endfor %}
-          </ul>
+          <div id="CategoriesPopup-{{ section.id }}-2" class="collection-categories-popup" hidden>
+            <div class="collection-categories-popup__backdrop" data-categories-popup-close></div>
+            <div class="collection-categories-popup__panel" role="dialog" aria-modal="true" aria-label="Categories" tabindex="-1">
+              <div class="collection-categories-popup__header">
+                <button type="button" class="collection-categories-popup__back" data-categories-popup-close aria-label="Back">
+                  <svg width="7" height="12" viewBox="0 0 7 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6.58942 0.610713C6.26398 0.285274 5.73635 0.285274 5.41091 0.610713L0.611415 5.41021C0.455135 5.56649 0.366829 5.77895 0.366829 5.99996C0.366829 6.22098 0.454629 6.43294 0.610909 6.58922L5.41091 11.3892C5.73635 11.7147 6.26398 11.7147 6.58942 11.3892C6.91486 11.0638 6.91486 10.5362 6.58942 10.2107L2.37867 5.99996L6.58942 1.78922C6.91486 1.46379 6.91486 0.936153 6.58942 0.610713Z" fill="#222222"></path>
+                  </svg>
+                </button>
+                <p class="collection-categories-popup__title">Categories</p>
+              </div>
+              <ul class="collection-hero__related-collections">
+                {% assign current_url = collection.url %}
+                {% for related in collection.metafields.custom.related_collections.value %}
+                  {% assign active_class = '' %}
+                  {% if related.url == current_url %}
+                    {% assign active_class = 'active' %}
+                  {% endif %}
+                  <li><a href="{{ related.url }}" class="collection-hero__related-collection {{ active_class }}">{{ related.title }}</a></li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
         </div>
       {% endif %}
     </div>
@@ -91,14 +109,33 @@
 </div>
 
 <script>
-  document.querySelectorAll('.collection-hero__related-collections-toggle').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var expanded = this.getAttribute('aria-expanded') === 'true';
-      this.setAttribute('aria-expanded', String(!expanded));
-      var list = this.nextElementSibling;
-      if (list) {
-        list.classList.toggle('is-open', !expanded);
-      }
+  document.querySelectorAll('.collection-hero__related-collections-toggle').forEach(function (btn) {
+    var popup = document.getElementById(btn.getAttribute('aria-controls'));
+    if (!popup) return;
+    document.body.appendChild(popup);
+    var panel = popup.querySelector('.collection-categories-popup__panel');
+
+    function openPopup() {
+      popup.hidden = false;
+      btn.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+      if (panel) panel.focus({ preventScroll: true });
+    }
+    function closePopup() {
+      popup.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+      btn.focus({ preventScroll: true });
+    }
+
+    btn.addEventListener('click', function () {
+      if (popup.hidden) { openPopup(); } else { closePopup(); }
+    });
+    popup.querySelectorAll('[data-categories-popup-close]').forEach(function (closer) {
+      closer.addEventListener('click', closePopup);
+    });
+    popup.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closePopup();
     });
   });
 </script>
@@ -111,7 +148,6 @@
     { "type": "paragraph", "content": "t:sections.main-collection-banner.settings.paragraph.content" },
     { "type": "checkbox", "id": "show_collection_description", "default": true, "label": "t:sections.main-collection-banner.settings.show_collection_description.label" },
     { "type": "checkbox", "id": "show_collection_image", "default": false, "label": "t:sections.main-collection-banner.settings.show_collection_image.label" },
-    { "type": "text", "id": "related_collections_toggle", "label": "t:sections.main-collection-banner.settings.related_collections_toggle.label", "default": "Browse subcategories" },
     { "type": "color_scheme", "id": "color_scheme", "label": "t:sections.all.colors.label", "default": "scheme-1" }
   ]
 }
