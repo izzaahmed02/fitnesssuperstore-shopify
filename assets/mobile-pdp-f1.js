@@ -342,16 +342,60 @@
     galleryState = null;
   };
 
+  // Figma quantity stepper: progressive enhancement of existing buy-box input.
+  // The original Shopify quantity input and form remain the source of truth.
+  const syncF1QuantityStepper = (enabled) => {
+    document.querySelectorAll('.product__info-wrapper .product_price_with_options_atc quantity-input.quantity').forEach((root) => {
+      const input = root.querySelector('input[name="quantity"]');
+      if (!input) return;
+      const generated = root.querySelectorAll('[data-f1-quantity-stepper]');
+      if (!enabled) {
+        generated.forEach((node) => node.remove());
+        root.classList.remove('f1-quantity-stepper');
+        return;
+      }
+      if (generated.length || root.querySelector('button[name="minus"], button[name="plus"]')) return;
+      const create = (direction, symbol) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.name = direction;
+        button.className = 'quantity__button f1-quantity-stepper-button';
+        button.dataset.f1QuantityStepper = direction;
+        button.setAttribute('aria-label', direction === 'plus' ? 'Increase quantity' : 'Decrease quantity');
+        button.textContent = symbol;
+        button.addEventListener('click', (event) => {
+          event.stopPropagation(); // Avoid a duplicate action if a theme listener handles delegated clicks.
+          if (input.disabled || input.readOnly) return;
+          const step = Math.max(1, Number(input.step) || 1);
+          const minimum = Number.isFinite(Number(input.min)) && input.min !== '' ? Number(input.min) : step;
+          const maximum = input.max !== '' && Number.isFinite(Number(input.max)) ? Number(input.max) : Infinity;
+          const current = Number.isFinite(input.valueAsNumber) ? input.valueAsNumber : minimum;
+          const next = direction === 'plus' ? Math.min(maximum, current + step) : Math.max(minimum, current - step);
+          if (next === current || next < minimum || next > maximum) return;
+          input.value = String(next);
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        return button;
+      };
+      root.insertBefore(create('minus', '−'), input);
+      root.appendChild(create('plus', '+'));
+      root.classList.add('f1-quantity-stepper');
+    });
+  };
+
   const applyMode = () => {
     if (mobile.matches) {
       markFigmaStaticGroups();
       collapseOptionGroups();
       buildDescriptionAccordions();
       setupGallery();
+      syncF1QuantityStepper(true);
     } else {
       restoreOptionGroups();
       restoreDescription();
       restoreGallery();
+      syncF1QuantityStepper(false);
       document.querySelectorAll('.f1-figma-static-option-group').forEach((item) => item.classList.remove('f1-figma-static-option-group', 'f1-figma-color-option-group'));
     }
   };
