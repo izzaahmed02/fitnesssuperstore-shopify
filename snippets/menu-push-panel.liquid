@@ -1,0 +1,102 @@
+{% comment %}
+  One mobile push-menu panel for a menu link, followed by the Level 3 panels under it.
+
+  Rows:
+  - an item linked to "#" with no children renders as a group label (e.g. "By Brand")
+  - an item with menu children drills into Level 3 using those children
+  - a collection with no menu children drills into its custom.subcategories_custom_titles
+    metafield (the same list the collection page shows as "Browse subcategories")
+  - anything else links straight to its collection/page
+  Panels for collection links open with a "Shop All …" row.
+
+  Accepts:
+  - link {Object}: menu link whose children fill the panel
+  - panel_id {String}: id for this panel
+
+  Usage:
+  {% render 'menu-push-panel', link: link, panel_id: 'MenuPush-1' %}
+{% endcomment %}
+{%- liquid
+  assign l3_panels = ''
+  assign collection_link_types = 'collection_link,collections_link,catalog_link' | split: ','
+-%}
+<div class="menu-push__panel" id="{{ panel_id }}" inert>
+  <button type="button" class="menu-push__back" data-menu-back>
+    <span>{{ link.title | escape }}</span>
+  </button>
+  <ul class="menu-push__list" role="list">
+    {%- if collection_link_types contains link.type -%}
+      <li>
+        <a href="{{ link.url }}" class="menu-push__row menu-push__row--all">Shop All {{ link.title | escape }}</a>
+      </li>
+    {%- endif -%}
+    {%- for child in link.links -%}
+      {%- if child.links == blank and child.url == '#' -%}
+        <li class="menu-push__label">{{ child.title | escape }}</li>
+        {%- continue -%}
+      {%- endif -%}
+      {%- liquid
+        assign subcats = blank
+        if child.links == blank and child.type == 'collection_link'
+          assign subcats = child.object.metafields.custom.subcategories_custom_titles.value
+        endif
+      -%}
+      <li>
+        {%- if child.links != blank or subcats != blank -%}
+          {%- assign child_id = panel_id | append: '-' | append: forloop.index -%}
+          <button
+            type="button"
+            class="menu-push__row"
+            data-menu-push="{{ child_id }}"
+            aria-controls="{{ child_id }}"
+            aria-expanded="false"
+          >
+            <span>{{ child.title | escape }}</span>
+          </button>
+          {%- capture l3_panel -%}
+            <div class="menu-push__panel" id="{{ child_id }}" inert>
+              <button type="button" class="menu-push__back" data-menu-back>
+                <span>{{ child.title | escape }}</span>
+              </button>
+              <ul class="menu-push__list" role="list">
+                {%- if collection_link_types contains child.type -%}
+                  <li>
+                    <a href="{{ child.url }}" class="menu-push__row menu-push__row--all">Shop All {{ child.title | escape }}</a>
+                  </li>
+                {%- endif -%}
+                {%- if child.links != blank -%}
+                  {%- for l3_link in child.links -%}
+                    {%- if l3_link.url == '#' -%}
+                      <li class="menu-push__label">{{ l3_link.title | escape }}</li>
+                    {%- else -%}
+                      <li>
+                        <a href="{{ l3_link.url }}" class="menu-push__row">{{ l3_link.title | escape }}</a>
+                      </li>
+                    {%- endif -%}
+                  {%- endfor -%}
+                {%- else -%}
+                  {%- for subcat in subcats -%}
+                    {%- if subcat.collection != blank -%}
+                      {%- assign sub_collection = subcat.collection.value -%}
+                      <li>
+                        <a href="{{ sub_collection.url }}" class="menu-push__row">
+                          {{- subcat.custom_title.value | default: sub_collection.title | escape -}}
+                        </a>
+                      </li>
+                    {%- endif -%}
+                  {%- endfor -%}
+                {%- endif -%}
+              </ul>
+            </div>
+          {%- endcapture -%}
+          {%- assign l3_panels = l3_panels | append: l3_panel -%}
+        {%- else -%}
+          <a href="{{ child.url }}" class="menu-push__row"{% if child.current %} aria-current="page"{% endif %}>
+            {{- child.title | escape -}}
+          </a>
+        {%- endif -%}
+      </li>
+    {%- endfor -%}
+  </ul>
+</div>
+{{- l3_panels -}}
