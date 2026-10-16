@@ -2,6 +2,52 @@
 Related Blog Posts — JS driven slider with synced scrollbar
 {% endcomment %}
 
+{%- comment -%}
+Resolve context before the section wrapper so a below-threshold row can be
+suppressed entirely (no empty <section>, heading or anchor left behind).
+
+Hub context = not on an article page (no current article). The hub-only
+behaviors (top-N limit and minimum-articles threshold) apply only here; on
+article pages this section is reused as an unlimited related-posts slider and
+its output must stay unchanged.
+{%- endcomment -%}
+{%- assign blog = blogs[section.settings.blog] -%}
+{%- assign current_article_id = article.id -%}
+{%- assign is_hub = false -%}
+{%- if current_article_id == blank -%}
+  {%- assign is_hub = true -%}
+{%- endif -%}
+{%- assign articles_limit = section.settings.articles_limit | default: 3 -%}
+{%- assign min_articles = section.settings.min_articles | default: 3 -%}
+
+{%- comment -%}
+A2b: on the hub, do not render this category row at all unless its blog has at
+least `min_articles` published articles. blog.articles_count counts published
+articles only. On article pages this suppression never applies.
+{%- endcomment -%}
+{%- comment -%}
+A missing blog is not the same case as an under-threshold one. When the handle
+does not resolve, blog.articles_count does not compare as a number, so the
+threshold test below never fires and the section renders anyway. On the
+live preview that shows as the heading, a visible "Liquid error ... comparison
+of String with 0 failed" from the articles_count test below, and the View All
+button pointing at a blog that is not there.
+
+Test blog.handle rather than the blog itself: an unresolved blog setting is
+truthy on the storefront (the articles_count test below reaches its right-hand
+side, which is why it raises), so a truthiness or `== blank` test on the blog
+is not reliable. Only a real blog carries a handle. Suppress outright, in every
+context, since there is nothing to show or link to. An existing blog that is
+merely under the threshold keeps the hub-only behaviour below.
+{%- endcomment -%}
+{%- assign hub_hide = false -%}
+{%- if blog.handle == blank -%}
+  {%- assign hub_hide = true -%}
+{%- elsif is_hub and blog.articles_count < min_articles -%}
+  {%- assign hub_hide = true -%}
+{%- endif -%}
+
+{%- unless hub_hide -%}
 <section
   id="RelatedBlogs-{{ section.id }}"
   class="section related-articles"
@@ -23,14 +69,6 @@ Related Blog Posts — JS driven slider with synced scrollbar
       </div>
     {% endif %}
 
-    {% assign blog = blogs[section.settings.blog] %}
-
-    {%- comment -%}
-    Capture the current article ID if we're on an article page,
-    so we can exclude it from the related posts loop below.
-    {%- endcomment -%}
-    {% assign current_article_id = article.id %}
-
     {% if blog and blog.articles_count > 0 %}
 
       {%- comment -%}
@@ -44,6 +82,16 @@ Related Blog Posts — JS driven slider with synced scrollbar
         {% endif %}
       {% endfor %}
 
+      {%- comment -%}
+      On the hub, cap the displayed count at the top-N limit so the scrollbar /
+      arrows and any "N slides" logic reflect what actually renders.
+      {%- endcomment -%}
+      {% assign display_count = slide_count %}
+      {% if is_hub and display_count > articles_limit %}
+        {% assign display_count = articles_limit %}
+      {% endif %}
+      {% assign rendered_count = 0 %}
+
       <div class="related-slider" data-slider>
 
         <div class="related-slider__track" data-track>
@@ -53,6 +101,7 @@ Related Blog Posts — JS driven slider with synced scrollbar
 1️⃣ Featured articles first — skip the current article if on an article page
 {%- endcomment -%}
 {% for article in blog.articles %}
+  {% if is_hub and rendered_count >= articles_limit %}{% break %}{% endif %}
   {% if article.tags contains featured_tag %}
     {% if current_article_id == blank or article.id != current_article_id %}
     <div class="related-slider__slide featured-article">
@@ -107,6 +156,7 @@ Related Blog Posts — JS driven slider with synced scrollbar
         </a>
       </article>
     </div>
+    {% assign rendered_count = rendered_count | plus: 1 %}
     {% endif %}
   {% endif %}
 {% endfor %}
@@ -115,6 +165,7 @@ Related Blog Posts — JS driven slider with synced scrollbar
 2️⃣ Remaining (non-featured) articles — skip the current article if on an article page
 {%- endcomment -%}
 {% for article in blog.articles %}
+  {% if is_hub and rendered_count >= articles_limit %}{% break %}{% endif %}
   {% unless article.tags contains featured_tag %}
     {% if current_article_id == blank or article.id != current_article_id %}
     <div class="related-slider__slide">
@@ -169,23 +220,50 @@ Related Blog Posts — JS driven slider with synced scrollbar
         </a>
       </article>
     </div>
+    {% assign rendered_count = rendered_count | plus: 1 %}
     {% endif %}
   {% endunless %}
 {% endfor %}
 
         </div>
 
-        {% if section.settings.show_scrollbar and slide_count > 3 %}
-          
-        {% else %}
-          <style>
-            @media screen and (min-width: 767px) {
-              #shopify-section-{{ section.id }} .related-slider__bottom {
-                display: none;
-              }
-            }
-          </style>
+        {%- comment -%}
+          Hide the bottom controls only where the track cannot scroll. Slides are
+          one per view below 990px and three per view at 990px and up, so "fits
+          without scrolling" means display_count <= 1 below 990px and
+          display_count <= 3 at 990px and up.
+
+          The previous rule hid them from 767px up whenever display_count <= 3,
+          which on the hub is always true because display_count is capped at
+          articles_limit (3). Between 767px and 989px that left one full-width
+          card on screen with no arrows or scrollbar to reach the other two.
+        {%- endcomment -%}
+        {% assign can_scroll_small = false %}
+        {% if section.settings.show_scrollbar and display_count > 1 %}
+          {% assign can_scroll_small = true %}
         {% endif %}
+        {% assign can_scroll_large = false %}
+        {% if section.settings.show_scrollbar and display_count > 3 %}
+          {% assign can_scroll_large = true %}
+        {% endif %}
+        {% unless can_scroll_small and can_scroll_large %}
+          <style>
+            {% unless can_scroll_small %}
+              @media screen and (min-width: 767px) and (max-width: 989px) {
+                #shopify-section-{{ section.id }} .related-slider__bottom {
+                  display: none;
+                }
+              }
+            {% endunless %}
+            {% unless can_scroll_large %}
+              @media screen and (min-width: 990px) {
+                #shopify-section-{{ section.id }} .related-slider__bottom {
+                  display: none;
+                }
+              }
+            {% endunless %}
+          </style>
+        {% endunless %}
 
         <div class="related-slider__bottom">
 
@@ -501,6 +579,7 @@ Related Blog Posts — JS driven slider with synced scrollbar
     syncThumb();
   })();
   </script>
+{%- endunless -%}
 
 {% schema %}
 {
@@ -529,6 +608,26 @@ Related Blog Posts — JS driven slider with synced scrollbar
       "id": "blog",
       "type": "blog",
       "label": "Select blog"
+    },
+    {
+      "id": "articles_limit",
+      "type": "range",
+      "min": 1,
+      "max": 12,
+      "step": 1,
+      "label": "Max articles to show (hub only)",
+      "info": "Top-N articles shown for this category row on the blog hub. Ignored where this section is used as a related-posts slider on an article page.",
+      "default": 3
+    },
+    {
+      "id": "min_articles",
+      "type": "range",
+      "min": 1,
+      "max": 12,
+      "step": 1,
+      "label": "Minimum published articles to show row (hub only)",
+      "info": "On the blog hub, this category row is hidden entirely unless its blog has at least this many published articles. Ignored on article pages.",
+      "default": 3
     },
     {
       "id": "show_scrollbar",
