@@ -370,7 +370,7 @@
 
 
 
-                <div>
+                <div id="Product-Prices-Mobile-{{ section.id }}">
                  {% comment %} GMC/MSRP compliance (2026-04): reference "retail price" ("As high as") display hidden — show actual selling price only. Do not re-enable without a verified/substantiated reference price.
 {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
   <span class="pr_custom_compare_price"
@@ -384,7 +384,22 @@
   </span>
 {% endif %}
 {% endcomment %}
-                  {% if product.metafields.custom.saleprice_name != blank %}
+                  {%- comment -%}
+                    #793: enter this branch only on the condition the banner actually renders on -
+                    a sale name alone is not a sale. Gating on the name only meant a product whose
+                    sale_price is blank, zero, or not below the regular price took the banner branch,
+                    the banner then declined to render, and because the alternative branch had already
+                    been skipped the PDP showed no price at all. The banner, this branch and
+                    "Total with options" now all test the sale value identically.
+                  {%- endcomment -%}
+                  {%- liquid
+                    assign _pm_variant = product.selected_or_first_available_variant
+                    assign _pm_sale_cents = 0
+                    if product.metafields.custom.saleprice_name != blank
+                      assign _pm_sale_cents = product.metafields.custom.sale_price | replace: ',', '' | times: 100.0
+                    endif
+                  -%}
+                  {% if _pm_sale_cents > 0 and _pm_variant.price > _pm_sale_cents %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
                       current_price: product.selected_or_first_available_variant.compare_at_price,
@@ -1129,7 +1144,7 @@
               {% when 'price' %}
 
 
-                <div class="product__prices hidden lg:block">
+                <div id="Product-Prices-Desktop-{{ section.id }}" class="product__prices hidden lg:block">
                   {% comment %} GMC/MSRP compliance (2026-04): reference "retail price" ("As high as") display hidden — show actual selling price only. Do not re-enable without a verified/substantiated reference price.
 {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
   <span class="pr_custom_compare_price"
@@ -1143,7 +1158,22 @@
   </span>
 {% endif %}
 {% endcomment %}
-                  {% if product.metafields.custom.saleprice_name != blank %}
+                  {%- comment -%}
+                    #793: enter this branch only on the condition the banner actually renders on -
+                    a sale name alone is not a sale. Gating on the name only meant a product whose
+                    sale_price is blank, zero, or not below the regular price took the banner branch,
+                    the banner then declined to render, and because the alternative branch had already
+                    been skipped the PDP showed no price at all. The banner, this branch and
+                    "Total with options" now all test the sale value identically.
+                  {%- endcomment -%}
+                  {%- liquid
+                    assign _pm_variant = product.selected_or_first_available_variant
+                    assign _pm_sale_cents = 0
+                    if product.metafields.custom.saleprice_name != blank
+                      assign _pm_sale_cents = product.metafields.custom.sale_price | replace: ',', '' | times: 100.0
+                    endif
+                  -%}
+                  {% if _pm_sale_cents > 0 and _pm_variant.price > _pm_sale_cents %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
                       current_price: product.selected_or_first_available_variant.compare_at_price,

@@ -1,3 +1,4 @@
+{%- capture hide_perm_price -%}{%- render 'ff-permanent-compare-hidden', product: product -%}{%- endcapture -%}
 {% style %}
   #shopify-section-{{ section.id }} .product-main-container{
     display: grid;
@@ -222,7 +223,7 @@
 
 
 
-                <div>
+                <div id="Product-Prices-Mobile-{{ section.id }}">
                   {% comment %} GMC/MSRP compliance (2026-04): reference price display hidden.
 {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
                     <span class="pr_custom_compare_price"
@@ -231,7 +232,22 @@
                     </span>
                   {% endif %}
                   {% endcomment %}
-                  {% if product.metafields.custom.saleprice_name != blank %}
+                  {%- comment -%}
+                    #793: enter this branch only on the condition the banner actually renders on -
+                    a sale name alone is not a sale. Gating on the name only meant a product whose
+                    sale_price is blank, zero, or not below the regular price took the banner branch,
+                    the banner then declined to render, and because the alternative branch had already
+                    been skipped the PDP showed no price at all. The banner, this branch and
+                    "Total with options" now all test the sale value identically.
+                  {%- endcomment -%}
+                  {%- liquid
+                    assign _pm_variant = product.selected_or_first_available_variant
+                    assign _pm_sale_cents = 0
+                    if product.metafields.custom.saleprice_name != blank
+                      assign _pm_sale_cents = product.metafields.custom.sale_price | replace: ',', '' | times: 100.0
+                    endif
+                  -%}
+                  {% if _pm_sale_cents > 0 and _pm_variant.price > _pm_sale_cents %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
                       current_price: product.selected_or_first_available_variant.compare_at_price,
@@ -880,7 +896,7 @@
 
 
                 <div class="product__price-row">
-                <div class="product__prices hidden lg:block">
+                <div id="Product-Prices-Desktop-{{ section.id }}" class="product__prices hidden lg:block">
                   {% comment %} GMC/MSRP compliance (2026-04): reference price display hidden.
 {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
                     <span class="pr_custom_compare_price"
@@ -889,7 +905,22 @@
                     </span>
                   {% endif %}
                   {% endcomment %}
-                  {% if product.metafields.custom.saleprice_name != blank %}
+                  {%- comment -%}
+                    #793: enter this branch only on the condition the banner actually renders on -
+                    a sale name alone is not a sale. Gating on the name only meant a product whose
+                    sale_price is blank, zero, or not below the regular price took the banner branch,
+                    the banner then declined to render, and because the alternative branch had already
+                    been skipped the PDP showed no price at all. The banner, this branch and
+                    "Total with options" now all test the sale value identically.
+                  {%- endcomment -%}
+                  {%- liquid
+                    assign _pm_variant = product.selected_or_first_available_variant
+                    assign _pm_sale_cents = 0
+                    if product.metafields.custom.saleprice_name != blank
+                      assign _pm_sale_cents = product.metafields.custom.sale_price | replace: ',', '' | times: 100.0
+                    endif
+                  -%}
+                  {% if _pm_sale_cents > 0 and _pm_variant.price > _pm_sale_cents %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
                       current_price: product.selected_or_first_available_variant.compare_at_price,
@@ -1040,7 +1071,7 @@
                             >
                               {%- if product.selected_or_first_available_variant.quantity_price_breaks.size > 0 -%}
                                 {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
-                                {%- if product.id == 10269254254908 -%}
+                                {%- if product.id == 10269254254908 or hide_perm_price contains 'true' -%}
                                   {%- assign variant_price_compare = nil -%}
                                 {%- endif -%}
                                 <div class="price-per-item">
@@ -1083,7 +1114,7 @@
                                   | money_with_currency
                                 -%}
                                 {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
-                                {%- if product.id == 10269254254908 -%}
+                                {%- if product.id == 10269254254908 or hide_perm_price contains 'true' -%}
                                   {%- assign variant_price_compare = nil -%}
                                 {%- endif -%}
                                 <div class="price-per-item">
@@ -1557,7 +1588,7 @@
                       >
                         {%- if product.selected_or_first_available_variant.quantity_price_breaks.size > 0 -%}
                           {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
-                                {%- if product.id == 10269254254908 -%}
+                                {%- if product.id == 10269254254908 or hide_perm_price contains 'true' -%}
                                   {%- assign variant_price_compare = nil -%}
                                 {%- endif -%}
                           <div class="price-per-item">
@@ -1600,7 +1631,7 @@
                             | money_with_currency
                           -%}
                           {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
-                                {%- if product.id == 10269254254908 -%}
+                                {%- if product.id == 10269254254908 or hide_perm_price contains 'true' -%}
                                   {%- assign variant_price_compare = nil -%}
                                 {%- endif -%}
                           <div class="price-per-item">
