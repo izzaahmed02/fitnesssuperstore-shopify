@@ -62,10 +62,13 @@
         <em>for more details</em>
       </span>
     </div>
+    {%- comment -%} Mobile options UI (display only): mobile heading; desktop banner unchanged. Not a heading tag (SEO outline). {%- endcomment -%}
+    <p class="product-options__mobile-heading">Choose your options</p>
   {% endif %}
+  {%- comment -%} Mobile options UI: product-options--pdp scopes the mobile styles to the PDP (cart Modify renders its own markup). {%- endcomment -%}
   <product-customization-options
     data-product-id="{{ product.selected_or_first_available_variant.id }}"
-    class="product-options"
+    class="product-options product-options--pdp"
     data-product="default"
   >
     {% liquid
@@ -132,8 +135,105 @@
         endif
       %}
 
+      {% liquid
+        # Mobile options UI (display only): short card labels and help-link targets.
+        # The category matching above is unchanged; nothing here feeds pricing or cart data.
+        assign mobile_label = ''
+        assign is_delivery_category = false
+        assign is_accessories_category = false
+        if category_title_downcase == 'assembly & room of choice installation needed?'
+          assign mobile_label = 'Delivery & setup'
+          assign is_delivery_category = true
+        elsif category_title_downcase == 'accessories / add ons'
+          assign mobile_label = 'Accessories'
+          assign is_accessories_category = true
+        endif
+
+        # Same popup key the category-level "?" below opens.
+        assign category_popup_key = ''
+        if category.help_text.value != blank
+          assign category_popup_key = category.title
+        else
+          for product_option in category.product_options.value
+            if product_option.option_type == 'Select' and product_option.help_text.value != blank
+              assign category_popup_key = product_option.product_option_title
+              break
+            endif
+          endfor
+        endif
+
+        # Field-level "?" (accordion headers) that open a popup the category "?" does not.
+        assign field_popup_keys = '|'
+        assign field_popup_count = 0
+        assign field_popup_key = ''
+        for product_option in category.product_options.value
+          assign po_title_downcase = product_option.product_option_title | downcase
+          assign po_is_accordion = false
+          if product_option.option_type == blank or product_option.option_type == 'Accordion' or is_delivery_category
+            assign po_is_accordion = true
+          endif
+          if po_title_downcase == 'paint color' or po_title_downcase == 'paint colors' or po_title_downcase == 'color' or po_title_downcase == 'vinyl color' or po_title_downcase == 'vinyl colors'
+            assign po_is_accordion = false
+          endif
+          if po_is_accordion and product_option.help_text.value != blank and product_option.product_option_title != category_popup_key
+            assign po_key_token = '|' | append: product_option.product_option_title | append: '|'
+            unless field_popup_keys contains po_key_token
+              assign field_popup_keys = field_popup_keys | append: product_option.product_option_title | append: '|'
+              assign field_popup_count = field_popup_count | plus: 1
+              assign field_popup_key = product_option.product_option_title
+            endunless
+          endif
+        endfor
+
+        # Hide field-level "?" on mobile only when every popup they open stays reachable:
+        # duplicates of the category popup, or a single sole trigger moved to the card header
+        # ("Optional" on Accessories, "Details" elsewhere). Anything else keeps its "?".
+        assign header_popup_key = ''
+        assign field_help_covered = false
+        if field_popup_count == 0
+          assign field_help_covered = true
+        elsif field_popup_count == 1
+          if is_accessories_category or category_popup_key == ''
+            assign header_popup_key = field_popup_key
+            assign field_help_covered = true
+          endif
+        endif
+      %}
+
+      {% liquid
+        # Mobile options UI (display only): category-level collapse for cards with two or more
+        # visible fields, or a colour picker. Single-field cards keep their field row as is.
+        # The fields are wrapped, never hidden themselves: the mandatory, conditional and
+        # add-to-cart checks read each accordion's own display and must see the same state.
+        # A card with a required field that has no default renders open.
+        assign is_collapsible = false
+        assign collapsible_starts_open = false
+        if category.title != blank
+          unless category.hide_option
+            assign collapsible_field_count = 0
+            assign collapsible_has_color = false
+            for product_option in category.product_options.value
+              assign po_title_downcase = product_option.product_option_title | downcase
+              if po_title_downcase == 'paint color' or po_title_downcase == 'paint colors' or po_title_downcase == 'color' or po_title_downcase == 'vinyl color' or po_title_downcase == 'vinyl colors'
+                assign collapsible_has_color = true
+              endif
+              unless product_option.hide_values
+                assign collapsible_field_count = collapsible_field_count | plus: 1
+                if product_option.mandatory and product_option.product_option_sets_default.value == blank and product_option.tier_parent_products.value == blank
+                  assign collapsible_starts_open = true
+                endif
+              endunless
+            endfor
+            if collapsible_field_count > 1 or collapsible_has_color
+              assign is_collapsible = true
+            endif
+          endunless
+        endif
+        assign category_body_id = 'ProductOptionsCategory-' | append: section.id | append: '-' | append: forloop.index
+      %}
+
       <div
-        class="product-option__item"
+        class="product-option__item{% if category.title != blank %}{% unless category.hide_option %} product-option__item--card{% endunless %}{% endif %}{% if is_delivery_category %} product-option__item--delivery{% endif %}{% if is_accessories_category %} product-option__item--accessories{% endif %}{% if field_help_covered %} product-option__item--field-help-covered{% endif %}{% if is_collapsible %} product-option__item--collapsible{% unless collapsible_starts_open %} product-option__item--collapsed{% endunless %}{% endif %}"
         {% unless category.hide_option %}
           style="order:  {% if color_title != blank %}{{ color_index }}{% elsif category_title_downcase == 'warranty' %}{{ warranty_index }}{% elsif category_title_downcase == 'assembly & room of choice installation needed?' %}{{ assambly_index }}{% elsif quantity_option %}0{% else %}{{ index }}{% endif %};"
         {% endunless %}
@@ -142,7 +242,7 @@
           {% comment %} Option-group label - kept as a styled div, not a heading, so it
              doesn't add UI heading tags to the PDP outline (SEO heading QA). {% endcomment %}
           <div
-            class="product-options__category-title"
+            class="product-options__category-title{% if mobile_label != blank %} product-options__category-title--short{% endif %}"
             {% if color_counter == 1 %}
               data-group-color-name="{{ color_group }}"
               data-color-name-title="{{ color_title }}"
@@ -157,6 +257,14 @@
               {% endunless %}
             </span>
             {{- category.title }}
+            {%- comment -%} Mobile options UI (display only): short label; the category title text above stays as is. {%- endcomment -%}
+            {% if mobile_label != blank %}
+              <span class="product-options__mobile-label" aria-hidden="true">{{ mobile_label }}</span>
+            {% endif %}
+            {%- comment -%}
+              Mobile options UI: "Details" / "Optional" reuse the existing data-popup-open keys. They must be
+              rendered here (inside the component) because the constructor collects [data-popup-open] once.
+            {%- endcomment -%}
             {% if category.help_text.value != blank %}
               {% render 'related-products-button',
                 product_id: product.id,
@@ -164,6 +272,7 @@
                 product_category: product.metafields.custom.option_category_id.value,
                 option_title: category.title
               %}
+              <button type="button" class="product-options__details-link" data-popup-open="{{ category.title }}">Details</button>
             {% else %}
               {% for product_option in category.product_options.value %}
                 {% if product_option.option_type == 'Select' and product_option.help_text.value != blank %}
@@ -173,9 +282,26 @@
                     product_category: product.metafields.custom.option_category_id.value,
                     option_title: product_option.product_option_title
                   %}
+                  <button type="button" class="product-options__details-link" data-popup-open="{{ product_option.product_option_title }}">Details</button>
                   {% break %}
                 {% endif %}
               {% endfor %}
+            {% endif %}
+            {% if is_accessories_category %}
+              {% if header_popup_key != blank %}
+                <button
+                  type="button"
+                  class="product-options__optional-link"
+                  data-popup-open="{{ header_popup_key }}"
+                  aria-label="Optional: view {{ header_popup_key | escape }} details"
+                >
+                  Optional
+                </button>
+              {% else %}
+                <span class="product-options__optional-tag">Optional</span>
+              {% endif %}
+            {% elsif header_popup_key != blank %}
+              <button type="button" class="product-options__details-link" data-popup-open="{{ header_popup_key }}">Details</button>
             {% endif %}
             {% if color_counter == 1 %}
               {% for product_option in category.product_options.value %}
@@ -207,6 +333,27 @@
             {% endif %}
           </div>
         {% endif %}
+        {%- if is_collapsible -%}
+          {%- comment -%}
+            Mobile options UI: the card's open/close row. Hidden at 750px and up, where the body
+            below is display: contents, so desktop renders exactly as before. The summary is
+            filled by handleCategoryCollapse() from the fields' own selected values.
+          {%- endcomment -%}
+          <button
+            type="button"
+            class="product-options__category-toggle"
+            aria-expanded="{% if collapsible_starts_open %}true{% else %}false{% endif %}"
+            aria-controls="{{ category_body_id }}"
+            data-category-toggle
+          >
+            <span class="visually-hidden">{{ category.title }}:</span>
+            <span class="product-options__category-summary" data-category-summary></span>
+            <span class="product-options__accordion-icon">
+              {%- render 'product-option-chevron' -%}
+            </span>
+          </button>
+          <div class="product-options__category-body" id="{{ category_body_id }}" data-category-body>
+        {%- endif -%}
         <div class="product-options__category-notification"></div>
         {% for product_option in category.product_options.value %}
           {% assign title = product_option.product_option_title | downcase %}
@@ -243,6 +390,9 @@
             {% render 'product-option-accordion', category: category, default: default, product_option: product_option, forloop_index: forloop.index, product_id: product.id %}
           {% endif %}
         {% endfor %}
+        {%- if is_collapsible -%}
+          </div>
+        {%- endif -%}
       </div>
     {% endfor %}
 

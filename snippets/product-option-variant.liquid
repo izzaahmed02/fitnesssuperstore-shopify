@@ -88,10 +88,24 @@
     >
       {{- variant.price | money -}}
     </span>
+  {% elsif service_display and variant.metafields.custom.price_reduction_value_new == blank %}
+    {%- comment -%} Mobile options UI (display only): "+$0.00" for no-charge service rows. No data-option-price-raw (price math reads that). {%- endcomment -%}
+    <span class="product-options__swatch-price-zero">{{ 0 | money }}</span>
   {% endif %}
 
   <span class="product-options__swatch-title">
-    {{ cleaned_title }}
+    {%- comment -%}
+      Mobile options UI (display only): delivery rows split at the first " - " so the qualifier can sit on
+      its own line on mobile. All three spans render inline, so the text reads exactly as before.
+      data-field-name on the input (the cart value) is untouched.
+    {%- endcomment -%}
+    {%- if service_display and cleaned_title contains ' - ' -%}
+      {%- assign title_main = cleaned_title | split: ' - ' | first -%}
+      {%- assign title_qualifier = cleaned_title | remove_first: title_main | remove_first: ' - ' -%}
+      <span class="product-options__swatch-title-text"><span class="product-options__swatch-title-main">{{ title_main }}</span><span class="product-options__swatch-title-sep"> - </span><span class="product-options__swatch-title-qualifier">{{ title_qualifier }}</span></span>
+    {%- else -%}
+      {{ cleaned_title }}
+    {%- endif -%}
     {% if product_title contains '(-$' and variant.metafields.custom.price_reduction_value_new != blank %}
       <span class="price-substract"> Subtract -${{ variant.metafields.custom.price_reduction_value_new }}</span>
     {% endif %}

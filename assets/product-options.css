@@ -744,6 +744,42 @@ product-customization-options {
   .option-popup__text a {
     color: #D83D0E;
   }
+
+  /* Option help popups: the text is CMS rich text (metaobjects) with inline widths
+     (e.g. 1800px images, table cells set to width:800px) that made the popup scroll
+     sideways. Keep every piece inside the popup on all screens. The !important rules
+     only override inline styles inside that content. */
+  .option-popup__text {
+    overflow-wrap: break-word;
+  }
+
+  .option-popup__text img,
+  .option-popup__text video,
+  .option-popup__text iframe {
+    max-width: 100%;
+  }
+
+  .option-popup__text img {
+    height: auto;
+  }
+
+  .option-popup__text table {
+    max-width: 100%;
+  }
+
+  .option-popup__text td,
+  .option-popup__text th {
+    width: auto !important;
+  }
+
+  @media screen and (max-width: 749px) {
+    /* Phones: floated images stack above the text instead of squeezing it. */
+    .option-popup__text img {
+      float: none !important;
+      display: block;
+      margin: 0 auto 12px;
+    }
+  }
   
   @media screen and (max-width: 1023px) {
     .option-popup__container {
@@ -1010,3 +1046,495 @@ product-customization-options {
     }
   }
   
+
+/* ==========================================================================
+   Mobile options UI (display only) — PDP-scoped via .product-options--pdp
+   (and the --card / --delivery / --accessories modifiers rendered with it).
+   Keep when reconciling with PR #837 (shared stylesheet with cart Modify).
+   Cart Modify renders its own markup, so none of these selectors match there,
+   and every visible change is inside max-width: 749px, so desktop is unchanged.
+   DATA: nothing below may display:none a [data-option-title] element -
+   prepareOptions() reads its innerText as the cart property key.
+   ========================================================================== */
+
+/* Mobile-only elements: hidden everywhere unless the mobile block shows them. */
+.product-options__mobile-heading,
+.product-options__mobile-label,
+.product-options__details-link,
+.product-options__optional-link,
+.product-options__optional-tag,
+.product-options__empty-value,
+.product-options__service-upgrade,
+.product-options__service-details,
+.product-options__swatch-price-zero,
+.product-options__category-toggle {
+  display: none;
+}
+
+/* Category collapse wrapper: no box of its own, so the fields lay out exactly as before
+   (desktop always; mobile while the card is open). */
+.product-options__category-body {
+  display: contents;
+}
+
+@media screen and (max-width: 749px) {
+  /* Layout only: fonts, sizes and colours below are the theme's own values (the
+     elements keep the rules they already had); new elements reuse the type of the
+     element next to them. */
+
+  /* Banner -> "Choose your options" (a <p>, so the heading outline is unchanged). */
+  .product-options__bar {
+    display: none;
+  }
+
+  /* Remove the large gap above the options-added row (custom-main-product-page.css sets 40px). */
+  .product-options.product-options--pdp {
+    margin-bottom: 0;
+  }
+
+  /* Same type as the banner title it replaces, in the banner's own dark colour. */
+  .product-options__mobile-heading {
+    display: block;
+    margin: 20px 0 12px;
+    font-family: 'Lato', sans-serif;
+    font-size: clamp(13px, 4.1vw, 20px);
+    font-weight: 400;
+    line-height: 26px;
+    color: #23232B;
+  }
+
+  /* One card per visible group: label row + field. Border, radius and background are
+     the accordion's existing values; the field inside drops its own border. */
+  .product-options--pdp .product-option__item--card {
+    margin-bottom: 12px;
+    border: 1px solid #dcdcdc;
+    border-radius: 8px;
+    background-color: #fff;
+  }
+
+  .product-options--pdp .product-option__item--card:has(.error) {
+    border-color: #D83D0E;
+  }
+
+  /* Header row: label left, "Details" / "Optional" right, no numbered circle.
+     12px side gutter = the theme's select and option-list padding. */
+  .product-options--pdp .product-option__item--card .product-options__category-title {
+    margin: 0;
+    padding: 10px 12px 0;
+  }
+
+  .product-options--pdp .product-options__category-title > span:first-child {
+    display: none;
+  }
+
+  /* Short label: the category title text node stays in the DOM, sized to 0.
+     column-gap 0: the zero-width text is still a flex item and would indent the label. */
+  .product-options--pdp .product-option__item--card .product-options__category-title--short {
+    font-size: 0;
+    column-gap: 0;
+  }
+
+  /* Same type as the category title (16px / 24px); the circle styles on
+     ".product-options__category-title span" are reset. text-transform: none keeps
+     the agreed wording "Delivery & setup". */
+  .product-options--pdp .product-options__category-title .product-options__mobile-label {
+    display: inline;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: inherit;
+    color: inherit;
+    text-align: left;
+    text-transform: none;
+  }
+
+  /* Help: "?" icons give way to text links that open the same popups. */
+  .product-options--pdp .product-options__category-title > .button--popup:has(+ .product-options__details-link) {
+    display: none;
+  }
+
+  /* Display only: the svg has no text, so hiding it inside [data-option-title] keeps innerText as is. */
+  .product-options--pdp .product-option__item--field-help-covered .product-options__subcategory-title .button--popup {
+    display: none;
+  }
+
+  /* "Details" in the help-icon colour (#D83D0E); 44x44 hit area. */
+  .product-options--pdp .product-options__details-link,
+  .product-options--pdp .product-options__optional-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 44px;
+    min-height: 44px;
+    margin: -10px 0 -10px auto;
+    padding: 0 0 0 16px;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    text-transform: none;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    color: #D83D0E;
+  }
+
+  .product-options--pdp .product-options__optional-link {
+    color: #666666;
+  }
+
+  .product-options--pdp .product-options__category-title .product-options__optional-tag {
+    display: inline;
+    width: auto;
+    height: auto;
+    margin: 0 0 0 auto;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    text-align: right;
+    text-transform: none;
+    color: #666666;
+  }
+
+  .product-options--pdp .product-options__details-link:focus-visible,
+  .product-options--pdp .product-options__optional-link:focus-visible,
+  .product-options--pdp .product-options__service-details:focus-visible {
+    outline: 2px solid #D83D0E;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Field inside the card: no second border (the card is the box). */
+  .product-options--pdp .product-option__item--card .product-options__accordion {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__accordion + .product-options__accordion {
+    border-top: 1px solid #ececec;
+  }
+
+  /* The open list's grey panel follows the card's rounded bottom corners. */
+  .product-options--pdp .product-option__item--card .product-options__accordion:last-child .product-options__accordion-content {
+    border-radius: 0 0 7px 7px;
+  }
+
+  /* Warranty (select): the theme draws its border and 14px size with !important, so
+     removing the box-in-box and the 16px readability size (Tim, 2026-10-16; also stops
+     iOS zooming on focus) need the same. Height and padding stay the theme's. */
+  .product-options--pdp .product-option__item--card .product-options__select {
+    border-color: transparent !important;
+    box-shadow: none;
+    font-size: 16px !important;
+  }
+
+  /* Full-row tap target (min 44px); wraps so the value can take its own line. */
+  .product-options--pdp .product-option__item--card .product-options__accordion-header {
+    flex-wrap: wrap;
+    min-height: 44px;
+    padding: 5px 12px;
+    row-gap: 0;
+  }
+
+  /* Field titles wrap instead of ellipsizing (text and text-transform unchanged). */
+  .product-options--pdp .product-option__item--card .product-options__subcategory-title {
+    order: 1;
+    flex: 1 1 0;
+    max-width: none;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__subcategory-title-text {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__accordion-icon {
+    order: 2;
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+  }
+
+  /* Selected value on its own line, wrapping (no ellipsis); 4px below the field title.
+     Single-field cards and delivery reset this to 0 (value sits on the first line). */
+  .product-options--pdp .product-option__item--card .product-options__accordion-label {
+    order: 3;
+    flex: 1 1 100%;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    margin: 4px 0 4px;
+    overflow: visible;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__accordion-label p {
+    width: 100%;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__accordion-label-title {
+    flex: 1 1 auto;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  /* x on optional selections stays; 44x44 hit area around the 16px icon. */
+  .product-options--pdp .product-option__item--card .product-options__accordion-label .close-option {
+    box-sizing: content-box;
+    padding: 14px;
+    margin: -14px -14px -14px 0;
+  }
+
+  .product-options--pdp .product-option__item--card [data-mandatory] .close-option {
+    display: none;
+  }
+
+  /* "No accessories selected" until something is added - single-tab Accessories / Add Ons
+     cards only. Multi-tab cards (any category) show no per-tab empty message: an empty
+     tab is its title + chevron, a tab with a selection shows its value (Tim, 2026-10-16:
+     no repeated empty-selection messages). "Selected" = a rendered badge
+     (p[data-option-id]), so defaults, clearing, resets and conditional tabs all follow. */
+  .product-options--pdp .product-option__item--accessories .product-options__accordion--single .product-options__accordion-header:not(:has([data-option-id])) .product-options__empty-value {
+    display: block;
+    order: 3;
+    flex: 1 1 100%;
+    margin: 4px 0 4px;
+    font-family: Lato, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 22px;
+    color: #393940;
+  }
+
+  /* Single accessory field and the delivery field: the card label names the group, so the
+     field title is visually hidden (NOT display:none) and the value takes the full row.
+     DATA: prepareOptions() reads [data-option-title] innerText as the cart property key. */
+  .product-options--pdp .product-option__item--card .product-options__accordion--single .product-options__subcategory-title,
+  .product-options--pdp .product-option__item--card .product-options__accordion--delivery .product-options__subcategory-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .product-options--pdp .product-option__item--card .product-options__accordion--single .product-options__accordion-label,
+  .product-options--pdp .product-option__item--accessories .product-options__accordion--single .product-options__accordion-header:not(:has([data-option-id])) .product-options__empty-value,
+  .product-options--pdp .product-option__item--card .product-options__accordion--delivery .product-options__accordion-label {
+    order: 1;
+    flex: 1 1 0;
+    margin: 0;
+  }
+
+  /* Delivery: price moves to the "Service upgrade" row. Clip-hidden, not display:none,
+     because the quantity handler writes into [data-option-price]. */
+  .product-options--pdp .product-options__accordion--delivery .product-options__accordion-label-price {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* Upgrade amount row (paid services only), right-aligned, in the selected-price type
+     (the theme's existing values). No label - the amount alone is clear. */
+  .product-options--pdp .product-option__item--card .product-options__service-upgrade {
+    display: flex;
+    order: 3;
+    flex: 1 1 100%;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 0 0 4px;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    color: #393940;
+  }
+
+  .product-options--pdp .product-options__service-upgrade-value {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 18px;
+    white-space: nowrap;
+    color: #D83D0E;
+  }
+
+  /* Option rows: theme padding and type; at least 44px tall. */
+  .product-options--pdp .product-option__item--card .product-options__swatch-wrapper {
+    min-height: 44px;
+  }
+
+  /* Delivery list: qualifier on its own line (muted colour already used for option
+     sub-text), "+" before every price, "+$0.00" for no-charge rows.
+     Display only - data-field-name / data-option-price-raw untouched. */
+  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-title-sep {
+    display: none;
+  }
+
+  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-title-qualifier {
+    display: block;
+    color: #929090e8;
+  }
+
+  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-price-zero {
+    display: block;
+    order: 3;
+    margin: 0 0 0 auto;
+    padding-left: 8px;
+    font-family: Lato, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: right;
+    white-space: nowrap;
+    color: #D83D0E;
+  }
+
+  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-price::before,
+  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-price-zero::before {
+    content: '+';
+  }
+
+  /* "Service details" under the list, in the option-price type. */
+  .product-options--pdp .product-options__accordion--delivery .product-options__service-details {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin: 0 0 0 16px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font-family: Lato, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 18px;
+    color: #D83D0E;
+  }
+
+  /* Readability (Tim, 2026-10-16): the small explanatory text is 16px on mobile, and
+     tab titles in multi-tab cards match it so a title never reads smaller than its value.
+     Size and line height only - family, weight and colour stay the theme's. */
+  .product-options--pdp .product-option__item--card .product-options__subcategory-title,
+  .product-options--pdp .product-options__accordion-label-title,
+  .product-options--pdp .product-options__accordion-label-price,
+  .product-options--pdp .product-option__item--card .product-options__service-upgrade,
+  .product-options--pdp .product-options__service-upgrade-value,
+  .product-options--pdp .product-options__swatch-title,
+  .product-options--pdp .product-options__swatch-price,
+  .product-options--pdp .product-options__accordion--delivery .product-options__swatch-price-zero,
+  .product-options--pdp .product-options__accordion--delivery .product-options__service-details {
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  /* Category-level collapse (Tim / Sagi, 2026-10-16): cards with several fields or a colour
+     picker show one row - selection summary + chevron - under the card label; the fields
+     open below it. Same row geometry as a field header (44px, 5px 12px) and the type of a
+     field's selected value / price. Only the wrapper is display: none, never a field. */
+  .product-options--pdp .product-option__item--collapsible > .product-options__category-title {
+    cursor: pointer;
+  }
+
+  .product-options--pdp .product-option__item--collapsible > .product-options__category-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 44px;
+    margin: 0;
+    padding: 5px 12px;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+    color: inherit;
+  }
+
+  .product-options--pdp .product-option__item--collapsible > .product-options__category-toggle[aria-expanded='true'] {
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .product-options--pdp .product-options__category-toggle .product-options__accordion-icon {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+  }
+
+  .product-options--pdp .product-options__category-toggle[aria-expanded='true'] .product-options__accordion-icon svg {
+    transform: rotate(180deg);
+  }
+
+  .product-options--pdp .product-options__category-summary {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .product-options--pdp .product-options__category-summary-line {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    font-family: Lato, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 22px;
+    color: #393940;
+  }
+
+  .product-options--pdp .product-options__category-summary-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .product-options--pdp .product-options__category-summary-price {
+    flex-shrink: 0;
+    font-weight: 700;
+    white-space: nowrap;
+    color: #D83D0E;
+  }
+
+  /* Closed: still rendered (height 0, clipped), never display: none - prepareOptions() reads
+     innerText of titles, colour names and prices inside, and innerText of a non-rendered
+     element returns raw textContent (cart property values would change). The JS makes the
+     closed body inert on mobile so its controls are out of the tab order and a11y tree. */
+  .product-options--pdp .product-option__item--collapsed > .product-options__category-body {
+    display: block;
+    height: 0;
+    overflow: hidden;
+  }
+
+  /* Bring an opened card (invalid Add to Cart) into view below the sticky header. */
+  .product-options--pdp .product-option__item--collapsible {
+    scroll-margin-top: 120px;
+  }
+}

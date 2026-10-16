@@ -940,7 +940,7 @@
                   {% assign tag = 'product-form-with-options' %}
                 {% endif %}
                 <{{ tag }}
-                  class="product-form"
+                  class="product-form{% if tag == 'product-form-with-options' %} product-form--options-mobile{% endif %}"
                   data-hide-errors="{{ gift_card_recipient_feature_active }}"
                   data-section-id="{{ section.id }}"
                 >
@@ -970,7 +970,8 @@
                     variant: buy_box_variant,
                     section_id: section.id
                   %}
-                  <h2 class="product_price_with_options-heading">Total with options</h2>
+                  {%- comment -%} Mobile options UI (display only): same <h2>, mobile text swap via CSS. {%- endcomment -%}
+                  <h2 class="product_price_with_options-heading"><span class="product_price_with_options-heading-desktop">Total with options</span><span class="product_price_with_options-heading-mobile">Item + options</span></h2>
 
                   <div class="product_price_with_options-contaniner">
                     <div class="product_prices">
@@ -1328,6 +1329,9 @@
                       </div>
                     </div>
                   </div>
+                  {%- if tag == 'product-form-with-options' -%}
+                    {% render 'pdp-chat-link' %}
+                  {%- endif -%}
                   {% render 'intl-transformer-note', product: product %}
                   {% if product.metafields.custom.backorder == true and product.metafields.custom.back_order_availability_date %}
                     <div class="backorder_container">
