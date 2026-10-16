@@ -69,6 +69,33 @@ contradicts anything above.
 | W9 | No throttle or retry handling on the live transport. | Medium |
 | W10 | An unattributable error parks 25 records in a terminal state. | Medium |
 
+### 3a. One note on Tim's item 3, from the technical-review seat
+
+Item 3 is Qash's to close and Yusra's to verify. One thing in it is checkable from the code and
+is worth recording here so it is not lost: Tim asked that the Rig 3 exception be "bounded to the
+approved Rig 3 parent/group and the two named choices".
+
+At `cdad0d2` it is bounded to **the two named choices only**.
+`scripts/catalogue-v2.mjs:170` reads:
+
+```js
+if (variantId !== undefined && register.has(bareVariantId(variantId))) {
+  return MAX_OPTION_QUANTITY;
+}
+```
+
+The lookup is by bare variant id. The register entries do carry `optionGroup` and
+`rendersStepperOn`, but `deriveCap()` never compares against them, and the group is already in
+hand as its `group` / `groupLabel` arguments. Malformed caps still fail closed for everything
+else, which is the half Tim asked for and it holds.
+
+It is harmless today and the register says why: 34 option groups contain one or both variants
+and 33 of them carry `hide_quantity = true`, so no stepper renders and the cap is never read.
+But `hide_quantity` is merchandising data that someone can change without touching this code,
+and on the day it changes the exception travels to that product silently. Adding the group and
+parent to the match condition is a few lines in the same function and makes the register say
+what it already documents.
+
 ---
 
 ## 4. Standing gates, unchanged
