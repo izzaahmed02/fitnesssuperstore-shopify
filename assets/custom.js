@@ -513,8 +513,20 @@ async function loadPricingReferenceHTML() {
       label: weightFieldset.querySelector('label[for="' + CSS.escape(input.id) + '"]'),
     }));
     pairs.sort((a, b) => compareWeights(a.input.value, b.input.value));
+    // Without a family map, "exists" falls back to the disabled flag, which also
+    // marks sold-out options. When the whole family is sold out every option is
+    // flagged and the entire row would be hidden, so infer existence from the
+    // option name instead: ranges ("5-50 lbs") are Sets, plain weights are Singles.
+    // Sold-out options stay visible; this only runs when none are in stock.
+    const allFlagged = !weights && pairs.length > 0 && pairs.every(({ input }) => input.classList.contains('disabled'));
+    const wantsSet = /^set/i.test(checkedPurchase.value);
+    const isRange = (value) => /\d\s*-\s*\d/.test(value);
     pairs.forEach(({ input, label }) => {
-      const exists = weights ? weights.has(input.value) : !input.classList.contains('disabled');
+      const exists = weights
+        ? weights.has(input.value)
+        : allFlagged
+          ? isRange(input.value) === wantsSet
+          : !input.classList.contains('disabled');
       input.hidden = !exists;
       weightFieldset.appendChild(input);
       if (label) {
