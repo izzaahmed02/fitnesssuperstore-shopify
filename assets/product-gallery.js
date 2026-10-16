@@ -1,4 +1,8 @@
 if (!customElements.get('product-gallery')) {
+// Popup thumbnails render at 60px; previously they loaded each image at full size.
+const POPUP_THUMB_WIDTH = 160;
+const MODEL_THUMB_POSITION = 3;
+
 class ProductGallery extends HTMLElement {
   constructor() {
     super();
@@ -43,6 +47,7 @@ class ProductGallery extends HTMLElement {
     }
 
 
+    if (this.isDesktop()) this.buildThumbnailRow();
     this.initThumbnails();
 
 
@@ -50,12 +55,10 @@ class ProductGallery extends HTMLElement {
     const renderedMainId = this.main?.querySelector('.main-image-container')?.getAttribute('data-media-id');
     const renderedMainMatches = renderedMainId && this.mediaData.find((m) => m.id == renderedMainId);
 
-    if (!currentActiveThumbnail && renderedMainMatches) {
-      this.activeMediaId = renderedMainId;
-    } else if (!currentActiveThumbnail && this.mediaData.length > 0) {
+    if (!currentActiveThumbnail && !renderedMainMatches && this.mediaData.length > 0) {
       this.setActiveMedia(this.mediaData[0].id);
-    } else if (currentActiveThumbnail) {
-      this.activeMediaId = currentActiveThumbnail.getAttribute('data-media-id');
+    } else if (currentActiveThumbnail || renderedMainMatches) {
+      this.activeMediaId = currentActiveThumbnail ? currentActiveThumbnail.getAttribute('data-media-id') : renderedMainId;
 
 
       const firstMedia = this.mediaData.find(m => m.id == this.activeMediaId);
@@ -76,12 +79,20 @@ class ProductGallery extends HTMLElement {
       }
     }
 
+    // The Liquid only marks the first thumbnail active when the product has no 3D model, so
+    // highlight whichever thumbnail matches the main image that is actually showing.
+    this.querySelectorAll('.thumbnail-btn').forEach((btn) => {
+      btn.classList.toggle('is-active', btn.getAttribute('data-media-id') == this.activeMediaId);
+    });
+
     // Honour a pre-selected variant on first load (e.g. arriving via a
     // ?variant= URL or a 301 redirect from a now-consolidated product) by
     // showing that variant's featured image rather than the product default.
     this.syncToSelectedVariant();
 
     window.addEventListener('resize', this.handleResize.bind(this));
+
+    window.matchMedia('(min-width: 990px)').addEventListener('change', () => this.handleResize());
 
 
     this.main.addEventListener('click', (e) => {
@@ -123,6 +134,16 @@ class ProductGallery extends HTMLElement {
   }
 
   handleResize() {
+    if (!this.isDesktop()) {
+      const popup = document.getElementById('product-gallery-popup');
+      if (popup && !popup.hidden) this.closePopup();
+    } else if (!this.querySelector('.custom-gallery-thumbnails.is-row')) {
+      this.buildThumbnailRow();
+      this.initThumbnails();
+      this.querySelectorAll('.thumbnail-btn').forEach((btn) => {
+        btn.classList.toggle('is-active', btn.getAttribute('data-media-id') == this.activeMediaId);
+      });
+    }
 
     const activeId = this.activeMediaId;
     const container = this.main?.querySelector('[data-zoom-container]');
@@ -162,28 +183,129 @@ class ProductGallery extends HTMLElement {
     });
   }
 
+  buildThumbnailRow() {
+    const row = this.querySelector('.custom-gallery-thumbnails.only-desktop');
+    if (!row || !this.mediaData.length) return;
+
+    const existing = new Map();
+    row.querySelectorAll('.thumbnail-btn').forEach((btn) => {
+      btn.querySelector('.thumbnail-overlay')?.remove();
+      existing.set(String(btn.getAttribute('data-media-id')), btn);
+    });
+
+    const isVideo = (m) => m.media_type === 'video' || m.media_type === 'external_video';
+    const isModel = (m) => m.media_type === 'model';
+    const [first, ...rest] = this.mediaData;
+    const ordered = [first, ...rest.filter(isVideo), ...rest.filter((m) => !isVideo(m) && !isModel(m))];
+    ordered.splice(Math.min(MODEL_THUMB_POSITION, ordered.length), 0, ...rest.filter(isModel));
+
+    const buttons = ordered.map((media) => existing.get(String(media.id)) || this.createThumbnailButton(media)).filter(Boolean);
+    if (!buttons.length) return;
+    row.replaceChildren(...buttons);
+    row.classList.add('is-row');
+    this.addRowNavigation(row);
+    row.addEventListener('scroll', () => this.updateRowScrollCue(row), { passive: true });
+    window.addEventListener('resize', () => this.updateRowScrollCue(row), { passive: true });
+    this.updateRowScrollCue(row);
+  }
+
+  // A plain mouse wheel only scrolls vertically, so with a mouse the row couldn't be scrolled
+  // at all. Add < > buttons, shown only when there is more in that direction.
+  addRowNavigation(row) {
+    const nav = document.createElement('div');
+    nav.className = 'custom-gallery-thumbnails-nav';
+    row.before(nav);
+    nav.appendChild(row);
+
+    [['prev', -1, 'Previous thumbnails', '‹'], ['next', 1, 'More thumbnails', '›']].forEach(([name, dir, label, glyph]) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `thumbnails-nav-btn thumbnails-nav-btn--${name}`;
+      btn.setAttribute('aria-label', label);
+      btn.textContent = glyph;
+      btn.addEventListener('click', () => {
+        row.scrollBy({ left: dir * Math.max(row.clientWidth * 0.8, 80), behavior: 'smooth' });
+      });
+      nav.appendChild(btn);
+    });
+  }
+
+  // Fade the row edge that has more thumbnails, and show the matching nav button.
+  updateRowScrollCue(row) {
+    const more = row.scrollWidth - row.clientWidth;
+    const left = more > 1 && row.scrollLeft > 1;
+    const right = more > 1 && row.scrollLeft < more - 1;
+    [row, row.parentElement].forEach((el) => {
+      el?.classList.toggle('has-more-left', left);
+      el?.classList.toggle('has-more-right', right);
+    });
+  }
+
+  createThumbnailButton(media) {
+    const src = media.preview_image?.src;
+    if (!src) return null;
+    const isVideo = media.media_type === 'video' || media.media_type === 'external_video';
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'thumbnail-btn';
+    btn.setAttribute('data-media-id', media.id);
+    if (isVideo) {
+      btn.classList.add('is-video');
+      btn.setAttribute('data-popup-open', 'video');
+    }
+    if (media.media_type === 'model') btn.classList.add('threeD-image');
+
+    const img = document.createElement('img');
+    img.src = /width=\d+/.test(src) ? src.replace(/width=\d+/, 'width=176') : `${src}${src.includes('?') ? '&' : '?'}width=176`;
+    img.alt = media.alt || '';
+    img.width = 88;
+    img.height = 88;
+    img.loading = 'lazy';
+
+    // Same wrappers the Liquid uses, so the existing video play overlay CSS applies.
+    const wrap = document.createElement('div');
+    wrap.className = isVideo ? 'thumbnail-btn__warp' : 'image-skeleton-wrapper loaded';
+    wrap.appendChild(img);
+    btn.appendChild(wrap);
+    return btn;
+  }
+
+  scrollThumbnailIntoView(btn) {
+    const row = btn?.closest('.custom-gallery-thumbnails.is-row');
+    if (!row) return;
+    const start = btn.offsetLeft;
+    const end = start + btn.offsetWidth;
+    if (start >= row.scrollLeft && end <= row.scrollLeft + row.clientWidth) return;
+    const left = start < row.scrollLeft ? start - 8 : end - row.clientWidth + 8;
+    row.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+  }
+
   initThumbnails() {
 
     const buttons = this.querySelectorAll('.thumbnail-btn');
     buttons.forEach((btn) => {
+      if (btn.dataset.thumbBound) return;
+      btn.dataset.thumbBound = 'true';
       const mediaId = btn.getAttribute('data-media-id');
       const media = this.mediaData.find(m => m.id == mediaId);
       const isVideoThumb = media && (media.media_type === 'video' || media.media_type === 'external_video');
 
 
 
-      btn.addEventListener('click', (e) => {
+      let hoverTimer;
 
-        if (isVideoThumb || this.activeMediaId === mediaId) {
-
+      // A thumbnail click only selects. Enlarging is done by clicking the main image, so a
+      // hover that already switched the main image can no longer turn this click into an
+      // "open popup". Video thumbnails still open the popup, where the video plays.
+      btn.addEventListener('click', () => {
+        clearTimeout(hoverTimer);
+        if (isVideoThumb) {
           this.openPopup(mediaId);
         } else {
-
           this.setActiveMedia(mediaId);
         }
       });
-
-      let hoverTimer;
       btn.addEventListener('mouseenter', () => {
 
         if (this.activeMediaId === mediaId || isVideoThumb) {
@@ -191,8 +313,10 @@ class ProductGallery extends HTMLElement {
           return;
         }
         hoverTimer = setTimeout(() => {
-
+          // The hovered thumbnail is already under the mouse, so don't scroll the row for it.
+          this.skipThumbScroll = true;
           this.setActiveMedia(mediaId);
+          this.skipThumbScroll = false;
         }, 150);
       });
 
@@ -307,8 +431,8 @@ class ProductGallery extends HTMLElement {
       const btnId = btn.getAttribute('data-media-id');
       const isActive = btnId == String(id);
       btn.classList.toggle('is-active', isActive);
-      if (isActive) {
-
+      if (isActive && !this.skipThumbScroll) {
+        this.scrollThumbnailIntoView(btn);
       }
     });
 
@@ -553,6 +677,10 @@ class ProductGallery extends HTMLElement {
       return;
     }
 
+    // Remember where the customer was, so closing returns focus and page position.
+    this.popupOpener = document.activeElement;
+    this.popupScrollY = window.scrollY;
+
     // First, make the popup visible
     popup.hidden = false;
     document.body.style.overflow = 'hidden';
@@ -577,7 +705,7 @@ class ProductGallery extends HTMLElement {
 
           const skeletonWrapper = document.createElement('div');
           const img = document.createElement('img');
-          img.src = media.preview_image.src;
+          img.src = this.sizedSrc(media.preview_image.src, POPUP_THUMB_WIDTH);
           img.alt = media.alt || '';
           img.width = media.preview_image.width;
           img.height = media.preview_image.height;
@@ -657,7 +785,7 @@ class ProductGallery extends HTMLElement {
           skeletonWrapper.className = 'image-skeleton-wrapper';
 
           const img = document.createElement('img');
-          img.src = media.preview_image.src;
+          img.src = this.sizedSrc(media.preview_image.src, POPUP_THUMB_WIDTH);
           img.alt = media.alt || '3D preview';
           img.width = media.preview_image.width;
           img.height = media.preview_image.height;
@@ -780,7 +908,9 @@ class ProductGallery extends HTMLElement {
 
     popup.querySelector('.popup-close').onclick = this.closePopup.bind(this);
     popup.querySelector('.product-popup-backdrop').onclick = this.closePopup.bind(this);
+    document.removeEventListener('keydown', this.handleEscClose);
     document.addEventListener('keydown', this.handleEscClose);
+    popup.querySelector('.popup-close')?.focus({ preventScroll: true });
 
   }
   // --- End of modified openPopup ---
@@ -1035,6 +1165,33 @@ class ProductGallery extends HTMLElement {
 
       }
     });
+
+    this.updatePopupCounter(popup, mediaId);
+  }
+
+  // "x of y" within the open tab (Images or Videos).
+  updatePopupCounter(popup, mediaId) {
+    let counter = popup.querySelector('.popup-counter');
+    if (!counter) {
+      counter = document.createElement('div');
+      counter.className = 'popup-counter';
+      counter.setAttribute('aria-live', 'polite');
+      popup.querySelector('.product-popup')?.appendChild(counter);
+    }
+    const thumbs = this.visiblePopupThumbs(popup);
+    const index = thumbs.findIndex((t) => t.getAttribute('data-media-id') == String(mediaId));
+    counter.hidden = index < 0 || thumbs.length < 2;
+    if (index >= 0) counter.textContent = `${index + 1} of ${thumbs.length}`;
+  }
+
+  visiblePopupThumbs(popup) {
+    const list = popup.querySelector('.popup-thumbnails:not(.hidden)');
+    return list ? [...list.querySelectorAll('[data-media-id]')] : [];
+  }
+
+  sizedSrc(src, width) {
+    if (!src) return '';
+    return /width=\d+/.test(src) ? src.replace(/width=\d+/, `width=${width}`) : `${src}${src.includes('?') ? '&' : '?'}width=${width}`;
   }
 
   closePopup() {
@@ -1073,13 +1230,36 @@ class ProductGallery extends HTMLElement {
 
 
     document.removeEventListener('keydown', this.handleEscClose);
+
+    // Back to where the customer was: same page position, focus on what opened the popup.
+    if (typeof this.popupScrollY === 'number' && Math.abs(window.scrollY - this.popupScrollY) > 1) {
+      window.scrollTo(0, this.popupScrollY);
+    }
+    if (this.popupOpener && this.popupOpener !== document.body && this.popupOpener.isConnected) {
+      this.popupOpener.focus({ preventScroll: true });
+    }
+    this.popupOpener = null;
   }
 
+  // Escape closes; Left/Right arrows step through the open tab's thumbnails.
   handleEscClose = (e) => {
     if (e.key === 'Escape') {
 
       this.closePopup();
+      return;
     }
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    if (e.target.closest?.('input, textarea, select, model-viewer')) return;
+
+    const popup = document.getElementById('product-gallery-popup');
+    if (!popup || popup.hidden) return;
+    const thumbs = this.visiblePopupThumbs(popup);
+    const current = thumbs.findIndex((t) => t.classList.contains('is-active'));
+    const next = current + (e.key === 'ArrowRight' ? 1 : -1);
+    if (current < 0 || next < 0 || next >= thumbs.length) return;
+    e.preventDefault();
+    // Clicking the thumbnail reuses its handler, which also resets any zoom.
+    thumbs[next].click();
   };
 }
 
