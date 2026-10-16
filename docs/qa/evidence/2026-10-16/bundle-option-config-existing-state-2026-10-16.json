@@ -1,0 +1,77 @@
+{
+  "_what": "Existing-state check for custom.bundle_option_config on the production store, read live on 2026-10-16. Supports the PASS in docs/qa/metafield-definition-bundle-option-config-pass-2026-10-16.md.",
+  "_why": "Tim, 14 October, item 1: \"I approve creation of the empty PRODUCT metafield definition for custom.bundle_option_config, type json, after Izza records a PASS on the exact definition, access settings and existing-state check.\"",
+  "_readOnly": "Every call below is a read or a bulkOperationRunQuery (a read). No definition was created, no metafield was written, nothing was changed.",
+  "readAt": "2026-10-16T03:07:00Z",
+  "store": {
+    "name": "Fitness Superstore",
+    "domain": "www.fitnesssuperstore.com",
+    "plan": "Shopify Plus",
+    "platform": "Shopify",
+    "adminApiVersion": "2026-10"
+  },
+
+  "definitionCheck": {
+    "method": "metafieldDefinitions(ownerType:…, namespace:\"custom\", key:\"bundle_option_config\") plus a full enumeration of every PRODUCT definition in the custom namespace",
+    "productDefinitionsInCustomNamespace": 219,
+    "customBundleOptionConfigOnPRODUCT": null,
+    "customBundleOptionConfigOnPRODUCTVARIANT": null,
+    "conflictingDefinitionFound": false,
+    "keyCollisionWithinCustomNamespace": false,
+    "verdict": "No definition exists. Nothing to stop and report under Tim's conflict clause."
+  },
+
+  "houseConventionForCustomProductDefinitions": {
+    "_how": "Read from all 219 existing custom PRODUCT definitions on this store.",
+    "access.admin": "PUBLIC_READ_WRITE on every one (the merchant-owned default)",
+    "access.storefront": "PUBLIC_READ on every one",
+    "access.customerAccount": "NONE on every one"
+  },
+
+  "existingValueCheck": {
+    "_method": "Byte-exact differential over two read-only bulk exports. The bulk result file host is blocked by this session's egress policy, so the file could not be downloaded; the comparison below proves the same thing from the server-reported file sizes without needing the bytes.",
+    "_howItProves": "Bulk JSONL emits one line per product. Adding one aliased field to the query adds exactly the serialized field to every line. If every value were null the added text is ',\"bundleCfg\":null' = 17 bytes on every line and nothing else. Any single non-null value would add '\"bundleCfg\":{\"id\":\"gid://shopify/Metafield/…\"}' instead, which is strictly longer, so the totals could not match.",
+
+    "products": {
+      "baselineQuery": "{ products { edges { node { id } } } }",
+      "baselineBulkOperation": "gid://shopify/BulkOperation/8673694875964",
+      "baselineObjectCount": 6502,
+      "baselineFileSizeBytes": 319336,
+      "probeQuery": "{ products { edges { node { id bundleCfg: metafield(namespace: \"custom\", key: \"bundle_option_config\") { id } } } } }",
+      "probeBulkOperation": "gid://shopify/BulkOperation/8673695400252",
+      "probeObjectCount": 6502,
+      "probeFileSizeBytes": 429870,
+      "deltaBytes": 110534,
+      "expectedDeltaIfEveryValueIsNull": 110534,
+      "perRecordDeltaBytes": 17.0,
+      "match": true,
+      "conclusion": "0 of 6,502 products carry a custom.bundle_option_config value."
+    },
+
+    "productVariants": {
+      "baselineQuery": "{ productVariants { edges { node { id } } } }",
+      "baselineBulkOperation": "gid://shopify/BulkOperation/8673696383292",
+      "baselineObjectCount": 10031,
+      "baselineFileSizeBytes": 571767,
+      "probeQuery": "{ productVariants { edges { node { id bundleCfg: metafield(namespace: \"custom\", key: \"bundle_option_config\") { id } } } } }",
+      "probeBulkOperation": "gid://shopify/BulkOperation/8673697431868",
+      "probeObjectCount": 10031,
+      "probeFileSizeBytes": 742294,
+      "deltaBytes": 170527,
+      "expectedDeltaIfEveryValueIsNull": 170527,
+      "perRecordDeltaBytes": 17.0,
+      "match": true,
+      "conclusion": "0 of 10,031 variants carry a custom.bundle_option_config value."
+    },
+
+    "corroboration": {
+      "_what": "Independent page-by-page spot check before the differential was run.",
+      "method": "products(first:250) { nodes { metafield(namespace:\"custom\", key:\"bundle_option_config\") { id } } } paged forward",
+      "pagesRead": 4,
+      "productsRead": 1000,
+      "nonNullFound": 0
+    }
+  },
+
+  "scopeNote": "This supersedes the 1 October sample, which checked the twelve pilot products only. The check here is the whole production catalogue, products and variants."
+}
