@@ -44,17 +44,32 @@
       placeholder="Search blog posts..."
       style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;"
     >
-    <div id="no-results" style="display:none; margin:20px 0; text-align:center;">
-      <p>No articles found.</p>
-    </div>
   </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const searchInput = document.getElementById('blog-live-search');
   const container = document.querySelector('.blog-articles');
-  const noResults = document.getElementById('no-results');
+  const searchWrapper = document.querySelector('.blog-search-wrapper');
   const totalPages = {{ paginate.pages | default: 1 }};
+
+  // Empty state is created in JS on demand so no placeholder copy sits in the
+  // server-rendered page source.
+  let noResults = null;
+  function setNoResults(show) {
+    if (show) {
+      if (!noResults) {
+        noResults = document.createElement('div');
+        noResults.id = 'no-results';
+        noResults.style.cssText = 'margin:20px 0; text-align:center;';
+        noResults.innerHTML = '<p>No articles found.</p>';
+        searchWrapper.appendChild(noResults);
+      }
+      noResults.style.display = 'block';
+    } else if (noResults) {
+      noResults.style.display = 'none';
+    }
+  }
   const blogUrl = "{{ blog.url }}";
 
   let allArticles = [];
@@ -97,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const trimmedQuery = query.trim().toLowerCase();
     if (!trimmedQuery) {
       container.innerHTML = originalContent;
-      noResults.style.display = 'none';
+      setNoResults(false);
       return;
     }
 
@@ -119,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     container.innerHTML = filtered.join('');
-    noResults.style.display = filtered.length ? 'none' : 'block';
+    setNoResults(filtered.length === 0);
   }
 
   searchInput.addEventListener('input', e => {

@@ -1,0 +1,499 @@
+{% comment %}
+  Featured & Latest Articles — controlled top feed for /pages/blog
+
+  DATA CONTRACT
+  - Exact tag "featured" determines eligibility. Legacy featured:* tags are ignored.
+  - ARTICLE metafield custom.featured_rank must be number_integer.
+  - Valid ranks are unique integers from 1 through the CONFIGURED ranked-slot count.
+  - Ranked featured articles render first; remaining positions use the newest
+    published non-featured articles.
+  - The card limit is hard-capped at nine in both schema and Liquid.
+  - No article handle, ID or title is hard-coded.
+
+  BLOG DISCOVERY
+  Shopify Liquid cannot enumerate all blogs. Blog handles are therefore supplied
+  through the section setting. Article selection and ordering remain driven by
+  live tag and metafield data. An unknown configured handle raises HOLD rather
+  than silently removing a blog from validation.
+
+  VALIDATION AND HOLD
+  Each configured blog is scanned separately because blog.articles exposes at
+  most 50 records. scanned_total is compared with the sum of articles_count. A
+  short scan raises incomplete_traversal. Missing, wrong-type, duplicate or
+  out-of-range ranks also raise HOLD. On HOLD, the ranked pass does not run and
+  the grid fills only from newest non-featured articles, so no approved article
+  appears in an unapproved position.
+
+  SETTINGS CONSTRAINTS REPORTED SEPARATELY FROM DATA DEFECTS
+  Two open review cases are addressed here.
+
+  Case 1, lowering the visible card limit while six valid ranks exist. Ranks are
+  validated against the CONFIGURED slot count, not the count after clamping to
+  the card limit. A rank set of 1..6 is therefore never reported as
+  out_of_range_rank merely because the card limit was lowered. The distinct
+  reason slots_exceed_card_limit is raised instead. Both still fail closed and
+  nothing is pinned, but the readback now distinguishes a configuration problem
+  from a data problem, because those need different fixes by different owners.
+
+  Case 2, fallback starvation after bulk or malformed featured tagging. Excess
+  eligibility still raises HOLD, but a diagnostic alone does not fill the grid.
+  Exclude exact-featured articles within each accessible blog array BEFORE
+  combining, sorting and limiting the fallback candidates. This lets older
+  non-featured articles survive even when the newest 50 are all featured.
+  Incomplete per-blog traversal remains explicitly HOLD; no pagination claim.
+
+  QA
+  FEATURED_FEED_READBACK is always emitted in page source. The visible HOLD panel
+  renders in the theme editor or client-side when feed_qa=1 is present. Normal
+  storefront URLs receive no HOLD-panel markup.
+{% endcomment %}
+
+{{ 'component-article-card.css' | asset_url | stylesheet_tag }}
+{{ 'section-main-blog.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+
+  .featured-feed-hold {
+    grid-column: 1 / -1;
+    border: 2px solid #b00020;
+    background: #fff5f5;
+    color: #b00020;
+    padding: 16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .featured-feed-hold h3 { margin: 0 0 8px; font-size: 15px; }
+  .featured-feed-hold ul { margin: 8px 0 0 18px; }
+  .featured-feed-hold code { background: #ffe9e9; padding: 1px 4px; }
+{%- endstyle -%}
+
+{%- liquid
+  assign max_cards = section.settings.max_cards | default: 9
+  if max_cards > 9
+    assign max_cards = 9
+  endif
+  if max_cards < 1
+    assign max_cards = 1
+  endif
+
+  assign configured_featured_slots = section.settings.featured_slots | default: 6
+  if configured_featured_slots < 1
+    assign configured_featured_slots = 1
+  endif
+
+  assign featured_slots = configured_featured_slots
+  if featured_slots > max_cards
+    assign featured_slots = max_cards
+  endif
+
+  assign expected_total = 0
+  assign scanned_total = 0
+  assign eligible_count = 0
+  assign seen_ranks = '|'
+  assign hold_reasons = '|'
+  assign rank_map = '|'
+  assign rank_readback = ''
+  assign blog_handles = section.settings.blog_handles | split: ','
+  assign blog_count = 0
+
+    # Case 1. A card limit below the configured slot count is a settings
+    # constraint, not defective rank data. It gets its own reason so the
+    # readback points at the setting rather than at the articles.
+  if configured_featured_slots > max_cards
+    unless hold_reasons contains '|slots_exceed_card_limit|'
+      assign hold_reasons = hold_reasons | append: 'slots_exceed_card_limit|'
+    endunless
+  endif
+
+  for handle in blog_handles
+    assign clean_handle = handle | strip
+    assign store_blog = blogs[clean_handle]
+
+    if store_blog == blank
+      unless hold_reasons contains '|unknown_blog_handle|'
+        assign hold_reasons = hold_reasons | append: 'unknown_blog_handle|'
+      endunless
+      continue
+    endif
+
+    assign blog_count = blog_count | plus: 1
+    assign expected_total = expected_total | plus: store_blog.articles_count
+
+    for article in store_blog.articles
+      assign scanned_total = scanned_total | plus: 1
+
+      if article.tags contains 'featured'
+        assign eligible_count = eligible_count | plus: 1
+        assign rank_field = article.metafields.custom.featured_rank
+        assign row_state = 'ok'
+
+        if rank_field == blank
+          assign row_state = 'missing_rank'
+        elsif rank_field.type != 'number_integer'
+          assign row_state = 'non_integer_rank'
+        else
+          assign rank_num = rank_field.value | plus: 0
+          assign rank_int = rank_num | round
+
+          if rank_num != rank_int
+            assign row_state = 'non_integer_rank'
+              # Validated against the CONFIGURED count, so a valid 1..6 set is
+              # never mislabelled out_of_range because the card limit dropped.
+          elsif rank_num < 1 or rank_num > configured_featured_slots
+            assign row_state = 'out_of_range_rank'
+          else
+            assign rank_key = '|' | append: rank_int | append: '|'
+
+            if seen_ranks contains rank_key
+              assign row_state = 'duplicate_rank'
+            else
+              # Liquid article.handle already includes the blog prefix (Admin handle does not).
+              assign lookup = article.handle
+
+              if articles[lookup] == blank
+                assign row_state = 'rank_lookup_failed'
+              else
+                assign seen_ranks = seen_ranks | append: rank_int | append: '|'
+                assign rank_map = rank_map | append: rank_int | append: '>' | append: lookup | append: '|'
+              endif
+            endif
+          endif
+        endif
+
+        unless row_state == 'ok'
+          assign reason_key = '|' | append: row_state | append: '|'
+          unless hold_reasons contains reason_key
+            assign hold_reasons = hold_reasons | append: row_state | append: '|'
+          endunless
+        endunless
+
+        assign rank_display = rank_field.value | default: 'none'
+        assign rank_readback = rank_readback | append: article.handle | append: ' rank=' | append: rank_display | append: ' state=' | append: row_state | append: '~'
+      endif
+    endfor
+  endfor
+
+  if expected_total == 0
+    unless hold_reasons contains '|no_articles_found|'
+      assign hold_reasons = hold_reasons | append: 'no_articles_found|'
+    endunless
+  endif
+
+  if scanned_total != expected_total
+    unless hold_reasons contains '|incomplete_traversal|'
+      assign hold_reasons = hold_reasons | append: 'incomplete_traversal|'
+    endunless
+  endif
+
+  if eligible_count < configured_featured_slots
+    unless hold_reasons contains '|incomplete_eligible_set|'
+      assign hold_reasons = hold_reasons | append: 'incomplete_eligible_set|'
+    endunless
+  endif
+
+    # Excess tags are invalid rank data. Candidate filtering below separately
+    # prevents those invalid tags from starving the non-featured fallback.
+  if eligible_count > configured_featured_slots
+    unless hold_reasons contains '|excess_eligible_articles|'
+      assign hold_reasons = hold_reasons | append: 'excess_eligible_articles|'
+    endunless
+  endif
+
+  # Limit only after exact-featured candidates have been removed below.
+  assign fill_limit = max_cards
+
+  assign feed_state = 'ok'
+  if hold_reasons != '|'
+    assign feed_state = 'hold'
+  endif
+
+  assign reason_list = hold_reasons | remove_first: '|' | split: '|'
+  assign rank_entries = rank_map | remove_first: '|' | split: '|'
+
+  assign pool = '' | split: ''
+  for handle in blog_handles
+    assign clean_handle = handle | strip
+    assign store_blog = blogs[clean_handle]
+    if store_blog != blank
+      assign blog_articles = store_blog.articles
+      for article in blog_articles
+        unless article.tags contains 'featured'
+          assign candidate = blog_articles | slice: forloop.index0, 1
+          assign pool = pool | concat: candidate
+        endunless
+      endfor
+    endif
+  endfor
+  assign pool_newest = pool | uniq | sort: 'published_at' | reverse
+
+  assign rendered = '|'
+  assign card_count = 0
+-%}
+
+<!-- FEATURED_FEED_READBACK
+  state: {{ feed_state }}
+  traversal: scanned {{ scanned_total }} of {{ expected_total }} expected articles across {{ blog_count }} resolved blogs
+  ranked slots: configured {{ configured_featured_slots }}; effective {{ featured_slots }}
+  eligible (exact tag "featured"): {{ eligible_count }}
+  max cards (clamped): {{ max_cards }}; fill window: {{ fill_limit }}
+  non-featured fallback candidates: {{ pool_newest.size }}
+  hold reasons: {% if reason_list.size > 0 %}{{ reason_list | join: ', ' }}{% else %}none{% endif %}
+  eligible readback:
+{% if rank_readback != blank %}{% assign readback_lines = rank_readback | split: '~' %}{% for readback_line in readback_lines %}    {{ readback_line }}
+{% endfor %}{% else %}    (no eligible articles)
+{% endif %}-->
+
+<div class="main-blog page-width section-{{ section.id }}-padding">
+  {%- if section.settings.heading != blank -%}
+    <h2 class="title--primary">{{ section.settings.heading }}</h2>
+  {%- endif -%}
+
+  {%- if section.settings.description != blank -%}
+    <div class="main-blog-description">{{ section.settings.description }}</div>
+  {%- endif -%}
+
+  <div
+    id="FeaturedFeed-{{ section.id }}"
+    class="blog-articles blog-articles--featured-latest"
+    data-featured-feed
+    data-feed-state="{{ feed_state }}"
+    data-scanned-total="{{ scanned_total }}"
+    data-expected-total="{{ expected_total }}"
+    data-eligible-count="{{ eligible_count }}"
+    data-configured-featured-slots="{{ configured_featured_slots }}"
+    data-featured-slots="{{ featured_slots }}"
+    data-max-cards="{{ max_cards }}"
+    data-hold-reasons="{% if reason_list.size > 0 %}{{ reason_list | join: ',' }}{% endif %}"
+  >
+    {%- if feed_state == 'hold' and request.design_mode -%}
+      <div class="featured-feed-hold" role="status">
+        <h3>Featured feed is on HOLD — configuration or rank data is not valid</h3>
+        <p>
+          No approved article has been pinned. Positions are filled with newest
+          published non-featured articles only.
+        </p>
+        <ul>
+          {%- for reason in reason_list -%}
+            <li>{{ reason | replace: '_', ' ' }}</li>
+          {%- endfor -%}
+        </ul>
+        <p>
+          Traversal: scanned {{ scanned_total }} of {{ expected_total }} expected articles.
+          Eligible: {{ eligible_count }}. Ranked slots: configured {{ configured_featured_slots }},
+          effective {{ featured_slots }}. Max cards: {{ max_cards }}.
+        </p>
+      </div>
+    {%- endif -%}
+
+    {%- if feed_state == 'ok' -%}
+      {%- for position in (1..featured_slots) -%}
+        {%- if card_count >= max_cards -%}{%- break -%}{%- endif -%}
+
+        {%- for entry in rank_entries -%}
+          {%- assign parts = entry | split: '>' -%}
+          {%- assign entry_rank = parts[0] | plus: 0 -%}
+
+          {%- if entry_rank == position -%}
+            {%- assign ranked_article = articles[parts[1]] -%}
+
+            {%- if ranked_article != blank -%}
+              {%- assign key = '|' | append: ranked_article.id | append: '|' -%}
+
+              {%- unless rendered contains key -%}
+                {% render 'article-card',
+                  article: ranked_article,
+                  media_height: section.settings.image_height,
+                  media_aspect_ratio: ranked_article.image.aspect_ratio,
+                  show_image: section.settings.show_image,
+                  show_date: section.settings.show_date,
+                  show_author: section.settings.show_author,
+                  show_excerpt: true
+                %}
+                {%- liquid
+                  assign rendered = rendered | append: ranked_article.id | append: '|'
+                  assign card_count = card_count | plus: 1
+                -%}
+              {%- endunless -%}
+            {%- endif -%}
+
+            {%- break -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endfor -%}
+    {%- endif -%}
+
+    {%- for article in pool_newest limit: fill_limit -%}
+      {%- if card_count >= max_cards -%}{%- break -%}{%- endif -%}
+
+      {%- unless article.tags contains 'featured' -%}
+        {%- assign key = '|' | append: article.id | append: '|' -%}
+
+        {%- unless rendered contains key -%}
+          {% render 'article-card',
+            article: article,
+            media_height: section.settings.image_height,
+            media_aspect_ratio: article.image.aspect_ratio,
+            show_image: section.settings.show_image,
+            show_date: section.settings.show_date,
+            show_author: section.settings.show_author,
+            show_excerpt: true
+          %}
+          {%- liquid
+            assign rendered = rendered | append: article.id | append: '|'
+            assign card_count = card_count | plus: 1
+          -%}
+        {%- endunless -%}
+      {%- endunless -%}
+    {%- endfor -%}
+  </div>
+</div>
+
+<!-- FEATURED_FEED_RENDERED count={{ card_count }} max={{ max_cards }} state={{ feed_state }} -->
+
+<script>
+  (function () {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('feed_qa') !== '1') return;
+
+    var grid = document.getElementById('FeaturedFeed-{{ section.id }}');
+    if (!grid || grid.dataset.feedState !== 'hold') return;
+    if (grid.querySelector('.featured-feed-hold')) return;
+
+    var reasons = (grid.dataset.holdReasons || '').split(',').filter(Boolean);
+    var panel = document.createElement('div');
+    panel.className = 'featured-feed-hold';
+    panel.setAttribute('role', 'status');
+
+    var title = document.createElement('h3');
+    title.textContent = 'Featured feed is on HOLD \u2014 configuration or rank data is not valid';
+    panel.appendChild(title);
+
+    var intro = document.createElement('p');
+    intro.textContent =
+      'No approved article has been pinned. Positions are filled with newest ' +
+      'published non-featured articles only.';
+    panel.appendChild(intro);
+
+    if (reasons.length) {
+      var list = document.createElement('ul');
+      reasons.forEach(function (reason) {
+        var item = document.createElement('li');
+        item.textContent = reason.replace(/_/g, ' ');
+        list.appendChild(item);
+      });
+      panel.appendChild(list);
+    }
+
+    var stats = document.createElement('p');
+    stats.textContent =
+      'Traversal: scanned ' + grid.dataset.scannedTotal + ' of ' +
+      grid.dataset.expectedTotal + ' expected articles. Eligible: ' +
+      grid.dataset.eligibleCount + '. Ranked slots: configured ' +
+      grid.dataset.configuredFeaturedSlots + ', effective ' +
+      grid.dataset.featuredSlots + '. Max cards: ' + grid.dataset.maxCards + '.';
+    panel.appendChild(stats);
+
+    grid.insertBefore(panel, grid.firstChild);
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Featured & Latest",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Featured & Latest Articles"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Section description"
+    },
+    {
+      "type": "paragraph",
+      "content": "Eligibility is the exact tag 'featured'. Order is the ARTICLE number_integer metafield custom.featured_rank. Ranks are validated against the configured slot count, so a card limit below that count raises slots_exceed_card_limit rather than reporting valid ranks as out of range. Append ?feed_qa=1 to reveal HOLD diagnostics."
+    },
+    {
+      "type": "text",
+      "id": "blog_handles",
+      "label": "Blog handles (comma separated)",
+      "default": "buying-guides, comparisons, maintenance, warranty-shipping, news, case-studies",
+      "info": "Liquid cannot enumerate blogs, so the blogs to scan must be named here. An unknown handle raises HOLD."
+    },
+    {
+      "type": "range",
+      "id": "featured_slots",
+      "min": 1,
+      "max": 9,
+      "step": 1,
+      "label": "Ranked featured positions",
+      "default": 6,
+      "info": "Valid featured_rank values are 1 through this number. Keep Maximum cards at or above it, or the feed holds with slots_exceed_card_limit."
+    },
+    {
+      "type": "range",
+      "id": "max_cards",
+      "min": 3,
+      "max": 9,
+      "step": 1,
+      "label": "Maximum cards",
+      "default": 9,
+      "info": "Approved maximum is nine. Also clamped in Liquid. Must be at or above Ranked featured positions."
+    },
+    { "type": "checkbox", "id": "show_image", "default": true, "label": "Show image" },
+    { "type": "checkbox", "id": "show_date", "default": true, "label": "Show date" },
+    { "type": "checkbox", "id": "show_author", "default": true, "label": "Show author" },
+    {
+      "type": "select",
+      "id": "image_height",
+      "options": [
+        { "value": "adapt", "label": "Adapt" },
+        { "value": "small", "label": "Small" },
+        { "value": "medium", "label": "Medium" },
+        { "value": "large", "label": "Large" }
+      ],
+      "default": "medium",
+      "label": "Image height"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 36
+    }
+  ],
+  "presets": [{ "name": "Featured & Latest" }]
+}
+{% endschema %}
